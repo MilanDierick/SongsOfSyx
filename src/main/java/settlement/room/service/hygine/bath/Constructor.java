@@ -1,0 +1,289 @@
+package settlement.room.service.hygine.bath;
+
+import java.io.IOException;
+
+import game.GAME;
+import settlement.main.RenderData.RenderIterator;
+import settlement.main.SETT;
+import settlement.path.AVAILABILITY;
+import settlement.room.main.*;
+import settlement.room.main.furnisher.*;
+import settlement.room.main.util.RoomInit;
+import settlement.room.main.util.RoomInitData;
+import settlement.room.sprite.*;
+import snake2d.SPRITE_RENDERER;
+import snake2d.util.datatypes.AREA;
+import snake2d.util.datatypes.DIR;
+import snake2d.util.file.Json;
+import snake2d.util.sprite.TILE_SHEET;
+import util.gui.misc.GText;
+import util.info.GFORMAT;
+import util.rendering.ShadowBatch;
+import util.spritecomposer.*;
+
+final class Constructor extends Furnisher {
+
+	private final ROOM_BATH blue;
+	final FurnisherItemTile tileBasin;
+
+	final FurnisherStat baths = new FurnisherStat(this, 1) {
+		
+		@Override
+		public double get(AREA area, double fromItems) {
+			return fromItems;
+		}
+		
+		@Override
+		public GText format(GText t, double value) {
+			return GFORMAT.i(t, (int)value);
+		}
+	};
+	
+	final FurnisherStat relaxation = new FurnisherStat.FurnisherStatRelative(this, baths, 1.5);
+	
+	protected Constructor(ROOM_BATH blue, RoomInitData init) throws IOException {
+		super(init, 2, 2, 280, 220);
+		this.blue = blue;
+		
+		Json sp = init.data().json("SPRITES");
+		
+		RoomSprite spriteNormal = new RoomSpriteComboN(sp, "FRAME_COMBO") {
+			final int off = 0;
+			@Override
+			public boolean render(SPRITE_RENDERER r, ShadowBatch s, int data, RenderIterator it, double degrade,
+					boolean isCandle) {
+				if (blue.is(it.tile())) {
+					int i = SETT.ROOMS().data.get(it.tile()) & 0b01;
+					int t = off + i*3*16;
+					if (i == 1)
+						t += (it.ran()+GAME.intervals().get04()) & 0x0F;
+					else
+						t+= it.ran() & 0x0F;
+					sheet.render(r, t, it.x(), it.y());
+				}else {
+					int t = off;
+					t+= it.ran() & 0x0F;
+					sheet.render(r, t, it.x(), it.y());
+				}
+				return super.render(r, s, data, it, degrade, isCandle);
+			}
+		};
+		
+		final RoomSprite spriteWork = new RoomSprite1x1(sp, "WORK_1X1") {
+			@Override
+			public boolean render(SPRITE_RENDERER r, ShadowBatch s, int data, RenderIterator it, double degrade,
+					boolean isCandle) {
+				animate(0);
+				if (blue.is(it.tile()) && (SETT.ROOMS().data.get(it.tile()) & Crank.WORKING) != 0) {
+					animate(1);
+				}
+				return super.render(r, s, data, it, degrade, isCandle);
+			}
+			
+			
+		};
+		
+		final RoomSprite spriteOven = new RoomSprite1x1(sp, "OVEN_1X1");
+		
+		final RoomSprite spriteService = new RoomSprite1x1(sp, "ENTRANCE_1X1") {
+			@Override
+			protected boolean joins(int tx, int ty, int rx, int ry, DIR d, FurnisherItem item) {
+				return item.sprite(rx, ry) == spriteNormal;
+			}
+			
+		};
+		
+		final RoomSprite spritePipe = new RoomSprite1x1(sp, "PIPE_1X1") {
+			@Override
+			protected boolean joins(int tx, int ty, int rx, int ry, DIR d, FurnisherItem item) {
+				return item.sprite(rx, ry) == spriteOven || item.sprite(rx, ry) == this;
+			}
+		};
+		
+		final RoomSprite spriteBenchHead = new RoomSprite1x1(sp, "BENCH_1X1") {
+			
+			@Override
+			protected boolean joins(int tx, int ty, int rx, int ry, DIR d, FurnisherItem item) {
+				return d.perpendicular().orthoID() == item.rotation;
+			}
+		};
+		
+		final RoomSprite spriteBenchTail = new RoomSprite1x1(spriteBenchHead) {
+			@Override
+			protected boolean joins(int tx, int ty, int rx, int ry, DIR d, FurnisherItem item) {
+				return d.orthoID() == item.rotation;
+			}
+		};
+		
+		final RoomSprite spriteMisc = new RoomSprite1x1(sp, "TORCH_1X1");
+		
+		FurnisherItemTile ww = new FurnisherItemTile(this, true, spriteWork, AVAILABILITY.SOLID, false).setData(Bits.CRANK);
+		FurnisherItemTile ss = new FurnisherItemTile(this, true, spriteService, AVAILABILITY.AVOID_PASS, false).setData(Bits.SERVICE);
+		FurnisherItemTile nn = new FurnisherItemTile(this, spriteNormal, AVAILABILITY.AVOID_PASS, false).setData(Bits.POOL);
+		FurnisherItemTile mm = new FurnisherItemTile(this, spriteMisc, AVAILABILITY.SOLID, true);
+		FurnisherItemTile ov = new FurnisherItemTile(this, true, spriteOven, AVAILABILITY.SOLID, false).setData(Bits.OVEN);
+		FurnisherItemTile pi = new FurnisherItemTile(this, spritePipe, AVAILABILITY.SOLID, false);
+		FurnisherItemTile b1 = new FurnisherItemTile(this, true,spriteBenchHead, AVAILABILITY.AVOID_PASS, false).setData(Bits.BENCH);
+		FurnisherItemTile b2 = new FurnisherItemTile(this, spriteBenchTail, AVAILABILITY.AVOID_PASS, false).setData(Bits.BENCH_TAIL);
+		FurnisherItemTile __ = null;
+		tileBasin = nn;
+		
+		new FurnisherItem(new FurnisherItemTile[][] {
+			{ww,nn,nn},
+			{ss,nn,nn}, 
+			{mm,ov,pi},
+		}, 2);
+		
+		new FurnisherItem(new FurnisherItemTile[][] {
+			{ww,nn,nn}, 
+			{ss,nn,nn},
+			{mm,nn,nn}, 
+			{pi,ov,pi},
+		}, 3);
+		
+		new FurnisherItem(new FurnisherItemTile[][] {
+			{mm,nn,nn},
+			{ss,nn,nn},
+			{ww,nn,nn},
+			{mm,nn,nn}, 
+			{pi,ov,pi},
+		}, 4);
+		
+		new FurnisherItem(new FurnisherItemTile[][] {
+			{pi,nn,nn},
+			{pi,nn,nn},
+			{ss,nn,nn},
+			{ww,nn,nn},
+			{mm,nn,nn}, 
+			{pi,ov,pi},
+		}, 5);
+		
+		new FurnisherItem(new FurnisherItemTile[][] {
+			{ww,nn,nn,nn},
+			{ss,nn,nn,nn}, 
+			{pi,ov,pi,mm}, 
+		}, 3);
+		
+		new FurnisherItem(new FurnisherItemTile[][] {
+			{ww,nn,nn,nn}, 
+			{ss,nn,nn,nn},
+			{mm,nn,nn,nn}, 
+			{pi,ov,pi,mm},
+		}, 4.5);
+		
+		new FurnisherItem(new FurnisherItemTile[][] {
+			{pi,nn,nn,nn},
+			{pi,nn,nn,nn},
+			{ww,nn,nn,nn},
+			{ss,nn,nn,nn}, 
+			{mm,pi,ov,pi}, 
+		}, 6);
+		
+		new FurnisherItem(new FurnisherItemTile[][] {
+			{mm,nn,nn,nn},
+			{pi,nn,nn,nn},
+			{pi,nn,nn,nn},
+			{ww,nn,nn,nn},
+			{ss,nn,nn,nn}, 
+			{mm,pi,ov,pi},
+		}, 7.5);
+		
+		new FurnisherItem(new FurnisherItemTile[][] {
+			{pi,nn,nn,nn,nn}, 
+			{pi,nn,nn,nn,nn},
+			{mm,nn,nn,nn,nn}, 
+			{pi,ov,pi,ss,ww}, 
+		}, 6);
+		
+		new FurnisherItem(new FurnisherItemTile[][] {
+			{mm,nn,nn,nn,nn},
+			{pi,nn,nn,nn,nn},
+			{pi,nn,nn,nn,nn},
+			{mm,nn,nn,nn,nn}, 
+			{pi,ov,pi,ss,ww}, 
+		}, 8);
+		
+		new FurnisherItem(new FurnisherItemTile[][] {
+			{pi,nn,nn,nn,nn},
+			{ov,nn,nn,nn,nn},
+			{pi,nn,nn,nn,nn},
+			{mm,nn,nn,nn,nn},
+			{pi,nn,nn,nn,nn}, 
+			{pi,ww,ss,pi,pi}, 
+		}, 10);
+		
+		flush(1, 3);
+		
+		new FurnisherItem(new FurnisherItemTile[][] {
+			{b1,mm},
+			{b2,__},
+		}, 1);
+		
+		new FurnisherItem(new FurnisherItemTile[][] {
+			{b1,mm,b1},
+			{b2,__,b2},
+		}, 2);
+		
+		new FurnisherItem(new FurnisherItemTile[][] {
+			{b1,mm,b1,b1},
+			{b2,__,b2,b2},
+		}, 3);
+		
+		new FurnisherItem(new FurnisherItemTile[][] {
+			{b1,b1,mm,b1,b1},
+			{b2,b2,__,b2,b2},
+		}, 4);
+		
+		flush(3);
+	}
+
+	@Override
+	protected TILE_SHEET sheet(ComposerUtil c, ComposerSources s, ComposerDests d, int y1) {
+		s.full.init(0, y1, 1, 4, 8, 2, d.s16);
+		for (int i = 0; i < 4; i++) {
+			s.full.setVar(i).paste(true);
+		}
+		return d.s16.saveGame();
+	}
+
+	@Override
+	public boolean usesArea() {
+		return true;
+	}
+
+	@Override
+	public boolean mustBeIndoors() {
+		return true;
+	}
+
+	@Override
+	public Room create(TmpArea area, RoomInit init) {
+		return new BathInstance(blue, area, init);
+	}
+
+	@Override
+	public RoomBlueprintImp blue() {
+		return blue;
+	}
+	
+//	private final FurnisherMinimapColor miniC = new FurnisherMinimapColor(new byte[][] {
+//		{0,0,0,0,0,0,0,0},
+//		{0,1,1,0,0,1,1,0},
+//		{1,0,0,1,1,0,0,1},
+//		{0,0,0,0,0,0,0,0},
+//		{0,0,0,0,0,0,0,0},
+//		{0,1,1,0,0,1,1,0},
+//		{1,0,0,1,1,0,0,1},
+//		{0,0,0,0,0,0,0,0},
+//		},
+//		miniColor
+//	);
+//	
+//	@Override
+//	public COLOR miniColor(int tx, int ty) {
+//		return miniC.get(tx, ty);
+//	}
+	
+	
+
+}

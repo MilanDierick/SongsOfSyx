@@ -1,0 +1,699 @@
+!Versions of the game are denoted 0.XX.YY. XX is the major version, and savegames are not compatible with other major versions. All major versions are available to check out in steam and saves are not deleted, so you can swap between them. YY - Minor versions are always savegame compatible and usually just small fixes.
+
+!2023-01-29 0.63.45
+Fixed bad performance on macs definately this time. Fixed potential minimap visuals. 
+Now going to work on the next version, and might be a bit unresponsive to bugs and suggestions, but will go through them again when the time comes.
+
+!2023-01-29 0.63.44
+Attempting to fix bad performance on macs, and broken minimap visuals.
+
+!2023-01-29 0.63.43
+Fix fix that broke saturday's gaming session. Sorry about that!
+
+!2023-01-28 0.63.42
+Minor fixes.
+
+!2023-01-26 0.63.41
+Updated Java for windows and mac.
+Bug fixes
+Updated translations
+
+!2023-01-26 0.63.40
+Bug fixes.
+Improved friendly fire
+
+!2023-01-25 0.63.39 - tourism
+NOTICE STEAM USERS! V63 is now on the default build. Your old V62 saves can not be loaded with this version. To continue on V62 saves, you need to select EA62 in properties -> betas. Apologies for the inconvenience.
+Ranged troops now have the ability to lob their projectiles (shoot in a higher arch) in order to evade obstacles in their trajectories.
+When commanding ranged troops, you get proper feedback to what's wrong with their line of fire.
+The underlying framework (GLFW) for the game has been updated. Might be that there are strange issues. If that's the case, please report them to me.
+An attempt to fix shuttering mouses on certain PCs.
+An in-game palette that lets you change colours of roads and structures for visuals.
+Climate and weather redone. Now with fully simulated cycles. Snow and ice added. Terrain has been redrawn and will respond to weather and wind. Map generation improved. Wild growing things adjusted and remade. One should now no longer be able to support maximum 100 people through harvesting.
+Buildings can be built next to deep water.
+Water now increases fertility around it. Irrigation is scrapped. 
+Sweet and salt water are now environments.
+Overlays have gotten some love.
+Minimap improved + flawless zooming in/out.
+Room panels and priority panels have been improved. Now possible to prevent employment by setting priorities to 0.
+Farms have been re-coded to make more sense. The coming harvest is the result of many factors, clearly listed.
+Blight and bountiful harvest events added. (+2 years playing) 25% chance per year
+Droughts events. (+4 years playing) 6% chance per year-
+Lots of effort put into the new sprite system for room. Making it more moddable.
+Homes now need a structure, the ugly walls are gone. Easier to copy and handle. Poor isolation leads to more furniture degrade.
+Copying items is easier.
+Unique sounds for all animals. sorry about the volume, WIP.
+Animals now have fixed spawning points. These replenish at a slow rate. Animals will stick to these points. Animals will attack people near them, except for hunters. Once you build near a spawning point, no more spawning will happen.
+Hunter room simplified. The rate is nerfed.
+People will not try to fetch corpses that are in dangerous zones, such as a animal spawn point.
+Corpses bleed.
+Sounds will play when fast forwarding.
+Room rates have been improved, now showing produced per day per room.
+Workload calculations improved.
+The use of walls when building rooms have been improved.
+3 new soundtracks
+Huge refactorings, making the game less error prone.
+Fishing events for improved/decreased fish output.
+New Housing panel panel with improved overlay and tools.
+Oddjobbers will find homes faster.
+Improved the top panel.
+Remade and improved bottom panel.
+Wiki improved + moved race info to new wiki and improved them a bit.
+Made openings of buildings a bit clearer.
+A light cycle toggle in the settings.
+Upgrades for all mines + small fixes
+Improved overlay for minables
+Difficulty settings for random game.
+New resource: Machinery. Used mostly to upgrade rooms.
+Added some visual help to room construction.
+Made roads go diagonal next to diagonal walls.
+Outdoors added as a building preference.
+Fixed Maintenance overlay
+Added a type swapper to room copying and saved blueprint placer.
+Industry recipes will revert if the recipe is re-locked.
+New script engine. Now possible to inject java code, and package them as mods. See pdf in installation directory of how to get started.
+3 scripts added
+Shape for rooms are now individual for each room, and it's possible to please everyone regarding squareness and roundness. 
+Refiners remade. Are now upgradable. Unlocked from start. Production lowered. Early survival tactics is to use grain + bakery.
+Accidents more rare, but more deadly.
+Workshops have been converted to the new sprite system. Visually improved. Has their own storage, same as refiner. Some have upgrades. They are more space efficient.
+New workshop added. Makes the machinery resource.
+New UI for individuals. Added a gimmic that generates biographies to each subject. Also added opinions as to what individuals want improved in the city. Each race can have their own template, and there are templates for scared, normal and confident subjects. Can be easily modded to add infinite flavour. If someone do, please let me know.
+Big refactoring with rooms. Room files now in folders. Modders, check out the new way of specifying rooms in other files.
+Improved the text rendering engines, taught it some new tricks, and better looking text.
+New thing - tourists. Tourists can come to see the marvels of your city. They're attracted by large scale industries that have a high work preference with the race of the tourist. Tourists will leave some cash and a review. You must build an inn to be able to accept tourists.
+Thanks to Victor Baker, who wrote a lot of tourist review texts. 
+University has gotten a face lift and is more space efficient.
+Upgrades for service rooms, although, I've only enabled it for lavatories so far. Lavatories got a facelift, with sanitary lids for the toilets.
+Added population to save game files.
+The throne can no longer be instantly moved, but must be constructed. Trapped people can still function and find jobs in their vicinity.
+Changed the trade controls a bit.
+Reworked exposure to work differently. Exposed people will seek services or shelter. In shelter they are still exposed, but at a lower rate. Prior to death, that can also go insane.
+Strikes added as an alternative to emigration and riots.
+Made titles be able to lock rooms (requested by modders).
+Made trees and other growth be able to grow randomly when fertility is increased by irrigation.
+Fixed buggy Workstations
+Added different sizes to wells, and an upgrade. And emitting of sweet water.
+Gave hearths the same treatment as above.
+Added fulfilment modifiers for all monuments, meaning you can get happiness from specific monuments per capita.
+Two new monuments. Flower beds and humidifier.
+New road: festival square
+New thing: Benches. Idle subjects will search out benches to sit on in a small radius. Useful for letting them absorb the environment.
+Law remake. More detailed and more options.
+All punishment types affect fulfilment differently for races. 
+Stocks added as a compliment to punishment. This shortens prison time by half.
+Guard post now come in different sizes. They now have a visible radius. The chance of arresting a criminal is based on distance to guard post. 
+Fullfillment from tourists.
+The enemy kills stat increases neuroticism and crime rate.
+Guard posts remade. Now work with a radius. The closer a crime is committed, the greater likelihood for catching them.
+More crime, and more penalty from it.
+Individual crime statistics.
+Micro and macro actions for your people. Free drinks, money handouts, day off work and arrest. Can be used to temporarily boost happiness.
+Ability to set punishment for prisoners manually + better ui for managing criminals.
+New growable resource 'Herbs'. Used in the ration maker. Will be used in cooking services for the nobility in later updates.
+Serial killer event
+Added stuff to the tutorial.
+Updated external libraries.
+Fixed broken steam achievements.
+
+!0.62.28
+!Features
+Many sounds have been professionally reworked by Megahammer studios.
+Visually made the openings of rooms look like doors / thin walls.
+Personal homes. Houses and chambers. Homes need resources depending on species and when provided they visually upgrade. Homes are furnished automatically by the inhabitants/servants. Homes can be configured to be allowed for different species. Sleep is no longer a need. People will go to their homes and sleep or do other stuff once their workshift has ended. Thus, services will mainly be used close to the home. People will interact with others around their homes. People will look for homes closet to their workplace with a max radius of 120 tiles. If they can't find a home, they will sleep out in the open. Unemployed people will look for homes closest to were they are. You can zone houses for unemployed people only. 
+Home assigner tools.
+New tech tree. Has been completely redone, streamlined and expanded. Each node now has the possibility of being leveled, so there are more choices for the player. 
+Low knowledge gives penalties instead of disabling techs, when below 80%. Regaining the knowledge removes the penalties and re-enables rooms.
+Climate no longer locks rooms, but can give negative and positive boosts.
+Boosts are now divided into multipliers and adders, enabling more interesting levelling-up mechanics.
+Indoctrination now gives bonuses, same as education.
+4 more soundtracks
+Subjects will now interact with one another, keep friends and enemies. They might fight. It is custom in Syx to just watch fighting people.
+Resthomes for the elderly, where retirees go (get employed) to have some fun remaining days.
+World camps. A camp is a building of some sort, that exist on the world map. Each camp contains a bunch of high-grade specimen, such as Cantors. If you own the region they're in, and fulfil their demands, they can join you, in which case you will get a certain amount of them over time. They immigrate like usual. You must also keep them happy like normal citizens.
+Immigration now possible at > 75% happiness.
+Rioting now no longer work randomly. You will get a chance to make the plebs happy before they start burning down the city.
+Citizens may emigrate when happiness < 70% && loyalty < 70%
+Slave uprisings no longer work randomly.
+Messages fixed up and can now be tailored to interrupt the game or not.
+Notifications fixed up. Added a homeless notification.
+New species: Argonosh. Thanks to superwutz on the discord, and Thosom Tom!
+World camps for the Argonosh.
+New temple and religion to the Argonosh queen.
+New animal: Batlticore crawler. Inspired by whomever made the maggot farm mod.
+Indoor pastures, also a suggestion from someone I forgot the name of.
+Now possible to build room directly in mountains.
+Now possible to select material when copying room.
+Upgradable rooms. Upgrades cost resources and upgrades sometimes need to be unlocked by a tech or title. Only laboratory for now, but more to come.
+Knowledge from education scrapped, but to make up for it:
+New room, the laboratory. Works like the old library, but doesn't need paper. Can be upgraded, 3 tiers.
+Library now boosts knowledge from laboratories. Each librarian can boost 1% of the laboratory knowledge. Needs paper unconditionally. Can be upgraded, 2 tiers.
+Ranged weapons now merged with ammunition and is only affected by ranged skill. Once the ammo is spent, it will replenished slowly. This is done for better modability, streamlining and less micro. The projectile fired is modified by the amount of ranged equipment worn, and by ranged skill. Accuracy and ranged power merged into "ranged skill".
+Roads can now be removed in caves.
+Warehouse UI remake.
+Saves fiddling. Remade where the game saves. It saves all saves in the same folder, and modded saves + different version saves will be in same place. You get feedback when trying to load a save that won't load, and why. You might want to free up some harddrive space before by deleting old saves. Go to local folder through the launcher -> saves. You can remove all folders there except for "saves" and "profile", as these are folders for the old save system. This will remove all saves prior to this version.   
+Increased combat experience gain.
+Decreased captives gained from battles.
+Name of ruler, settlement, and flag is saved in your profile.
+Oddjobbers will search smarter at higher populations. They will search a small radius, then increase it after awhile. Giving the closest ones a chance to get the closest jobs.
+Monuments now have a pedestal, they use the new sprite system.
+Insanity added. Subjects have a chance of going insane. Insane people will just walk around, use services, eat and act weird.
+Asylum added, to treat insane people. Curing them may take a few years.
+Health now a thing. Health determines how likely you'll die from a disease. Some work places can decrease health. Food rations improve health.
+Physician added. A room that subjects will visit for a checkup. Access improves health.
+Diseases added. Come in various forms and deadliness. Can occur from bad hygiene, decomposing corpses, or by someone entering your city. Spreads by touch. Infected subjects will be coloured. If subject falls seriously ill, they will lay down and eventually die. If a hospital is close, they will seek help.
+Once a subject has recovered from a disease, they are immune.
+(Quarantine will come next version)
+Hospital added. Can tend to infected, or injured subjects and have them recover to a greater extent. Needs fabric and opiates to function.
+Accident events. All rooms have a chance of causing an accident, in which case there will be an explosion and/or injured and dead people.
+!Balance
+The difficulty of the game now increases as you progress.  Expect more resistant from 200 on gradually increasing.  Furnishing is a must to succeed.  
+Completely redone tech tree with scaling bonus nodes.  Hints have been added to the tooltips.
+Administration is still extremely useful but has been balanced.  Administration power increases with throne level so it cannot be spammed as easily.
+Tools last significantly longer but have a lower multiplier.  Still definitely worthwhile even with minimal bonus in its tech.
+Many industries can be accessed earlier without advanced materials and alternate recipes.
+Food is an even more important part of the game.  Food days need to be shored up with rationmaking.
+Single species setups and multi species are now more consistent in difficulty.  Multi is slightly easier though.  This is based on Majority stat so you may need to bribe a minority to come in.  
+Garthimi are generally more useful now with fishing, balticrawler pastures, logistics carry capacity, and not as terrible mining fulfillment.
+Species are now more varied in needs, style, and skills.  Humans and Dondorians have a tougher intro than others.
+Advanced roads are unlocked and have more varied stats.  Be sure to use the "Convert road" tool to make upgrading easy.
+Reworked throne level perks, population requirements, and noble distribution.
+Citizens away in an army still count toward happiness needs.  This also saves you from having an instant riot when they return.
+Some things like food rations will now reward your more for the first extra point than later ones.  (Food, Clothing, Drink)..
+
+
+!Bugs & Fixes
+Made nurseries use the new sprite system. Changed them up a bit.
+Added service and work indicators to build menu.
+Fixed some rooms not returning resources when removed.
+Fixed lights from not being removed when refurnishing.
+Music shuffling is a bit less repetitive
+Fixed broken removal mechanics of statues in rows.
+Fixed and balanced throne levels
+Condensed and improved the fulfilment UI.
+Some fixes to the subject UI panel.
+All weirdness with recruitment fixed.
+Species have different blood color.
+Sorted entries in the race info panel.
+Scary portraits for corpses.
+New standardised requirement system, that allows for much more interesting requirements from e.g. titles.
+Fixed up the race info panel.
+You will have warnings about emigration and riots when they're approaching. 
+Increased light from torches.
+Subjects will use wells when hot.
+Rooms retain names when refurnished.
+Freed slaves and immigrants now do not dislike themselves.
+Maintenance now shouldn't spawn on inconvenient tiles.
+Place UI remembers what type of placement shape you use.
+Rebind key hotkey fixed.
+removed activation for import depots.
+Removed the close button for room construction so that you have to make a choice.
+Place fixed rooms now show their material cost for walls.
+Removed weird 1 tile coming out of janitors / Chambers.
+"Others" stat now only applies to the same class of subjects.
+Game will mute when unfocused.
+Removed duplicate import depot item.
+Copied Import and Export buildings copies resource as well.
+Fixed minimap zoom square
+Added next/prev buttons to room ui.
+Radius for export depot
+Fixed tooltip for placing pasture gates.
+New saves populate names with city name + index
+A picker for the harvest tool
+Canteen now properly consume coal.
+Farms can be placed on deposits
+Added a scroll through touching edge setting.
+Hopefully fixed instant trade weirdness.
+
+!Modding
+Tech is redone, so you need to change to the new file format.
+Housing can be modified for spieces. A housing file must be referred from a race file.
+New sprite mechanics that will slowly replace the old one. There's now a folder "game" where a lot of sprites are. The init files will reference to these sprites. It allows for more reusability, and simplicity when making new rooms, and separates spriting from scripting. The ambition is that most rooms will have their sprite sheets removed, and only reference the game sprites, but this is a work in progress.
+Added blood colour to a race's appearance.
+Added separate skelleton sprites, must be declared in appearance;
+Auto generated gore sprites, can be removed.
+Titles need to use a new requirement notation
+Have fun with the new camp mechanics
+Added an optional clause to race files to set certain stats on spawning.
+
+
+
+!0.61.29
+New pathfinder mechanics. Twice as fast as the old one. Allows for better performance, better subject pathing, and no more fuss about the throne not being connected. Tested on a 28k settlement, gives a solid x3 speed at laptop cpu. Next patch I'll try to speed it up with threading to maybe get x5-x6 speed at similar population, Theoretical pop cap at over 100k!
+Division pathing and formation improved. Now able to walk in narrow mazes better, and no more enemies darting for the throne. Performance also greatly increased. This is done in a different thread and has no effect of the settlement. 
+Cantor + Dondorians don't care about immigration.
+2 new soundtracks
+Fixed a bug with raids, when difficulty would increase even if you lose.
+Changed raid ransom amount to be in line with your population.
+Fixed resources from vanishing when refurnishing.
+Battlegear broken up into weapons and armour. The smithy can produce both. ***The tailor can produce armour out of pelts.
+Race properties now changed. All properties joined with general bonuses. Technologies can therefore change race properties.
+Tech tree revamped with some helpful tools.
+Bonus page revamped.
+Subject detail UI revamped. 
+Work proficiency removed.
+Education is now gained at the rate of subject's "Learning rate". Indoctrination is x5 faster. Education boosts increased. Knowledge gained is flatly based on education * 40.
+Fixed room degrade tooltip
+Fixed average workload meter for rooms.
+Bows added as resource & a bowyer workshop
+Arrow quiveres added + a fletcher workshop + new mechanics for equipping soldiers with ranged weapons.
+Archery range added
+Added a banner editor and banner to divisions
+Division UI overhaul
+Made army supplies modifiable.
+Battles make men gain experience.
+Health and morale added to world armies, based on supplies. Low health leads to desertion. Low morale to worse battle performance.
+Supplies now affect morale and health.
+Auto resolve mechanics refined.
+Changed up properties of species a bit.
+New fonts and new font system. UI adjusted to fit with new font.
+Easy-font option in settings.
+Modable text colors.
+Gatehouses
+Troops on walls. Staircase to access them.
+Doors are now removed.
+New invasion mechanics and a whole new AI for the enemy army, alias Ct. Bob.
+
+
+!MODDING
+All "BONUS" clauses changed. There is a lot more to choose from. It's all listed in _BOOSTABLE.txt in the technology folder.
+"Properties" clause now scrapped in race files. Instead you now define these things entirely in the BONUS clause.
+Equippables is moved to the resource folder. An equippable can now be defined as work/battle only. I suggest someone mods in pipes and tobacco as equippables for a fulfillment boost.
+
+
+Many rooms have metal scrapped from auxilaries and instead rely heavily on tools for production boost.
+
+!0.60.23
+Religion
+Entertainment 
+
+!0.59.1 - 0.59.26
+REGION POPULATION BUG FIXED. CAN LEAD TO A STEEP DROP IN REGIONAL PRODUCTION/KNOWLEDGE. I'll keep the previous version in steam beta EA59, in case you want to continue the save as it is, then update for your next game.
+Fixed region population issues. Hopefully population will stabilise for those with huge populations. If problems occur, save and reload should fix them.
+Fixed conscripts not saving
+Fixed CTD from battles at the edge of the map.
+Hopefully this is the last hotfix for version 59.
+Fixed some translation problems.
+Fixed some CTD when selecting mods.
+Fixed French language.
+Fixed crash when switching back to English.
+Fixed broken mod selection.
+Fixed emptying crates resources missing
+Fixed bug with nobles.
+Fixed so that patchnotes doesn't pop up every time.
+Fixed some broken settings.
+Fixed nasty bugs where caravans would deliver double, and reserve space in the warehouse
+Increased performance by 25-50%.
+Added multi language. Translations are gotten from crowin and inserted into the game.
+Made it so the game unpacks resources after a patch by itself. Will take some time, but put an end to steam interfering.
+Some minor fixes here and there.
+Added hard numbers to trade sliders.
+Fixed weird storage sprites.
+Fixed Janitor resource bugs. Not completely, since it will break saves, but much better.
+Changed the production rate tooltip.
+Rebalanced raids to occur more frequently in beginning, and more rare as you build up your garrison.
+Some university crashes. Should not happen again, let me know it it does please.
+Increased trade distance
+Stopped children starving with limit.
+Changed mining sound
+Fixed incomplete race info.
+Tree monuments can be walked under (moddable)
+Water table returns when removing jobs
+Tooltips adjustments for subject bars
+Auto immigration fix
+Fiddled with top menu
+Generating only available animals.
+V59 is now on the default steam branch. It is not save-game compatible. Steam users that wants to continue playing their saves must check out V58 manually from the steam client.
+Fixed some training shenanigans.
+Rebalanced happiness and immigration.
+Students now maintain their division.
+Added some custom map types from Victor Baker.
+Fixed blocked tiles that aren't supposed to be blocked
+Fixed trade running amok with increased production mods.
+Fixed the broken resource hack from 59.13
+Fixed wrong numbers of raids
+Isolated riots geographically
+Decreased rioter chance of breaking something. Improved their behavior a bit.
+Smoother diagonal pathing.
+Added a fix for broken resources < V59.12. Enable dev mode, be in the city view, click the cog upper-left. Type in "unreserve everything". Click it. This will cause a lot of confusion and the game will pause a lot. But save the game, and run it without developer mode again, should now work. If any piles aren't being picked up after this, please report it to me.
+Fixed broken warehouses. Industries not being fetched from might have to be refurnished.
+Problem is resources being reserved by warehouse workers, and never picked up or unreserved.
+Sorry!
+Fixed escaped convicts
+Fixed first immigration for other races.
+Fixed import slider visuals in the mini resources UI
+Fixed Import depots from not filling up.
+Attempted to make warehouse workers cycle through good that they fetch
+Made all logistics workers reserve more stuff when they are walking to a resource.
+Fixed broken multicarry.
+Increased efficiency of haulers
+All logistics bugs should be fixed. Broken rooms need to be reset through a refurnish/change resource
+Fixed the tutorial
+Fixed achievements
+Janitor hauling too much fix.
+Made children run indoors when exposed and recuperate. 
+Allowed children graveyard access
+Removed Auto employ from nurseries.
+Children give less meat :)
+Cannibalism stat fixed.
+Immigration and happiness adjusted.
+Fixed slave submission from not updating.
+Fixed copied doors from becoming solid walls.
+Possibly fixed auto saving crashes.
+Stopped all slaves from being sold.
+Fixed fulfillment hover tooltip.
+If anyone is having problems with the tutorial, opt out of the V59 beta, let steam update stuff, then opt in again.
+Fixed transports from breaking down.
+A few crash fixes
+Fixed constructing rooms from resetting when reconstructing them
+Wooden door copy FPS fix.
+Increased livestock spawning of hunters
+Education limits now saved
+Stopped room blueprint copier from filling in mountains.
+Added immigration tooltip, so you know what's up.
+Fixed used universities. To fix broken saves: deactivate all universities. Wait a few minutes. Save and load.
+Fixed hauler rotations.
+Some spelling errors
+Improved the seed thing on world generation
+saved room blueprints fixed. Sorry, had to remove all of your saved ones :(
+Fixed 3d speed button
+Previous consumption rate fix
+Refiners stop working fix.
+Added vegetables to the tutorial
+Removed child collisions
+Fixed immigration again
+Show what the region can do when picking world city.
+Reduced paper and food usage for children
+Absolute resource amount on import/export sliders
+Developer is still alive
+Fixed a bunch of reported crashes
+Fixed room placement UI in corners of map
+Fixed java issues
+Auto Immigrant fix
+Export level fixed. Green = export more
+Fixed edible jobs on zoomout
+Fixed previous production year UI
+Education bonus fixed
+Fixed blueprint names saving
+Fixed export meter thing
+Another CTD when looking at room lists.
+Fixed a crash related to caravans
+Crash fixes
+Fixed broken race init files
+Initial immigration problems fix
+Fixed education stat so that education for children is correctly displayed.
+Fixed dig into mountain crash. (You might want to restart if you want stone from the mountains).
+Admitting 0 immigrants CTD fix.
+Fixed stuck soldiers chasing enemies.
+
+!0.59.0
+Patch notes will automatically be shown when something new has been added to the game!
+Rebalance happiness in general. Should now be more stable, and immigration shouldn't ruin it.
+Rebalance a few technologies.
+Added more flavour to all species.
+Tech tree now allows unlocking multiple techs at once.
+Slave uprisings. Slaves no longer runs away. If they are unhappy enough they will rebel.
+Slaves can now be sold to the slaver
+Riots. When loyalty is low for subjects there is a chance for a riot. Can be put down with guards and soldiers.
+Law remade. Much easier at first and climbs with your population. Happiness is no longer such a big factor.
+Burials now count differently. If no deaths take place, value will be based on available grave spots.
+Production rate remake for all rooms. Adds intelligence as a possible factor and a lot of tweaks for better balance.
+Fixed correct training for your city divisions on the world map.
+Fixed library/admin paper bug, and made gaining tech/admin faster, while decaying at a lower speed.
+Warning icon on harvestable food when not ripe added.
+University room for education of adults
+New smart remove tool.
+Reconstructing rooms with different structure now works.
+Workflow of room construction made better. Now refurnish without prompt & builds over other jobs.
+When hovering a job/ something buildable, you'll be prompted to build jobs of the same type by hitting a hotkey.
+New translation opportunities through crowdin. The idea is that the game will ship with these translations automatically, no need for mods.
+New species, the Tilapi. Thrives in forests, and likes to eat people. Hates basically everyone. Good fighters and herders.
+New portraits for all races. Thanks to Bendi!
+Storage and logistics wiki entry
+Immigration can now be set to a absolute number.
+Launcher screen selection is now a bit clearer and simpler.
+Education added. Education + intelligence = production boosts and knowledge. Will decrease loyalty a bit. 
+Indoctrination as an option to education. Indoctrination only adds to submission regardless of education.
+School added. Can only be used by children. Will rapidly educate them.
+Changed so that wild growables spawn based on yield rate, and decreased regeneration of all of them.
+Added a multitude of hotkeys and new ways of assigning them.
+Path notes will automatically be shown when something new has been added!
+Children. Walks around and eats your food while contributing to nothing. Can also go to school.
+New procreation rooms that lets you make new citizens. Breeder for Cretonians, Nursery for men and Hatchery for Garthimis.
+Rooms on battle minimap fixed
+Nerfed hunter success by 50%
+Room refurnishing vanishing resources fix.
+Added addition useful info to the food days tooltip.
+Fixed disparaging enemy garrisons after battles
+Tweaked pathing a bit. More road usage, and smoother paths. 
+Hearths now used once a week, even if no one is cold.
+Fixed population decline in world regions.
+Remade room, work and priority panels.
+Made slaughtered animals into skeletons in pastures, so to stop the confusion.
+World generation now have moddable blueprints for the terrain. Random seed also added.
+Export depot remade into a static design, and has only one resource. Global settings for exporting in the UI
+Visual genders for certain species, with feminine and masculine names.
+Admin nerfed slightly. Harder to remain in control of regions. You need either an army stationed, or a big garrison.
+Admin room now unlocks at Cheiftain (500 people)
+Import depots have controls for global import level.
+Import depot has a visual resource
+Lavatory basins fixed
+Janitors do a better job at fetching needed resources
+New title system. Titles can be unlocked and then used with a new game. Unlocked titles persist between games and also hopefully versions.
+Savable room layouts that will also hopefully survive between versions.
+x200 speed added if you push the third speed key twice. 
+Some rooms leave the floor/road when deleted
+Steam achievements now triggered when you press the sync steam button.
+Trade resource counter fixed
+Bonuses in status panel sorted alphabetically
+Warehouse and export depot UI fixes
+Added tooltip for equipping resources with their wear-rate
+Improved the room creation UI
+Added UI for how much a race like other races in the race info panel
+Some needs now resets, such as drink. Will help that initial drink supplying.
+Improved canteen workers significantly and their usage as well.
+New room - transport. A cart pulled by animals that is loaded and then sent to a destination. Requires livestock to operate. Moves 200 items at a time.
+Hauler now come in different sizes.
+Made freed slaves immigrants, so you'll have some time before their expectations rise.
+Smarter Deliverymen
+All now have multi-carry capabilities. They'll carry up to 3 resources, and be a bit smarter about it.
+Refiners have common storage for output.
+Deliverymen has had their carry capacity nerfed a bit.
+Prolonged the day-length. This is to optimise things and make distances less important. Leisure time can be experienced as longer in early game though.
+New stat: riches. Based on the amount of credits you have per citizen.
+Military depots have setting how much they'll be filled.
+Trade interval halved, more frequent trades. Good deals for SoS. Trade reworked, should be better in general.
+Import depots has more storage.
+New penalty for exports. You'll be paid less at the beginning, but this penalty can be reduced by techs and levels.
+AI now receives tribute as to what makes sense, not a static amount for each, resulting in a more balanced market. 
+Spoils and tribute will go to the throne, if there is no import depot for the resource. Also imports that has had their import depots removed.
+measuring tool with right click.
+Deposits colored after density
+A new super copier tool
+Fixed keyboard issues
+Proximity instead of distance in services. And this has been nerfed, allowing you to reach 100%. 
+Service coverage radius increased by 50%
+Toggable overlay when building roads
+Some rooms have their settings copied when copying them. Worker limits and warehouse settings.
+Fixed mining output based on workers
+Added "Starfoth The Burgundy"'s Silk Rug's2 nobility mod to the main game.
+4 new soundtracks
+Info in main menu about starting race
+Expanded info when placing down first city
+MODDING
+Environments (awe, harmony) modifiable.
+Monuments/decorations made modifiable, and ordinary rooms can map to these.
+Added support for invalid keys for mods. Race init files can now have rooms that doesn't exist. Make sure you have debug on when modding to test that you aren't making mistakes.
+Remade the appearance block of subjects almost completely. Now allows for more modularity when rendering portraits. There is an example race you can have a look at in game folder that hopefully explains it. Not too difficult too convert from the old system. 
+Added a file-type "_IgnoreVanilla.txt". Place this anywhere in order to ignore all vanilla assets in the folder.
+Added new mod versioning. At the root of the mod folder, you must have a new folder VXX, where XX is the major version number of the game. So you can now support multiple versions.
+Sync steam button no longer hangs
+Removed tutorial + examples if mod does not have their own.
+Added support for more textures. Crazy content mods is no problem, and bigger fonts possible, such as Asian ones. (you specify texture size in mod _info.txt as TEXTURE_CACHE_SIZE Can be 4096, 8192, 16384)
+
+
+
+!0.58.0
+Entirely new gameplay mechanics for the overworld.
+space usage for sprites severely reduced, making it possible for more mods.
+UI for goods remade. Now merged with trade.
+Inflation added. 10% of credits per year will be lost. Sorry.
+Treasury UI remade
+New Happiness modifiers and fixed ones.
+Improved Pastures ability to deal with bad daily work.
+Made Lavatories modable
+Graveyards outside only
+Free slaves option
+Added some load information to services and heatmaps for access.
+Added dynamic yield for mines based on assigned workers.
+Added some kind of growth inside mountains, made mountain generation a bit better
+Races now have terrain/biome preference in addition to climate. MODDERS: added a TERRAIN clause for animals. Added POPULATION clause to races.
+Fixed a lot of streaming issues, like discord. Just uncheck "debug" in the launcher, if it complains when you exit the game.
+2 new races.
+3 new music tracks
+Price for leather fixed through a moddable thing in resource init files.
+Fixed CTD regarding monuments and smaller rooms.
+Added forums and a wiki to the webpage (well, community did really).
+Middle mouse button now grabs map.
+Knowledge cap now limitless
+Mines now produce according to employees and deposits, you can now build over bad deposits.
+Administration room, works as library to make admin points, used to upgrade regions.
+Rations and rationmaker
+Autosave & quicksave new UI
+Changed apartments to only need work every 4th use.
+Workers highlighted on hover room
+Replaced the "++" with bars on species info.
+
+!0.57.0
+Added new fonts and increased brightness of text.
+Build a spell checker that checks for spelling/typos whenever I build the game.
+Room production overhaul. Enables us to specify in-rates, so that bread can cost 0.5 wood and 1 grain for instance.
+Added a "do what I did last" Button and hotkey for the build menu.
+Clarified and fixed squareness a bit.
+Clay exavatable resource + claypit
+Ability to mod occurrence of exavatable resource based on terrain.
+Happiness screen overhauled.
+Info on city selection refined.
+Trade adjusted and balanced.
+Potter Workshop and Pottery. Coal + clay = pottery
+Alcohol resource and brewery. Wood+pottery+grain/fruit = alcohol
+Eatery room. Very basic food distribution place. Replaces kitchen.
+Canteen room. Now works as a kitchen with tables.
+Tarven is now for drinks only.
+Alcohol limit to dictate. Adds happiness, but can make subjects drunk an unproductive if set too high.
+Changed so that all rooms that needed wood to run now requires coal instead at a lower rate.
+AI faction trade and production overhauled. Still needs some work, but better now.
+Well room, a simple bath.
+Jewelry and jewelers. Jewelry can be worn.
+Proper slaves. Can be gained through beating Krull, or as a form of punishment. Slaves have a collective happiness that is still based on the racial composition of all your slaves. You set work priorities for slaves, same as citizens. Slaves have simpler demands in general. They don't have expectations, but the more slaves you have per citizen, the happier you must make them. Slaves can run away if too unhappy. Will revolt in the future.
+Slaver room for punishing criminals and gain slaves.
+New slave UI screen.
+Unique slave happiness based on the number of citizens compared to slaves.
+Lots of rebalancing around happiness and a few stats added/removed.
+Touched up some icons.
+Slaves will run away, while citizens will commit more crimes and not emigrate if unhappy.
+Slaver event, lets you buy slaves.
+Notifications reworked, some new added.
+Death statistics and death causes added.
+New grave alternative - Crypt
+Cannibal room that butchers corpses for resources.
+Mass grave for corpses.
+Hover info for room copier.
+Room category UI remade.
+industry storage visible on hover.
+mines/woodcutter proper errors.
+Guard post placed inside fixed.
+Forgetting techs now disables all dependent techs.
+Horizontal scrolling of tech tree with ctrl + mousewheel
+Notification when nobles die.
+
+!0.56.0
+Hauler room added. Can be placed for free on cleared ground and will employ haulers, that will fetch resources to the room.
+Proper Woodcutter room added. Now fully renewable and with fixed output, same as other industries.
+Much easier to reach 0% squareness.
+Logistics mechanics overhauled, added a "empty to" mechanics which lets you empty resources to specific warehouses. 
+New Janitor room with maintenance now separated from construction. Only janitors can do maintenance. Janitors need construction materials in the vicinity, or they will become less effective.
+Auto employment for some rooms, which will make the AI fire/hire 1 subject per day based on workload. Workload calculations improved.
+Normal speed triggers when there is a message
+Immigrant value now decreases more slow, allowing you to fulfil the needs of new immigrants. 
+Onx pastures for cold and temperate climates.
+Hotkey for getting to the throne/capitol.
+Status concept. New profile screen.
+Level (title). You now increase your level according to your population, which unlocks bonuses and rooms. The throne visually upgrades with these levels.
+Faction visuals. Change faction name and colors while playing.
+Faction banners. Randomized banners for all faction and a banner editor for the player.
+Added on "available services" tooltip. How many are used and how many that needs work.
+Fixed various crashes from streaming. Requires you to uncheck "debug" in the launcher.
+Remade light engine and prettier fires/candles
+Recoloured ore
+Huge AI refactoring. Not that anyone cares, but it allows for faster AI progress.
+Criminals. Come in three flavours: thieves, vandalisers, streakers, and murderers. Each race has a property on their chance to become criminals. The amount of criminals spawned depends of law and happiness.
+New guard post room. Guards will catch criminals in their vicinity, or if they happen to stumble into one on their patrols. Guard posts also deter crime in their vicinity.
+Prison. Employs guards that bring food and empties latrines of the cells. Criminals will go here after being caught, if your policies are set up that way. Prisoners will stay there for a number of years before being let out and become citizens again (average 6 years).  
+Game will now save to "new_city" before you place your throne, allowing you to restart at any time by loading it.
+Scaffolds room. Employs executioners. Prisoners will go here to be executed according to your policies.
+Courts. Prisoners will go here before going to either prisons or scaffolds. Improves justice. Can also instantly turn some prisoners back to friendly subjects.
+Added a width/height restriction to rooms.
+Made so that the tunnelling bonus actually works. Dondorians tunnel into mountains twice as fast.
+Rearranged resources categories a bit.
+Law. Law is gained by apprehending criminals, having courts for them as well as Prisons and scaffolds. Law makes your citizens happy and deters the spawning of criminals.
+New algorithm for determining build order when constructing massive walls now enables you to build as thick a walls as you'd like without people getting stuck.
+The above also holds true when building rooms with inner walls.
+Added demography to understand retirement better. Also made it more clear that retired people doesn't work.
+Returned rock ground under mountains that had disappeared.
+Moved key settings to in-game menu.
+Touched up the happiness screen in an effort to make it more understandable.
+New tech tree with unlockable buildings.
+Made room construction render above terrain.
+Decreased snoring sound.
+Deleting room blueprint no longer removes roads beneath.
+New employment mechanics with new priority system and panels. AI will now distribute workforce evenly.
+A bit more UI info about service rooms.   
+New trading mechanics for stabler trade and prices.
+When Krull dies, his son will take up his arms and continue raiding you.
+optional resources shown as optional on hover when build.
+Harvest jobs can be placed, but only performed when ripe.
+ 
+!0.55.0
+Sithilion Ore that can be mined. Very rare and at a slow rate.
+Happiness modifier based on resource stored per citizen (modable in race init files). Dondorians like Sithilion ore.
+Stockpile crates size increased from 64 to 255.
+Stockpiles have adjustable radius for their workers.
+Smaller radius for employed subjects that wants to give a hand with odd jobs like hauling, construction or maintenance. 
+Bread resource + Bakery industry. Grain is no longer edible, but must be processed into bread. The industry only needs grain to operate.
+Proper hunting rooms. Very effective in the beginning to feet your subjects. Has an adjustable radius that can cover the whole map. Wild game will be exterminated quickly though if overused.
+Proper fisheries. You now place a fishery room on top of shallow water. Expand a bit on land too to be able to place storage and auxiliary items. Fish stock is static and is highlighted when placing the room. Green is best. Red is hardly worth placing a fishery on top. 
+When placing your throne at the beginning of the game you have the ability to regenerate (button below "place start"). While the general layout will be the same and dirived from the world tiles you picked, minerals, game, and fish stock will be randomly generated once more.
+Tilling period for farms. No longer will you get an army of workers after harvest, the farmers must remain an "till" the earth until they can sow in spring. Tilling increases the output of next harvest.
+Manual food usage in kitchen. You can now check which raw ingredients to use. Can come in handy if you're saving up some of them, or using them different locally (save the meat for the nobility district)
+Manual usage of specific raw materials in workshops. Now only applies to tailors in practise that can use either pelts or fabric.
+Rates added to industries. The rate is an estimate of the amount of produce per worker per day.
+All industries internal storage reduced and will stop producing if these are full. should prevent carpenter from using up all the wood.
+Tiny saves < 1MB. No need to zip anymore! Things now saved better and faster.
+Fields of minable resources are now much bigger, while having a lower yield. they are also infinite and clearly visible if you right click. they can also generate inside mountains, or under shallow water.
+Room placement undV55 is now ready to be checked out as a beta. enjoy!o better.
+Ability to change roof of room when reconstructing it.
+Ability to reconstruct rooms under construction. (Just click them).
+Livestock resource replaces the damned eggs (eggs now a food) and pastures no longer needs them in the construction process. Instead the herders will grab a livestock and haul it into the pasture where it transforms into cattle. Pastures produce livestock at a low rate. Different type pastures are available in different climates and the animals produce different kinds of resources at different rates (meat, pelt, cotton, eggs). Hunters sometimes produce a livestock resource.
+Animals also spawned according to climate and have different resources when hunted.
+Minimap has been a bit revamped with better and more consistent colors and functions.
+Construction panel has been condensed.
+New setting in the launcher allows you to pick both width and height of a windowed window. Should now work well with ultra wide-screeners. 
+Service rooms have a reachability map on hover that shows you the area where subjects can reach it. "Distance" also added as a modifier to service happiness. You can never max it out, but you can decrease it by placing services closer to where they're needed.
+Ability to pick multiple mods. The first chosen mod will have residence over the second and so forth.
+3 more soundtracks. I advise you turn the music volume back up.
+keyboard rework. Ability to assign more keys using ctrl/alt as a modulator. Added keys for saving and zooming. More keys to come. Open to suggestions.
+All rooms and their production now reflected on the world map. What this means is that the AI is playing by the same rules as you are when building your city in terms of manpower and production rates.
+Trade fixed a bit. You will now get special treatment in the algorithms, making sure you're the first who gets to export/import on the world scene, leading to massive trades. 
+Baths are now made modable, meaning they are dynamically loaded. So you can add as many variations of a bath as you want and define how it affects happiness.
+Clarified service access happiness a bit. I grouped each "group" (food & sleep)
+Immigrants will now walk to the throne and kiss it.
+Happiness and immigration completely reworked. We now have "expectations" which will increase as your population grows. It affects total population as well as population per species.
+New, rare race added (Cantors). Giants not really good at anything else but fighting. Very picky and demanding.
+Maintenance and upkeep reworked. Should be a higher rate, you now need to pay attention to it. There are settings for road and room maintenance in the room panel.
+More resource expenditure UI. Added maintenance, construction and some other resource usage statistics.
+Temperature according to climate and season. Exposure added to subjects. they have a chance to die from exposure. Exposure can be mitigated by wearing clothes and using hearths /skinnydipping. There is also snow in cold climates.
+Walls now count towards building preference.
+Squareness thing added for room construction. Affects happiness. Species can have a thing for organic looking cities or square ones.
+Isolation added to rooms based on walls surrounding it. Affects maintenance needed greatly.
+Room cost and upkeep is increased by building big rooms. You now need supportive pillars or walls inside the rooms to avoid this extra cost. 
+Efficiency/cosiness reworked. Based on actual stations vs knick-knacks/auxiliaries 
+Monument Trees now emit harmony. awe, harmony and dread reworked.
+Noise. Noisy rooms disturb subjects. Noise travels through air, but is dampened by walls.
+Paper and papermaker, primarely for libraries that now needs paper, else they'll work at 25% speed.
+Fixed game zooming, should now zoom in and out without disorientation.
+Krull wins if his men reaches the throne.
+Species work priorities draggable.
+Fart sounds reduced.
+Re-added sounds to work rooms
+Service usage number fixed
+New localization method ensuring swift translation.
+Removed coal usage in weaver, reduced efficiency
+Launcher wind sound lowered.
+Faction colors mixup fix.
+CTD when invasion
+CTD when dragging unit cards in dev mode
+CTD when opening room list
+Fixed broken kitchens. No more free food.
+Food preference fixed.
+CTD when deleting room from panel

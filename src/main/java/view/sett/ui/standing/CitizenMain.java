@@ -1,0 +1,506 @@
+package view.sett.ui.standing;
+
+import game.GAME;
+import game.time.TIME;
+import init.race.Race;
+import init.sprite.ICON;
+import init.sprite.SPRITES;
+import init.sprite.UI.UI;
+import settlement.entity.humanoid.HCLASS;
+import settlement.stats.STAT;
+import settlement.stats.STATS;
+import settlement.stats.StatsMultipliers.StatMultiplier;
+import settlement.stats.standing.STANDINGS;
+import settlement.stats.standing.StandingCitizen;
+import settlement.stats.standing.StandingCitizen.CitizenThing;
+import snake2d.SPRITE_RENDERER;
+import snake2d.util.color.ColorImp;
+import snake2d.util.datatypes.COORDINATE;
+import snake2d.util.datatypes.DIR;
+import snake2d.util.gui.GUI_BOX;
+import snake2d.util.gui.GuiSection;
+import snake2d.util.gui.renderable.RENDEROBJ;
+import snake2d.util.misc.CLAMP;
+import snake2d.util.sets.ArrayList;
+import snake2d.util.sprite.SPRITE;
+import util.colors.GCOLOR;
+import util.data.GETTER;
+import util.data.INT;
+import util.dic.DicMisc;
+import util.gui.misc.*;
+import util.gui.table.GScrollRows;
+import util.gui.table.GStaples;
+import util.info.GFORMAT;
+import view.main.VIEW;
+import view.sett.ui.standing.Cats.Cat;
+import view.sett.ui.standing.decree.UIDecreeButt;
+
+final class CitizenMain extends GuiSection {
+
+	static Race current = GAME.player().race();
+	static int width = 220;
+	private final INT.IntImp hov = new INT.IntImp();
+
+	public CitizenMain(int HEIGHT, Cats cats) {
+
+		add(infoButt(cats));
+		addRelBody(8, DIR.S, mainHappiness(cats, hov));
+		
+		ArrayList<RENDEROBJ> rens = new ArrayList<>(STATS.COLLECTIONS().size());
+		
+		for (Cat c : cats.all) {
+			rens.add(new CatButt(cats, c, HCLASS.CITIZEN, hov));
+		}
+		
+		
+		GScrollRows r = new GScrollRows(rens, HEIGHT -body().height()-4, 0);
+		add(r.view(), body().x1(), body().y2()+4);
+	}
+	
+	@Override
+	public void render(SPRITE_RENDERER r, float ds) {
+		super.render(r, ds);
+		hov.set(-1);
+	}
+
+	private static RENDEROBJ infoButt(Cats cats) {
+		
+		GuiSection ss = new GuiSection();
+		
+		GButt.ButtPanel s = new GButt.ButtPanel(SPRITES.icons().m.questionmark) {
+			@Override
+			protected void clickA() {
+				if (current != null)
+					VIEW.inters().wiki.showRace(current);
+			};
+			
+			
+
+			@Override
+			protected void renAction() {
+				visableSet(current != null);
+			}
+		};
+		s.body.incrW(16);
+		ss.add(s);
+		
+		{
+			MenuProp pp = new MenuProp(HCLASS.CITIZEN);
+			GButt.ButtPanel sss = new GButt.ButtPanel(DicMisc.¤¤Properites) {
+				@Override
+				protected void clickA() {
+					VIEW.s().panels.addDontRemove(VIEW.s().ui.standing, pp);
+				}
+				@Override
+				protected void renAction() {
+					selectedSet(VIEW.s().panels.added(pp));
+				}
+			};
+			sss.body.incrW(16);
+			ss.addRightC(2, sss);
+		}
+		
+		{
+
+			GETTER<Race> g = new GETTER<Race>() {
+
+				@Override
+				public Race get() {
+					return current;
+				}
+				
+			};
+			GButt.ButtPanel sss = new UIDecreeButt(HCLASS.CITIZEN, g);
+			ss.addRightC(2, sss);
+		}
+		
+		ss.addRelBody(8, DIR.N, new GStat() {
+			
+			@Override
+			public void update(GText text) {
+				text.setFont(UI.FONT().H2);
+				text.lablifySub();
+				text.add(current == null ? DicMisc.¤¤All : current.info.names);
+			}
+		}.r(DIR.N));
+		
+		return ss;
+	}
+
+	private static RENDEROBJ mainHappiness(Cats cats, INT.IntImp hov) {
+		GuiSection s = new GuiSection();
+		StandingCitizen h = STANDINGS.CITIZEN();
+
+		{
+			GuiSection ss = new GuiSection() {
+				@Override
+				public void hoverInfoGet(GUI_BOX text) {
+					super.hoverInfoGet(text);
+					if (!text.emptyIs())
+						return;
+					
+					GBox b = (GBox) text;
+					b.title(h.info().name);
+					b.text(h.info().desc);
+					b.NL(8);
+					
+					b.textLL(DicMisc.¤¤Current);
+					b.add(GFORMAT.perc(b.text(), h.main.getD(current)));
+					b.add(SPRITES.icons().s.arrow_right);
+
+					b.textLL(DicMisc.¤¤Target);
+					b.tab(6);
+					b.add(GFORMAT.perc(b.text(), h.mainTarget.getD(current)));
+					b.NL(8);
+					
+					{
+						b.textLL(h.happiness.info().name);
+						b.tab(6);
+						b.add(GFORMAT.f1(b.text(), h.happiness.getD(current)));
+						b.NL();
+						b.text(h.happiness.info().desc);
+						b.NL(4);
+					}
+					
+					for (CitizenThing t : h.factors){
+						b.textLL(t.info().name);
+						b.tab(6);
+						b.add(GFORMAT.f1(b.text(), t.getD(current)));
+						b.NL();
+						b.text(t.info().desc);
+						b.NL(4);
+						
+						
+					}
+					b.NL(8);
+					
+					
+				}
+			};
+			ss.add(new GHeader(h.info().name));
+			ss.addRightCAbs(124, new GStat() {
+
+				@Override
+				public void update(GText text) {
+					GFORMAT.perc(text, h.main.getD(current));
+				}
+			});
+			ss.addRightC(32, new RENDEROBJ.RenderImp(ICON.MEDIUM.SIZE) {
+
+				@Override
+				public void render(SPRITE_RENDERER r, float ds) {
+					double now = h.main.getD(current);
+					double t = h.mainTarget.getD(current);
+					int am = (int) CLAMP.d(Math.abs(now - t) * 10, 0, 1);
+					SPRITE a = SPRITES.icons().m.arrow_right;
+					GCOLOR.UI().goodFlash().bind();
+					if (now > t) {
+						GCOLOR.UI().badFlash().bind();
+						a = SPRITES.icons().m.arrow_left;
+					}
+					for (int i = 0; i < am; i++) {
+						a.render(r, body().x1() + i * ICON.MEDIUM.SIZE, body().y1());
+					}
+				}
+			});
+
+			RENDEROBJ r = new RENDEROBJ.RenderImp(width, 24) {
+
+				@Override
+				public void render(SPRITE_RENDERER r, float ds) {
+					double now = h.main.getD(current);
+					double t = h.mainTarget.getD(current);
+					GMeter.renderDelta(r, now, t, body);
+				}
+			};
+
+			ss.add(r, 0, ss.body().y2()+4);
+			
+			GStaples st = new GStaples(STATS.DAYS_SAVED) {
+
+				@Override
+				protected void render(SPRITE_RENDERER r, float ds, boolean isHovered) {
+
+					isHovered = true;
+					setHovered(hov.get());
+					super.render(r, ds, isHovered);
+				}
+
+				@Override
+				protected void hover(GBox box, int stapleI) {
+					box.title(h.info().name);
+					int fromZero = STATS.DAYS_SAVED - stapleI - 1;
+					box.add(box.text().lablify().add(-fromZero).s().add(TIME.days().cycleName()));
+					box.NL();
+					
+					box.textLL(DicMisc.¤¤Current);
+					box.add(GFORMAT.perc(box.text(), h.main.getD(current, fromZero)));
+					box.add(SPRITES.icons().s.arrow_right);
+					box.textLL(DicMisc.¤¤Target);
+					box.tab(6);
+					box.add(GFORMAT.perc(box.text(), h.mainTarget.getD(current, fromZero)));
+					box.NL(8);
+					
+					{
+						box.textLL(h.happiness.info().name);
+						box.tab(6);
+						box.add(GFORMAT.f1(box.text(), h.happiness.getD(current, fromZero)));
+						box.NL();
+						
+					}
+					
+					for (CitizenThing t : h.factors){
+						box.textLL(t.info().name);
+						box.tab(6);
+						box.add(GFORMAT.f1(box.text(), t.getD(current, fromZero)));
+						box.NL();
+						
+						
+					}
+					
+					
+				}
+
+				@Override
+				public boolean hover(COORDINATE mCoo) {
+					if (super.hover(mCoo)) {
+						hov.set(hoverI());
+						return true;
+					}
+					return false;
+				}
+				
+				@Override
+				protected double getValue(int stapleI) {
+					int fromZero = STATS.DAYS_SAVED - stapleI - 1;
+					return h.main.getD(current, fromZero);
+				}
+
+				@Override
+				protected void setColor(ColorImp c, int stapleI, double value) {
+					c.interpolate(GCOLOR.UI().BAD.hovered, GCOLOR.UI().GOOD2.hovered, value);
+				}
+			};
+			st.normalize(false);
+			st.body().setWidth(7*STATS.DAYS_SAVED);
+			st.body().setHeight(64);
+			st.body().centerY(ss);
+			st.body().moveX1(width+8);
+			ss.add(st);
+
+			s.addDown(2, ss);
+
+
+		}
+		
+		
+		{
+			GuiSection ss = new GuiSection() {
+				@Override
+				public void hoverInfoGet(GUI_BOX text) {
+					super.hoverInfoGet(text);
+					if (!text.emptyIs())
+						return;
+					
+					GBox b = (GBox) text;
+					b.title(h.happiness.info().name);
+					b.text(h.happiness.info().desc);
+					b.NL(8);
+					
+					b.textLL(DicMisc.¤¤Current);
+					b.tab(7);
+					b.add(GFORMAT.perc(b.text(), h.happiness.getD(current)));
+					b.NL(8);
+					
+					
+					
+					b.textL(h.fullfillment.info().name);
+					b.tab(7);
+					b.add(GFORMAT.percBig(b.text(), h.fullfillment.getD(current)));
+					b.NL();
+					b.text(h.fullfillment.info().desc);
+					b.NL(8);
+					b.NL();
+					b.textL(h.expectation.info().name);
+					b.tab(7);
+					b.add(GFORMAT.percBig(b.text(), h.expectation.getD(current)));
+					b.NL();
+					b.text(h.expectation.info().desc);
+					b.NL(8);
+					
+					UIDecreeButt.hover(b, HCLASS.CITIZEN, current);
+					
+					
+				}
+			};
+			ss.add(new GHeader(h.happiness.info().name));
+			ss.addRightCAbs(124, new GStat() {
+
+				@Override
+				public void update(GText text) {
+					GFORMAT.perc(text, h.happiness.getD(current));
+				}
+			});
+
+			RENDEROBJ r = new RENDEROBJ.RenderImp(width, 24) {
+
+				@Override
+				public void render(SPRITE_RENDERER r, float ds) {
+					double now = h.happiness.getD(current);
+					GMeter.render(r, GMeter.C_REDGREEN, now, body);
+
+				}
+			};
+			ss.add(r, 0, ss.body().y2()+4);
+
+			GStaples st = new GStaples(STATS.DAYS_SAVED) {
+
+				@Override
+				protected void render(SPRITE_RENDERER r, float ds, boolean isHovered) {
+
+					isHovered = true;
+					setHovered(hov.get());
+					super.render(r, ds, isHovered);
+				}
+
+				@Override
+				protected void hover(GBox box, int stapleI) {
+					int fromZero = STATS.DAYS_SAVED - stapleI - 1;
+					box.add(box.text().lablify().add(-fromZero).s().add(TIME.days().cycleName()));
+					box.NL();
+					
+					box.textLL(h.happiness.info().name);
+					box.tab(7);
+					box.add(GFORMAT.perc(box.text(), h.happiness.getD(current, fromZero)));
+					
+					box.NL();
+					for (StatMultiplier m : STATS.MULTIPLIERS().get(HCLASS.CITIZEN)) {
+						box.tab(1);
+						box.textL(m.name);
+						box.tab(7);
+						box.add(GFORMAT.f1(box.text(), m.multiplier(HCLASS.CITIZEN, current, fromZero)));
+						double d1 = m.multiplier(HCLASS.CITIZEN, current, fromZero);
+						double d2 = d1;
+						if (stapleI > 0)
+							d2 = m.multiplier(HCLASS.CITIZEN, current, fromZero+1);
+						if (Math.abs(d1 -d2) > 0.001) {
+							box.tab(9);
+							box.add(GFORMAT.f0(box.text(), d1-d2));
+							box.NL();
+						}
+						box.NL();
+					}
+					
+					box.NL(8);
+					
+					box.textLL(h.fullfillment.info().name);
+					box.tab(7);
+					box.add(GFORMAT.percBig(box.text(), h.fullfillment.getD(current, fromZero)));
+					box.NL();
+					for (Cat ca : cats.all) {
+						int v1 = (int)(100*CatButt.Staples.value(stapleI, ca.cs, HCLASS.CITIZEN));
+						int v2 = v1;
+						if (stapleI > 0)
+							v2 = (int)(100*CatButt.Staples.value(stapleI-1, ca.cs, HCLASS.CITIZEN));
+						if (v1 != v2) {
+							box.tab(1);
+							box.textL(ca.cs[0].info.name);
+							box.tab(7);
+							double d = (v1-v2)/100.0;
+							box.add(GFORMAT.f0(box.text(), d));
+							box.NL();
+						}
+					}
+					box.NL(16);
+					
+					
+					box.textLL(h.expectation.info().name);
+					box.tab(7);
+					box.add(GFORMAT.percBig(box.text(), h.expectation.getD(current, fromZero)));
+					if (fromZero < STATS.DAYS_SAVED-1) {
+						box.NL();
+						double d = h.expectation.getD(current, fromZero);
+						double d2 = h.expectation.getD(current, fromZero+1);
+						box.tab(7);
+						double v = d/d2;
+						if (v < 1) {
+							box.add(GFORMAT.percInc(box.text(), (1-v)));
+						}else if (v > 1) {
+							box.add(GFORMAT.percInc(box.text(), -(v-1)));
+						}
+					}
+					
+					box.NL(8);
+					
+
+					
+				}
+
+				@Override
+				public boolean hover(COORDINATE mCoo) {
+					if (super.hover(mCoo)) {
+						hov.set(hoverI());
+						return true;
+					}
+					return false;
+				}
+				
+				@Override
+				protected double getValue(int stapleI) {
+					int fromZero = STATS.DAYS_SAVED - stapleI - 1;
+					return h.happiness.getD(current, fromZero);
+				}
+
+				@Override
+				protected void setColor(ColorImp c, int stapleI, double value) {
+					c.interpolate(GCOLOR.UI().BAD.hovered, GCOLOR.UI().GOOD2.hovered, value);
+				}
+			};
+			st.normalize(false);
+			st.body().setWidth(7*STATS.DAYS_SAVED);
+			st.body().setHeight(64);
+			st.body().centerY(ss);
+			st.body().moveX1(width+8);
+			ss.add(st);
+
+			s.addDown(2, ss);
+
+		}
+
+		{
+			GuiSection ss = new GuiSection();
+			ss.add(new GHeader(h.fullfillment.info().name));
+			ss.hoverTitleSet(h.fullfillment.info().name).hoverInfoSet(h.fullfillment.info().desc);
+			ss.addRightC(16, new GStat() {
+				
+				@Override
+				public void update(GText text) {
+					double c = 0;
+					double m = 0;
+					for (STAT s : STATS.all()) {
+						c += s.standing().get(HCLASS.CITIZEN, CitizenMain.current);
+						m += s.standing().max(HCLASS.CITIZEN, CitizenMain.current) - s.standing().getDismiss(HCLASS.CITIZEN, CitizenMain.current);
+					}
+					GFORMAT.dofk(text, c, m);
+				}
+			});
+			
+			ss.addRightC(80, SPRITES.icons().m.arrow_right);
+			
+			ss.addRightC(4, new GStat() {
+				
+				@Override
+				public void update(GText text) {
+					GFORMAT.percBig(text, h.fullfillment.getD(current, 0));
+				}
+			});
+			
+			s.addRelBody(8, DIR.S, ss);
+		}
+		
+
+
+		return s;
+	}
+
+}
