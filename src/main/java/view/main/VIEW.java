@@ -48,7 +48,7 @@ public class VIEW extends CORE_STATE{
 	private final Interrupters inters;
 	private boolean hideUI = false;
 	private static double renderSecond;
-	private final SyxInterer rpc = new SyxInterer();
+//	private final SyxInterer rpc = new SyxInterer();
 	
 	public VIEW(){
 		
@@ -205,7 +205,7 @@ public class VIEW extends CORE_STATE{
 		}
 		
 		GAME.update(ds, slowDown);
-		rpc.update();
+//		rpc.update();
 	}
 	
 	@Override

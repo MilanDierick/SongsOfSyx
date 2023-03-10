@@ -5,8 +5,8 @@ import init.C;
 import init.D;
 import init.settings.S;
 import init.sprite.UI.UI;
-import integrations.INTEGRATIONS;
-import integrations.INTER_RPC;
+//import integrations.INTEGRATIONS;
+//import integrations.INTER_RPC;
 import snake2d.*;
 import snake2d.CORE.GlJob;
 import snake2d.KeyBoard.KeyEvent;
@@ -45,7 +45,7 @@ public class Menu extends CORE_STATE{
 	private static boolean hasIntro = true;
 	private float fadeLight = 0;
 	
-	private final RPC rpc = new RPC();
+//	private final RPC rpc = new RPC();
 	
 	private final CharSequence ¤¤loading = "¤loading...";
 	
@@ -129,7 +129,7 @@ public class Menu extends CORE_STATE{
 	@Override
 	public void update(float ds, double slow) {
 		hover(CORE.getInput().getMouse().getCoo(), false);
-		INTEGRATIONS.updateRPC(rpc);
+//		INTEGRATIONS.updateRPC(rpc);
 		if (hasLogo) {
 			hasLogo = logo.update(ds);
 			return;
@@ -256,22 +256,22 @@ public class Menu extends CORE_STATE{
 		
 	}
 	
-	private final static class RPC implements INTER_RPC{
-
-		private final String title = "Exploring the menu";
-		private final String[] details = new String[0];
-		
-		@Override
-		public String rpcTitle() {
-			return title;
-		}
-
-		@Override
-		public String[] rpcDetails() {
-			return details;
-		}
-		
-	}
+//	private final static class RPC implements INTER_RPC{
+//
+//		private final String title = "Exploring the menu";
+//		private final String[] details = new String[0];
+//
+//		@Override
+//		public String rpcTitle() {
+//			return title;
+//		}
+//
+//		@Override
+//		public String[] rpcDetails() {
+//			return details;
+//		}
+//
+//	}
 	
 	private final SPRITE_RENDERER rr = new SPRITE_RENDERER() {
 		
