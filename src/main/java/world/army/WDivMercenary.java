@@ -4,7 +4,7 @@ import java.io.IOException;
 
 import game.faction.FACTIONS;
 import game.faction.Faction;
-import init.RES;
+import init.config.Config;
 import init.race.RACES;
 import init.race.Race;
 import settlement.army.DivisionBanners.DivisionBanner;
@@ -62,7 +62,9 @@ final class WDivMercenary implements WDIV {
 			}
 		}
 
-		men = (short) CLAMP.i((int) ((0.5 + 0.5*RND.rFloat())*RES.config().BATTLE.MEN_PER_DIVISION), 1, RES.config().BATTLE.MEN_PER_DIVISION);
+		
+		
+		men = (short) CLAMP.i((int) ((0.5 + 0.5*RND.rFloat())*Config.BATTLE.MEN_PER_DIVISION), 1, Config.BATTLE.MEN_PER_DIVISION);
 		menTarget = men;
 		
 		exp = (float) CLAMP.d(Math.pow(RND.rFloat(), 1.5)*STATS.BATTLE().COMBAT_EXPERIENCE.indu().max(null), 0, 1);
@@ -205,7 +207,7 @@ final class WDivMercenary implements WDIV {
 	
 	@Override
 	public double experience() {
-		return (exp)/(double)STATS.EQUIP().BATTLEGEAR.max();
+		return (exp)/(double)STATS.BATTLE().COMBAT_EXPERIENCE.indu().max(null);
 	}
 	
 	@Override

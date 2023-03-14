@@ -1,6 +1,6 @@
 package view.world.ui.army;
 
-import init.RES;
+import init.config.Config;
 import init.sprite.SPRITES;
 import init.sprite.UI.UI;
 import settlement.stats.STATS;
@@ -48,7 +48,9 @@ public final class DivCard {
 		//SPRITES.armyCard().renderTraining(body.x1()+6, body.cY()-4, r, d.training());
 		//SPRITES.armyCard().renderGear(body.x1()+6+10, body.cY()-4, r, d.gear());
 		SPRITES.armyCard().renderPower(body.x1()+32, body.cY()-4, r, d.provess()/(STATS.BATTLE_BONUS().max()*d.men()));
-		GMeter.renderDelta(r, (double)d.men()/RES.config().BATTLE.MEN_PER_DIVISION, (double)d.menTarget()/RES.config().BATTLE.MEN_PER_DIVISION, body.x1()+4, body.x2()-4, body.cY()+20, body.cY()+28);
+		
+		
+		GMeter.renderDelta(r, (double)d.men()/Config.BATTLE.MEN_PER_DIVISION, (double)d.menTarget()/Config.BATTLE.MEN_PER_DIVISION, body.x1()+4, body.x2()-4, body.cY()+20, body.cY()+28);
 		OPACITY.unbind();
 		
 	}

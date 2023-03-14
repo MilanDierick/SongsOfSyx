@@ -16,6 +16,7 @@ import snake2d.SPRITE_RENDERER;
 import snake2d.util.color.COLOR;
 import snake2d.util.datatypes.DIR;
 import snake2d.util.datatypes.Rec;
+import snake2d.util.file.Json;
 import snake2d.util.rnd.RND;
 import util.rendering.ShadowBatch;
 
@@ -24,9 +25,102 @@ class Sprites {
 	private final Carpet carpet = new Carpet();
 	private final HomeHouse house = new HomeHouse();
 	
-	Sprites() throws IOException{
+	public static final int renderAbsolute = 1;
+	public final Sprite staU;
+	public final Sprite staD;
+
+	final SpriteConfigs sp;
+	
+	Sprites(Json json) throws IOException{
 		
+		Json js = json.json("SPRITES");
+		
+		staU = new Sprite(house) {
+
+			private final Sheets sheets = new Sheets(SheetType.s1x1, js.json("UP_1X1"));
+			
+			{
+				sDataSet(renderAbsolute);
+			}
+			
+
+			@Override
+			public boolean render(SPRITE_RENDERER r, ShadowBatch s, int data, RenderIterator it, double degrade,
+					boolean isCandle) {
+				if (house.upgrade() < 2)
+					return false;
+				int ran = it.ran();
+				render1x1(ran, sheets, r, s, data, it, degrade);
+
+				return false;
+			}
+
+			@Override
+			public byte getData(int tx, int ty, int rx, int ry, FurnisherItem item, int itemRan) {
+				house.useAndReserve(tx, ty);
+				Room room = SETT.ROOMS().map.get(tx, ty);
+				int r = RND.rInt(4);
+				
+				for (int i = 0; i < DIR.ORTHO.size(); i++) {
+					DIR d = DIR.ORTHO.getC(i+r);
+					if (house.service().isSameAs(tx+d.x(), ty+d.y()) && !room.isSame(tx, ty, tx-d.x(), ty-d.y()) ) {
+						return (byte)d.orthoID();
+					}
+					
+				}
+				
+
+				for (int i = 0; i < DIR.ORTHO.size(); i++) {
+					DIR d = DIR.ORTHO.getC(i+r);
+					if (house.sprite.get(tx, ty, d) == null && room.isSame(tx, ty, tx+d.x(), ty+d.y())) {
+						return (byte)d.orthoID();
+					}
+					
+				}
+
+
+				for (int i = 0; i < DIR.ORTHO.size(); i++) {
+					DIR d = DIR.ORTHO.getC(i+r);
+					if (!room.isSame(tx, ty, tx+d.x(), ty+d.y()) ) {
+						return (byte)d.orthoID();
+					}
+					
+				}
+				return (byte) RND.rInt(4);
+			}
+		};
+		staD = new Sprite(house) {
+			{
+				sDataSet(renderAbsolute);
+			}
+			private final Sheets sheets = new Sheets(SheetType.s1x1, js.json("DOWN_1X1"));
+			
+			@Override
+			public boolean render(SPRITE_RENDERER r, ShadowBatch s, int data, RenderIterator it, double degrade,
+					boolean isCandle) {
+				return false;
+			}
+			
+			@Override
+			public void renderBelow(SPRITE_RENDERER r, ShadowBatch s, int data, RenderIterator it, double degrade) {
+				if (house.upgrade() == 0)
+					return;
+				int ran = it.ran();
+				render1x1(ran, sheets, r, s, data, it, degrade);
+			};
+			
+			@Override
+			public byte getData(int tx, int ty, int rx, int ry, FurnisherItem item, int itemRan) {
+				return staU.getData(tx, ty, rx, ry, item, itemRan);
+			}
+		};
+		
+		
+		sp = new SpriteConfigs();
 	}
+
+	
+
 	
 	public final Sprite bedN = new Sprite(house) {
 
@@ -138,6 +232,7 @@ class Sprites {
 		
 		@Override
 		public byte getData(int tx, int ty, int rx, int ry, FurnisherItem item, int itemRan) {
+			house.useAndReserve(tx, ty);
 			int m = 0;
 			for (DIR d : DIR.ORTHO) {
 				if (house.sprite.get(tx, ty, d) == this)
@@ -239,8 +334,6 @@ class Sprites {
 				s.setDistance2Ground(0).setHeight(0);
 				COLOR.BLACK.render(s, it.x(), it.x() + C.TILE_SIZE, it.y(), it.y() + C.TILE_SIZE);
 				s.setPrev();
-				if (SETT.ROOMS().fData.tile.get(it.tx(), it.ty()).data() == 2)
-					return;
 				house.useAndReserve(it.tx(), it.ty());
 				
 				if (house.occupants() > 0) {
@@ -281,8 +374,14 @@ class Sprites {
 					shadowBatch.setHeight(16).setDistance2Ground(4);
 					COLOR.BLACK.render(shadowBatch, it.x(), it.x() + C.TILE_SIZE, it.y(), it.y() + C.TILE_SIZE);
 					shadowBatch.setPrev();
-				}else if (SETT.FLOOR().getter.get(it.tx(), it.ty()) != SETT.ROOMS().HOMES.HOME.constructor.flooring)
-					SETT.ROOMS().HOMES.HOME.constructor.flooring.placeFixed(it.tx(), it.ty());
+				}else {
+					RoomSprite s = house.sprite.get(it.tx(), it.ty());
+					if (s != null && s.sData() == renderAbsolute) {
+						s.render(r, shadowBatch, data, it, degrade, isCandle);
+					}
+					if (SETT.FLOOR().getter.get(it.tx(), it.ty()) != SETT.ROOMS().HOMES.HOME.constructor.flooring)
+						SETT.ROOMS().HOMES.HOME.constructor.flooring.placeFixed(it.tx(), it.ty());
+				}
 				
 				
 				
@@ -305,10 +404,12 @@ class Sprites {
 						s.renderBelow(r, shadow, data, it, degrade);
 
 					renderCarpet(r, shadow, data, it, degrade);
+				}else {
+					RoomSprite s = house.sprite.get(it.tx(), it.ty());
+					if (s != null && s.sData() == renderAbsolute) {
+						s.renderBelow(r, shadow, data, it, degrade);
+					}
 				}
-				
-				
-
 			}
 		}
 
@@ -391,7 +492,6 @@ class Sprites {
 
 	};
 
-	final SpriteConfigs sp = new SpriteConfigs();
 
 	final class SpriteConfigs {
 
@@ -402,187 +502,259 @@ class Sprites {
 				new SpriteConfig(new Sprite[][] { 
 					{ bedN, bedS, nic2 }, 
 					{ nSta, null, nic1 }, 
-					{ stor, _mat, chai }, }),
+					{ staU, _mat, staD }, }),
 				new SpriteConfig(new Sprite[][] { 
 					{ nic2, bedS, bedN }, 
 					{ nic1, null, nSta }, 
-					{ chai, _mat, stor }, }),
+					{ staD, _mat, staU }, }),
 				new SpriteConfig(new Sprite[][] { 
 					{ bedN, nSta, nic2 }, 
 					{ bedS, null, nic1 }, 
-					{ stor, _mat, chai }, }),
+					{ staU, _mat, staD }, }),
 				new SpriteConfig(new Sprite[][] { 
 					{ nic2, nSta, bedN }, 
 					{ nic1, null, bedS }, 
-					{ stor, _mat, chai }, }),
+					{ staU, _mat, staD }, }),
 				new SpriteConfig(new Sprite[][] { 
-					{ nic2, stor, nSta }, 
+					{ nic2, stor, bedN }, 
 					{ chai, null, bedS }, 
-					{ nic1, _mat, bedN }, }),
+					{ staU, _mat, staD }, }),
 				new SpriteConfig(new Sprite[][] { 
-					{ nic2, nic1, stor }, 
+					{ bedN, nic1, stor }, 
 					{ bedS, null, chai }, 
-					{ bedN, _mat, nSta }, }),
+					{ staD, _mat, staU }, }),
 
 			});
-
+			
 			sprites[1] = mirror(new SpriteConfig[] {
-				new SpriteConfig(new Sprite[][] {
-					{ bedN, bedS, bedS, bedN, stor },
-					{ nSta, null, null, null, nSta },
-					{ stor, nic1, _mat, chai, nic2 }, }),
-				new SpriteConfig(new Sprite[][] {
-					{ bedN, nSta, nic1, nic1, bedN },
-					{ bedS, null, null, null, bedS },
-					{ nic2, chai, _mat, chai, stor }, }),
-				new SpriteConfig(new Sprite[][] {
-					{ nic2, chai, nic1, chai, stor },
-					{ nic1, null, null, null, nSta },
-					{ bedN, bedS, _mat, bedS, bedN }, }),
-				new SpriteConfig(new Sprite[][] {
-					{ null, nic1, nic1, bedS, bedN },
-					{ chai, null, null, null, nSta },
-					{ bedN, bedS, _mat, chai, stor }, }),
-				new SpriteConfig(new Sprite[][] {
-					{ bedN, bedS, nSta, bedS, bedN },
-					{ chai, null, null, null, chai },
-					{ stor, nic1, _mat, nic1, nic2 }, }),
-				new SpriteConfig(new Sprite[][] {
-					{ stor, nic1, nic1, chai, nSta },
-					{ bedS, null, null, null, bedS },
-					{ bedN, nic2, _mat, chai, bedN }, }),
-				new SpriteConfig(new Sprite[][] {
-					{ nSta, nic1, chai, chai, bedN },
-					{ bedS, null, null, null, bedS },
-					{ bedN, nic1, _mat, nic2, stor }, }),
-				new SpriteConfig(new Sprite[][] {
-					{ null, chai, nic1, bedS, bedN },
-					{ chai, null, null, null, nSta },
-					{ bedN, bedS, _mat, nic1, stor }, }),
-				new SpriteConfig(new Sprite[][] {
-					{ bedN, bedN, bedS, chai, nic2 },
-					{ bedS, null, null, null, chai },
-					{ nSta, nic1, _mat, nic1, stor }, }),
-
+				new SpriteConfig(new Sprite[][] { 
+					{ bedN, nSta, bedN }, 
+					{ bedS, null, bedS }, 
+					{ chai, null, nic1 }, 
+					{ tabl, null, nic2 }, 
+					{ staU, _mat, staD }, }),
+				new SpriteConfig(new Sprite[][] { 
+					{ bedN, nSta, bedN }, 
+					{ bedS, null, bedS }, 
+					{ nic1, null, chai }, 
+					{ nic2, null, stor }, 
+					{ staU, _mat, staD }, }),
+				new SpriteConfig(new Sprite[][] { 
+					{ bedN, nSta, bedN }, 
+					{ bedS, null, bedS }, 
+					{ chai, null, nic2 }, 
+					{ stor, null, nic1 }, 
+					{ staU, _mat, staD }, }),
+				new SpriteConfig(new Sprite[][] { 
+					{ bedN, nSta, bedN }, 
+					{ bedS, null, bedS }, 
+					{ nic1, null, nic2 }, 
+					{ nic1, null, nic2 }, 
+					{ staU, _mat, staD }, }),
+				new SpriteConfig(new Sprite[][] { 
+					{ bedN, nSta, bedN }, 
+					{ bedS, null, bedS }, 
+					{ nic1, null, stor }, 
+					{ chai, null, chai }, 
+					{ staU, _mat, staD }, }),
+				new SpriteConfig(new Sprite[][] { 
+					{ bedN, nSta, stor }, 
+					{ bedS, null, nic1 }, 
+					{ bedN, null, chai }, 
+					{ bedS, null, tabl }, 
+					{ staD, _mat, staU }, }),
+				new SpriteConfig(new Sprite[][] { 
+					{ nic1, nSta, bedN }, 
+					{ null, null, bedS }, 
+					{ chai, null, bedN }, 
+					{ tabl, null, bedS }, 
+					{ staD, _mat, staU }, }),
+				new SpriteConfig(new Sprite[][] { 
+					{ bedN, stor, tabl }, 
+					{ bedS, null, nic1 }, 
+					{ bedS, null, chai }, 
+					{ bedN, null, null }, 
+					{ staD, _mat, staU }, }),
+				new SpriteConfig(new Sprite[][] { 
+					{ tabl, stor, bedN }, 
+					{ nic2, null, bedS }, 
+					{ nic1, null, bedS }, 
+					{ chai, null, bedN }, 
+					{ staD, _mat, staU }, }),
+				new SpriteConfig(new Sprite[][] { 
+					{ bedN, nSta, nic1 }, 
+					{ bedS, null, nic2 }, 
+					{ bedN, null, chai }, 
+					{ bedS, null, tabl }, 
+					{ staD, _mat, staU }, }),
+				new SpriteConfig(new Sprite[][] { 
+					{ nic1, nSta, bedN }, 
+					{ chai, null, bedS }, 
+					{ nic2, null, bedN }, 
+					{ tabl, null, bedS }, 
+					{ staD, _mat, staU }, }),
+				new SpriteConfig(new Sprite[][] { 
+					{ bedN, stor, tabl }, 
+					{ bedS, null, nic1 }, 
+					{ bedS, null, nic2 }, 
+					{ bedN, null, chai }, 
+					{ staD, _mat, staU }, }),
+				new SpriteConfig(new Sprite[][] { 
+					{ tabl, stor, bedN }, 
+					{ nic2, null, bedS }, 
+					{ nic1, null, bedS }, 
+					{ chai, null, bedN }, 
+					{ staD, _mat, staU }, }),
 			});
 
 			sprites[2] = mirror(new SpriteConfig[] {
 				new SpriteConfig(new Sprite[][] {
-					{ bedN, bedS, nic1, bedS, bedN },
-					{ nSta, null, null, null, chai },
-					{ chai, null, null, null, nic2 },
-					{ bedN, bedS, null, null, chai },
-					{ bedN, bedS, _mat, nSta, stor }, }),
-				new SpriteConfig(new Sprite[][] {
-					{ stor, chai, nic1, nic1, nic2 },
-					{ chai, null, null, null, chai },
-					{ nSta, null, null, null, nSta },
+					{ tabl, nic1, nic1, nic1, nSta },
 					{ bedN, bedS, null, bedS, bedN },
-					{ bedN, bedS, _mat, bedS, bedN }, }),  
+					{ bedN, bedS, null, bedS, bedN },
+					{ nic2, null, null, null, stor },
+					{ nic2, null, null, null, nic2 },
+					{ stor, staD, _mat, staU, tabl }, }),
 				new SpriteConfig(new Sprite[][] {
-					{ bedN, bedS, chai, chai, nSta },
-					{ bedN, null, null, null, nic2 },
-					{ bedS, null, null, null, stor },
-					{ nSta, null, null, null, bedS },
-					{ bedN, bedS, _mat, nic1, bedN }, }), 
-				new SpriteConfig(new Sprite[][] {
-					{ stor, bedN, bedN, bedN, nSta },
-					{ nic1, bedS, bedS, bedS, bedN },
-					{ nic1, null, null, null, bedS },
+					{ nSta, nic2, stor, nic2, nic2 },
+					{ bedN, bedS, null, bedS, bedN },
+					{ bedN, bedS, null, bedS, bedN },
 					{ chai, null, null, null, chai },
-					{ nic2, nSta, _mat, chai, stor }, }), 
+					{ nic1, null, null, null, nic2 },
+					{ nic1, staD, _mat, staU, tabl }, }),
 				new SpriteConfig(new Sprite[][] {
-					{ bedN, chai, nic1, chai, bedN },
-					{ bedS, null, null, null, bedS },
+					{ nSta, nic2, nic2, nic2, nic1 },
+					{ bedN, bedS, null, bedS, bedN },
+					{ bedN, bedS, null, bedS, bedN },
+					{ stor, null, null, null, nic1 },
+					{ chai, null, null, null, chai },
+					{ tabl, staD, _mat, staU, nSta }, }),
+				new SpriteConfig(new Sprite[][] {
+					{ nSta, tabl, nic1, nic1, nSta },
+					{ bedN, bedS, null, bedS, bedN },
+					{ bedN, bedS, null, bedS, bedN },
+					{ chai, null, null, null, chai },
+					{ nic2, null, null, null, nic2 },
+					{ stor, staD, _mat, staU, stor }, }),
+				new SpriteConfig(new Sprite[][] {
+					{ stor, nic2, nic2, null, stor },
+					{ bedN, bedS, null, bedS, bedN },
+					{ bedN, bedS, null, bedS, bedN },
 					{ nSta, null, null, null, nSta },
-					{ bedS, null, null, null, bedS },
-					{ bedN, stor, _mat, nic2, bedN }, }), 
+					{ chai, null, null, null, chai },
+					{ nic1, staD, _mat, staU, tabl }, }),
+				
+				
 				new SpriteConfig(new Sprite[][] {
-					{ nSta, nic2, chai, bedS, bedN },
-					{ nic1, null, null, null, bedN },
-					{ nic1, null, null, null, bedS },
-					{ chai, null, null, null, bedS },
-					{ stor, chai, _mat, nSta, bedN }, }), 
+					{ tabl, stor, nic1, nic1, nic1 },
+					{ chai, null, null, null, chai },
+					{ bedN, bedS, null, bedS, bedN },
+					{ bedN, bedS, null, bedS, bedN },
+					{ nSta, null, null, null, nSta },
+					{ tabl, staU, _mat, staD, nic2 }, }),
 				new SpriteConfig(new Sprite[][] {
-					{ bedN, nic2, bedN, nSta, bedN },
-					{ bedS, null, bedS, null, bedS },
-					{ chai, null, null, null, nic1 },
+					{ nic1, chai, chai, nic1, tabl },
+					{ nSta, null, null, null, stor },
+					{ bedN, bedS, null, bedS, bedN },
+					{ bedN, bedS, null, bedS, bedN },
+					{ nic1, null, null, null, nSta },
+					{ tabl, staU, _mat, staD, nic1 }, }),
+				new SpriteConfig(new Sprite[][] {
+					{ nic2, nic1, nic1, nic2, nSta },
 					{ nSta, null, null, null, chai },
-					{ bedN, bedS, _mat, chai, stor }, }), 
-			
-			});
-
-			sprites[3] = mirror(new SpriteConfig[] {
+					{ bedN, bedS, null, bedS, bedN },
+					{ bedN, bedS, null, bedS, bedN },
+					{ chai, null, null, null, stor },
+					{ tabl, staU, _mat, staD, stor }, }),
 				new SpriteConfig(new Sprite[][] {
-					{ nic2, nic1, nic1, nic1, nic2 },
+					{ nic2, chai, chai, stor, tabl },
 					{ stor, null, null, null, nSta },
 					{ bedN, bedS, null, bedS, bedN },
 					{ bedN, bedS, null, bedS, bedN },
-					{ nSta, null, null, null, stor },
-					{ chai, null, null, null, stor },
-					{ chai, null, null, null, bedN },
-					{ nic1, null, null, null, bedS },
-					{ nic2, nic1, _mat, nic1, nic2 }, }),
-				new SpriteConfig(new Sprite[][] {
-					{ bedN, stor, nSta, bedS, bedN },
-					{ bedS, null, null, null, nSta },
-					{ nic1, chai, chai, null, bedN },
-					{ nic1, tabl, tabl, null, bedS },
-					{ nic1, chai, chai, null, nic2 },
 					{ nSta, null, null, null, nic1 },
-					{ bedN, bedS, null, null, nic1 },
-					{ bedN, bedS, null, null, nic2 },
-					{ bedN, bedS, _mat, nSta, stor }, }),
+					{ nic1, staU, _mat, staD, nic1 }, }),
+				new SpriteConfig(new Sprite[][] {
+					{ stor, stor, nic2, nic2, nic2 },
+					{ nic1, null, null, null, chai },
+					{ bedN, bedS, null, bedS, bedN },
+					{ bedN, bedS, null, bedS, bedN },
+					{ chai, null, null, null, tabl },
+					{ nic1, staU, _mat, staD, nic1 }, }),
+				
+				
+				
 				new SpriteConfig(new Sprite[][] {
 					{ nSta, bedN, bedN, bedN, nSta },
-					{ nic1, bedS, bedS, bedS, nic1 },
-					{ stor, null, null, null, chai },
-					{ chai, null, null, null, chai },
-					{ nic1, chai, chai, null, bedN },
-					{ nic2, tabl, tabl, null, bedS },
-					{ nic1, chai, chai, null, nSta },
-					{ bedS, null, null, null, bedS },
-					{ bedN, nSta, _mat, nic1, bedN }, }),
+					{ nic1, bedS, bedS, bedS, nic2 },
+					{ nic1, null, null, null, stor },
+					{ nic2, null, null, null, bedN },
+					{ stor, null, null, null, bedS },
+					{ tabl, staU, _mat, staD, nic2 }, }),
 				new SpriteConfig(new Sprite[][] {
-					{ stor, chai, nSta, chai, stor },
-					{ nic1, null, null, null, nic2 },
-					{ bedN, bedS, null, bedS, bedN },
-					{ bedN, bedS, null, bedS, bedN },
-					{ bedN, bedS, null, chai, stor },
-					{ bedN, bedS, null, tabl, nic1 },
-					{ bedN, bedS, null, chai, nic1 },
-					{ nic1, null, null, null, nic1 },
-					{ stor, nSta, _mat, chai, nic2 }, }),
+					{ nSta, bedN, bedN, bedN, tabl },
+					{ nic2, bedS, bedS, bedS, nic1 },
+					{ nic2, null, null, null, chai },
+					{ stor, null, null, null, bedN },
+					{ chai, null, null, null, bedS },
+					{ nic1, staU, _mat, staD, nSta }, }),
 				new SpriteConfig(new Sprite[][] {
-					{ nSta, chai, chai, bedS, bedN },
+					{ stor, bedN, bedN, bedN, nSta },
+					{ nic2, bedS, bedS, bedS, nic1 },
+					{ chai, null, null, null, nic2 },
+					{ chai, null, null, null, bedN },
+					{ nic1, null, null, null, bedS },
+					{ nSta, staU, _mat, staD, tabl }, }),
+				new SpriteConfig(new Sprite[][] {
+					{ nSta, bedN, bedN, bedN, nic2 },
+					{ nic2, bedS, bedS, bedS, stor },
+					{ nic1, null, null, null, chai },
+					{ nic1, null, null, null, bedN },
+					{ chai, null, null, null, bedS },
+					{ tabl, staU, _mat, staD, nSta }, }),
+				new SpriteConfig(new Sprite[][] {
+					{ nic2, bedN, bedN, bedN, nSta },
+					{ tabl, bedS, bedS, bedS, nic1 },
+					{ chai, null, null, null, nic2 },
+					{ chai, null, null, null, bedN },
+					{ tabl, null, null, null, bedS },
+					{ nSta, staU, _mat, staD, stor }, }),
+				
+				
+				new SpriteConfig(new Sprite[][] {
+					{ nSta, bedN, bedN, nSta, bedN },
+					{ nic2, bedS, bedS, null, bedS },
+					{ nic1, null, null, null, chai },
+					{ nic1, null, null, null, bedS },
+					{ chai, null, null, null, bedN },
+					{ stor, staU, _mat, staD, nic2 }, }),
+				new SpriteConfig(new Sprite[][] {
+					{ tabl, bedN, bedN, nic2, bedN },
+					{ nSta, bedS, bedS, null, bedS },
+					{ chai, null, null, null, nic2 },
+					{ chai, null, null, null, bedS },
+					{ nic1, null, null, null, bedN },
+					{ nic1, staU, _mat, staD, nSta }, }),
+				new SpriteConfig(new Sprite[][] {
+					{ nic1, bedN, bedN, nic2, bedN },
+					{ nic1, bedS, bedS, null, bedS },
+					{ chai, null, null, null, tabl },
+					{ stor, null, null, null, bedS },
+					{ chai, null, null, null, bedN },
+					{ nSta, staU, _mat, staD, nSta }, }),
+				new SpriteConfig(new Sprite[][] {
+					{ stor, bedN, bedN, nic2, bedN },
+					{ nic2, bedS, bedS, null, bedS },
 					{ chai, null, null, null, nSta },
-					{ stor, chai, null, bedS, bedN },
-					{ nic1, tabl, null, bedS, bedN },
-					{ nic1, chai, null, bedS, bedN },
-					{ nic2, null, null, bedS, bedN },
-					{ nic1, null, null, null, nSta },
-					{ stor, null, null, bedS, bedN },
-					{ nSta, chai, _mat, bedS, bedN }, }),
+					{ chai, null, null, null, bedS },
+					{ nSta, null, null, null, bedN },
+					{ tabl, staU, _mat, staD, nic1 }, }),
 				new SpriteConfig(new Sprite[][] {
-					{ nic2, chai, chai, nic1, nSta },
-					{ nic1, null, null, null, nic2 },
-					{ bedN, bedS, null, nSta, stor },
-					{ bedN, bedS, null, null, stor },
-					{ bedN, bedS, null, chai, nic1 },
-					{ bedN, bedS, null, tabl, nic1 },
-					{ bedN, bedS, null, chai, nic1 },
-					{ chai, null, null, bedS, bedN },
-					{ nSta, chai, _mat, bedS, bedN }, }),
-				new SpriteConfig(new Sprite[][] {
-					{ nic2, nSta, bedN, bedN, nSta },
-					{ nic1, null, bedS, bedS, nic2 },
-					{ nic1, null, null, null, nic1 },
-					{ bedS, null, null, bedS, bedN },
-					{ bedN, chai, null, bedS, bedN },
-					{ nSta, tabl, null, null, nSta },
-					{ bedN, chai, null, null, nic1 },
-					{ bedS, null, null, bedS, bedN },
-					{ nSta, chai, _mat, bedS, bedN }, }),
+					{ tabl, bedN, bedN, nSta, bedN },
+					{ nic2, bedS, bedS, null, bedS },
+					{ chai, null, null, null, stor },
+					{ nic2, null, null, null, bedS },
+					{ chai, null, null, null, bedN },
+					{ nic1, staU, _mat, staD, nSta }, }),
 				
 			
 			});

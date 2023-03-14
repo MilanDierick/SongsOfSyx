@@ -4,16 +4,14 @@ import game.GAME;
 import game.faction.FACTIONS;
 import game.time.TIME;
 import init.D;
-import init.RES;
-import init.boostable.BOOSTABLE;
-import init.boostable.BOOSTABLES;
+import init.boostable.*;
+import init.config.Config;
 import init.race.RACES;
 import init.race.Race;
 import init.sprite.SPRITES;
 import settlement.main.SETT;
 import settlement.stats.STATS;
 import settlement.stats.StatsBattle.StatTraining;
-import settlement.stats.StatsBoosts.StatBooster;
 import settlement.stats.StatsEquippables.EQUIPPABLE_MILITARY;
 import snake2d.SPRITE_RENDERER;
 import snake2d.util.color.COLOR;
@@ -57,7 +55,8 @@ class UIArmyRecruit extends ISidePanel{
 	private final BannerEditor ee = new BannerEditor();
 	
 	public int men() {
-		return (int) Math.ceil(RES.config().BATTLE.MEN_PER_DIVISION*(amount.get()+1)/10.0);
+		
+		return (int) Math.ceil(Config.BATTLE.MEN_PER_DIVISION*(amount.get()+1)/10.0);
 	}
 	
 	UIArmyRecruit() {
@@ -234,14 +233,16 @@ class UIArmyRecruit extends ISidePanel{
 				
 				@Override
 				public void update(GText text) {
-					GFORMAT.i(text, WDivRegional.trainingDays(training[0].get(), training[1].get(), (int) (amount.getD()*RES.config().BATTLE.MEN_PER_DIVISION)));
+					
+					GFORMAT.i(text, WDivRegional.trainingDays(training[0].get(), training[1].get(), (int) (amount.getD()*Config.BATTLE.MEN_PER_DIVISION)));
 				}
 				
 				@Override
 				public void hoverInfoGet(GBox b) {
 					b.title(DicArmy.¤¤RecruitmentTime);
 					GText t = b.text();
-					DicTime.setTime(t, WDivRegional.trainingDays(training[0].get(), training[1].get(), (int) (amount.getD()*RES.config().BATTLE.MEN_PER_DIVISION))*TIME.secondsPerDay);
+					
+					DicTime.setTime(t, WDivRegional.trainingDays(training[0].get(), training[1].get(), (int) (amount.getD()*Config.BATTLE.MEN_PER_DIVISION))*TIME.secondsPerDay);
 					b.add(t);
 				}
 				
@@ -364,7 +365,7 @@ class UIArmyRecruit extends ISidePanel{
 		private final double max;
 		private final BOOSTABLE b;
 		Boost(BOOSTABLE b){
-			max = b.max(FACTIONS.player());
+			max = BOOSTABLES.player().max(b);
 			this.b = b;
 			add(b.icon(), 0, 0);
 			addRightC(8, new GHeader(b.name));
@@ -397,8 +398,8 @@ class UIArmyRecruit extends ISidePanel{
 			add += FACTIONS.player().bonus().add(b);
 			
 			for (EQUIPPABLE_MILITARY mi : STATS.EQUIP().military_all()) {
-				for (StatBooster bb : mi.boosts()) {
-					if (bb.boost.boost == b) {
+				for (BBooster bb : mi.boosts()) {
+					if (bb.boost.boostable == b) {
 						if (bb.boost.isMul())
 							mul *= bb.boost.value()*(double)gear[mi.indexMilitary()].get()/mi.max();
 						else
@@ -409,8 +410,8 @@ class UIArmyRecruit extends ISidePanel{
 				}
 			}
 			for (StatTraining t : STATS.BATTLE().TRAINING_ALL) {
-				for (StatBooster bb : t.boosts()) {
-					if (bb.boost.boost == b) {
+				for (BBooster bb : t.boosts()) {
+					if (bb.boost.boostable == b) {
 						if (bb.boost.isMul())
 							mul *= bb.boost.value()*(double)training[t.tIndex].get()/t.indu().max(null);
 						else

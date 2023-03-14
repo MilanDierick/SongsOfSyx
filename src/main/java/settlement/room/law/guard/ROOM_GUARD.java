@@ -39,7 +39,7 @@ public final class ROOM_GUARD extends RoomBlueprintIns<GuardInstance>{
 			}
 		};
 		constructor = new Constructor(this, init);
-
+		
 	}
 	
 	@Override

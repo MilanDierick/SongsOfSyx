@@ -9,6 +9,7 @@ import game.time.TIME;
 import init.C;
 import init.RES;
 import settlement.main.RenderData;
+import settlement.main.SETT;
 import snake2d.*;
 import snake2d.KeyBoard.KeyEvent;
 import snake2d.util.datatypes.COORDINATE;
@@ -25,6 +26,7 @@ import view.keyboard.KeyPoller;
 import view.sett.SettView;
 import view.ui.UIView;
 import view.world.WorldView;
+import view.world.generator.WorldViewGenerator;
 
 public class VIEW extends CORE_STATE{
 	
@@ -40,7 +42,7 @@ public class VIEW extends CORE_STATE{
 	private final BattleView battle;
 
 
-	private ViewSub current;
+	private ViewSubSimple current;
 	private ViewSub previous;
 	
 	private final Mouse mouse;
@@ -48,7 +50,7 @@ public class VIEW extends CORE_STATE{
 	private final Interrupters inters;
 	private boolean hideUI = false;
 	private static double renderSecond;
-//	private final SyxInterer rpc = new SyxInterer();
+	private final SyxInterer rpc = new SyxInterer();
 	
 	public VIEW(){
 		
@@ -61,33 +63,48 @@ public class VIEW extends CORE_STATE{
 		sett = new SettView();
 		battle = new BattleView();
 		world.activate();
-		current = world;
-		previous = null;
 		KEYS.get().readSettings();
+		setFirstView(world);
 	}
 	
 	public final SAVABLE saver = new SAVABLE() {
 		
 		@Override
 		public void save(FilePutter saveFile) {
+			saveFile.mark(this);
 			inters.messages.save(saveFile);
-			saveFile.i(current.index);
-			for (ViewSub s : ViewSub.all)
+			
+			if (current instanceof ViewSub)
+				saveFile.i(((ViewSub)current).index);
+			else
+				saveFile.i(-1);
+			
+			
+			for (ViewSub s : ViewSub.all) {
+				saveFile.mark(s);
 				s.save(saveFile);
+			}
 		}
 		
 		@Override
 		public void load(FileGetter saveFile) throws IOException {
+			saveFile.check(this);
 			inters.messages.load(saveFile);
-			ViewSub v = ViewSub.all.get(saveFile.i());
+			
+			int si = saveFile.i();
+			ViewSub v = null;
+			if (si >= 0)
+				v = ViewSub.all.get(si);
 			
 			
-			for (ViewSub s : ViewSub.all)
+			for (ViewSub s : ViewSub.all) {
+				saveFile.check(s);
 				s.load(saveFile);
-			
-			current = null;
-			v.activate();
+			}
 			KEYS.get().readSettings();
+			setFirstView(v);
+			current.activate();
+			
 			
 		}
 		
@@ -98,6 +115,15 @@ public class VIEW extends CORE_STATE{
 		}
 	};
 
+	private void setFirstView(ViewSubSimple prefered) {
+		if (prefered == null || !SETT.exists()) {
+			prefered = new WorldViewGenerator();
+		}
+		current = prefered;
+		previous = null;
+		
+	}
+	
 
 	@Override
 	protected void keyPush(LIST<KeyEvent> keys, boolean hasCleared) {
@@ -205,7 +231,7 @@ public class VIEW extends CORE_STATE{
 		}
 		
 		GAME.update(ds, slowDown);
-//		rpc.update();
+		rpc.update();
 	}
 	
 	@Override
@@ -273,7 +299,7 @@ public class VIEW extends CORE_STATE{
 		return i.battle;
 	}
 	
-	public static ViewSub current() {
+	public static ViewSubSimple current() {
 		return i.current;
 	}
 
@@ -352,7 +378,7 @@ public class VIEW extends CORE_STATE{
 		GAME.stats().flush();
 	}
 	
-	public static abstract class ViewSub{
+	public static abstract class ViewSubSimple{
 		
 		protected abstract void hoverTimer(double mouseTimer, GBox text);
 		protected abstract boolean update(float ds, boolean shouldUpdate);
@@ -364,9 +390,6 @@ public class VIEW extends CORE_STATE{
 		
 		protected abstract void mouseClick(MButt button);
 		protected abstract void hover(COORDINATE mCoo, boolean mouseHasMoved);
-		private boolean active = false;
-		private static final ArrayList<ViewSub> all = new ArrayList<>(20);
-		private final int index = all.add(this);
 		public final InterManager uiManager = new InterManager();
 		
 		public void activate(){
@@ -375,28 +398,33 @@ public class VIEW extends CORE_STATE{
 				return;
 			
 			i.inters.mouseMessage.close();
-			i.previous = i.current;
-			active = true;
-			if (i.current != null)
-				i.current.active = false;
+			if (i.current instanceof ViewSub)
+				i.previous = (ViewSub) i.current;
 			i.current = this;
 			hover(CORE.getInput().getMouse().getCoo(), true);
 		}
 		
 		public final boolean isActive(){
-			return active;
+			return this == VIEW.i.current;
 		}
-		
-		protected abstract void save(FilePutter file);
-		protected abstract void load(FileGetter file) throws IOException;
 		
 		protected void afterTick() {
 			
 		}
 		
+	}
+	
+	public static abstract class ViewSub extends ViewSubSimple{
+
+		private static final ArrayList<ViewSub> all = new ArrayList<>(20);
+		private final int index = all.add(this);
+		
 		public int index() {
 			return index;
 		}
+		
+		protected abstract void save(FilePutter file);
+		protected abstract void load(FileGetter file) throws IOException;
 		
 	}
 

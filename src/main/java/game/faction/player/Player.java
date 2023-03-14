@@ -33,9 +33,10 @@ public final class Player extends Faction {
 	private final FRuler ruler = new FRuler();
 	public final PLocks locks = new PLocks(this);
 	
-	public Player(Race race, LISTE<Faction> all, KeyMap<Double> boosts){
-		super(race, all);
-		races = new PlayerRaces(race);
+	public Player(LISTE<Faction> all, KeyMap<Double> boosts){
+		super(all);
+		races = new PlayerRaces();
+		ri = races.get(0).index();
 		
 		IDebugPanel.add("add credits", new ACTION() {
 			
@@ -53,6 +54,11 @@ public final class Player extends Faction {
 			}
 		});
 		bonus = new PBonus(this, boosts);
+	}
+	
+	public void setRace(Race race) {
+		ri = race.index;
+		races.set(race);
 	}
 	
 	@Override
@@ -198,7 +204,8 @@ public final class Player extends Faction {
 			}
 		};
 		
-		PlayerRaces(Race player){
+		
+		void set(Race player){
 			order[0] = player.index;
 			int playable = 1;
 			for (Race r : RACES.all()) {
@@ -211,6 +218,25 @@ public final class Player extends Faction {
 				if (r != player && r.playable) {
 					order[i++] = r.index;
 				}else if (r != player){
+					order[playable++] = r.index;
+				}
+				
+					
+			}
+		}
+		
+		PlayerRaces(){
+			int playable = 0;
+			for (Race r : RACES.all()) {
+				if (r.playable) {
+					playable++;
+				}
+			}
+			int i = 0;
+			for (Race r : RACES.all()) {
+				if (r.playable) {
+					order[i++] = r.index;
+				}else {
 					order[playable++] = r.index;
 				}
 				

@@ -4,7 +4,7 @@ import java.io.IOException;
 
 import game.faction.FACTIONS;
 import game.faction.Faction;
-import init.RES;
+import init.config.Config;
 import init.race.RACES;
 import snake2d.util.rnd.RND;
 import snake2d.util.sets.LISTE;
@@ -35,7 +35,9 @@ public final class WArmyConstructor extends WEntityConstructor<WArmy> {
 			public void placeFirst(int tx, int ty) {
 				WArmy e = FACTIONS.player().kingdom().armies().create(tx, ty);
 				for (int i = 0; i <= 100; i++) {
-					WDivRegional d = World.ARMIES().regional().create(RACES.all().rnd(), (10.0 + RND.rInt(RES.config().BATTLE.MEN_PER_DIVISION-10))/RES.config().BATTLE.MEN_PER_DIVISION, 0, 0, e);
+					
+					
+					WDivRegional d = World.ARMIES().regional().create(RACES.all().rnd(), (10.0 + RND.rInt(Config.BATTLE.MEN_PER_DIVISION-10))/Config.BATTLE.MEN_PER_DIVISION, 0, 0, e);
 					d.randomize(RND.rFloat(), RND.rInt(16));
 					d.menSet(d.menTarget());
 				}
@@ -54,7 +56,9 @@ public final class WArmyConstructor extends WEntityConstructor<WArmy> {
 			public void placeFirst(int tx, int ty) {
 				WArmy e = FACTIONS.player().kingdom().armies().create(tx, ty);
 				for (int i = 0; i <= 1; i++) {
-					WDivRegional d = World.ARMIES().regional().create(RACES.all().rnd(), (10.0 + RND.rInt(RES.config().BATTLE.MEN_PER_DIVISION-10))/RES.config().BATTLE.MEN_PER_DIVISION, 0,0, e);
+					
+					
+					WDivRegional d = World.ARMIES().regional().create(RACES.all().rnd(), (10.0 + RND.rInt(Config.BATTLE.MEN_PER_DIVISION-10))/Config.BATTLE.MEN_PER_DIVISION, 0,0, e);
 					d.randomize(RND.rFloat(), RND.rInt(16));
 					d.menSet(d.menTarget());
 				}
@@ -74,7 +78,9 @@ public final class WArmyConstructor extends WEntityConstructor<WArmy> {
 				WArmy e = FACTIONS.player().kingdom().armies().create(tx, ty);
 				WARMYD.faction().set(e, null);
 				for (int i = 0; i <= 100; i++) {
-					WDivRegional d = World.ARMIES().regional().create(RACES.all().rnd(), (10.0 + RND.rInt(RES.config().BATTLE.MEN_PER_DIVISION-10))/RES.config().BATTLE.MEN_PER_DIVISION, 0,0, e);
+					
+					
+					WDivRegional d = World.ARMIES().regional().create(RACES.all().rnd(), (10.0 + RND.rInt(Config.BATTLE.MEN_PER_DIVISION-10))/Config.BATTLE.MEN_PER_DIVISION, 0,0, e);
 					d.randomize(RND.rFloat(), RND.rInt(16));
 					d.menSet(d.menTarget());
 				}
@@ -93,7 +99,9 @@ public final class WArmyConstructor extends WEntityConstructor<WArmy> {
 			public void placeFirst(int tx, int ty) {
 				WArmy e = FACTIONS.player().kingdom().armies().create(tx, ty);
 				WARMYD.faction().set(e, null);
-				WDivRegional d = World.ARMIES().regional().create(RACES.all().rnd(), (10.0 + RND.rInt(RES.config().BATTLE.MEN_PER_DIVISION-10))/RES.config().BATTLE.MEN_PER_DIVISION, 0, 0, e);
+				
+				
+				WDivRegional d = World.ARMIES().regional().create(RACES.all().rnd(), (10.0 + RND.rInt(Config.BATTLE.MEN_PER_DIVISION-10))/Config.BATTLE.MEN_PER_DIVISION, 0, 0, e);
 				d.randomize(RND.rFloat(), RND.rInt(16));
 				d.menSet(d.menTarget());
 			}
@@ -113,7 +121,9 @@ public final class WArmyConstructor extends WEntityConstructor<WArmy> {
 					return;
 				WArmy e = f.kingdom().armies().create(tx, ty);
 				for (int i = 0; i <= 50; i++) {
-					WDivRegional d = World.ARMIES().regional().create(RACES.all().rnd(), (10.0 + RND.rInt(RES.config().BATTLE.MEN_PER_DIVISION-10))/RES.config().BATTLE.MEN_PER_DIVISION, 0, 0, e);
+					
+					
+					WDivRegional d = World.ARMIES().regional().create(RACES.all().rnd(), (10.0 + RND.rInt(Config.BATTLE.MEN_PER_DIVISION-10))/Config.BATTLE.MEN_PER_DIVISION, 0, 0, e);
 					d.randomize(RND.rFloat(), RND.rInt(16));
 					d.menSet(d.menTarget());
 				}

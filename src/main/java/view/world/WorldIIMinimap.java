@@ -37,9 +37,11 @@ public final class WorldIIMinimap extends Interrupter{
 	private boolean expanded = true;
 	private final GFrame frame = new GFrame();
 	GuiSection buttons = new GuiSection();
+	private final GameWindow window;
 	
-	public WorldIIMinimap(UIPanelTop top, InterManager m){
+	public WorldIIMinimap(UIPanelTop top, InterManager m, GameWindow window){
 		
+		this.window = window;
 		pin();
 		frame.body().setWidth(map.width()).setHeight(map.height());
 		frame.body().moveX2(C.WIDTH()-GFrame.MARGIN);
@@ -52,8 +54,10 @@ public final class WorldIIMinimap extends Interrupter{
 		
 		CLICKABLE b;
 		
-		b = new WorldHeatmaps();
-		buttons.addRight(0, b);
+		if (top != null) {
+			b = new WorldHeatmaps();
+			buttons.addRight(0, b);
+		}
 		
 		b = new GButt.Panel(SPRITES.icons().s.camera) {
 			@Override
@@ -90,13 +94,13 @@ public final class WorldIIMinimap extends Interrupter{
 		b = new GButt.Panel(SPRITES.icons().m.plus) {
 			@Override
 			protected void clickA() {
-				if (VIEW.world().window.zoomout() > 0)
-					VIEW.world().window.setZoomout(VIEW.world().window.zoomout()-1);
+				if (window.zoomout() > 0)
+					window.setZoomout(window.zoomout()-1);
 				//inters.miniview.toggle();
 			};
 			@Override
 			protected void renAction() {
-				activeSet(VIEW.world().window.zoomout() > 0);
+				activeSet(window.zoomout() > 0);
 			}
 		};
 		b = KeyButt.wrap(b, KEYS.MAIN().ZOOM_IN);
@@ -106,13 +110,13 @@ public final class WorldIIMinimap extends Interrupter{
 		b = new GButt.Panel(SPRITES.icons().m.minus) {
 			@Override
 			protected void clickA() {
-				if (VIEW.world().window.zoomout() < 3)
-					VIEW.world().window.setZoomout(VIEW.world().window.zoomout()+1);
+				if (window.zoomout() < 3)
+					window.setZoomout(window.zoomout()+1);
 				//inters.miniview.toggle();
 			};
 			@Override
 			protected void renAction() {
-				activeSet(VIEW.world().window.zoomout() < 3);
+				activeSet(window.zoomout() < 3);
 			}
 		};
 		b = KeyButt.wrap(b, KEYS.MAIN().ZOOM_OUT);
@@ -239,12 +243,12 @@ public final class WorldIIMinimap extends Interrupter{
 		if (buttons.click())
 			return;
 		else
-			move(VIEW.world().window);
+			move(window);
 	}
 
 	@Override
 	protected boolean render(Renderer r, float ds) {
-		render(r, VIEW.world().window);
+		render(r, window);
 		return true;
 	}
 

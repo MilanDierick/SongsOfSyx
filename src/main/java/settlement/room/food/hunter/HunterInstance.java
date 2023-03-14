@@ -50,8 +50,8 @@ public final class HunterInstance extends RoomInstance implements ROOM_PRODUCER,
 				coos.set(am++).set(c);
 			}
 		}
-		employees().maxSet(2);
-		employees().neededSet(2);
+		employees().maxSet(am);
+		employees().neededSet(am);
 		activate();
 		
 	}
@@ -127,7 +127,10 @@ public final class HunterInstance extends RoomInstance implements ROOM_PRODUCER,
 	}
 	
 	public boolean countHunt() {
-		count += 0.15*RND.rFloat()*(0.25 + 0.75*(1.0-getDegrade()));
+		count += 0.15*RND.rFloat()*(0.25 + 0.75*(1.0-getDegrade()))*(0.25 + 0.75*blueprintI().constructor.efficiency.get(this));
+		
+		
+		
 		if (count > 1) {
 			count -= 1;
 			return true;

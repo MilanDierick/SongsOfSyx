@@ -111,8 +111,7 @@ public class StatsEnv extends StatCollection{
 			
 		};
 		UNBURRIED.info().setInt();
-		UNBURRIED.info().setMatters(true, false);
-		
+		UNBURRIED.info().setMatters(true, false);	
 
 		init.updatable.add(updater);
 		

@@ -2,9 +2,9 @@ package settlement.room.military.barracks;
 
 import java.io.IOException;
 
-import init.RES;
 import init.boostable.BOOSTABLE;
 import init.boostable.BOOSTABLES;
+import init.config.Config;
 import settlement.army.Div;
 import settlement.path.finder.SFinderRoomService;
 import settlement.room.industry.module.Industry;
@@ -29,7 +29,7 @@ public final class ROOM_BARRACKS extends RoomBlueprintIns<BarracksInstance> {
 	final BarracksThing thing = new BarracksThing(this);
 	
 	int trainingLimit = 10000;
-	public static final double DEGRADE_RATE16 = 1.0/(4*16*16*16)*RES.config().BATTLE.TRAINING_DEGRADE;
+	public static final double DEGRADE_RATE16 = 1.0/(4*16*16*16)*Config.BATTLE.TRAINING_DEGRADE;
 	public final double DAY_RATE;
 	public final double RATEI;
 	public final EmployerSimple emp = new EmployerSimple(employment());

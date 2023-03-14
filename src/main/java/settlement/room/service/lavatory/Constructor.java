@@ -14,9 +14,7 @@ import settlement.room.sprite.*;
 import snake2d.SPRITE_RENDERER;
 import snake2d.util.datatypes.DIR;
 import snake2d.util.file.Json;
-import snake2d.util.sprite.TILE_SHEET;
 import util.rendering.ShadowBatch;
-import util.spritecomposer.*;
 
 class Constructor extends Furnisher {
 
@@ -27,7 +25,7 @@ class Constructor extends Furnisher {
 	final FurnisherStat basins;
 
 	protected Constructor(ROOM_LAVATORY blue, RoomInitData init) throws IOException {
-		super(init, 2, 3, 364, 160);
+		super(init, 2, 3, 88, 44);
 		this.blue = blue;
 		
 		latrines = new FurnisherStat.FurnisherStatServices(this, blue);
@@ -248,19 +246,6 @@ class Constructor extends Furnisher {
 		}, 9);
 		
 		flush(0, 3);
-	}
-
-	@Override
-	protected TILE_SHEET sheet(ComposerUtil c, ComposerSources s, ComposerDests d, int y1) {
-		s.singles.init(0, y1, 1, 1, 8, 5, d.s16);
-		s.singles.setSkip(0, 8).paste(3, true);
-		s.singles.setSkip(8, 8).paste(true);
-		s.singles.setSkip(9, 1).pasteRotated(1, true);
-
-		s.singles.setSkip(16, 4).paste(3, true);
-		s.singles.setSkip(20, 4).paste(3, true);
-		s.singles.setSkip(24, 16).paste(true);
-		return d.s16.saveGame();
 	}
 
 	@Override

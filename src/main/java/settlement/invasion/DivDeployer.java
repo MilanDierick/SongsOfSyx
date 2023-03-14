@@ -3,7 +3,7 @@ package settlement.invasion;
 import static settlement.main.SETT.*;
 
 import init.C;
-import init.RES;
+import init.config.Config;
 import settlement.army.Div;
 import settlement.entity.ENTITY;
 import settlement.entity.humanoid.HTYPE;
@@ -76,7 +76,7 @@ final class DivDeployer {
 		
 	}
 	
-	private static ArrayList<Humanoid> tmp = new ArrayList<>(RES.config().BATTLE.MEN_PER_DIVISION);
+	private static ArrayList<Humanoid> tmp = new ArrayList<>(Config.BATTLE.MEN_PER_DIVISION);
 	
 	private static boolean place(int sx, int sy, InvadorDiv d, Div div, DIR spotdir) {
 		int amount = d.men;

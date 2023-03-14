@@ -89,7 +89,7 @@ public final class StatsService extends StatCollection {
 
 		stats = makeStats(init);
 		
-		new StatsBoosts.StatBoosterStat(init, SETT.ROOMS().PHYSICIAN.info.name, get(SETT.ROOMS().PHYSICIAN.service()).access, new BBoost(BOOSTABLES.PHYSICS().HEALTH, 3.0, true));
+		new StatBoosterStat(SETT.ROOMS().PHYSICIAN.info.name, get(SETT.ROOMS().PHYSICIAN.service()).access, new BBoost(BOOSTABLES.PHYSICS().HEALTH, 3.0, true));
 		
 		
 	}

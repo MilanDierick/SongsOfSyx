@@ -37,6 +37,7 @@ abstract class Sprite extends RoomSprite.Imp{
 
 	static abstract class Rot extends Sprite {
 		
+
 		
 		Rot(HomeHouse house){
 			super(house);

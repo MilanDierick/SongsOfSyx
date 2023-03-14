@@ -3,7 +3,6 @@ package game;
 import java.nio.file.Path;
 
 import init.paths.PATHS;
-import script.ScriptLoad;
 import snake2d.*;
 import snake2d.CORE_STATE.Constructor;
 import snake2d.util.file.FileGetter;
@@ -14,21 +13,15 @@ import view.main.VIEW;
 public class GameLoader implements Constructor {
 
 	private final Path saveFile;
-	private final String scriptFile;
 	private boolean achiving = true;
 	
 	public GameLoader(java.nio.file.Path path){
-		this(path, null);
+		this(path, true);
 	}
 	
 	public GameLoader(java.nio.file.Path path, boolean achiveing){
-		this(path, null);
-		this.achiving = achiveing;
-	}
-	
-	public GameLoader(java.nio.file.Path path, String script){
 		saveFile = path;
-		scriptFile = script;
+		this.achiving = achiveing;
 	}
 	
 
@@ -43,7 +36,7 @@ public class GameLoader implements Constructor {
 		LOG.ln("LOADING GAME", "Game version: " + VERSION.VERSION_STRING);
 
 		try {
-			fg = new FileGetter(saveFile, true, ScriptLoad.getLoader());
+			fg = new FileGetter(saveFile, true);
 			b = (SaveGame) fg.object();
 			
 			
@@ -58,7 +51,7 @@ public class GameLoader implements Constructor {
 		CharSequence p = b.problem(true);
 		
 		try {
-			new GAME(fg, scriptFile);
+			new GAME(fg);
 		} catch(Errors.GameError ee) {
 			
 			throw ee;

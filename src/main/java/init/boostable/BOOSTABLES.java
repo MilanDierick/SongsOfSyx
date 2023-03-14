@@ -30,6 +30,9 @@ public class BOOSTABLES {
 	private final LIST<BOOSTABLE> military;
 	public final LIST<BoostableCollection> collections;
 	public final BRooms ROOMS;
+	private BBoosters player;
+	private BBoosters enemy;
+	
 	
 	private BOOSTABLES() {
 		self = this;
@@ -49,11 +52,15 @@ public class BOOSTABLES {
 		for (KEY_COLLECTION<? extends BOOSTABLE> c : collections)
 			collMap.put(c.key(), c);
 		military = battle.all.join(physics.MASS, physics.STAMINA, physics.SPEED);
-		
 	}
 	
 	public static void init() {
 		new BOOSTABLES();
+		
+	}
+	
+	public static KeyMap<KEY_COLLECTION<? extends BOOSTABLE>> collmap() {
+		return self.collMap;
 	}
 	
 	public static void finishUp(GAME game) {
@@ -63,8 +70,18 @@ public class BOOSTABLES {
 			b.climates = null;
 		}
 		CLIMATES.initBonuses(self, cb);
-		
-		
+		self.player = new BBoosters(BBooster.PLAYER);
+		self.enemy = new BBoosters(BBooster.ENEMY);
+		BBooster.PLAYER.clear();
+		BBooster.ENEMY.clear();
+	}
+	
+	public static BBoosters player() {
+		return self.player;
+	}
+	
+	public static BBoosters enemy() {
+		return self.enemy;
 	}
 	
 	public static Physics PHYSICS() {
@@ -210,7 +227,7 @@ public class BOOSTABLES {
 		
 		if (!dominant) {
 			for (BBoost o : res) {
-				if (o.boost == b) {
+				if (o.boostable == b) {
 					return;
 				}
 			}
@@ -221,7 +238,7 @@ public class BOOSTABLES {
 		boolean dup = true;
 		while(dup) {
 			for (BBoost o : res) {
-				if (o.boost == b) {
+				if (o.boostable == b) {
 					res.remove(o);
 					break;
 				}
@@ -289,6 +306,7 @@ public class BOOSTABLES {
 		public final BOOSTABLE THIRST = pushMisc(s().jug,"THIRST");
 		public final BOOSTABLE LEARNING_SKILL = pushMisc(s().vial,"LEARNING");
 		public final BOOSTABLE DOCTOR = pushMisc(s().heart,"DOCTOR");
+		public final BOOSTABLE GROOMING = pushMisc(s().pluses,"GROOMING");
 		public final BOOSTABLE TRAINING = pushMisc(s().sword,"TRAINING");
 		
 	}
@@ -315,6 +333,7 @@ public class BOOSTABLES {
 		public final BOOSTABLE TRADE = pushMisc(s().money,"TRADE");
 		public final BOOSTABLE SPOILAGE = pushMisc(s().fly,	"SPOILAGE");
 		public final BOOSTABLE ACCIDENT = pushMisc(s().boom, "ACCIDENT");
+		public final BOOSTABLE HYGINE = pushMisc(s().heart, "HYGINE");
 		public final BOOSTABLE FURNITURE = pushMisc(s().bed, "FURNITURE");
 		public final BOOSTABLE RAIDING = pushMisc(s().citizen, "RAIDING");
 		

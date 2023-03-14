@@ -21,12 +21,13 @@ final class Constructor extends Furnisher{
 
 	private final ROOM_JANITOR blue;
 	final FurnisherStat workers = new FurnisherStat.FurnisherStatI(this);
+	final FurnisherStat efficiency = new FurnisherStat.FurnisherStatEfficiency(this, workers);
 	final FurnisherItemTile ta;
 	
 	
 	protected Constructor(ROOM_JANITOR blue, RoomInitData init)
 			throws IOException {
-		super(init, 1, 1, 88, 44);
+		super(init, 2, 2, 88, 44);
 		this.blue = blue;
 		
 		Json sp = init.data().json("SPRITES");
@@ -75,11 +76,6 @@ final class Constructor extends Furnisher{
 			
 		};
 		
-
-		
-
-		RoomSprite sDummy = new RoomSprite.Dummy();
-		
 		final FurnisherItemTile tc = new FurnisherItemTile(
 				this,
 				table,
@@ -88,6 +84,7 @@ final class Constructor extends Furnisher{
 		
 		ta = new FurnisherItemTile(
 				this,
+				true,
 				res,
 				AVAILABILITY.SOLID, 
 				false).setData(1);
@@ -103,28 +100,24 @@ final class Constructor extends Furnisher{
 				top,
 				AVAILABILITY.SOLID, 
 				false);
-
-		final FurnisherItemTile ee = new FurnisherItemTile(
-				this,
-				true,
-				sDummy,
-				AVAILABILITY.ROOM, 
-				false);
-		ee.noWalls = true;
-		
-		final FurnisherItemTile __ = new FurnisherItemTile(
-				this,
-				sDummy,
-				AVAILABILITY.ROOM, 
-				false);
 		
 		new FurnisherItem(new FurnisherItemTile[][] {
-			{tc,ta,ta,ta,tc,}, 
-			{nn,__,__,__,nn,},
-			{ng,__,__,__,ng,},
-			{ng,__,__,__,ng,},
-			{nn,__,ee,__,nn,},
-		}, 16);
+			{tc,ta,ta,ta,tc},
+		}, 1);
+		
+		flush(1, 3);
+		
+		new FurnisherItem(new FurnisherItemTile[][] {
+			{nn,ng,},
+		}, 1);
+		
+		new FurnisherItem(new FurnisherItemTile[][] {
+			{nn,ng,nn},
+		}, 1.5);
+		
+		new FurnisherItem(new FurnisherItemTile[][] {
+			{nn,ng,ng,nn},
+		}, 2);
 		
 		flush(1, 3);
 	}
@@ -138,7 +131,7 @@ final class Constructor extends Furnisher{
 
 	@Override
 	public boolean usesArea() {
-		return false;
+		return true;
 	}
 
 	@Override

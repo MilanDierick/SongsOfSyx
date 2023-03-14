@@ -2,6 +2,7 @@ package settlement.job;
 
 import static settlement.main.SETT.*;
 
+import settlement.main.SETT;
 import settlement.misc.util.TileGetter;
 import snake2d.util.datatypes.DIR;
 import snake2d.util.sets.Bitsmap1D;
@@ -111,6 +112,15 @@ final class StateManager implements TileGetter<StateManager.State> {
 	
 	public int getDepth(int tx, int ty) {
 		
+		int depth = getDepthOrtho(tx, ty);
+		if (depth < MAX_DISTANCE)
+			return depth;
+		
+		return depth + getDepthNortho(tx, ty);
+	}
+	
+	public int getDepthOrtho(int tx, int ty) {
+		
 		int depth = MAX_DISTANCE;
 		
 		for (int di = 0; di < DIR.ORTHO.size() && depth > 0; di++) {
@@ -134,11 +144,15 @@ final class StateManager implements TileGetter<StateManager.State> {
 			for (int di = 0; di < DIR.ORTHO.size(); di++) {
 				DIR d = DIR.ORTHO.get(di);
 				if (!IN_BOUNDS(tx, ty, d) || PATH().solidity.is(tx, ty, d))
-					am++;
+					am+=SETT.TWIDTH;
 			}
 		}
 		
 		return depth + am;
+	}
+	
+	public int getDepthNortho(int tx, int ty) {
+		return tx;
 	}
 	
 	private boolean isBlockingJob(int tx, int ty) {

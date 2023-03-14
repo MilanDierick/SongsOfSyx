@@ -2,6 +2,7 @@ package settlement.entity.humanoid.spirte;
 
 import init.race.RACES;
 import init.race.Race;
+import init.race.appearence.RAddon;
 import settlement.entity.humanoid.spirte.HSpriteConst.CLAY;
 import settlement.stats.*;
 import snake2d.Renderer;
@@ -49,7 +50,7 @@ public final class HCorpseRenderer {
 		
 		
 		
-		TILE_SHEET sheet = indu.race().appearance().sheet(indu).lay;
+		TILE_SHEET sheet = indu.race().appearance().sheet(indu).sheet.lay;
 		
 
 		if (!inWater) {
@@ -57,21 +58,29 @@ public final class HCorpseRenderer {
 			sheet.render(s, CLAY.SHADOW + dir, x, y);
 		}
 		
-		Appearance ap = STATS.APPEARANCE();
-		inter.interpolate(CLAY.pantsC, decayC, decay).bind();
+		StatsAppearance ap = STATS.APPEARANCE();
+		inter.interpolate(ap.colorLegs(indu), decayC, decay).bind();
 		sheet.render(r, CLAY.PANTS + dir, x, y);
 		inter.interpolate(ap.colorSkin(indu), decayC, decay).bind();
 		sheet.render(r, CLAY.ARMS + dir, x, y);
-		if (ap.hasHair(indu))
-			inter.interpolate(ap.colorHair(indu), decayC, decay).bind();
+		for (RAddon add : indu.race().appearance().types.get(ap.gender.get(indu)).addonsBelow) {
+			add.renderLaying(r, dir, x, y, indu, false, decayC, decay);
+		}
+		inter.bind();
 		sheet.render(r, CLAY.HEAD + dir, x, y);
 		inter.interpolate(ap.colorClothes(indu), decayC, decay).bind();
 		sheet.render(r, CLAY.TORSO + dir, x, y);
-		if (STATS.EQUIP().BATTLEGEAR.stat().indu().get(indu) > 0) {
-			ap.colorArmour(indu).bind();
-			sheet.render(r, CLAY.ARMOR + dir, x, y);
+		
+		for (RAddon add : indu.race().appearance().types.get(ap.gender.get(indu)).addonsAbove) {
+			add.renderLaying(r, dir, x, y, indu, false, decayC, decay);
 		}
 		COLOR.unbind();
+//		
+//		if (STATS.EQUIP().BATTLEGEAR.stat().indu().get(indu) > 0) {
+//			ap.colorArmour(indu).bind();
+//			sheet.render(r, CLAY.ARMOR + dir, x, y);
+//		}
+//		COLOR.unbind();
 
 		OPACITY.O99.bind();		
 		inter.interpolate(COLOR.WHITE100, decayC, decay).bind();
@@ -94,7 +103,7 @@ public final class HCorpseRenderer {
 		y += CLAY.off;
 		
 		
-		TILE_SHEET sheet = race.appearance().adult().lay;
+		TILE_SHEET sheet = race.appearance().adult().sheet.lay;
 		
 		s.setHeight(3).setDistance2Ground(0);
 		sheet.render(s, CLAY.SHADOW + dir, x, y);
@@ -130,7 +139,7 @@ public final class HCorpseRenderer {
 		
 		COLOR blood = indu.race().appearance().colors.blood;
 		
-		TILE_SHEET sheet = indu.race().appearance().sheet(indu).lay;
+		TILE_SHEET sheet = indu.race().appearance().sheet(indu).sheet.lay;
 		
 
 		if (!inWater) {
@@ -138,26 +147,23 @@ public final class HCorpseRenderer {
 			sheet.render(s, CLAY.SHADOW + dir, x, y);
 		}
 		
-		Appearance ap = STATS.APPEARANCE();
-		inter.interpolate(CLAY.pantsC, decayC, decay).bind();
+		StatsAppearance ap = STATS.APPEARANCE();
+		inter.interpolate(ap.colorLegs(indu), decayC, decay).bind();
 		stencil.renderTextured(sheet.getTexture(CLAY.PANTS + dir), ran, x, y);
 		
 
 		inter.interpolate(ap.colorSkin(indu), decayC, decay).bind();
 		stencil.renderTextured(sheet.getTexture(CLAY.ARMS + dir), ran, x, y);
-		if (ap.hasHair(indu))
-			inter.interpolate(ap.colorHair(indu), decayC, decay).bind();
-		
 		stencil.renderTextured(sheet.getTexture(CLAY.HEAD + dir), ran, x, y);
 		
 		inter.interpolate(ap.colorClothes(indu), decayC, decay).bind();
 		stencil.renderTextured(sheet.getTexture(CLAY.TORSO + dir), ran, x, y);
 		
-		if (STATS.EQUIP().BATTLEGEAR.stat().indu().get(indu) > 0) {
-			ap.colorArmour(indu).bind();
-			stencil.renderTextured(sheet.getTexture(CLAY.ARMOR + dir), ran, x, y);
+		for (RAddon add : indu.race().appearance().types.get(ap.gender.get(indu)).addonsAbove) {
+			add.renderLayingTextured(stencil, ran, r, dir, x, y, indu, false);
 		}
 		COLOR.unbind();
+		
 //
 //		OPACITY.O99.bind();		
 //		inter.interpolate(COLOR.WHITE100, decayC, decay).bind();

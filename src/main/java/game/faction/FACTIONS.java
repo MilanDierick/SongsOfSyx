@@ -12,7 +12,6 @@ import game.faction.trade.TradeManager;
 import game.time.TIME;
 import init.RES;
 import init.race.RACES;
-import init.race.Race;
 import snake2d.util.file.FileGetter;
 import snake2d.util.file.FilePutter;
 import snake2d.util.sets.*;
@@ -43,9 +42,9 @@ public class FACTIONS extends GameResource {
 	public final PlayerPrices tradeUtil;
 	private final FDiplomacy relations;
 
-	public FACTIONS(Race playerRace, KeyMap<Double> boosts){
+	public FACTIONS(KeyMap<Double> boosts){
 		self = this;
-		this.player = new Player(playerRace, all, boosts);
+		this.player = new Player(all, boosts);
 		ncpUpdater = new UpdaterNPC();
 		for (int i = 1; i < MAX; i++) {
 			npcs.add(new FactionNPC(RACES.all().get(0), all, ncpUpdater));

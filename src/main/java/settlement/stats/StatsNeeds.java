@@ -2,7 +2,6 @@ package settlement.stats;
 
 
 import game.time.TIME;
-import init.D;
 import init.boostable.*;
 import init.race.RACES;
 import init.race.Race;
@@ -11,40 +10,41 @@ import settlement.entity.humanoid.*;
 import settlement.entity.humanoid.Humanoid.HumanoidResource;
 import settlement.main.SETT;
 import settlement.stats.Init.Updatable;
-import settlement.stats.STAT.StatInfo;
-import snake2d.util.file.Json;
 import snake2d.util.misc.ACTION;
 import snake2d.util.misc.CLAMP;
 import snake2d.util.rnd.RND;
 import snake2d.util.sets.*;
 import util.data.INT_O.INT_OE;
-import util.info.INFO;
 import view.sett.IDebugPanelSett;
 
-public class StatsNeeds {
+public class StatsNeeds extends StatCollection{
 	
 	public final StatNeed DIRTINESS;
-	public final StatNeed CONSTIPATION;
 	public final StatNeed HUNGER;
+	
 	public final StatNeed THIRST;
+	public final StatNeed CONSTIPATION;
+	
 	public final StatNeed RELIGION;
 	public final StatNeed MEDICAL;
+	
+	public final StatNeed GROOMING;
+	
 	public final LIST<StatNeed> NEEDS;
 	public final LIST<STAT> OTHERS;
-	public final INFO info;
 	
 	public final STAT EXHASTION;
 	
 	public final StatDanger INJURIES;
 	public final StatDanger EXPOSURE;
-	public final StatsDisease disease;
+	public final StatsNeedsDisease disease;
+	
+	private final LIST<STAT> all;
 	
 	StatsNeeds(Init init){
-		Json jte = new Json(init.pt.get("_STATS")).json("NEEDS"); 
-		D.gInit(this);
-		info = new INFO(D.g("Needs"), D.g("NeedsD", "Needs increase with time and is fulfilled by certain services or activities"));
+		super(init, "NEEDS");
 		LinkedList<StatNeed> all = new LinkedList<>();
-		DIRTINESS = new StatNeed(all, BOOSTABLES.RATES().SOILING, 4, D.g("Dirtiness"), D.g("DirtinessD", "How dirty this this individual is. Dirty subjects will seek out washing services."), init);
+		DIRTINESS = new StatNeed("DIRTINESS", all, BOOSTABLES.RATES().SOILING, 4, init);
 		
 		IDebugPanelSett.add("Cure insanity", new ACTION() {
 			
@@ -62,26 +62,32 @@ public class StatsNeeds {
 			}
 		});
 		
-		INJURIES = new StatDanger(init, init.count.new DataByte(), jte.json("INJURIES"));
-		EXPOSURE = new StatDanger(init, init.count.new DataNibble(), jte.json("EXPOSURE"));
+		INJURIES = new StatDanger("INJURIES", init, init.count.new DataByte());
+		EXPOSURE = new StatDanger("EXPOSURE", init, init.count.new DataNibble());
 		
 		
 		
-		EXHASTION = new STAT.STATData(null, init, init.count.new DataNibble1(), new StatInfo(D.g("Exhaustion"), D.g("ExhaustionD", "Exhausted subjects will lay down to rest to recover.")), null);
+		EXHASTION = new STAT.STATData("EXHAUSTION", init, init.count.new DataNibble1());
 		
 //		new StatsBoosts.StatBoosterStat(init, EXHASTION, new BoostableBoost(BOOSTABLES.BATTLE().OFFENCE, -0.4));
 //		new StatsBoosts.StatBoosterStat(init, EXHASTION, new BoostableBoost(BOOSTABLES.BATTLE().DEFENCE, -0.4));
-		new StatsBoosts.StatBoosterStat(init, EXHASTION, new BBoost(BOOSTABLES.PHYSICS().SPEED, 0.25, true));
+		new StatBoosterStat(EXHASTION, new BBoost(BOOSTABLES.PHYSICS().SPEED, 0.25, true));
 		
-		CONSTIPATION = new StatNeed(all, BOOSTABLES.RATES().DEFECATION, 1, D.g("Constipation"), D.g("ConstipationD", "Constipated subjects will seek out lavatories."), init);
-		HUNGER = new StatNeed(all, BOOSTABLES.RATES().HUNGER, 3, D.g("Hunger"), D.g("HungerD", "Hungry subjects will seek out food. Hunger may lead to starvation and death."), init);
-		THIRST = new StatNeed(all, BOOSTABLES.RATES().THIRST, 1, D.g("Thirst"), D.g("ThirstD", "Thirsty subjects will seek out drink."), init);
-		RELIGION = new StatNeed(all, BOOSTABLES.RATES().PIETY, 1, D.g("Religion"), D.g("ReligionD", "This indicates how much a subjects wants to visit the temple of their god."), init);
-		MEDICAL = new StatNeed(all, BOOSTABLES.RATES().DOCTOR, 1, D.g("Doctor"), D.g("DoctorD", "This indicates how often a subjects need to visit a physician."), init);
+		CONSTIPATION = new StatNeed("CONSTIPATION", all, BOOSTABLES.RATES().DEFECATION, 1, init);
+		HUNGER = new StatNeed("HUNGER", all, BOOSTABLES.RATES().HUNGER, 3, init);
+		THIRST = new StatNeed("THIRST", all, BOOSTABLES.RATES().THIRST, 1, init);
+		RELIGION = new StatNeed("RELIGION", all, BOOSTABLES.RATES().PIETY, 1, init);
+		MEDICAL = new StatNeed("MEDICAL", all, BOOSTABLES.RATES().DOCTOR, 1, init);
+		GROOMING = new StatNeed("GROOMING", all, BOOSTABLES.RATES().GROOMING, 1, init);
 		NEEDS = new ArrayList<StatNeed>(all);
+		
 		OTHERS = new ArrayList<STAT>(INJURIES.COUNT, EXHASTION, EXPOSURE.COUNT);
 		init.updatable.add(updater);
-		disease = new StatsDisease(init);
+		disease = new StatsNeedsDisease(init);
+		
+		
+		
+		this.all = makeStats(init);
 	}
 	
 	private final Updatable updater = new Updatable() {
@@ -164,6 +170,8 @@ public class StatsNeeds {
 				EXPOSURE.count.inc(i, -4);
 			}
 			
+			disease.update16(h, updateI, day, updateI);
+			
 		}
 		
 		@Override
@@ -179,17 +187,32 @@ public class StatsNeeds {
 		
 		private double InsaneRate(Race r) {
 			if (TIME.currentSecond() - itime > 10) {
-				double popD = 0.25 + 0.75*CLAMP.d(STATS.POP().POP.data().get(null)/3000.0, 0, 1);
-				for (int ri = 0; ri < RACES.all().size(); ri++) {
-					Race race = RACES.all().get(ri);
-					double v = popD;
+				double pop = STATS.POP().POP.data().get(null);
+				if (pop < 500) {
+					for (int ri = 0; ri < RACES.all().size(); ri++) {
+						Race race = RACES.all().get(ri);
+						int insane = STATS.POP().pop(race, HTYPE.DERANGED);
+						if (insane > STATS.POP().POP.data(HCLASS.CITIZEN).get(race)/(1+BOOSTABLES.BEHAVIOUR().SANITY.get(HCLASS.CITIZEN, race)*15)) {
+							insaneRate[race.index()] = 0;
+						}else {
+							insaneRate[race.index()] = 0.001;
+						}
 					
-					int insane = STATS.POP().pop(race, HTYPE.DERANGED);
-					if (insane > STATS.POP().POP.data(HCLASS.CITIZEN).get(race)/(1+BOOSTABLES.BEHAVIOUR().SANITY.get(HCLASS.CITIZEN, race)*20)) {
-						v = 0;
 					}
-					insaneRate[r.index()] = v;
+				}else {
+					double popD = CLAMP.d((pop-500)/3000.0, 0, 1);
+					for (int ri = 0; ri < RACES.all().size(); ri++) {
+						Race race = RACES.all().get(ri);
+						double v = popD;
+						
+						int insane = STATS.POP().pop(race, HTYPE.DERANGED);
+						if (insane > STATS.POP().POP.data(HCLASS.CITIZEN).get(race)/(1+BOOSTABLES.BEHAVIOUR().SANITY.get(HCLASS.CITIZEN, race)*15)) {
+							v = 0;
+						}
+						insaneRate[r.index()] = v;
+					}
 				}
+				
 				itime = TIME.currentSecond();
 			}
 			return insaneRate[r.index()];
@@ -203,7 +226,7 @@ public class StatsNeeds {
 		public final STAT COUNT;
 		public final INT_OE<Induvidual> count;
 		
-		private StatDanger(Init init, INT_OE<Induvidual> c, Json te) {
+		private StatDanger(String key, Init init, INT_OE<Induvidual> c) {
 			
 			count = new INT_OE<Induvidual>() {
 				@Override
@@ -228,8 +251,8 @@ public class StatsNeeds {
 				}
 			};
 			
-			COUNT = new STAT.STATData(null, init, count, new StatInfo(te), null);
-			DANGER = new STAT.STATData(null, init, init.count.new DataBit(), new StatInfo(te), null);
+			COUNT = new STAT.STATData(key, init, count);
+			DANGER = new STAT.STATData(null, init, init.count.new DataBit(), COUNT.info(), null);
 		}
 		
 		public boolean inDanger(Induvidual i) {
@@ -245,14 +268,14 @@ public class StatsNeeds {
 	public static class StatNeed implements INDEXED{
 		
 		private final int index;
-		public final STAT stat;
+		private final STAT stat;
 		private final double pp = 1.0/0x010;
 		public final BOOSTABLE rate;
-		public static final int breakPoint = 15;
+		private static final int breakPoint = 15;
 		
-		StatNeed(LISTE<StatNeed> all, BOOSTABLE p, int size, CharSequence name, CharSequence desc, Init init) {
+		StatNeed(String key, LISTE<StatNeed> all, BOOSTABLE p, int size, Init init) {
 			this.index = all.add(this);
-			stat = new STAT.STATData(null, init, init.count.new DataByte(0x010*(size+1)), new StatInfo(name, desc), null);
+			stat = new STAT.STATData(key, init, init.count.new DataByte(0x010*(size+1)));
 			rate = p;
 		}
 		
@@ -269,20 +292,15 @@ public class StatsNeeds {
 			stat.indu().set(h, (int) (breakPoint + Math.ceil(prio*d)));
 		}
 		
-		
 		public void fix(Induvidual h) {
 			inc(h, -0x010);
-		}
-		
-		public void fix(Induvidual h, int am) {
-			inc(h, -0x010*am);
 		}
 		
 		public void fixMax(Induvidual h) {
 			inc(h, -stat.indu().max(h));
 		}
 
-		public void inc(Induvidual h, int i) {
+		private void inc(Induvidual h, int i) {
 			stat.indu().inc(h, i);
 		}
 
@@ -291,7 +309,13 @@ public class StatsNeeds {
 			return index;
 		}
 		
-
+		public STAT stat() {
+			return stat;
+		}
+		
+		public int breakpoint() {
+			return breakPoint;
+		}
 		
 	}
 	
@@ -300,6 +324,11 @@ public class StatsNeeds {
 			if (n.rate.get(h) > 0)
 				n.stat.indu().set(h.indu(), StatNeed.breakPoint);
 		}
+	}
+
+	@Override
+	public LIST<STAT> all() {
+		return all;
 	}
 
 	

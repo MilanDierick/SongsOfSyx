@@ -101,6 +101,9 @@ class JobRoom extends Job {
 	public double jobPerformTime(Humanoid skill) {
 		switch (state) {
 		case CLEAR_TERRAIN:
+			if (SETT.TERRAIN().MOUNTAIN.is(coo))
+				return JOBS().clearss.tunnel.jobPerformTime(skill);
+			
 			TerrainTile t = TERRAIN().get(coo);
 			if (t.clearing().isEasilyCleared())
 				return 2;
@@ -127,13 +130,22 @@ class JobRoom extends Job {
 		RESOURCE res = null;
 		switch (state) {
 		case CLEAR_TERRAIN:
-			TerrainTile t = TERRAIN().get(tile);
-			res = t.clearing().resource();
-			for (int i = 0; i < 5; i++) {
-				t.clearing().clear1(coo.x(), coo.y());
-				if (t != TERRAIN().get(coo))
-					break;
+			if (SETT.TERRAIN().MOUNTAIN.is(coo))
+				return JOBS().clearss.tunnelPerform(coo);
+			else {
+				TerrainTile t = TERRAIN().get(tile);
+				boolean w = TERRAIN().WATER.is(tile);
+				res = t.clearing().resource();
+				for (int i = 0; i < 5; i++) {
+					t.clearing().clear1(coo.x(), coo.y());
+					if (t != TERRAIN().get(coo))
+						break;
+				}
+				if (TERRAIN().NADA.is(coo) && w) {
+					JOBS().waterTable++;
+				}
 			}
+			
 			break;
 		case CLEAR_VEG:
 			GRASS().current.increment(coo.x(), coo.y(), -4);

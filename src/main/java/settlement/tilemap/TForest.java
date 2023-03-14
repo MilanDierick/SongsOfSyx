@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 
 import game.GAME;
+import game.time.TIME;
 import init.C;
 import init.D;
 import init.biomes.TERRAIN;
@@ -499,6 +500,7 @@ public final class TForest {
 		private final SheetPair big;
 		private final TForestTop top = new TForestTop();
 		private final TForestLeafs leafs = new TForestLeafs();
+		private final Swayer swayer = new Swayer();
 		
 		private Sprites() throws IOException {
 			
@@ -560,6 +562,7 @@ public final class TForest {
 		public void update(float ds) {
 			top.update(ds);
 			leafs.update(ds);
+			swayer.update();
 		}
 
 		private SheetPair make(SheetType type, TILE_SHEET sh){
@@ -576,17 +579,34 @@ public final class TForest {
 				super(type, s, false);
 			}
 			
+			private final ColorImp col = new ColorImp();
+			
 			@Override
 			public void render(SheetData da, int x, int y, RenderIterator it, SPRITE_RENDERER sr, int tile, int random,
 					double degrade) {
 				
 				int ran = random;
 				int colI = (ran >> 7)&31;
-				SETT.TERRAIN().colors.tree.get(random).bind();
-				sheet.render(sr, tile, it.x(), it.y());
+				int swI = (ran >> 10)&63;
+				
+				
+				if (degrade > 0) {
+
+					col.interpolate(SETT.TERRAIN().colors.tree.get(random), SETT.TERRAIN().colors.tree.dry(random), degrade);
+				}else {
+					col.set(SETT.TERRAIN().colors.tree.get(random));
+				}
+				col.bind();
+				x += TERRAIN().TREES.sprites.swayer.dx[swI];
+				y -= TERRAIN().TREES.sprites.swayer.dy[swI];
+				int offX = it.oX()+TERRAIN().TREES.sprites.swayer.dx[swI];
+				int offY = it.oY()-TERRAIN().TREES.sprites.swayer.dy[swI];
+				
+				it.setOff(offX, offY);
+				sheet.render(sr, tile, x , y);
 				if (S.get().graphics.get() > 0) {
-					TERRAIN().TREES.sprites.top.render(sr, 0, it, colI);
-					TERRAIN().TREES.sprites.leafs.render(it.x(), it.y(), it.ran());
+					TERRAIN().TREES.sprites.top.render(x, y, sr, 0, it, colI);
+					TERRAIN().TREES.sprites.leafs.render(x, y, it.ran());
 				}
 				
 				
@@ -594,6 +614,12 @@ public final class TForest {
 				COLOR.unbind();
 				it.countVegetation();
 				it.countVegetation();
+			}
+			
+			@Override
+			public void renderShadow(SheetData da, int x, int y, RenderIterator it, ShadowBatch shadow, int tile,
+					int random) {
+				super.renderShadow(da, x, y, it, shadow, tile, random);
 			}
 		}
 		
@@ -737,14 +763,62 @@ public final class TForest {
 			}
 
 			
-			public void render(SPRITE_RENDERER r, int tile, RenderIterator i, int ran) {
+			public void render(int x, int y, SPRITE_RENDERER r, int tile, RenderIterator i, int ran) {
 				
 				ran &= 0x01F;
 				OPACITY.O50.bind();
 				TextureCoords t = SPRITES.textures().dots.get(i.tx(), i.ty(), 0, 0);
 				TextureCoords d = dis[ran].get(i.tx(), i.ty());
-				CORE.renderer().renderDisplaced(i.x(), i.x()+C.TILE_SIZE, i.y(), i.y()+C.TILE_SIZE, d, t);
+				CORE.renderer().renderDisplaced(x, x+C.TILE_SIZE, y, y+C.TILE_SIZE, d, t);
 				OPACITY.unbind();
+			}
+			
+			
+		}
+		
+		private static class Swayer {
+			private final int am = 64;
+			private final byte[] dx = new byte[am];
+			private final byte[] dy = new byte[am];
+
+			private final double[] dz = new double[am]; 
+			private double[] ran = new double[am];
+			
+			double dd;
+			
+			private double lastSecond = 0;
+			
+			Swayer(){
+				for (int i = 0; i < am; i++) {
+					dx[i] = (byte) RND.rInt(16);
+					dy[i] = (byte) RND.rInt(16);
+					ran[i] = RND.rFloat()*Math.PI*2;
+					dz[i] = 0.1 + 0.9*RND.rFloat();
+				}
+				
+			}
+			
+			void update() {
+				
+				if (TIME.currentSecond() == lastSecond)
+					return;
+				
+				double ds = TIME.currentSecond()-lastSecond;
+				lastSecond = TIME.currentSecond();
+				
+				double d = (SETT.WEATHER().wind.getD()-0.4)/0.4;
+				if (d < 0)
+					d = 0;
+				
+				dd += ds*d*4;
+
+				for (int i = 0; i < am; i++) {
+					double cos = (Math.cos(dd+ran[i]));
+					double a = dz[i]*4*cos;
+					dx[i] = (byte) (a);
+					dy[i] = (byte) (a);
+				}
+				
 			}
 			
 			

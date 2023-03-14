@@ -4,9 +4,7 @@ package init.biomes;
 import java.util.Set;
 
 import init.D;
-import init.boostable.*;
-import init.boostable.BOOSTER_COLLECTION.BOOSTER_COLLECTION_IMP;
-import init.boostable.BOOSTER_COLLECTION.OBJECT;
+import init.boostable.BOOSTABLES;
 import init.paths.PATHS;
 import init.sprite.ICON;
 import init.sprite.SPRITES;
@@ -19,7 +17,7 @@ public final class CLIMATES {
 
 	public final static String KEY = "CLIMATE";
 	private static Data d;
-	private static OBJECT<CLIMATE> bonus;
+	private static ClimateBonus bonus;
 
 	
 	private CLIMATES() {
@@ -31,7 +29,7 @@ public final class CLIMATES {
 	}
 	
 	public static void initBonuses(BOOSTABLES bo, double[][] climates) {
-		bonus = new Bonus(bo, climates);
+		bonus = new ClimateBonus(bo, climates);
 	}
 	
 	public static CLIMATE COLD() {
@@ -58,7 +56,7 @@ public final class CLIMATES {
 		return d.info;
 	}
 	
-	public static BOOSTER_COLLECTION.OBJECT<CLIMATE> BONUS() {
+	public static ClimateBonus BONUS() {
 		return bonus;
 	}
 	
@@ -72,35 +70,7 @@ public final class CLIMATES {
 		return null;
 	}
 	
-	private static class Bonus extends BOOSTER_COLLECTION_IMP implements BOOSTER_COLLECTION.OBJECT<CLIMATE>{
 
-		protected Bonus(BOOSTABLES bo, double[][] climates) {
-			super(d.info.name);
-
-			Json j = new Json(PATHS.CONFIG().get(KEY));
-			
-			
-			for (CLIMATE c : ALL()) {
-				
-				CLIMATE.Boost b = new CLIMATE.Boost(c, j.json(c.key), climates);
-				init(b);
-				c.booster = b;
-			}
-			
-		}
-
-		@Override
-		public double add(BOOSTABLE b, CLIMATE t) {
-			return t.booster.add[b.index()];
-		}
-
-		@Override
-		public double mul(BOOSTABLE b, CLIMATE t) {
-			return t.booster.mul[b.index()];
-		}
-		
-		
-	}
 	
 	private static final class Data implements KEY_COLLECTION<CLIMATE>{
 

@@ -1,22 +1,50 @@
 !Versions of the game are denoted 0.XX.YY. XX is the major version, and savegames are not compatible with other major versions. All major versions are available to check out in steam and saves are not deleted, so you can swap between them. YY - Minor versions are always savegame compatible and usually just small fixes.
 
-!2023-01-29 0.63.45
-Fixed bad performance on macs definately this time. Fixed potential minimap visuals. 
-Now going to work on the next version, and might be a bit unresponsive to bugs and suggestions, but will go through them again when the time comes.
+0.64.00
+Hunters made furnishable.
+Janitors made furnishable.
+Adjusted colors of wooden floors
+Moved the work camp to the jobs section in the UI.
+Work overtime decree. Increases production output, but decreases happiness, and increases accidents. Available to set per room.
+Accident rates added in the room UI
+Made accidents only happen in the workplace, and only affect subjects within the workplace.
+Moved all events to the same place, and made a suppress method for them, convenient for modders.
+MODDING: made it so there is no script picker in the menu. If a mod is selected, then the scripts will run. If you want toggle functionality, use a message. This might break advanced mods, but I do not intend to change this again.
+Brawls more common in mixed housing with hateful species.
+Brawl event, where two species are fed up with each other and will brawl everywhere they meet.
+Curfew added where subjects will stay indoors for the most part. Automatically activated during a battle, and can be manually toggled in the law screen. Curfews prevent crime and disease.
+Game disease a facelift. Diseases will circulate regularly in low numbers. Disease is derived from a new concept "sanitation". Epidemics pushed to late game. New UI for disease.
+¤¤¤This needs some testing. And we also need more diseases if you're up for that. I also added length of the disease, just like you wanted)
+Insanity has been pushed up to 800 people before becoming a problem. You might get 1 or 2 prior to that though.
+¤¤¤Might need to reflect that on the tech tree, or we use a title to unlock the asylum...)
+Plugged tunnel speed exploit when building room on a solid mountain.
+First 2 malus events for happiness will be milder.
+Fixed up the main menu generator screen.
+¤¤¤You expressed you wanted some additional difficulty settings here, lets hear them!
+A new advisor system is set up, where I can easily add advice to the player. I've added a few already. They work like messages, so you can toggle each one.
+¤¤¤I should just do what you tell me to without fuzz, will you be my boss ?? I added keys to buttons like you said ^^
+MODDING: The appearance of races has been severely remade and is now more flexible. You can add frames to the in-game sprites based on stats. Sorry for breaking it for you, but it's for the better good.
+Orchards added. Takes 4 years to grow.
+¤¤¤Add bonuses to them accordingly.
+¤¤¤CAn you give something like 100% 200% and 1000% to the accident tech?
+Changed accidents to be deterministic, no more bad dice rolls.
+Barber added as a service. Can produce resources based on species.
+¤¤An unlock for this (late game), perhaps check the room texts. Also extra fulfillment for Tilapi and no fulfillment for Garthimi and other brutes. 
+Home privacy removed. There are now upgrades and tools to increase max occupants of homes. Each size of homes have the same area/occupants stat.
+¤¤¤added placeholder techs, leave it for you.
+Amevia as a new species. Likes water and fish.
+¤¤¤Added water and fish as happiness, haven't done much else.
+Stopped messing with the workload when adding/removing employees.
+Routing enemies now orange on minimap
+3 new soundtracks
+WORLD-MAP
+New visuals and functionality across the board.
+Random generation now a multi-step process.
 
-!2023-01-29 0.63.44
-Attempting to fix bad performance on macs, and broken minimap visuals.
 
-!2023-01-29 0.63.43
-Fix fix that broke saturday's gaming session. Sorry about that!
 
-!2023-01-28 0.63.42
-Minor fixes.
-
-!2023-01-26 0.63.41
-Updated Java for windows and mac.
-Bug fixes
-Updated translations
+MODDING
+Titles have unlocking capabilities
 
 !2023-01-26 0.63.40
 Bug fixes.

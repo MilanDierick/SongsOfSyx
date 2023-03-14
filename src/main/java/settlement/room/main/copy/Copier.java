@@ -287,7 +287,7 @@ class Copier extends PlacableSingle{
 			}
 			
 			Room r = SETT.ROOMS().map.get(room.mX(), room.mY());
-			ConstructionInit init = new ConstructionInit(r.upgrade(), furnisher, structure, 0, r.makeState(room.mX(), room.mY()));
+			ConstructionInit init = new ConstructionInit(0, furnisher, structure, 0, r.makeState(room.mX(), room.mY()));
 			
 			SETT.ROOMS().construction.createClean(tmp, init);
 			

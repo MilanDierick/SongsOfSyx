@@ -305,7 +305,7 @@ public class Ground extends TileMap.Resource{
 			
 		}
 		
-		public void placeRaw(int x, int y) {
+		void placeRaw(int x, int y) {
 			if (IN_BOUNDS(x, y))
 				data[y*C.SETTLE_TSIZE+x] = (byte) (index<<4);
 		}
@@ -418,16 +418,15 @@ public class Ground extends TileMap.Resource{
 			return fer;
 	}
 	
-	public boolean adjust(int tile, int tx, int ty) {
+	public void adjust(int tile, int tx, int ty) {
 		GROUND g = getter.get(tile);
 		if (g.special)
-			return false;
+			return;
 		GROUND t = fertilityGet(SETT.FERTILITY().baseD.get(tile)+SETT.ENV().environment.WATER_SWEET.get(tile));
 		int d = CLAMP.i(t.fertility-g.fertility, -1, 1);
 		if (d != 0) {
 			all.get(g.fertility + d).placeFixed(tx, ty);
 		}
-		return g != getter.get(tile);
 	}
 	
 

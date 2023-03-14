@@ -18,17 +18,18 @@ import settlement.stats.STATS;
 import snake2d.util.bit.Bits;
 import snake2d.util.datatypes.*;
 import snake2d.util.map.MAP_OBJECT;
+import snake2d.util.misc.CLAMP;
 import snake2d.util.rnd.RND;
 
 public final class HomeHouse extends RoomWrap implements HOME{
 
 	private FurnisherItem it;
 	private final Coo service = new Coo();
-	private int maxAmount = 2;
 	
 	private final LivingDataD random = 		new LivingDataD(this, 1, 0x0000FFFF);
 	private final LivingDataD lit = 		new LivingDataD(this, 1, 0x00010000);
-	private final LivingDataD isolation = 	new LivingDataD(this, 1, 0x0FF00000);
+	private final LivingDataD upgrade = 	new LivingDataD(this, 1, 0x00F00000);
+	private final LivingDataD isolation = 	new LivingDataD(this, 1, 0xFF000000);
 	private final LivingDataD setting = 	new LivingDataD(this, 2, 0x0000FFFF);
 	private final LivingDataD am = 			new LivingDataD(this, 2, 0x00FF0000);
 	private final LivingDataD amOdd = 		new LivingDataD(this, 2, 0xFF000000);
@@ -61,7 +62,6 @@ public final class HomeHouse extends RoomWrap implements HOME{
 			throw new RuntimeException();
 		if (this.it != it | super.init(r, tx, ty)) {
 			this.it = it;
-			maxAmount = (int) it.group.stat(0);
 			int x = 0;
 			int y = it.group.item(0, 0).height()/2;
 			
@@ -71,16 +71,16 @@ public final class HomeHouse extends RoomWrap implements HOME{
 				x = newX;
 				y = newY;
 			}
-			service.set(body().x1()+it.width()/2+x, body().y1()+it.height()/2+y);
+			x = CLAMP.i(body().x1()+it.width()/2+x, body().x1(), body().x2()-1);
+			y = CLAMP.i(body().y1()+it.height()/2+y, body().y1(), body().y2()-1);
+			
+			service.set(x, y);
 		}
 		return this;
 	}
 
 	HomeHouse create() {
-		maxAmount = (int) it.group.stat(0);
-		if (5+maxAmount >= it.area)
-			throw new RuntimeException(""+it.group.name + " " + it.area);
-		
+
 		for (COORDINATE c : body()) {
 			if (is(c)) {
 				SETT.ROOMS().data.set(ROOMS().map.rooma.get(c), c, 0);
@@ -263,7 +263,7 @@ public final class HomeHouse extends RoomWrap implements HOME{
 	
 	@Override
 	public HOME_TYPE availability() {
-		if (am.get()-amOdd.get() >= maxAmount)
+		if (am.get()-amOdd.get() >= occupantsMax())
 			return null;
 		return psetting();
 	}
@@ -297,7 +297,7 @@ public final class HomeHouse extends RoomWrap implements HOME{
 	private void remove() {
 
 		
-		SETT.ROOMS().HOMES.report(-am.get(), -maxAmount, psetting());
+		SETT.ROOMS().HOMES.report(-am.get(), -occupantsMax(), psetting());
 		if (availability() != null) {
 			SETT.PATH().comps.data.home.reportAbsence(service.x(), service.y(), availability());
 			
@@ -306,7 +306,7 @@ public final class HomeHouse extends RoomWrap implements HOME{
 	}
 	
 	private void add() {
-		SETT.ROOMS().HOMES.report(am.get(), maxAmount, psetting());
+		SETT.ROOMS().HOMES.report(am.get(), occupantsMax(), psetting());
 		if (availability() != null) {
 			SETT.PATH().comps.data.home.reportPresence(service.x(), service.y(), availability());
 			
@@ -325,7 +325,7 @@ public final class HomeHouse extends RoomWrap implements HOME{
 
 	@Override
 	public int occupantsMax() {
-		return maxAmount;
+		return SETT.ROOMS().HOMES.HOME.constructor.maxOccupants[it.group.index()][upgrade.get()];
 	}
 	
 
@@ -416,11 +416,6 @@ public final class HomeHouse extends RoomWrap implements HOME{
 	}
 
 	@Override
-	public double space() {
-		return blue().constructor.space[it.group().index()];
-	}
-
-	@Override
 	public HOME resUpdate() {
 		renderTimer.set(0);
 		return this;
@@ -456,5 +451,27 @@ public final class HomeHouse extends RoomWrap implements HOME{
 		return it.group.name;
 	}
 
+	public void setUpgrade(int upgrade) {
+		if (upgrade < 0 || upgrade > 2)
+			throw new RuntimeException("" + upgrade);
+		if (this.upgrade.get() == upgrade)
+			return;
+		
+		int am = SETT.ROOMS().HOMES.HOME.constructor.maxOccupants[it.group.index()][upgrade];
+		int d = occupants()-am;
+
+		for (int i = 0; i < d; i++) {
+			Humanoid o = occupant(0);
+			STATS.HOME().GETTER.set(o, null);
+		}
+		remove();
+		this.upgrade.set(upgrade);
+		add();
+	}
+	
+	public int upgrade() {
+		return this.upgrade.get();
+	}
+	
 	
 }

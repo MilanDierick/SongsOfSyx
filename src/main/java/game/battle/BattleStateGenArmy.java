@@ -3,7 +3,7 @@ package game.battle;
 import static settlement.main.SETT.*;
 
 import init.C;
-import init.RES;
+import init.config.Config;
 import init.race.RACES;
 import init.race.Race;
 import settlement.army.Div;
@@ -21,7 +21,7 @@ import world.army.WINDU.WDivGeneration;
 
 final class BattleStateGenArmy {
 
-	private final static Tree<WDivId> sort = new Tree<WDivId>(RES.config().BATTLE.DIVISIONS_PER_ARMY) {
+	private final static Tree<WDivId> sort = new Tree<WDivId>(Config.BATTLE.DIVISIONS_PER_ARMY) {
 
 		@Override
 		protected boolean isGreaterThan(WDivId current, WDivId cmp) {
@@ -147,7 +147,8 @@ final class BattleStateGenArmy {
 		
 		int am = div.indus.length;
 		
-		if (am > RES.config().BATTLE.MEN_PER_DIVISION)
+		
+		if (am > Config.BATTLE.MEN_PER_DIVISION)
 			throw new RuntimeException(div + " " + am);
 		
 		for (COORDINATE c : tmp) {

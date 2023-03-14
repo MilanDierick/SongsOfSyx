@@ -2,7 +2,6 @@ package world.map.terrain;
 
 import static world.World.*;
 
-import game.GameConRandom;
 import init.RES;
 import snake2d.PathTile;
 import snake2d.util.datatypes.*;
@@ -13,7 +12,7 @@ class GeneratorOcean {
 
 	private double limit = 0.5;
 	
-	GeneratorOcean(GameConRandom spec,HeightMap height) {
+	GeneratorOcean(HeightMap height) {
 		
 		int size = TWIDTH()*THEIGHT();
 		size = size/8 + RND.rInt(size/4);
@@ -22,7 +21,6 @@ class GeneratorOcean {
 		COORDINATE c = getStart(height);
 		if (c == null)
 			return;
-		
 		
 		RES.flooder().init(this);
 		
@@ -38,9 +36,9 @@ class GeneratorOcean {
 			if (!WATER().fertile.is(t.x(), t.y()) && MOUNTAIN().is(t.x(), t.y()))
 				continue;
 			if (h < limit*0.8)
-				WATER().ABYSS.placeRaw(t.x(), t.y());
+				WATER().OCEAN.deep.placeRaw(t.x(), t.y());
 			else
-				WATER().OCEAN.placeRaw(t.x(), t.y());
+				WATER().OCEAN.normal.placeRaw(t.x(), t.y());
 			for (int i = 0; i < DIR.ORTHO.size(); i++) {
 				DIR d = DIR.ORTHO.get(i);
 				if (!TBOUNDS().holdsPoint(t, d))
@@ -72,9 +70,9 @@ class GeneratorOcean {
 				continue;
 			
 			if (h < limit*0.8)
-				WATER().ABYSS.placeRaw(t.x(), t.y());
+				WATER().OCEAN.deep.placeRaw(t.x(), t.y());
 			else
-				WATER().OCEAN.placeRaw(t.x(), t.y());
+				WATER().OCEAN.normal.placeRaw(t.x(), t.y());
 			for (int i = 0; i < DIR.ORTHO.size(); i++) {
 				DIR d = DIR.ORTHO.get(i);
 				if (!TBOUNDS().holdsPoint(t, d))

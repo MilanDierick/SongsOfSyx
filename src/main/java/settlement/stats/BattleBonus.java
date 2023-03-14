@@ -1,11 +1,8 @@
 package settlement.stats;
 
 
-import game.faction.FACTIONS;
-import init.boostable.BOOSTABLE;
-import init.boostable.BOOSTABLES;
+import init.boostable.*;
 import settlement.army.Div;
-import settlement.stats.StatsBoosts.StatBooster;
 import snake2d.util.sets.*;
 
 public final class BattleBonus{
@@ -34,8 +31,8 @@ public final class BattleBonus{
 		
 		LinkedList<STAT> eff = new LinkedList<>();
 		for (STAT s : STATS.all()) {
-			for (StatBooster b : s.boosts) {
-				if (powers[b.boost.boost.index()] != 0) {
+			for (BBooster b : s.boosts) {
+				if (powers[b.boost.boostable.index()] != 0) {
 					eff.add(s);
 					break;
 				}
@@ -73,7 +70,7 @@ public final class BattleBonus{
 		if (max == -1) {
 			double m = 0;
 			for (BOOSTABLE bo : all) {
-				m += powers[bo.index]*bo.max(FACTIONS.player());
+				m += powers[bo.index]*BOOSTABLES.player().max(bo);
 			}
 			this.max = m;
 		}

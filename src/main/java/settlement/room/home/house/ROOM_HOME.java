@@ -14,6 +14,7 @@ import snake2d.util.file.FileGetter;
 import snake2d.util.file.FilePutter;
 import snake2d.util.sets.LISTE;
 import view.sett.ui.room.UIRoomModule;
+import view.tool.PlacableMulti;
 
 public class ROOM_HOME extends RoomBlueprintImp{
 
@@ -22,11 +23,14 @@ public class ROOM_HOME extends RoomBlueprintImp{
 	public final OddHome odd = new OddHome();
 	final Houses houses = new Houses();
 	
+	private final Upgrader uper;
+	
 	public ROOM_HOME(RoomInitData init, RoomCategorySub cat) throws IOException {
 		super(init, 0, "_HOME", cat);
 		
 		constructor = new ContructorHome(init, this);
 		instance = new InstanceHome(init.m, this);
+		uper = new Upgrader(this, init);
 	}
 
 	@Override
@@ -115,7 +119,9 @@ public class ROOM_HOME extends RoomBlueprintImp{
 		return null;
 	}
 
-	
+	public PlacableMulti upgrader() {
+		return uper.get();
+	}
 	
 
 }

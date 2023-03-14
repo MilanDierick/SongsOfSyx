@@ -329,6 +329,21 @@ public class GBox implements SPRITE, GUI_BOX{
 		return this;
 	}
 	
+	public GBox resLine(RESOURCE r, double amount) {
+		if (rensFree.isEmpty()) {
+			GAME.Notify(r.name);
+			return this;
+		}
+		if (amount == 0)
+			return this;
+		add(r.icon().small);
+		text(r.names);
+		tab(6);
+		GFORMAT.f0(text(), amount);
+		NL();
+		return this;
+	}
+	
 	public GBox setResource(RESOURCE r, int amount, int of) {
 		add(r.icon().small);
 		GText t = text();

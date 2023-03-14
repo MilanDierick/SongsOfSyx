@@ -268,10 +268,10 @@ public final class AIModule_Insane extends AIModule{
 		
 		@Override
 		protected AISubActivation init(Humanoid a, AIManager d) {
-			return res.set(a, d);
+			return first.set(a, d);
 		}
 		
-		private final Resumer res = new Resumer(¤¤insane) {
+		private final Resumer first = new Resumer(¤¤insane) {
 			
 			@Override
 			protected AISubActivation setAction(Humanoid a, AIManager d) {
@@ -286,13 +286,7 @@ public final class AIModule_Insane extends AIModule{
 			
 			@Override
 			protected AISubActivation res(Humanoid a, AIManager d) {
-				d.planByte1 --;
-				if (d.planByte1 <= 0)
-					return null;
-				if (RND.oneIn(10)) {
-					return AI.SUBS().walkTo.run_arround_crazy(a, d, 2);
-				}
-				return crazySubs[RND.rInt(crazySubs.length)].activate(a, d);
+				return res.set(a, d);
 			}
 			
 			@Override
@@ -305,6 +299,58 @@ public final class AIModule_Insane extends AIModule{
 				// TODO Auto-generated method stub
 				
 			}
+		};
+		
+		private final Resumer res = new Resumer(¤¤insane) {
+			
+			@Override
+			protected AISubActivation setAction(Humanoid a, AIManager d) {
+				d.planByte1 --;
+				if (d.planByte1 <= 0)
+					return null;
+				if (RND.oneIn(10)) {
+					return AI.SUBS().walkTo.run_arround_crazy(a, d, 2);
+				}
+				return crazySubs[RND.rInt(crazySubs.length)].activate(a, d);
+			}
+			
+			@Override
+			protected AISubActivation res(Humanoid a, AIManager d) {
+				return setAction(a, d);
+			}
+			
+			@Override
+			public boolean con(Humanoid a, AIManager d) {
+				return true;
+			}
+			
+			@Override
+			public void can(Humanoid a, AIManager d) {
+				// TODO Auto-generated method stub
+				
+			}
+			
+			@Override
+			public boolean event(Humanoid a, AIManager d, settlement.entity.humanoid.HEvent.HEventData e) {
+				if (e.event == HEvent.COLLISION_UNREACHABLE) {
+					DIR dd = a.speed.dir();
+					if (!dd.isOrtho())
+						dd = dd.next(1);
+					for (int i = 0; i < 4; i++) {
+						if (SETT.PATH().connectivity.is(a.tc(), dd)) {
+							break;
+						}
+						dd = dd.next(2);
+						//a.speed.turn90();
+					}
+					if (SETT.PATH().connectivity.is(a.tc(), dd)) {
+						a.speed.setRaw(dd, 0.5);
+					}else
+						a.speed.magnitudeTargetSet(0);
+					
+				}
+				return super.event(a, d, e);
+			};
 		};
 		
 		private final Resumer sleep = new Resumer(¤¤insane) {
@@ -333,28 +379,7 @@ public final class AIModule_Insane extends AIModule{
 				
 			}
 		};
-		
-		@Override
-		public boolean event(Humanoid a, AIManager d, settlement.entity.humanoid.HEvent.HEventData e) {
-			if (e.event == HEvent.COLLISION_UNREACHABLE) {
-				DIR dd = a.speed.dir();
-				if (!dd.isOrtho())
-					dd = dd.next(1);
-				for (int i = 0; i < 4; i++) {
-					if (SETT.PATH().connectivity.is(a.tc(), dd)) {
-						break;
-					}
-					dd = dd.next(2);
-					//a.speed.turn90();
-				}
-				if (SETT.PATH().connectivity.is(a.tc(), dd)) {
-					a.speed.setRaw(dd, 0.5);
-				}else
-					a.speed.magnitudeTargetSet(0);
-				
-			}
-			return super.event(a, d, e);
-		};
+
 	};
 	
 	private final AISUB[] crazySubsA = new AISUB[] {

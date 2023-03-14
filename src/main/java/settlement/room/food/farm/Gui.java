@@ -292,14 +292,14 @@ class Gui extends UIRoomModuleImp<FarmInstance, ROOM_FARM> {
 				
 				@Override
 				public void update(GText text) {
-					GFORMAT.perc(text, blueprint.event);
+					GFORMAT.perc(text, blueprint.event());
 				}
 				
 				@Override
 				public void hoverInfoGet(GBox b) {
 					b.title(¤¤Event);
 					b.text(¤¤EventD);
-					b.add(GFORMAT.perc(b.text(), blueprint.event));
+					b.add(GFORMAT.perc(b.text(), blueprint.event()));
 				};
 				
 			}.hv(¤¤Event));
@@ -360,7 +360,7 @@ class Gui extends UIRoomModuleImp<FarmInstance, ROOM_FARM> {
 				
 				b.textL(¤¤Event);
 				b.tab(6);
-				b.add(GFORMAT.f1(b.text(), blueprint.event));
+				b.add(GFORMAT.f1(b.text(), blueprint.event()));
 				b.NL();
 				
 				

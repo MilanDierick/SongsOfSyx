@@ -1,7 +1,7 @@
 package settlement.army.ai.general;
 
 import init.C;
-import init.RES;
+import init.config.Config;
 import settlement.army.Army;
 import settlement.army.Div;
 import settlement.army.ai.util.ArmyAIUtil;
@@ -16,7 +16,7 @@ final class DivFinder {
 
 	private final Context c;
 	private final AbsMap map = new AbsMap(1);
-	private IntChecker dCheck = new IntChecker(RES.config().BATTLE.DIVISIONS_PER_ARMY);
+	private IntChecker dCheck = new IntChecker(Config.BATTLE.DIVISIONS_PER_ARMY);
 	
 	public DivFinder(Context c){
 		this.c = c;

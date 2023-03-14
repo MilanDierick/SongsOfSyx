@@ -8,17 +8,17 @@ public final class RNames {
 
 	public final LIST<String> firstNames;
 	public final LIST<String> lastNames;
-	public final LIST<String> firstNamesNoble;
-	public final LIST<String> lastNamesNoble;
+//	public final LIST<String> firstNamesNoble;
+//	public final LIST<String> lastNamesNoble;
 	
 	RNames(Json json, KeyMap<String[]> names){
 		firstNames = names("NAMESET_FILE_FIRST", json, names);
 		lastNames = names("NAMESET_FILE_SURNAME", json, names);
-		firstNamesNoble = names("NAMESET_FILE_FIRST_NOBLE", json, names);
-		lastNamesNoble = names("NAMESET_FILE_SURNAME_NOBLE", json, names);
+//		firstNamesNoble = names("NAMESET_FILE_FIRST_NOBLE", json, names);
+//		lastNamesNoble = names("NAMESET_FILE_SURNAME_NOBLE", json, names);
 	}
 	
-	private ArrayList<String> names(String key, Json json, KeyMap<String[]> names){
+	static ArrayList<String> names(String key, Json json, KeyMap<String[]> names){
 		String v = json.value(key);
 		if (names.containsKey(v))
 			return new ArrayList<>(names.get(v));

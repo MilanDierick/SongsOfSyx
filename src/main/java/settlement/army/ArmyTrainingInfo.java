@@ -5,7 +5,7 @@ import static settlement.main.SETT.*;
 import java.io.IOException;
 import java.util.Arrays;
 
-import init.RES;
+import init.config.Config;
 import init.race.RACES;
 import init.race.Race;
 import settlement.entity.humanoid.Humanoid;
@@ -227,7 +227,8 @@ public final class ArmyTrainingInfo {
 			file.is(soldiersTarget);
 
 			
-			for (int i = 0; i <= RES.config().BATTLE.DIVISIONS_PER_ARMY; i++)
+			
+			for (int i = 0; i <= Config.BATTLE.DIVISIONS_PER_ARMY; i++)
 				update();
 		}
 		
@@ -246,7 +247,8 @@ public final class ArmyTrainingInfo {
 
 	public void update() {
 
-		if (raceU == RES.config().BATTLE.DIVISIONS_PER_ARMY) {
+		
+		if (raceU == Config.BATTLE.DIVISIONS_PER_ARMY) {
 			for (RaceDiv d : perRace)
 				d.update();
 			raceU = 0;

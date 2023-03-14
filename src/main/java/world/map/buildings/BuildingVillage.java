@@ -51,14 +51,14 @@ final class BuildingVillage extends WorldBuildingSimple{
 		if (isVisible(it.ran(), it.tile())) {
 			
 		
-			int ran = ((it.ran()) % 64);
+			int ran = ((it.ran()) % 32);
 			
 			int x = it.x() + (((it.ran() >> 4)&0x07))*C.SCALE;
 			int y = it.y() + (((it.ran() >> 8)&0x07))*C.SCALE;
 			
-			World.BUILDINGS().sprites.houses.render(r, ran, x, y);
+			World.BUILDINGS().sprites.village.render(r, ran, x, y);
 			s.setHeight(1).setDistance2Ground(0);
-			World.BUILDINGS().sprites.houses.render(s, ran, x, y);
+			World.BUILDINGS().sprites.village.render(s, ran, x, y);
 			
 			if (TIME.light().nightIs() && (TIME.light().partOfCircular()*16 > (it.ran()&0x07))) {
 				x += C.TILE_SIZEH/2+(GAME.intervals().get05()+it.ran() & 0b11);

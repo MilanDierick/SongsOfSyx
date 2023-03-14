@@ -3,7 +3,7 @@ package world.army;
 import java.io.IOException;
 import java.util.Arrays;
 
-import init.RES;
+import init.config.Config;
 import snake2d.util.bit.BitsLong;
 import snake2d.util.file.*;
 import snake2d.util.sprite.text.Str;
@@ -13,7 +13,7 @@ import world.entity.army.WArmy;
 
 public final class WArmyDivs implements SAVABLE{
 
-	private final long[] divs = new long[RES.config().BATTLE.DIVISIONS_PER_ARMY];
+	private final long[] divs = new long[Config.BATTLE.DIVISIONS_PER_ARMY];
 	private int divI;
 	public final Str name = new Str(24);
 	final int[] data;

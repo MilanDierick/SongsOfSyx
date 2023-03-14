@@ -15,7 +15,6 @@ import settlement.thing.ThingsCadavers.Cadaver;
 import snake2d.SPRITE_RENDERER;
 import snake2d.util.color.COLOR;
 import snake2d.util.datatypes.AREA;
-import snake2d.util.datatypes.DIR;
 import snake2d.util.file.Json;
 import util.gui.misc.GText;
 import util.info.GFORMAT;
@@ -25,7 +24,7 @@ final class Constructor extends Furnisher{
 
 	private final ROOM_HUNTER blue;
 	
-	final FurnisherStat workers = new FurnisherStat(this) {
+	final FurnisherStat workers = new FurnisherStat(this, 1) {
 		
 		@Override
 		public double get(AREA area, double fromItems) {
@@ -38,13 +37,15 @@ final class Constructor extends Furnisher{
 		}
 	};
 	
+	final FurnisherStat efficiency = new FurnisherStat.FurnisherStatEfficiency(this, workers);
+	
 	final FurnisherItemTile ww;
 	final FurnisherItemTile rm;
 	final FurnisherItemTile rr;
 	
 	protected Constructor(ROOM_HUNTER blue, RoomInitData init)
 			throws IOException {
-		super(init, 1, 1, 88, 44);
+		super(init, 2, 2, 88, 44);
 		this.blue = blue;
 		
 		Json j = init.data().json("SPRITES");
@@ -112,45 +113,65 @@ final class Constructor extends Furnisher{
 			}
 			
 		};
+
 		
-		final RoomSprite smantel = new RoomSprite1x1(j, "MANTELPIECE_1X1") {
-			
-			@Override
-			public void renderAbove(SPRITE_RENDERER r, ShadowBatch s, int data, RenderIterator it, double degrade) {
-				if (((it.ran() >> 24) & 0b1) == 0)
-					return;
-				super.render(r, s, data, it, degrade, rotates);
-			}
-			
-			@Override
-			public boolean render(SPRITE_RENDERER r, ShadowBatch s, int data, RenderIterator it, double degrade,
-					boolean isCandle) {
-				return false;
-			}
-			
-			@Override
-			protected boolean joins(int tx, int ty, int rx, int ry, DIR d, FurnisherItem item) {
-				return DIR.ORTHO.get(item.rotation+1) == d;
-			}
-			
-		};
-		
-		ww = new FurnisherItemTile(this, false,table, AVAILABILITY.SOLID, false);
-		rm = new FurnisherItemTile(this, false,table, AVAILABILITY.SOLID, false);
-		rr = new FurnisherItemTile(this, false,table, AVAILABILITY.SOLID, false);
-		FurnisherItemTile __ = new FurnisherItemTile(this, RoomSprite.DUMMY, AVAILABILITY.ROOM, false);
-		FurnisherItemTile op = new FurnisherItemTile(this, true, RoomSprite.DUMMY, AVAILABILITY.ROOM, false);
+		ww = new FurnisherItemTile(this, true,table, AVAILABILITY.SOLID, false);
+		rm = new FurnisherItemTile(this, true,table, AVAILABILITY.SOLID, false);
+		rr = new FurnisherItemTile(this, true,table, AVAILABILITY.SOLID, false);
 		final FurnisherItemTile mm = new FurnisherItemTile(this, false,stable2, AVAILABILITY.SOLID, true);
-		final FurnisherItemTile nn = new FurnisherItemTile(this, false,sstorage, AVAILABILITY.SOLID, false);
-		final FurnisherItemTile ma = new FurnisherItemTile(this, false,smantel, AVAILABILITY.ROOM, false);
+		final FurnisherItemTile nn = new FurnisherItemTile(this, false, sstorage, AVAILABILITY.SOLID, false);
+		
+		new FurnisherItem(new FurnisherItemTile[][] {
+			{rm,ww,rr,mm},
+		}, 1);
+		
+		new FurnisherItem(new FurnisherItemTile[][] {
+			{rm,ww,rr,mm},
+			{rm,ww,rr,mm},
+		}, 2);
+		
+		flush(3);
+		
+		
+		new FurnisherItem(new FurnisherItemTile[][] {
+			{mm},
+		}, 1);
+		
+		new FurnisherItem(new FurnisherItemTile[][] {
+			{nn,mm},
+		}, 2);
+		
+		new FurnisherItem(new FurnisherItemTile[][] {
+			{nn,mm,nn},
+		}, 3);
+		
+		new FurnisherItem(new FurnisherItemTile[][] {
+			{nn,mm,mm,nn},
+		}, 4);
 		
 		new FurnisherItem(new FurnisherItemTile[][] {
 			{nn,mm,mm,mm,nn},
-			{__,__,__,__,ma},
-			{rm,ww,rr,mm,ma},
-			{rm,ww,rr,mm,ma},
-			{__,__,op,__,ma},
-		}, 1);
+		}, 5);
+		
+		new FurnisherItem(new FurnisherItemTile[][] {
+			{nn,mm},
+			{nn,mm},
+		}, 4);
+		
+		new FurnisherItem(new FurnisherItemTile[][] {
+			{nn,mm,nn},
+			{nn,mm,nn},
+		}, 6);
+		
+		new FurnisherItem(new FurnisherItemTile[][] {
+			{nn,mm,mm,nn},
+			{nn,mm,mm,nn},
+		}, 8);
+		
+		new FurnisherItem(new FurnisherItemTile[][] {
+			{nn,mm,mm,mm,nn},
+			{nn,mm,mm,mm,nn},
+		}, 10);
 		
 		flush(3);
 		
@@ -159,7 +180,7 @@ final class Constructor extends Furnisher{
 
 	@Override
 	public boolean usesArea() {
-		return false;
+		return true;
 	}
 
 	@Override

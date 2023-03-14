@@ -159,7 +159,7 @@ public abstract class RoomSingleton extends Room {
 		SETT.ROOMS().stats.broken().remove(a.mX(), a.mY());
 		removeAction(a);
 		if (scatter)
-			Deleter.scatterMaterials(a, constructor(), upgrade());
+			Deleter.scatterMaterials(a, constructor(), upgrade(tx, ty));
 		
 		for (COORDINATE c : a.body()) {
 			if (!a.is(c))
@@ -214,7 +214,7 @@ public abstract class RoomSingleton extends Room {
 
 		@Override
 		public int resAmount(int i) {
-			return item.cost(i, upgrade());
+			return item.cost(i, upgrade(degA.mX(), degA.mY()));
 		}
 
 		@Override
@@ -260,7 +260,7 @@ public abstract class RoomSingleton extends Room {
 	
 	@Override
 	public int resAmount(int ri, int upgrade) {
-		return (int) item.group.cost(ri, upgrade());
+		return (int) item.group.cost(ri, upgrade);
 	}
 	
 	protected void degradeChange(double oldD, double newD) {

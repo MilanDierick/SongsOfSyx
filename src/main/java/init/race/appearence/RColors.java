@@ -1,12 +1,12 @@
 package init.race.appearence;
 
 import settlement.entity.humanoid.HTYPE;
-import settlement.stats.Induvidual;
-import settlement.stats.STATS;
+import settlement.stats.*;
 import snake2d.util.color.COLOR;
 import snake2d.util.color.ColorImp;
 import snake2d.util.file.Json;
 import snake2d.util.sets.*;
+import util.data.DOUBLE_O;
 import util.keymap.RCollection;
 
 public final class RColors {
@@ -18,7 +18,7 @@ public final class RColors {
 	static final ColorCollection dummy = new ColorCollection(COLOR.WHITE100);
 //	public final ColorCollection dead;
 	private final COLOR[][] clothes;
-	private final COLOR[][] armour;
+//	private final COLOR[][] armour;
 	private final ArrayList<ColorCollection> all;
 	public static final COLOR grey = new ColorImp(170,170,170);
 	final RCollection<ColorCollection> collection;
@@ -26,7 +26,7 @@ public final class RColors {
 	RColors(Json data){
 		
 		clothes = clothes("COLOR_CLOTHES", data, STATS.EQUIP().CLOTHES.stat().indu().max(null)+1, 16);
-		armour = armour("COLOR_ARMOUR_LEVELS", data, STATS.EQUIP().BATTLEGEAR.stat().indu().max(null)+1, 16);
+//		armour = armour("COLOR_ARMOUR_LEVELS", data, STATS.EQUIP().BATTLEGEAR.stat().indu().max(null)+1, 16);
 		blood = new ColorImp(data.json("COLOR_BLOOD"));
 		
 		data = data.json("COLORS");
@@ -67,9 +67,9 @@ public final class RColors {
 		return clothes[var&0x0F][level%clothes[0].length];
 	}
 	
-	public COLOR armour(int level, int var) {
-		return armour[var&0x0F][level%armour[0].length];
-	}
+//	public COLOR armour(int level, int var) {
+//		return armour[var&0x0F][level%armour[0].length];
+//	}
 	
 //	public COLOR skin(Induvidual indu) {
 //		return skin.get((int) (indu.randomness2()>>((skin.ran)*8)));
@@ -87,6 +87,8 @@ public final class RColors {
 	
 	public static class ColorCollection implements INDEXED{
 		
+		public static ColorCollection DUMMY = new ColorCollection(COLOR.WHITE100);
+		
 		final String key;
 		protected final COLOR[] colors;
 		private final int index;
@@ -94,6 +96,7 @@ public final class RColors {
 		public boolean turnsGrayWhenOld;
 		public boolean turnsWhiteWhenDead;
 		public boolean addsSickColor;
+		public DOUBLE_O<Induvidual> statDerive;
 		
 		private ColorCollection(ArrayList<ColorCollection> all, Json json, String key) {
 			this.key = key;
@@ -102,23 +105,41 @@ public final class RColors {
 			turnsGrayWhenOld = json.bool("TURNS_GRAY_WHEN_OLD", false);
 			turnsWhiteWhenDead = json.bool("TURNS_WHITE_WHEN_DEAD", false);
 			addsSickColor = json.bool("TURNS_SICKLY", false);
-			ran = json.has("RANDOM_SEED") ? json.i("RANDOM_SEED", 0, 16) : index&15;
-			Json[] is = json.jsons("VALUES", 1, 16);
+			ran = index&15;
+			
+			if (json.has("PICK_BY_STAT")) {
+				DOUBLE_O<Induvidual> statDerive = null;
+				Json j = json.json("PICK_BY_STAT");
+				if (j.keys().size() == 0)
+					j.error("No stat declared. If no condition is wanted, remove the whole condition block.", "USE_STAT");
+				StatCollection coll = STATS.COLLECTION(j.keys().get(0));
+				STAT s = coll.MAP().tryGet(j.value(coll.key));
+				if (s != null) {
+					statDerive = s.indu();
+				}
+				this.statDerive = statDerive;
+			}
+			
+			LIST<ColorImp> lcols = ColorImp.cols(json, "VALUES");
 			COLOR[] cols = new COLOR[16];
+			
 			int k = 0;
-			for (Json j : is) {
-				cols[k++] = new ColorImp(j);
+			for (ColorImp c : lcols) {
+				cols[k++] = c;
 			}
 			
 			if (json.has("GENERATE_RANDOMIZE")) {
 				double d = json.d("GENERATE_RANDOMIZE");
 				for (int i = k; i < 16; i++) {
-					cols[i] = new ColorImp(cols[i%is.length]).shade(1.0-d*(i/16.0));
+					cols[i] = new ColorImp(cols[i%lcols.size()]).shade(1.0-d*(i/16.0));
 				}
 			}else {
-				for (int i = k; i < 16; i++) {
-					cols[i] = new ColorImp(cols[i%is.length]);
+				COLOR[] nn = new COLOR[16];
+				double d = lcols.size()/16.0;
+				for (int i = 0; i < 16; i++) {
+					nn[i] = cols[(int) (i*d)];
 				}
+				cols = nn;
 			}
 			
 			
@@ -154,12 +175,23 @@ public final class RColors {
 		}
 		
 		public COLOR get(Induvidual in, boolean dead) {
-			
 			if (turnsGrayWhenOld && in.hType() == HTYPE.RETIREE)
 				return grey;
+			
+			COLOR col = null;
+			
+			if (statDerive != null) {
+				col = get((int)(statDerive.getD(in)*15));	
+			}else {
+				col = get((int) (in.randomness2() >> (ran*4)));
+			}
 			if (turnsWhiteWhenDead && dead)
-				return ColorImp.TMP.interpolate(get((int) (in.randomness2() >> (ran*4))), COLOR.WHITE100, 0.3);
-			return get((int) (in.randomness2() >> (ran*4)));
+				return col = ColorImp.TMP.interpolate(col, COLOR.WHITE100, 0.3);
+			if (addsSickColor) {
+				col = STATS.NEEDS().disease.colorAdd(col, in);
+			}
+			return col;
+			
 		}
 
 	}
@@ -181,36 +213,6 @@ public final class RColors {
 				cols[v][s] = cols[v][levels-1].makeSaturated(d);
 			}
 			
-		}
-		
-		return cols;
-	}
-	
-	private COLOR[][] armour(String key, Json json, int levels, int vars) {
-		Json[] is = json.jsons(key, 1, vars);
-		COLOR[][] cols = new COLOR[vars][levels];
-		
-		for (int l = 0; l < levels; l++) {
-			double s = l/(levels-1.0);
-			double d = (is.length-1.0)*s;
-			
-			int iF = (int) (d);
-			int iT = (int) Math.ceil(d);
-			d -= iF; 
-			
-			ColorImp from = new ColorImp(is[iF]);
-			ColorImp to = new ColorImp(is[iT]);
-			COLOR c = from.interpolate(from, to, d);
-			cols[0][l] = c;
-		}
-		
-		for (int l = 0; l < levels; l++) {
-			for (int v = 1; v < vars; v++) {
-				ColorImp p = new ColorImp(cols[0][l]);
-				p.randomize(0.05);
-				cols[v][l] = p;
-				
-			}
 		}
 		
 		return cols;

@@ -17,7 +17,7 @@ import util.rendering.ShadowBatch;
 import view.tool.PlacableMessages;
 import view.tool.PlacableMulti;
 
-abstract class JobBuild extends Job{
+public abstract class JobBuild extends Job{
 
 	private enum PSTATE {
 		

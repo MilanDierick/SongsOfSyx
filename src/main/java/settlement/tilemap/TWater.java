@@ -529,8 +529,8 @@ public class TWater extends TerrainTile {
 		
 		private final TileTextureScroller dis1 = SPRITES.textures().dis_big.scroller(1.1, -1.1);
 		private final TileTextureScroller dis2 = SPRITES.textures().dis_tiny.scroller(-0.8, 0.8);
-		private final TileTextureScroller tex1 = SPRITES.textures().water3.scroller(-1, -1);
-		private final TileTextureScroller tex2 = SPRITES.textures().water2.scroller(1.5, 1.5);
+		private final TileTextureScroller tex1 = SPRITES.textures().bumps.scroller(-1, -1);
+		private final TileTextureScroller tex2 = SPRITES.textures().water.scroller(1.5, 1.5);
 		private final OpacityImp o2 = new OpacityImp((int) (255*0.25));
 		
 		private final int[] offs = new int[16];

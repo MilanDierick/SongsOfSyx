@@ -22,11 +22,21 @@ public class WorldBuildingSprites {
 			return d.s8.saveGame();
 		}
 	}.get();
-	public final TILE_SHEET farms = new ITileSheet(getter.get("Farms"), 364, 100) {
+	
+	public final TILE_SHEET village = new ITileSheet(getter.getFolder("houses").get("Village"), 460, 34) {
 		
 		@Override
 		protected TILE_SHEET init(ComposerUtil c, ComposerSources s, ComposerDests d) {
-			s.singles.init(0, 0, 1, 1, 8, 4, d.s16);
+			s.singles.init(0, 0, 1, 1, 16, 2, d.s8);
+			s.singles.paste(true);
+			return d.s8.saveGame();
+		}
+	}.get();
+	public final TILE_SHEET farms = new ITileSheet(getter.get("Farms"), 364, 50) {
+		
+		@Override
+		protected TILE_SHEET init(ComposerUtil c, ComposerSources s, ComposerDests d) {
+			s.singles.init(0, 0, 1, 1, 8, 2, d.s16);
 			s.singles.paste(true);
 			return d.s16.saveGame();
 		}
@@ -41,7 +51,7 @@ public class WorldBuildingSprites {
 		}
 	}.get();
 	
-	public final TILE_SHEET roads = new ITileSheet(getter.get("Roads"), 576, 140) {
+	public final TILE_SHEET roads = new ITileSheet(getter.get("Roads"), 576, 244) {
 		
 		@Override
 		protected TILE_SHEET init(ComposerUtil c, ComposerSources s, ComposerDests d) {
@@ -51,6 +61,17 @@ public class WorldBuildingSprites {
 			s.house.paste(true);
 			for (int i = 0; i < am*var; i++)
 				s.house.setVar(i).paste(true);
+			return d.s16.saveGame();
+		}
+	}.get();
+	
+	public final TILE_SHEET bridge = new ITileSheet() {
+		
+		@Override
+		protected TILE_SHEET init(ComposerUtil c, ComposerSources s, ComposerDests d) {
+			s.singles.init(0, s.house.body().y2(), 1, 1, 3, 1, d.s16);
+			for (int i = 0; i < 3; i++)
+				s.singles.setSkip(i, 1).paste(3, true);
 			return d.s16.saveGame();
 		}
 	}.get();

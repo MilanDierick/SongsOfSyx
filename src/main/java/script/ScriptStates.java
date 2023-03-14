@@ -9,13 +9,13 @@ public final class ScriptStates implements SAVABLE{
 
 	private final ArrayListResize<ScriptState> states = new ArrayListResize<>(1, 200);
 	
+	
 	public final void update(double ds) {
 		
 		for (ScriptState s : states) {
 			if (!s.hasPassed) {
 				if (s.condition()) {
 					s.hasPassed = true;
-					ScriptEngine.skipScriptOnce = false;
 					s.action();
 				}
 				

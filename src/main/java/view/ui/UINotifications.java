@@ -137,28 +137,6 @@ final class UINotifications extends GuiSection {
 			
 		});
 		
-		butts.add(new Butt(SPRITES.icons().s.death, new ColorImp(127, 100, 0), STATS.NEEDS().disease.infected().info().name, STATS.NEEDS().disease.infected().info().desc) {
-			int k = 0;
-			
-			@Override
-			public int get() {
-				return STATS.NEEDS().disease.infected().data(null).get(null);
-			}
-			
-			@Override
-			protected void clickA() {
-				k = showNextH(k, STATS.NEEDS().disease.infected());
-				super.clickA();
-			}
-			
-			@Override
-			public void hoverInfoGet(GUI_BOX text) {
-				super.hoverInfoGet(text);
-				UINotifications.this.hover(text, STATS.NEEDS().disease.infected());
-			}
-			
-		});
-		
 		
 		
 		butts.add(new Butt(SPRITES.icons().s.death, new ColorImp(127, 20, 0)) {

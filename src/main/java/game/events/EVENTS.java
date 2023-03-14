@@ -6,7 +6,10 @@ import java.util.LinkedList;
 import game.GAME.GameResource;
 import game.GameConRandom;
 import game.GameDisposable;
+import game.events.advice.EventAdvisor;
+import game.events.citizen.EventCitizen;
 import game.events.killer.EventKiller;
+import game.events.slave.EventUprising;
 import snake2d.util.file.FileGetter;
 import snake2d.util.file.FilePutter;
 
@@ -18,6 +21,15 @@ public final class EVENTS extends GameResource{
 	public final EventUprising uprising = new EventUprising();
 	public final EventDisease disease = new EventDisease();
 	public final EventKiller killer = new EventKiller();
+	public final EventTemperature temperature = new EventTemperature();
+	public final EventFarm farm = new EventFarm();
+	public final EventPasture pasture = new EventPasture();
+	public final EventOrchard orchard = new EventOrchard();
+	public final EventFish fish = new EventFish();
+	public final EventRaceTensions raceWars = new EventRaceTensions();
+	public final EventAdvisor advice = new EventAdvisor();
+	public final EventAccident accident = new EventAccident();
+	
 	
 	public EVENTS() {
 		super(false);

@@ -38,7 +38,7 @@ final class Options extends GuiSection{
 				@Override
 				public void exe() {
 					VIEW.inters().popup.close();
-					VIEW.s().ui.copier.activate();
+					VIEW.s().misc.copier.activate();
 				}
 			};
 			CLICKABLE c = new GButt.ButtPanel(¤¤CopyArea){

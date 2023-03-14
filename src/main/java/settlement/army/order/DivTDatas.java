@@ -2,13 +2,13 @@ package settlement.army.order;
 
 import java.io.IOException;
 
-import init.RES;
+import init.config.Config;
 import settlement.army.Div;
 import snake2d.util.file.*;
 
 public final class DivTDatas implements SAVABLE{
 
-	private final DivTData[] orders = new DivTData[RES.config().BATTLE.DIVISIONS_PER_ARMY*2];
+	private final DivTData[] orders = new DivTData[Config.BATTLE.DIVISIONS_PER_ARMY*2];
 	
 	public DivTDatas() {
 		for (int i = 0; i < orders.length; i++)

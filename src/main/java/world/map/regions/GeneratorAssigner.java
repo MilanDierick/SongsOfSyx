@@ -3,6 +3,7 @@ package world.map.regions;
 import static world.World.*;
 
 import init.RES;
+import init.config.Config;
 import snake2d.CORE;
 import snake2d.PathTile;
 import snake2d.util.datatypes.COORDINATE;
@@ -12,15 +13,17 @@ import world.World;
 
 class GeneratorAssigner {
 
-	public final static int maxSize = RES.config().WORLD.REGION_SIZE;
+	public final static int maxSize = Config.WORLD.REGION_SIZE;
 	
 	private final Polymap polly = new Polymap(TWIDTH(), THEIGHT(), (int) (40*(TWIDTH()/256.0)), 1.0);
 	private final Region none = null;
-	private final Region temp = REGIONS().getByIndex(0);
+	private Region temp;
 	
-	void generate() {
+	public GeneratorAssigner(int nr) {
+		temp = REGIONS().getByIndex(nr);
+		nr++;
 		
-		int nr = 1;
+		
 		
 		//make land regions
 		for (COORDINATE c : TBOUNDS()) {
@@ -90,7 +93,6 @@ class GeneratorAssigner {
 				assign(c.x(), c.y(), r, r2);
 			}
 		}
-		
 	}
 	
 	private boolean assignWater(int tx, int ty, Region nr, int minSize) {
@@ -249,7 +251,7 @@ class GeneratorAssigner {
 		boolean ok = false;
 		for (int y = y1; y < y2 && !ok; y++) {
 			for (int x = x1; x < x2; x++) {
-				if (test(x, y, nr)) {
+				if (World.REGIONS().setter.is(tx,ty,nr) && CapitolPlacablity.region(x, y) == null) {
 					ok = true;
 					break;
 					
@@ -265,26 +267,6 @@ class GeneratorAssigner {
 		nr.isWater = false;
 		
 		return true;
-	}
-	
-	static boolean test(int tx, int ty, Region r) {
-		if (!World.REGIONS().setter.is(tx,ty,r))
-			return false;
-		if (CapitolPlacablity.whole(tx-1, ty-1) != null)
-			return false;
-		
-		for (int dy = -1; dy < 3; dy++) {
-			for (int dx = -1; dx < 3; dx++) {
-				int x = tx+dx;
-				int y = ty+dy;
-				if (x < 1 || x >= World.TWIDTH()-1 || y < 1 || y >= World.THEIGHT()-1)
-					return false;
-				if (!World.REGIONS().setter.is(tx+dx,ty+dy,r))
-					return false;
-			}
-		}
-		return true;
-		
 	}
 
 	

@@ -18,21 +18,22 @@ public abstract class Faction{
 //	public final FactionTrade trade = new FactionTrade(this);
 	
 	private final int index;
-	private Race race;
+	protected int ri;
 	
 	public void remove() {
 		kingdom().remove();
 		FACTIONS.rel().clear(this);
 	}
 	
-	protected Faction(Race race, LISTE<Faction> all){
+	protected Faction(LISTE<Faction> all){
 		index = all.add(this);
-		this.race = race;
 	}
 
 	public final Race race() {
-		return race;
+		return RACES.all().get(ri);
 	}
+	
+	
 
 	public final int index() {
 		return index;
@@ -43,7 +44,7 @@ public abstract class Faction{
 	}
 
 	protected void save(FilePutter file) {
-		file.i(race.index);
+		file.i(ri);
 		
 		res().save(file);
 		capitol().save(file);
@@ -55,7 +56,7 @@ public abstract class Faction{
 	}
 
 	protected void load(FileGetter file) throws IOException {
-		race = RACES.all().get(file.i());
+		ri = file.i();
 		
 		res().load(file);
 		capitol().load(file);

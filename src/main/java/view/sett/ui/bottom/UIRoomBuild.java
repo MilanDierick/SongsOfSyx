@@ -27,6 +27,7 @@ import snake2d.util.gui.GUI_BOX;
 import snake2d.util.misc.CLAMP;
 import snake2d.util.sprite.SPRITE;
 import util.colors.GCOLOR;
+import util.dic.DicMisc;
 import util.gui.misc.GBox;
 import util.gui.misc.GText;
 import util.gui.slider.GGaugeMutable;
@@ -40,7 +41,7 @@ public final class UIRoomBuild{
 	private static CharSequence ¤¤optional = "¤(Optional)";
 	private static CharSequence ¤¤Emits = "¤Emits";
 	private static CharSequence ¤¤CurrentRooms = "¤Current Rooms";
-
+	
 	static {
 		D.ts(UIRoomBuild.class);
 	}
@@ -86,21 +87,24 @@ public final class UIRoomBuild{
 		for (SettEnv en : SETT.ENV().environment.all()) {
 			if (b.constructor().envValue(en)) {
 				if (!e) {
-					box.textL(¤¤Emits);
-					box.NL();
+					box.textLL(¤¤Emits);
 					e = true;
 				}
 				box.text(en.name);
-				box.NL();
+
 			}
 		}
+		box.NL();
 		
-		
+		if (b.employment() != null) {
+			box.textLL(DicMisc.¤¤AccidentRate);
+			box.add(GFORMAT.perc(box.text(), b.employment().accidentsPerYear*100 / (1+BOOSTABLES.CIVICS().ACCIDENT.get(null, null))));
+			box.NL();
+		}
 		
 		if (b.constructor().resources() > 0) {
 			box.NL(8);
 			box.textLL(¤¤cost);
-			box.NL();
 			int o = 0;
 			for (int ri = 0; ri < b.constructor().resources(); ri++) {
 				if (b.upgrades().resMask(0,ri) == 0)
@@ -124,6 +128,7 @@ public final class UIRoomBuild{
 					
 				}
 			}
+			box.NL();
 		}
 		
 		if (b instanceof INDUSTRY_HASER) {

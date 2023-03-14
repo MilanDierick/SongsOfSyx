@@ -3,7 +3,7 @@ package view.battle;
 import static settlement.main.SETT.*;
 
 import init.C;
-import init.RES;
+import init.config.Config;
 import init.sprite.SPRITES;
 import settlement.army.Div;
 import settlement.army.ai.util.DivTDataStatus;
@@ -25,9 +25,9 @@ final class BattlePlacerRenderer extends ON_TOP_RENDERABLE{
 	private final DivTDataStatus stat = new DivTDataStatus();
 	private final BattlePlacer b;
 	
-	private final double[] xs = new double[RES.config().BATTLE.DIVISIONS_PER_ARMY];
-	private final double[] ys = new double[RES.config().BATTLE.DIVISIONS_PER_ARMY];
-	private final double[] ranges = new double[RES.config().BATTLE.DIVISIONS_PER_ARMY];
+	private final double[] xs = new double[Config.BATTLE.DIVISIONS_PER_ARMY];
+	private final double[] ys = new double[Config.BATTLE.DIVISIONS_PER_ARMY];
+	private final double[] ranges = new double[Config.BATTLE.DIVISIONS_PER_ARMY];
 	private int ri;
 	
 	private boolean hovered;

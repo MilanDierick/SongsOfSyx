@@ -16,7 +16,7 @@ class Util {
 		double fertility = b.constructor.isIndoors ? 1 : ins.tData.fertility();
 		double skill = ins.tData.skill();
 		double work = ins.tData.work();
-		double e =  ins.blueprintI().event;
+		double e =  ins.blueprintI().event();
 		double m = ins.blueprintI().moisture;
 		return (int) (base*fertility*skill*work*e*m);
 		

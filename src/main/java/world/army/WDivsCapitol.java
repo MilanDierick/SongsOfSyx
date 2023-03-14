@@ -8,7 +8,7 @@ import java.util.Iterator;
 import game.GAME;
 import game.faction.FACTIONS;
 import game.faction.Faction;
-import init.RES;
+import init.config.Config;
 import init.race.Race;
 import init.resources.RESOURCES;
 import settlement.army.Div;
@@ -35,8 +35,8 @@ import world.entity.army.WArmy;
 final class WDivsCapitol implements LIST<WDIV>, SAVABLE {
 
 	private int updateTick = -1;
-	private final ArrayList<WDivCity> list = new ArrayList<WDivCity>(RES.config().BATTLE.DIVISIONS_PER_ARMY);
-	private final WDivCity[] all = new WDivCity[RES.config().BATTLE.DIVISIONS_PER_ARMY];
+	private final ArrayList<WDivCity> list = new ArrayList<WDivCity>(Config.BATTLE.DIVISIONS_PER_ARMY);
+	private final WDivCity[] all = new WDivCity[Config.BATTLE.DIVISIONS_PER_ARMY];
 
 	@Override
 	public void save(FilePutter file) {

@@ -14,18 +14,19 @@ import game.tourism.TOURISM;
 import init.D;
 import init.RES;
 import init.boostable.BOOSTABLES;
+import init.config.Config;
 import init.paths.PATHS;
 import init.race.RACES;
 import init.settings.S;
 import init.tech.TECHS;
 import script.ScriptEngine;
-import script.ScriptLoad;
 import settlement.main.SETT;
 import snake2d.*;
 import snake2d.CORE.GlJob;
 import snake2d.util.file.FileGetter;
 import snake2d.util.file.FilePutter;
-import snake2d.util.sets.*;
+import snake2d.util.sets.ArrayList;
+import snake2d.util.sets.KeyMap;
 import util.spritecomposer.Initer;
 import view.main.VIEW;
 import world.World;
@@ -58,18 +59,20 @@ public class GAME{
 		private int updateI = 0;
 		private final GameSpec spec;
 		
-		Game(GameSpec spec, LIST<ScriptLoad> scripts) throws IOException{
+		Game(GameSpec spec) throws IOException{
 			CORE.disposeClient();
 			GameDisposable.disposeAll();
 			this.spec = spec;
 			game = this;
-			for (ScriptLoad l : scripts)
-				l.script.initBeforeGameCreated();
+			
+			CORE.checkIn();
+			script = new ScriptEngine();
+			CORE.checkIn();
 			
 			GAME_LOAD_FIXER.all.clear();
 			
 			
-			new RES(spec.race);
+			new RES();
 			CORE.checkIn();
 			new TIME();
 			CORE.checkIn();
@@ -81,7 +84,7 @@ public class GAME{
 			settlement = new SETT();
 			CORE.checkIn();
 			new WARMYD();
-			BOOSTABLES.finishUp(null);
+			
 			new TECHS();
 			
 			CORE.checkIn();
@@ -89,10 +92,7 @@ public class GAME{
 			CORE.checkIn();
 			world = new World(spec.worldW, spec.worldH);
 			CORE.checkIn();
-			
 
-			script = new ScriptEngine();
-			CORE.checkIn();
 			
 			RACES.expand();
 			CORE.checkIn();
@@ -100,13 +100,14 @@ public class GAME{
 			new TOURISM();
 			CORE.checkIn();
 			nobilities = new NOBILITIES();
-			factions = new FACTIONS(RACES.all().get(spec.race), spec.boosts);
+			factions = new FACTIONS(spec.boosts);
 			CORE.checkIn();
 			battle = new BATTLE();
-			
+			BOOSTABLES.finishUp(null);
 			SPEED.clear();
 			CORE.checkIn();
-			game.script.set(scripts);
+			
+			script.initAfter();
 			
 		}
 		
@@ -118,7 +119,7 @@ public class GAME{
 	public final static GameSpeed SPEED = new GameSpeed(); 
 	private final static AutoSaver saver = new AutoSaver();
 	
-	private static void create(GameSpec spec, LIST<ScriptLoad> scripts) {
+	private static void create(GameSpec spec) {
 		new GlJob() {
 			@Override
 			public void doJob() {
@@ -130,7 +131,7 @@ public class GAME{
 						CORE.getSoundCore().stopAllSounds();
 						CORE.getSoundCore().disposeSounds();
 						CORE.checkIn();
-						new Game(spec, scripts);
+						new Game(spec);
 						CORE.checkIn();
 						
 						
@@ -143,22 +144,18 @@ public class GAME{
 	GAME(GameConRandom random){
 		LOG.ln("NEW GAME " + "Game version: " + VERSION.VERSION_STRING);
 		
-		create(new GameSpec(random), random.scripts);
+		create(new GameSpec(random));
 		game.factions.generate(random);
-		game.world.generate(random);
+		//game.world.generate(random);
 		game.events.generate(random);
 
 	}
 	
-	GAME(FileGetter fg, String script) throws IOException{
+	GAME(FileGetter fg) throws IOException{
 		
 		
 		GameSpec s = new GameSpec(fg);
-		
-		LIST<ScriptLoad> scripts = new ArrayList<>();
-		if (VERSION.versionMajor(s.version) > 63 || (VERSION.versionMajor(s.version) == 63 && VERSION.versionMinor(s.version) >= 30))
-			scripts = ScriptLoad.load(fg);
-		create(s, new ArrayList<ScriptLoad>(scripts));
+		create(s);
 		
 		achieving = fg.bool();
 		RES.loader().init();
@@ -176,9 +173,6 @@ public class GAME{
 		
 		game.updateI = fg.i();
 		
-		if (script != null)
-			game.script.set(new ArrayList<ScriptLoad>(ScriptLoad.get(script)));
-		
 		for (GAME_LOAD_FIXER f : GAME_LOAD_FIXER.all) {
 			f.fix();
 		}
@@ -190,8 +184,6 @@ public class GAME{
 		
 		
 		game.spec.save(fp);
-		
-		ScriptLoad.save(game.script.makeCurrent(), fp);
 		
 		fp.bool(achieving);
 		
@@ -223,7 +215,11 @@ public class GAME{
 		
 		
 		if (speed == 0) {
-			up(0);
+			for (GameResource s : GameResource.all) {
+				if (s.isBattle || !VIEW.b().isActive())
+					s.update(0);
+			}
+			game.updateI++;
 		}else {
 			ds *= speed;
 			saver.autosave(ds);
@@ -231,24 +227,24 @@ public class GAME{
 			float last = ds - fulls*max;
 			
 			for (int i = 0; i < fulls; i++){
-				up(max);
+				for (GameResource s : GameResource.all) {
+					if (s.isBattle|| !VIEW.b().isActive())
+						s.update(max);
+				}
+				game.updateI++;
 			}
 			
 			if (last > 0) {
-				up(last);
+				for (GameResource s : GameResource.all) {
+					if (s.isBattle || !VIEW.b().isActive())
+						s.update(last);
+				}
+				game.updateI++;
 			}
 		}
 		RES.sound().update(speed, ods, ds);
 		
 		
-	}
-	
-	private static void up(float max) {
-		for (GameResource s : GameResource.all) {
-			if (s.isBattle|| !VIEW.b().isActive())
-				s.update(max);
-		}
-		game.updateI++;
 	}
 	
 	public static void afterTick() {
@@ -418,22 +414,19 @@ public class GAME{
 	
 	static class GameSpec{
 
-		public final int race;
 		public final int worldW;
 		public final int worldH;
 		public final int version;
 		public final KeyMap<Double> boosts;
 		
 		GameSpec(GameConRandom random){
-			race = (int)random.race.getValue();
-			worldW = (int)random.size.getValue();
-			worldH = (int)random.size.getValue();
+			worldW = Config.WORLD.WORLD_SIZE;
+			worldH = Config.WORLD.WORLD_SIZE;
 			version = VERSION.VERSION;
 			boosts = random.BOOSTS;
 		}
 		
 		GameSpec(FileGetter file) throws IOException{
-			race = file.i();
 			worldW = file.i();
 			worldH = file.i();
 			version = file.i();
@@ -445,7 +438,6 @@ public class GAME{
 		}
 		
 		void save(FilePutter file) {
-			file.i(race);
 			file.i(worldW);
 			file.i(worldH);
 			file.i(VERSION.VERSION);

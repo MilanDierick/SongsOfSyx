@@ -8,12 +8,11 @@ import game.faction.player.PLocks.PLocker;
 import game.time.TIME;
 import init.D;
 import init.boostable.*;
-import init.boostable.BOOSTER_COLLECTION.BOOSTER_COLLECTION_IMP;
-import init.boostable.BOOSTER_COLLECTION.SIMPLE;
+import init.boostable.BOOST_LOOKUP.BOOSTER_LOOKUP_IMP;
+import init.boostable.BOOST_LOOKUP.SIMPLE;
 import init.sprite.SPRITES;
-import init.tech.TECH;
+import init.tech.*;
 import init.tech.TECH.TechRequirement;
-import init.tech.TECHS;
 import settlement.main.SETT;
 import settlement.room.industry.module.Industry;
 import settlement.room.knowledge.laboratory.ROOM_LABORATORY;
@@ -60,7 +59,7 @@ public class PTech {
 	public static final double FORGET_THRESHOLD = 0.8;
 	private double askTimer = -10;
 	
-	public BOOSTER_COLLECTION.SIMPLE BOOSTER;
+	public BOOST_LOOKUP.SIMPLE BOOSTER;
 	private final Boost boost;
 	
 	private final INT.IntImp allocated = new INT.IntImp() {
@@ -228,7 +227,7 @@ public class PTech {
 		boost.setBonuses();
 	}
 	
-	private class Boost extends BOOSTER_COLLECTION_IMP implements SIMPLE {
+	private class Boost extends BOOSTER_LOOKUP_IMP implements SIMPLE {
 
 		private final double[] add = new double[BOOSTABLES.all().size()];
 		private final double[] mul = new double[BOOSTABLES.all().size()];
@@ -238,6 +237,7 @@ public class PTech {
 			for (TECH t : TECHS.ALL())
 				init(t, t.levelMax);
 			setBonuses();
+			makeBoosters(this, true, false, true);
 		}
 
 		@Override
@@ -260,9 +260,9 @@ public class PTech {
 					allocated.inc(costTotal(t, l));
 					for (BBoost b : t.boosts()) {
 						if (b.isMul())
-							mul[b.boost.index()] *= b.value()*l;
+							mul[b.boostable.index()] *= b.value()*l;
 						else
-							add[b.boost.index()] += b.value()*l;
+							add[b.boostable.index()] += b.value()*l;
 					}
 				}
 			}
@@ -373,12 +373,13 @@ public class PTech {
 		double b = 1.0;
 		for (ROOM_LIBRARY l : SETT.ROOMS().LIBRARIES)
 			b += l.boost();
+		
 		am *= b;
 		for (Region r : FACTIONS.player().kingdom().realm().regions()) {
 			am += REGIOND.CIVIC().knowledge.next(r);
 		}
-		am = (long) BOOSTABLES.START().KNOWLEDGE.get(null, null, am);
-		return (long) (am);
+		am += BOOSTABLES.START().KNOWLEDGE.get(null, null);
+		return am;
 	}
 	
 	private long cap,main;
@@ -386,6 +387,7 @@ public class PTech {
 	
 	void update(double ds) {
 		askTimer -= ds;
+		
 		if (askTimer <= 0) {
 			cap = pknowledgeCapacity();
 			main = pknowledgeMaintained();
@@ -617,6 +619,16 @@ public class PTech {
 				s.add(¤¤LockedByDefecit);
 			}
 			return s;
+		}
+
+		@Override
+		protected int unlocks() {
+			return TECHS.ALL().size();
+		}
+
+		@Override
+		protected Unlocks unlock(int i) {
+			return TECHS.ALL().get(i);
 		}
 	};
 

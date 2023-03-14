@@ -30,7 +30,7 @@ class ScreenMods extends GuiSection{
 	private Text hs = new Text(Sprites.font, 200).setScale(1);
 	private final GuiSection mods = new GuiSection();
 	private boolean fetching = false;
-//	private SteamAchieve steam = null;
+	private SteamAchieve steam = null;
 	private final Launcher l;
 	
 	ScreenMods(Launcher l) {
@@ -92,25 +92,25 @@ class ScreenMods extends GuiSection{
 		add(b);
 		
 		if (PATHS.isSteam() || PATHS.isDevelop()) {
-//			steam = new SteamAchieve();
+			steam = new SteamAchieve();
 			
 			b = new GUI.Button.Text("sync steam") {
 				boolean sentError = false;
 				@Override
 				protected void clickA() {
 					fetching = true;
-//					steam.work();
+					steam.work();
 				}
 				
 				@Override
 				protected void renAction() {
 					
-//					activeSet(steam.isDone() && !steam.isError());
-//					if (steam.exception() != null && ! sentError) {
-//						sentError = true;
-//						steam.exception().printStackTrace(System.err);
-//						new ErrorHandler().handle(new GameError(steam.exception().getMessage()), "error syncing steam");
-//					}
+					activeSet(steam.isDone() && !steam.isError());
+					if (steam.exception() != null && ! sentError) {
+						sentError = true;
+						steam.exception().printStackTrace(System.err);
+						new ErrorHandler().handle(new GameError(steam.exception().getMessage()), "error syncing steam");
+					}
 				}
 				
 				
@@ -146,10 +146,10 @@ class ScreenMods extends GuiSection{
 	public void render(SPRITE_RENDERER r, float ds) {
 		
 			
-//		if (fetching && steam != null && (steam.isDone() || steam.isError())) {
-//			update(ds);
-//			fetching = false;
-//		}
+		if (fetching && steam != null && (steam.isDone() || steam.isError())) {
+			//update(ds);
+			fetching = false;
+		}
 		
 		super.render(r, ds);
 		int sx = body().x1()+550;

@@ -1,7 +1,7 @@
 package world.map.regions;
 
 import init.D;
-import init.RES;
+import init.config.Config;
 import snake2d.util.misc.CLAMP;
 import util.data.DOUBLE_O.DOUBLE_OE;
 import util.data.INT_O;
@@ -28,7 +28,8 @@ public final class RegionPopulation {
 	}
 
 	RegionPopulation(RegionInit init) {
-		MAX = RES.config().WORLD.TILE_POPULATION * GeneratorAssigner.maxSize;
+		
+		MAX = Config.WORLD.TILE_POPULATION * GeneratorAssigner.maxSize;
 		MAXI = 1.0/MAX;
 		new RegionFactorImp(capacity, ¤¤Base, ¤¤BaseD) {
 

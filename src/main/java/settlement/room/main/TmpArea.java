@@ -5,7 +5,6 @@ import static settlement.room.main.construction.ConstructionData.*;
 
 import java.io.IOException;
 
-import game.VERSION;
 import init.RES;
 import init.sprite.ICON.BIG;
 import settlement.main.RenderData.RenderIterator;
@@ -85,8 +84,6 @@ public final class TmpArea implements MAP_SETTER, ROOMA {
 		lastUser = user;
 		cons = null;
 		removeFloor = true;
-		if (VERSION.versionIsBefore(0, 0))
-			;
 //		els = new RuntimeException().getStackTrace();
 	}
 	

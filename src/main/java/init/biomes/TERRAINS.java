@@ -4,6 +4,7 @@ import static settlement.main.SETT.*;
 
 import init.D;
 import init.paths.PATHS;
+import settlement.main.SETT;
 import snake2d.util.datatypes.DIR;
 import snake2d.util.file.Json;
 import snake2d.util.map.MAP_OBJECT;
@@ -51,7 +52,7 @@ public final class TERRAINS {
 				public double value(int wx, int wy) {
 					double res = 0;
 					for (int di = 0; di < DIR.ORTHO.size(); di++) {
-						if (World.WATER().isOceany.is(wx, wy, DIR.ORTHO.get(di)))
+						if (World.WATER().OCEAN.is.is(wx, wy, DIR.ORTHO.get(di)))
 							res += 0.25;
 					}
 					return CLAMP.d(res, 0, 1);
@@ -73,7 +74,7 @@ public final class TERRAINS {
 			public double value(int wx, int wy) {
 				double res = 0;
 				for (int di = 0; di < DIR.ORTHO.size(); di++) {
-					if (World.WATER().isLaky.is(wx, wy, DIR.ORTHO.get(di)) || World.WATER().isRivery.is(wx, wy, DIR.ORTHO.get(di)))
+					if (World.WATER().LAKE.is.is(wx, wy, DIR.ORTHO.get(di)) || World.WATER().isRivery.is(wx, wy, DIR.ORTHO.get(di)))
 						res += 0.25;
 				}
 				return CLAMP.d(res, 0, 1);
@@ -86,7 +87,7 @@ public final class TERRAINS {
 
 					@Override
 					public SPRITE icon() {
-						return World.MOUNTAIN().icon;
+						return SETT.TERRAIN().MOUNTAIN.getIcon();
 					}
 
 					@Override
@@ -178,6 +179,30 @@ public final class TERRAINS {
 			if (TERRAIN().WATER.is(tx, ty) && GROUND().getter.get(tx, ty).fertility() == 0)
 				return OCEAN();
 			if (TERRAIN().WATER.is(tx, ty))
+				return WET();
+			return NONE();
+		}
+	
+	};
+	
+	public static final MAP_OBJECT<TERRAIN> world = new MAP_OBJECT<TERRAIN>() {
+
+		@Override
+		public TERRAIN get(int tile) {
+			throw new RuntimeException();
+		}
+
+		@Override
+		public TERRAIN get(int tx, int ty) {
+			if (!World.IN_BOUNDS(tx, ty))
+				return NONE();
+			if (World.FOREST().is.is(tx, ty))
+				return FOREST();
+			if (World.MOUNTAIN().is(tx, ty))
+				return MOUNTAIN();
+			if (World.WATER().OCEAN.is.is(tx, ty))
+				return OCEAN();
+			if (World.WATER().fertile.is(tx, ty))
 				return WET();
 			return NONE();
 		}

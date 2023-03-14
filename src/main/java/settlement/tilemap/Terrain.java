@@ -151,7 +151,7 @@ public final class Terrain extends TileMap.Resource implements MAP_OBJECT<Terrai
 	
 	void renderAbove(Renderer r, ShadowBatch shadowBatch, RenderData data) {
 
-		RenderData.RenderIterator i = data.onScreenTiles(2, 1, 2, 1);
+		RenderData.RenderIterator i = data.onScreenTiles(2, 2, 2, 2);
 		
 		while (i.has()) {
 

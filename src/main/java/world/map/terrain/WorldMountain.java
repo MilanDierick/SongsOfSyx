@@ -3,11 +3,13 @@ package world.map.terrain;
 import static world.World.*;
 
 import java.io.IOException;
+import java.util.Arrays;
 
 import game.time.TIME;
 import init.C;
 import init.RES;
 import init.biomes.TERRAINS;
+import init.paths.PATHS;
 import init.sprite.ICON;
 import settlement.main.RenderData;
 import settlement.main.RenderData.RenderIterator;
@@ -23,6 +25,8 @@ import snake2d.util.map.MAP_INT;
 import snake2d.util.sets.Bitmap1D;
 import snake2d.util.sprite.*;
 import util.rendering.ShadowBatch;
+import util.spritecomposer.*;
+import util.spritecomposer.ComposerThings.ITileSheet;
 import view.tool.*;
 import view.world.IDebugPanelWorld;
 import world.World;
@@ -32,14 +36,38 @@ public class WorldMountain extends WorldResource{
 
 	private byte[] data;
 	private static byte NOTHING = -1;
-	private final TILE_SHEET sheet = World.sprites().mountain;
+	private final TILE_SHEET sheet = (new ITileSheet(PATHS.SPRITE_WORLD_MAP().get("Mountain"), 576, 316) {
+
+		@Override
+		protected TILE_SHEET init(ComposerUtil c, ComposerSources s, ComposerDests d) {
+			ComposerDests.Tile t = d.s16;
+			s.house2.init(0, 0, 3, 3, t);
+
+			s.house2.setVar(0).paste(2, true);
+			s.house2.setVar(1).paste(2, true);
+			s.house2.setVar(2).paste(1, true);
+			s.house2.setVar(3).paste(2, true);
+			s.house2.setVar(4).paste(2, true);
+			s.house2.setVar(5).paste(1, true);
+			
+			s.house2.setVar(6).paste(true);
+			s.house2.setVar(7).paste(true);
+			s.house2.setVar(8).paste(1, true);
+
+			s.full.init(0, s.house2.body().y2(), 1, 1, 16, 3, t);
+			s.full.setSkip(16, 0).paste(1, true);
+			s.full.setSkip(4, 16).paste(3, true);
+			return t.saveGame();
+
+		}
+	}).get();
 	private static final int MAX_HEIGHT = 15;
 	private final COLOR[] colors = COLOR.interpolate(new ColorImp(80,80,80), new ColorImp(210,210,210), MAX_HEIGHT);
 	private final Bitmap1D top = new Bitmap1D(TAREA(), false);
 	public final PLACABLE placer;
 	public final SPRITE icon;
 	
-	public WorldMountain() {
+	public WorldMountain() throws IOException {
 		data = new byte[TAREA()];
 		for (int i = 0; i < data.length; i++)
 			data[i] = (byte) NOTHING;
@@ -340,6 +368,12 @@ public class WorldMountain extends WorldResource{
 	protected void load(FileGetter saveFile) throws IOException {
 		saveFile.bs(data);
 		top.load(saveFile);
+	}
+	
+	@Override
+	protected void clear() {
+		Arrays.fill(data, (byte)0);
+		top.setAll(false);
 	}
 	
 	private final static int SET = 16;

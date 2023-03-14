@@ -5,8 +5,11 @@ import java.io.IOException;
 import game.GAME;
 import game.faction.FACTIONS;
 import game.time.TIME;
-import init.*;
+import init.C;
+import init.D;
 import init.boostable.*;
+import init.boostable.BBooster.BBoosterImp;
+import init.config.Config;
 import init.paths.PATH;
 import init.race.RACES;
 import init.race.Race;
@@ -23,7 +26,6 @@ import settlement.room.main.*;
 import settlement.stats.Init.Updatable;
 import settlement.stats.STANDING.StandingDef;
 import settlement.stats.STAT.StatInfo;
-import settlement.stats.StatsBoosts.StatBooster;
 import settlement.thing.projectiles.Projectile;
 import snake2d.Renderer;
 import snake2d.util.color.COLOR;
@@ -54,7 +56,6 @@ public final class StatsEquippables extends StatCollection implements Updatable 
 	private final ArrayList<StatEquippableWork> work;
 	private final LIST<STAT> stats;
 	public final EQUIPPABLE CLOTHES;
-	public final StatEquippableBattle BATTLEGEAR;
 	private static CharSequence ¤¤Level = "¤{0} Level";
 	private static CharSequence ¤¤Target = "¤{0} Target";
 	private static CharSequence ¤¤Level_desc = "¤The target number of items each individual should equip. Special cases for this is tools, which is set at each industry. Weapons are also set separately for each division.";
@@ -97,7 +98,6 @@ public final class StatsEquippables extends StatCollection implements Updatable 
 		{
 			LinkedList<StatEquippableBattle> tmp = new LinkedList<>();
 			PATH d = data.getFolder("battle");
-			this.BATTLEGEAR = new StatEquippableBattle("_ARMOUR", d, all, tmp, mil, init);
 			for (String k : d.getFiles()) {
 				new StatEquippableBattle(k, d, all, tmp, mil, init);
 			}
@@ -146,7 +146,7 @@ public final class StatsEquippables extends StatCollection implements Updatable 
 	public static abstract interface EQUIPPABLE extends INDEXED{
 		
 		public abstract STAT stat();
-		public abstract LIST<StatBooster> boosts();
+		public abstract LIST<BBoosterImp> boosts();
 		public abstract int target(Humanoid h);
 		public abstract int max(Induvidual i);
 		public abstract double wearRate();
@@ -169,7 +169,8 @@ public final class StatsEquippables extends StatCollection implements Updatable 
 		public int max();
 		public int indexMilitary();
 		public void hover(GUI_BOX box, Div div);
-
+		public int garrisonAmount();
+		public int guardAmount();
 	}
 	
 	
@@ -189,8 +190,6 @@ public final class StatsEquippables extends StatCollection implements Updatable 
 		
 		final STAT stat;
 		final INT_OE<Induvidual> counter;
-		
-		public final LIST<StatBooster> boosts;
 		
 		StatEquippableAbs(String key, PATH path, LISTE<EQUIPPABLE> all, Init init) {
 			this.key = key;
@@ -215,11 +214,9 @@ public final class StatsEquippables extends StatCollection implements Updatable 
 			
 			LIST<BBoost> bb = BOOSTABLES.boosts(data);
 			
-			LinkedList<StatBooster> boosts = new LinkedList<>();
 			for (BBoost b : bb) {
-				boosts.add(new SBoost(init, this, b));
+				stat.boosts.add(new SBoost(init, this, b));
 			}
-			this.boosts = new ArrayList<>(boosts);
 			
 		}
 
@@ -264,8 +261,8 @@ public final class StatsEquippables extends StatCollection implements Updatable 
 		protected abstract double value(Div v);
 
 		@Override
-		public LIST<StatBooster> boosts() {
-			return boosts;
+		public LIST<BBoosterImp> boosts() {
+			return stat.boosts();
 		}
 
 		@Override
@@ -295,7 +292,7 @@ public final class StatsEquippables extends StatCollection implements Updatable 
 			b.text(¤¤WearRateD);
 			b.NL(8);
 			if (boosts().size() > 0) {
-				for (StatBooster s : boosts()) {
+				for (BBooster s : boosts()) {
 					s.boost.hover(b);
 					b.NL();
 				}
@@ -313,7 +310,7 @@ public final class StatsEquippables extends StatCollection implements Updatable 
 			b.NL();
 			b.text(¤¤WearRateD);
 			b.NL(8);
-			for (StatBooster s : boosts()) {
+			for (BBoosterImp s : boosts()) {
 				s.boost.hoverValue(b, s.pvalue(cl, r));
 				b.NL();
 			}
@@ -335,7 +332,7 @@ public final class StatsEquippables extends StatCollection implements Updatable 
 			b.add(b.text().add('/').add(TIME.years().cycleName()));
 
 			b.NL(8);
-			for (StatBooster s : boosts()) {
+			for (BBoosterImp s : boosts()) {
 				s.boost.hoverValue(b, s.pvalue(h));
 				b.NL();
 			}
@@ -469,10 +466,10 @@ public final class StatsEquippables extends StatCollection implements Updatable 
 			};
 			
 			double m = 0;
-			for (StatBooster b : boosts) {
-				if (b.boost.boost instanceof BOOSTABLERoom) {
+			for (BBooster b : boosts()) {
+				if (b.boost.boostable instanceof BOOSTABLERoom) {
 					
-					BOOSTABLERoom r = (BOOSTABLERoom) b.boost.boost;
+					BOOSTABLERoom r = (BOOSTABLERoom) b.boost.boostable;
 					if (r.room instanceof RoomBlueprintIns<?>) {
 						if (b.boost.value() > m)
 							m = b.boost.value();
@@ -482,10 +479,10 @@ public final class StatsEquippables extends StatCollection implements Updatable 
 				
 			}
 			maxBoost = m;
-			for (StatBooster b : boosts) {
-				if (b.boost.boost instanceof BOOSTABLERoom) {
+			for (BBooster b : boosts()) {
+				if (b.boost.boostable instanceof BOOSTABLERoom) {
 				
-					BOOSTABLERoom r = (BOOSTABLERoom) b.boost.boost;
+					BOOSTABLERoom r = (BOOSTABLERoom) b.boost.boostable;
 					if (r.room instanceof RoomBlueprintIns<?>) {
 						RoomBlueprintIns<?> ri = (RoomBlueprintIns<?>) r.room;
 						int am = (int) Math.ceil(equipMax*b.boost.value()/m);
@@ -578,8 +575,8 @@ public final class StatsEquippables extends StatCollection implements Updatable 
 			
 			if (STATS.WORK().EMPLOYED.get(h) != null) {
 				b.NL();
-				for (StatBooster s : boosts()) {
-					if (s.boost.boost instanceof BOOSTABLERoom && ((BOOSTABLERoom)s.boost.boost).room == STATS.WORK().EMPLOYED.get(h).blueprintI())
+				for (BBooster s : boosts()) {
+					if (s.boost.boostable instanceof BOOSTABLERoom && ((BOOSTABLERoom)s.boost.boostable).room == STATS.WORK().EMPLOYED.get(h).blueprintI())
 						s.boost.hoverValue(b, maxBoost);
 						b.NL();
 				}
@@ -592,8 +589,10 @@ public final class StatsEquippables extends StatCollection implements Updatable 
 	
 	public static class StatEquippableBattle extends StatEquippableAbs implements EQUIPPABLE_MILITARY{
 		
-		private final int[] tars = new int[ArmyManager.ARMIES*RES.config().BATTLE.DIVISIONS_PER_ARMY];
+		private final int[] tars = new int[ArmyManager.ARMIES*Config.BATTLE.DIVISIONS_PER_ARMY];
 		private final int iMil;
+		public final int amountInGarrison;
+		public final int amountGuard;
 		
 		StatEquippableBattle(String key, PATH path, LISTE<EQUIPPABLE> all, LISTE<StatEquippableBattle> type, LISTE<EQUIPPABLE_MILITARY> mil, Init init) {
 			this(key, path, all, mil, init);
@@ -625,7 +624,8 @@ public final class StatsEquippables extends StatCollection implements Updatable 
 			};
 			
 			s.clear();
-			
+			amountInGarrison = new Json(path.get(key)).i("AMOUNT_IN_GARRISON", 0, equipMax);
+			amountGuard = new Json(path.get(key)).i("EQUIP_GUARDS", 0, equipMax);
 			init.savables.add(s);
 			stat.info().setMatters(false, true);
 		}
@@ -697,12 +697,22 @@ public final class StatsEquippables extends StatCollection implements Updatable 
 			b.NL(8);
 			if (boosts().size() > 0) {
 				b.NL();
-				for (StatBooster s : boosts()) {
+				for (BBoosterImp s : boosts()) {
 					s.boost.hoverValue(b, s.pvalue(div));
 					b.NL();
 				}
 			}
 			
+		}
+
+		@Override
+		public int garrisonAmount() {
+			return amountInGarrison;
+		}
+
+		@Override
+		public int guardAmount() {
+			return amountGuard;
 		}
 		
 	}
@@ -977,14 +987,14 @@ public final class StatsEquippables extends StatCollection implements Updatable 
 		
 	}
 	
-	static class SBoost extends StatBooster {
+	static class SBoost extends BBooster.BBoosterImp {
 
 		private final StatEquippableAbs s;
 		
 		SBoost(Init init, StatEquippableAbs trait, BBoost b) {
-			super(init, 
+			super(
 					new Str(¤¤Equipped).insert(0, trait.resource.names),
-					b);
+					b, true, true, false);
 			this.s = trait;
 		}
 

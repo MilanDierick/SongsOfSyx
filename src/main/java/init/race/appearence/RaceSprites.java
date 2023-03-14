@@ -39,8 +39,6 @@ public final class RaceSprites{
 				return gets(8, d.s24, s);
 			}
 		}.get();
-
-
 		
 		Lblood = new ITileSheet() {
 			
@@ -68,7 +66,7 @@ public final class RaceSprites{
 			
 			@Override
 			protected TILE_SHEET init(ComposerUtil c, ComposerSources s, ComposerDests d) {
-				s.full.init(s.singles.body().x2(), 0, 1, 4, PortraitFrame.TILES_X, PortraitFrame.TILES_Y, d.s8);
+				s.full.init(s.singles.body().x2(), 0, 1, 4, RPortraitFrame.TILES_X, RPortraitFrame.TILES_Y, d.s8);
 				for (int i = 0; i < 4; i++)
 					s.full.setVar(i).paste(true);
 				return d.s8.save(1);
@@ -79,7 +77,7 @@ public final class RaceSprites{
 			
 			@Override
 			protected TILE_SHEET init(ComposerUtil c, ComposerSources s, ComposerDests d) {
-				s.full.init(s.full.body().x1(), s.full.body().y2(), 1, 4, PortraitFrame.TILES_X, PortraitFrame.TILES_Y, d.s8);
+				s.full.init(s.full.body().x1(), s.full.body().y2(), 1, 4, RPortraitFrame.TILES_X, RPortraitFrame.TILES_Y, d.s8);
 				for (int i = 0; i < 4; i++)
 					s.full.setVar(i).paste(true);
 				return d.s8.save(1);

@@ -35,7 +35,7 @@ class GeneratorForest {
 		double f = 0;
 		for (int i = 0; i < DIR.ALL.size(); i++) {
 			DIR d = DIR.ALL.get(i);
-			if (WATER().RIVER.is(tx, ty, d) || WATER().LAKE.is(tx, ty, d))
+			if (WATER().RIVER.is(tx, ty, d) || WATER().LAKE.normal.is(tx, ty, d))
 				n += 0.010;
 			f+= GROUND().getFertility(tx+d.x(), ty+d.y());
 		}
@@ -88,7 +88,7 @@ class GeneratorForest {
 				n-= 0.6;
 				n*= 1.66;
 				n -= 0.75 - GROUND().getFertility(tx, ty);
-				n*= RND.rFloat();
+				n*= RND.rFloat()*RND.rFloat();
 				
 				FOREST().amount.set(tx, ty, n);
 				

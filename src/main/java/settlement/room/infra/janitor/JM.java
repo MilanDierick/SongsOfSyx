@@ -197,9 +197,11 @@ final class JM implements JOB_MANAGER{
 		@Override
 		public double jobPerformTime(Humanoid skill) {
 			RESOURCE r = SETT.MAINTENANCE().resourceNeeded(coo.x(), coo.y());
+			double t = 32;
+			t *= 2-b.constructor.efficiency.get(ins);
 			if (r == null || (r.bit & ins.resourcesMissing) == 0)
-				return 32;
-			return 32*6;
+				return t;
+			return t*6;
 		}
 		
 		@Override

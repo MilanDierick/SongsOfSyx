@@ -1,11 +1,9 @@
 package view.sett.ui.standing;
 
-import game.faction.FACTIONS;
 import init.boostable.*;
 import init.sprite.UI.UI;
 import settlement.entity.humanoid.HCLASS;
 import settlement.stats.STATS;
-import settlement.stats.StatsBoosts.StatBooster;
 import settlement.stats.StatsTraits;
 import settlement.stats.StatsTraits.StatTrait;
 import snake2d.SPRITE_RENDERER;
@@ -107,15 +105,7 @@ class MenuProp extends ISidePanel {
 			b.text(bo.desc);
 			b.NL(8);
 			
-			for (BOOSTER_COLLECTION.SIMPLE bb : FACTIONS.player().bonus().subs()) {
-				bb.hover(b, bo);
-				b.NL();
-			}
-			
-			for (StatBooster bb : STATS.BOOST().all2(bo)) {
-				bb.boost.hoverValue(text, bb.name(), bb.value(c, CitizenMain.current));
-				b.NL();
-			}
+			BoostHoverer.hover(text, bo, c, CitizenMain.current);
 			
 		}
 		

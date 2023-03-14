@@ -45,8 +45,7 @@ public final class STATS extends SettResource{
 	private final StatsBurial burial;
 	private final StatsReligion religion;
 	private final StatsMultipliers multipliers;
-	private final Appearance appearance;
-	private final StatsBoosts boosts;
+	private final StatsAppearance appearance;
 	private final BattleBonus battleBonus;
 	
 	final int dataIntCount;
@@ -104,8 +103,7 @@ public final class STATS extends SettResource{
 		religion = new StatsReligion(init);
 		multipliers = new StatsMultipliers(init);
 		
-		appearance = new Appearance(init);
-		boosts = new StatsBoosts(init);
+		appearance = new StatsAppearance(init);
 		
 		
 
@@ -202,7 +200,7 @@ public final class STATS extends SettResource{
 		return s.food;
 	}
 	
-	public static Appearance APPEARANCE() {
+	public static StatsAppearance APPEARANCE() {
 		return s.appearance;
 	}
 	
@@ -260,11 +258,6 @@ public final class STATS extends SettResource{
 	
 	public static StatCollection COLLECTION(String key) {
 		return s.map.get(key);
-	}
-	
-	
-	public static StatsBoosts BOOST() {
-		return s.boosts;
 	}
 	
 //	public static HISTORY_INT_OBJECT<Race> POP() {

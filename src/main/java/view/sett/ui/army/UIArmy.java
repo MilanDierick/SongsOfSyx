@@ -3,9 +3,10 @@ package view.sett.ui.army;
 import static settlement.main.SETT.*;
 
 import game.faction.FACTIONS;
-import init.*;
-import init.boostable.BOOSTABLE;
-import init.boostable.BOOSTABLES;
+import init.C;
+import init.D;
+import init.boostable.*;
+import init.config.Config;
 import init.race.RACES;
 import init.resources.ArmySupply;
 import init.resources.RESOURCES;
@@ -17,7 +18,6 @@ import settlement.army.Div;
 import settlement.army.DivisionBanners.DivisionBanner;
 import settlement.main.SETT;
 import settlement.stats.STATS;
-import settlement.stats.StatsBoosts.StatBooster;
 import settlement.stats.StatsEquippables.StatEquippableBattle;
 import settlement.stats.StatsEquippables.StatEquippableRange;
 import snake2d.SPRITE_RENDERER;
@@ -91,8 +91,10 @@ public final class UIArmy extends ISidePanel{
 	
 	private void table(int y1, ArmyManager m) {
 
-		RENDEROBJ[] rows = new RENDEROBJ[ RES.config().BATTLE.DIVISIONS_PER_ARMY];
-		for (int i = 0; i < RES.config().BATTLE.DIVISIONS_PER_ARMY; i++) {
+		
+		RENDEROBJ[] rows = new RENDEROBJ[ Config.BATTLE.DIVISIONS_PER_ARMY];
+		
+		for (int i = 0; i < Config.BATTLE.DIVISIONS_PER_ARMY; i++) {
 			rows[i] = new DivSection(m.player().divisions().get(i), m, appearence);
 		}
 		
@@ -156,7 +158,7 @@ public final class UIArmy extends ISidePanel{
 				
 				b.NL(8);
 				b.NL();
-				for (StatBooster bo : STATS.BATTLE().TRAINING_MELEE.boosts()) {
+				for (BBooster bo : STATS.BATTLE().TRAINING_MELEE.boosts()) {
 					bo.boost.hover(b);
 					b.NL();
 				}
@@ -180,7 +182,7 @@ public final class UIArmy extends ISidePanel{
 				
 				b.NL(8);
 				b.NL();
-				for (StatBooster bo : STATS.BATTLE().TRAINING_ARCHERY.boosts()) {
+				for (BBooster bo : STATS.BATTLE().TRAINING_ARCHERY.boosts()) {
 					bo.boost.hover(b);
 					b.NL();
 				}
@@ -220,7 +222,7 @@ public final class UIArmy extends ISidePanel{
 					b.NL(4);
 					b.textLL(BOOSTABLES.INFO().name);
 					b.NL(4);
-					for (StatBooster bo : e.boosts()) {
+					for (BBooster bo : e.boosts()) {
 						bo.boost.hover(b);
 						b.NL();
 					}
@@ -415,7 +417,8 @@ public final class UIArmy extends ISidePanel{
 				
 				@Override
 				public int max() {
-					return (int)Math.ceil((double)RES.config().BATTLE.MEN_PER_DIVISION/dmen);
+					
+					return (int)Math.ceil((double)Config.BATTLE.MEN_PER_DIVISION/dmen);
 				}
 				
 				@Override
@@ -425,7 +428,8 @@ public final class UIArmy extends ISidePanel{
 				
 				@Override
 				public void set(int t) {
-					div.info.men.set(CLAMP.i(t*dmen, 0, RES.config().BATTLE.MEN_PER_DIVISION));
+					
+					div.info.men.set(CLAMP.i(t*dmen, 0, Config.BATTLE.MEN_PER_DIVISION));
 				}
 			};
 			
@@ -559,7 +563,7 @@ public final class UIArmy extends ISidePanel{
 						text.title(STATS.BATTLE().TRAINING_MELEE.info().name);
 						text.text(¤¤TrainingLevelD);
 						text.NL(4);
-						for (StatBooster bo : STATS.BATTLE().TRAINING_MELEE.boosts()) {
+						for (BBooster bo : STATS.BATTLE().TRAINING_MELEE.boosts()) {
 							bo.boost.hoverValue(text, div.info.training.getD());
 							text.NL();
 						}
@@ -580,7 +584,7 @@ public final class UIArmy extends ISidePanel{
 						text.title(STATS.BATTLE().TRAINING_ARCHERY.info().name);
 						text.text(STATS.BATTLE().TRAINING_ARCHERY.info().desc);
 						text.NL(4);
-						for (StatBooster bo : STATS.BATTLE().TRAINING_ARCHERY.boosts()) {
+						for (BBooster bo : STATS.BATTLE().TRAINING_ARCHERY.boosts()) {
 							bo.boost.hoverValue(text, div.info.trainingR.getD());
 							text.NL();
 						}
@@ -623,7 +627,7 @@ public final class UIArmy extends ISidePanel{
 						text.text(e.stat().info().desc);
 						text.NL(4);
 					
-						for (StatBooster bo : e.boosts()) {
+						for (BBooster bo : e.boosts()) {
 							bo.boost.hoverValue(text, t.getD());
 							text.NL();
 						}
@@ -667,7 +671,7 @@ public final class UIArmy extends ISidePanel{
 						
 						text.NL(4);
 						
-						for (StatBooster bo : e.boosts()) {
+						for (BBooster bo : e.boosts()) {
 							bo.boost.hoverValue(text, t.getD());
 							text.NL();
 						}

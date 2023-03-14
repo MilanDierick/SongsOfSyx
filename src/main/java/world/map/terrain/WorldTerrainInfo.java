@@ -1,30 +1,42 @@
 package world.map.terrain;
 
-import java.io.IOException;
 import java.util.Arrays;
 
-import init.biomes.TERRAIN;
-import init.biomes.TERRAINS;
-import snake2d.util.file.*;
+import init.biomes.*;
+import init.resources.Minable;
+import init.resources.RESOURCES;
 import snake2d.util.misc.CLAMP;
+import util.data.DOUBLE.DoubleImp;
 import world.World;
 import world.map.regions.CapitolPlacablity;
 
-public final class WorldTerrainInfo implements SAVABLE{
+public final class WorldTerrainInfo {
 
-	private double[] terrain = new double[TERRAINS.ALL().size()];
-	private double fertility;
+	private final DoubleImp[] terrain = new DoubleImp[TERRAINS.ALL().size()];
+	private final DoubleImp fertility = new DoubleImp();
+	private int[] minables = new int[RESOURCES.minables().all().size()];
+	private final DoubleImp[] climates = new DoubleImp[CLIMATES.ALL().size()];
 	public int tx;
 	public int ty;
 	
 	public WorldTerrainInfo() {
-		
+		for (int i = 0; i < terrain.length; i++) {
+			terrain[i] = new DoubleImp();
+		}
+		for (int i = 0; i < climates.length; i++) {
+			climates[i] = new DoubleImp();
+		}
 	}
 	
-	@Override
 	public void clear() {
-		Arrays.fill(terrain, 0);
-		fertility = 0;
+		Arrays.fill(minables, 0);
+		for (int i = 0; i < terrain.length; i++) {
+			terrain[i].setD(0);
+		}
+		for (int i = 0; i < climates.length; i++) {
+			climates[i].setD(0);
+		}
+		fertility.setD(0);
 	}
 	
 	public void initCity(int x1, int y1) {
@@ -40,53 +52,66 @@ public final class WorldTerrainInfo implements SAVABLE{
 		tx = x1+1;
 		ty = y1+1;
 		double d = CapitolPlacablity.TILE_DIM*CapitolPlacablity.TILE_DIM;
-		for (int i = 0; i < terrain.length; i++)
-			terrain[i]/=d;
-		fertility /= d;
+		divide(d);
 	}
 	
 	public void add(int tx, int ty) {
-		fertility += World.GROUND().getFertility(tx, ty);
+		fertility.incD(World.GROUND().getFertility(tx, ty));
 		double f = 0;
 		f += World.FOREST().add(this, tx, ty);
 		f += World.MOUNTAIN().add(this, tx, ty);
 		f += World.WATER().add(this, tx, ty);
 		
 		add(TERRAINS.NONE(), CLAMP.d(1.0-f, 0, 1));
+		
+		Minable m = World.MINERALS().get(tx, ty);
+		if (m != null)
+			minables[m.index()]++;
+		climates[World.CLIMATE().getter.get(tx, ty).index()].incD(1); 
 	}
 	
 	public void add(TERRAIN t, double v) {
-		terrain[t.index()] += v;
+		terrain[t.index()].incD(v);
 	}
 	
-	public double get(TERRAIN t) {
+	public DoubleImp get(TERRAIN t) {
 		return terrain[t.index()];
 	}
 	
-	public double fertility() {
+	public DoubleImp get(CLIMATE c) {
+		return climates[c.index()];
+	}
+	
+	public DoubleImp fertility() {
 		return fertility;
 	}
 	
+	public int minable(Minable m) {
+		return minables[m.index()];
+	}
+	
 	public void addFertility(double v) {
-		fertility += v;
+		fertility.incD(v);
 	}
 
-	@Override
-	public void save(FilePutter file) {
-		file.ds(terrain);
-		file.d(fertility);
-	}
-
-	@Override
-	public void load(FileGetter file) throws IOException {
-		file.ds(terrain);
-		fertility = file.d();
-	}
+//	@Override
+//	public void save(FilePutter file) {
+//		file.ds(terrain);
+//		file.d(fertility);
+//	}
+//
+//	@Override
+//	public void load(FileGetter file) throws IOException {
+//		file.ds(terrain);
+//		fertility = file.d();
+//	}
 
 	public void divide(double d) {
 		for (int i = 0; i < terrain.length; i++)
-			terrain[i]/=d;
-		fertility/=d;
+			terrain[i].setD(terrain[i].getD()/d);
+		for (int i = 0; i < climates.length; i++)
+			climates[i].setD(climates[i].getD()/d);
+		fertility.setD(fertility.getD()/d);
 	}
 	
 }

@@ -1,7 +1,5 @@
 package view.sett.ui.subject;
 
-import game.faction.FACTIONS;
-import game.faction.Faction;
 import init.D;
 import init.boostable.*;
 import init.race.RACES;
@@ -20,7 +18,6 @@ import snake2d.util.gui.renderable.RENDEROBJ;
 import snake2d.util.sets.LinkedList;
 import util.colors.GCOLOR;
 import util.colors.GCOLOR_UI;
-import util.dic.DicMisc;
 import util.gui.misc.*;
 import util.gui.misc.GMeter.GGaugeColor;
 import util.gui.table.GScrollRows;
@@ -129,7 +126,7 @@ final class SProperties {
 		
 		GText work = new GText(UI.FONT().S, 32);
 		for (StatNeed s : STATS.NEEDS().NEEDS) {
-			CLICKABLE c = makeNeed(s, s.stat, work); 				
+			CLICKABLE c = makeNeed(s, s.stat(), work); 				
 			sec.addDown(2, c);
 		}
 		for (STAT s : STATS.NEEDS().OTHERS) {
@@ -171,7 +168,7 @@ final class SProperties {
 				double d = i/m;
 				
 				GGaugeColor c = GMeter.C_GREEN; 
-				if (n == null || i > StatNeed.breakPoint) {
+				if (n == null || i > n.breakpoint()) {
 					c = GMeter.C_RED;
 				}
 				GMeter.render(r, c, 
@@ -181,7 +178,7 @@ final class SProperties {
 				
 				
 				if (n != null) {
-					int x = (int) (x1 + 50*(StatNeed.breakPoint/m));
+					int x = (int) (x1 + 50*(n.breakpoint()/m));
 					GCOLOR.UI().border().render(r, x, x+1, body().y1()+3, body().y2()-3);
 				}
 				
@@ -190,7 +187,7 @@ final class SProperties {
 				work.clear();
 				
 				if (n != null){
-					double def = n.rate.defValue*RACES.bonus().tot(n.rate, a.a.race());
+					double def = n.rate.defAdd*RACES.bonus().tot(n.rate, a.a.race());
 					double rate = n.rate.get(a.a);
 					GFORMAT.perc(work, rate);
 					if (rate > def)
@@ -232,22 +229,12 @@ final class SProperties {
 	}
 	
 	private void hoverBoost(BOOSTABLE boo, GUI_BOX text) {
-		GBox b = (GBox) text;
-		Faction f = a.a.indu().clas().player ? FACTIONS.player() : FACTIONS.other();
 		
-		b.text(DicMisc.¤¤Base);
-		b.tab(6);
-		GText t = b.text();
-		t.add('*');
-		b.add(GFORMAT.f(t, boo.defValue));
+		text.title(boo.name);
+		text.text(boo.desc);
+		text.NL(8);
+		BoostHoverer.hover(text, boo, a.a.indu());
 		
-		for (BOOSTER_COLLECTION.SIMPLE c : f.bonus().subs()) {
-			c.hover(b, boo);
-		}
-		
-		RACES.bonus().hover(b, boo, a.a.race());
-		
-		STATS.BOOST().hover(b, boo, a.a.indu());
 	}
 	
 	GuiSection activate() {

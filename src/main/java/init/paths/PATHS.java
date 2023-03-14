@@ -51,6 +51,7 @@ public class PATHS {
 	private final PATH SPRITE_SETTLEMENT;
 	private final PATH SPRITE_SETTLEMENT_MAP;
 	private final PATH SPRITE_WORLD;
+	private final PATH SPRITE_WORLD_MAP;
 	private final PATH SPRITE_GAME;
 	private final PATH SPRITE_UI;
 	private final Script SCRIPT;
@@ -168,6 +169,7 @@ public class PATHS {
 		SPRITE_SETTLEMENT = SPRITE.getFolder("settlement");
 		SPRITE_SETTLEMENT_MAP = SPRITE_SETTLEMENT.getFolder("map");
 		SPRITE_WORLD = SPRITE.getFolder("world");
+		SPRITE_WORLD_MAP = SPRITE_WORLD.getFolder("map");
 		SPRITE_UI = SPRITE.getFolder("ui");
 		SPRITE_GAME = SPRITE.getFolder("game");
 		
@@ -175,6 +177,10 @@ public class PATHS {
 
 		RACE = new ResFolder("race", true);
 		
+	}
+	
+	public static boolean inited() {
+		return i != null;
 	}
 	
 	private static Path getFromZip(String file) {
@@ -246,6 +252,10 @@ public class PATHS {
 	
 	public static PATH SPRITE_WORLD() {
 		return i.SPRITE_WORLD;
+	}
+	
+	public static PATH SPRITE_WORLD_MAP() {
+		return i.SPRITE_WORLD_MAP;
 	}
 	
 	public static PATH TEXT_WORLD() {

@@ -2,11 +2,25 @@ package init.resources;
 
 import java.io.Serializable;
 
+import snake2d.util.file.Json;
+import snake2d.util.sets.*;
+
 public interface RES_AMOUNT {
 
 	public RESOURCE resource();
 	
 	public int amount();
+	
+	public static LIST<RES_AMOUNT> make(Json json){
+		LinkedList<RES_AMOUNT> li = new LinkedList<>();
+		for (String k : json.keys()) {
+			RESOURCE r = RESOURCES.map().tryGet(k);
+			if (r != null) {
+				li.add(new Imp(r, json.i(k)));
+			}
+		}
+		return new ArrayList<RES_AMOUNT>(li);
+	}
 	
 	public class Imp implements RES_AMOUNT, Serializable{
 

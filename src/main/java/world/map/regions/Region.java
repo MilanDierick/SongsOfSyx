@@ -1,6 +1,7 @@
 package world.map.regions;
 
 import java.io.IOException;
+import java.util.Arrays;
 
 import game.GAME;
 import game.faction.Faction;
@@ -16,8 +17,10 @@ import world.entity.army.WArmy;
 
 public class Region {
 
-	private final short index;
 	public static final int nameSize = 24;
+	
+	private final short index;
+	
 	private final Str name = new Str(nameSize);
 	int area;
 	final Rec bounds = new Rec();
@@ -99,14 +102,14 @@ public class Region {
 		cy = -1;
 		tx = -1;
 		ty = -1;
+		bounds.clear();
 		textSize = -1;
 		area = 0;
-		name.clear().add("region");
-		for (int i = 0; i < data.length; i++)
-			data[0] = 0;
+		Arrays.fill(data, 0);
 		upI = 0;
 		isWater = false;
 		besieged = -1;
+		distances = new short[0];
 	}
 	
 	void init(int cx, int cy, int tx, int ty, int area, int textDir) {
@@ -139,7 +142,7 @@ public class Region {
 		return ty;
 	}
 	
-	public Region centreSet(int tx, int ty) {
+	Region centreSet(int tx, int ty) {
 		cx = (short) tx;
 		cy = (short) ty;
 		return this;

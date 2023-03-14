@@ -50,6 +50,8 @@ final class PopupRooms{
 				Expansion ex = new Popup.Expansion();
 
 				for (RoomBlueprintImp b : s.rooms()) {
+					if (b == SETT.ROOMS().BUILDER)
+						continue;
 					if (b.isAvailable(SETT.ENV().climate()))
 						ex.add(butt(b, placer, last));
 				}
@@ -164,7 +166,7 @@ final class PopupRooms{
 		return c;
 	}
 	
-	private static CLICKABLE butt(RoomBlueprintImp b, UIRoomPlacer placer, GETTER_IMP<ACTION> last){
+	static CLICKABLE butt(RoomBlueprintImp b, UIRoomPlacer placer, GETTER_IMP<ACTION> last){
 		
 		ACTION a = new ACTION() {
 			

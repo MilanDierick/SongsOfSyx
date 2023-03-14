@@ -251,7 +251,7 @@ public class UIRoom {
 					@Override
 					protected void clickA() {
 						if (room.constructor() != null && room.constructor().usesArea()) {
-							VIEW.s().ui.reconstruct(room);
+							VIEW.s().misc.reconstruct(room);
 						}
 					}
 				}.hoverInfoSet(¤¤Refurnish);

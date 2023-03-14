@@ -17,8 +17,7 @@ import settlement.room.industry.mine.ROOM_MINE;
 import settlement.tilemap.TGrowable;
 import settlement.tilemap.Terrain.TerrainTile;
 import snake2d.SPRITE_RENDERER;
-import snake2d.util.datatypes.AREA;
-import snake2d.util.datatypes.DIR;
+import snake2d.util.datatypes.*;
 import snake2d.util.gui.clickable.CLICKABLE;
 import snake2d.util.rnd.RND;
 import snake2d.util.sets.LIST;
@@ -434,32 +433,19 @@ public final class JobClears {
 		
 		@Override
 		public RESOURCE jobPerform(Humanoid skill, RESOURCE r, int ri) {
-			RESOURCE res = TERRAIN().get(coo.x(), coo.y()).clearing().resource();
 			tunnelD += 1;
 			
 			while(tunnelD >= 1) {
 				tunnelD --;
-				TERRAIN().get(coo.x(), coo.y()).clearing().clear1(coo.x(), coo.y());
+				RESOURCE res = tunnelPerform(coo);
 				
 				if (!TERRAIN().MOUNTAIN.is(coo)) {
 					PlacerDelete.place(coo.x(), coo.y());
-					for (DIR d : DIR.ALLC) {
-						if (TERRAIN().CAVE.canFix(coo.x()+d.x(), coo.y()+d.y())) {
-							TERRAIN().CAVE.fix(coo.x()+d.x(), coo.y()+d.y());
-						}
-						GAME.stats().TUNNELS.inc(1);
-					}
-					if (res != null && RND.oneIn(15)) {
-						GAME.player().res().inProduced.inc(res, 1);
-						return res;
-					}
-					return null;
-					
-				}else if (RND.oneIn(15)) {
-					JOBS().state.set(State.RESERVABLE, this);
-					GAME.player().res().inProduced.inc(res, 1);
+
 					return res;
+					
 				}
+				return res;
 				
 			}
 			JOBS().state.set(State.RESERVABLE, this);
@@ -488,6 +474,29 @@ public final class JobClears {
 		
 		
 	};
+	
+	public RESOURCE tunnelPerform(COORDINATE coo) {
+		RESOURCE res = TERRAIN().get(coo.x(), coo.y()).clearing().resource();
+		TERRAIN().get(coo.x(), coo.y()).clearing().clear1(coo.x(), coo.y());
+		if (!TERRAIN().MOUNTAIN.is(coo)) {
+			for (DIR d : DIR.ALLC) {
+				if (TERRAIN().CAVE.canFix(coo.x()+d.x(), coo.y()+d.y())) {
+					TERRAIN().CAVE.fix(coo.x()+d.x(), coo.y()+d.y());
+				}
+				GAME.stats().TUNNELS.inc(1);
+			}
+			if (res != null && RND.oneIn(15)) {
+				GAME.player().res().inProduced.inc(res, 1);
+				return res;
+			}
+			return null;
+			
+		}else if (RND.oneIn(15)) {
+			GAME.player().res().inProduced.inc(res, 1);
+			return res;
+		}
+		return null;
+	}
 	
 	public final Job caveFill = new JobBuildFillCave();
 	

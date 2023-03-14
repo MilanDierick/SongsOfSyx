@@ -4,9 +4,9 @@ import java.io.IOException;
 import java.util.Arrays;
 
 import init.D;
-import init.RES;
 import init.boostable.BBoost;
 import init.boostable.BOOSTABLES;
+import init.config.Config;
 import init.race.Race;
 import init.sprite.SPRITES;
 import settlement.army.ArmyManager;
@@ -51,21 +51,21 @@ public class StatsBattle extends StatCollection {
 		COMBAT_EXPERIENCE = new STATData("COMBAT_EXPERIENCE", init, init.count.new DataNibble());
 		TRAINING_MELEE = new StatTraining("COMBAT_TRAINING", init, 0, SPRITES.icons().s.sword);
 		TRAINING_ARCHERY = new StatTraining("ARCHERY_TRAINING", init, 1, SPRITES.icons().s.bow);
-		new StatsBoosts.StatBoosterStat(init, TRAINING_MELEE, new BBoost(BOOSTABLES.BATTLE().OFFENCE, 1.5, false));
-		new StatsBoosts.StatBoosterStat(init, TRAINING_MELEE, new BBoost(BOOSTABLES.BATTLE().DEFENCE, 1.5, false));
-		new StatsBoosts.StatBoosterStat(init, TRAINING_MELEE, new BBoost(BOOSTABLES.BATTLE().BLUNT_DAMAGE, 1.5, true));
-		new StatsBoosts.StatBoosterStat(init, TRAINING_MELEE, new BBoost(BOOSTABLES.PHYSICS().STAMINA, 2.0, true));
-		new StatsBoosts.StatBoosterStat(init, TRAINING_MELEE, new BBoost(BOOSTABLES.BATTLE().MORALE, 4.0, false));
+		new StatBoosterStat(TRAINING_MELEE, new BBoost(BOOSTABLES.BATTLE().OFFENCE, 1.5, false));
+		new StatBoosterStat(TRAINING_MELEE, new BBoost(BOOSTABLES.BATTLE().DEFENCE, 1.5, false));
+		new StatBoosterStat(TRAINING_MELEE, new BBoost(BOOSTABLES.BATTLE().BLUNT_DAMAGE, 1.5, true));
+		new StatBoosterStat(TRAINING_MELEE, new BBoost(BOOSTABLES.PHYSICS().STAMINA, 2.0, true));
+		new StatBoosterStat(TRAINING_MELEE, new BBoost(BOOSTABLES.BATTLE().MORALE, 4.0, false));
 		
-		new StatsBoosts.StatBoosterStat(init, COMBAT_EXPERIENCE, new BBoost(BOOSTABLES.BATTLE().OFFENCE, 1.0, false));
-		new StatsBoosts.StatBoosterStat(init, COMBAT_EXPERIENCE, new BBoost(BOOSTABLES.BATTLE().DEFENCE, 1.0, false));
-		new StatsBoosts.StatBoosterStat(init, COMBAT_EXPERIENCE, new BBoost(BOOSTABLES.BATTLE().MORALE, 2.0, false));
+		new StatBoosterStat(COMBAT_EXPERIENCE, new BBoost(BOOSTABLES.BATTLE().OFFENCE, 1.0, false));
+		new StatBoosterStat(COMBAT_EXPERIENCE, new BBoost(BOOSTABLES.BATTLE().DEFENCE, 1.0, false));
+		new StatBoosterStat(COMBAT_EXPERIENCE, new BBoost(BOOSTABLES.BATTLE().MORALE, 2.0, false));
 		
-		new StatsBoosts.StatBoosterStat(init, TRAINING_ARCHERY, new BBoost(BOOSTABLES.BATTLE().RANGED_SKILL, 1.0, false));
+		new StatBoosterStat(TRAINING_ARCHERY, new BBoost(BOOSTABLES.BATTLE().RANGED_SKILL, 1.0, false));
 
 		ENEMY_KILLS = new STATData("ENEMY_KILLS", init,  init.count.new DataByte());
-		new StatsBoosts.StatBoosterStat(init, ENEMY_KILLS, new BBoost(BOOSTABLES.BEHAVIOUR().SANITY, 0.5, true), 10);
-		new StatsBoosts.StatBoosterStat(init, ENEMY_KILLS, new BBoost(BOOSTABLES.BEHAVIOUR().LAWFULNESS, 0.5, true), 10);
+		new StatBoosterStat(ENEMY_KILLS, new BBoost(BOOSTABLES.BEHAVIOUR().SANITY, 0.5, true), 10);
+		new StatBoosterStat(ENEMY_KILLS, new BBoost(BOOSTABLES.BEHAVIOUR().LAWFULNESS, 0.5, true), 10);
 		
 		ENEMY_KILLS.info().setInt();
 		ROUTING = new STATData("ROUTING", init, init.count.new DataBit());
@@ -198,7 +198,7 @@ public class StatsBattle extends StatCollection {
 
 		private final STATData stat;
 		private final INT_OE<Induvidual>  idiv;
-		private final short[] divs = new short[RES.config().BATTLE.DIVISIONS_PER_ARMY*2];
+		private final short[] divs = new short[Config.BATTLE.DIVISIONS_PER_ARMY*2];
 
 		public StatProspect(Init init) {
 			super(D.g("Recruit"),

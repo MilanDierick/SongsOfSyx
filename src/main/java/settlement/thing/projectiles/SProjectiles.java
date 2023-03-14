@@ -83,6 +83,11 @@ public class SProjectiles extends SettResource {
 		}
 	}
 
+	@Override
+	protected void afterTick() {
+
+	}
+
 	public void renderAbove(Renderer r, ShadowBatch s, float ds, int zoomout, RenderData renData) {
 		
 		ren.renderAbove(r, s, ds, zoomout, renData);

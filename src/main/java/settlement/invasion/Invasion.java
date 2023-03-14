@@ -8,7 +8,7 @@ import game.GAME;
 import game.faction.FACTIONS;
 import game.faction.Faction;
 import game.time.TIME;
-import init.RES;
+import init.config.Config;
 import settlement.army.Div;
 import settlement.entity.ENTITY;
 import settlement.entity.humanoid.HTYPE;
@@ -39,10 +39,10 @@ final class Invasion {
 	private STATE state = null;
 	private double timer = 0;
 	private final InvasionSpot spot;
-	private ArrayListShort activeDivs = new ArrayListShort(RES.config().BATTLE.DIVISIONS_PER_ARMY);
+	private ArrayListShort activeDivs = new ArrayListShort(Config.BATTLE.DIVISIONS_PER_ARMY);
 	private int invadingFacion;
 	public boolean victory;
-	private static final IntChecker check = new IntChecker(RES.config().BATTLE.DIVISIONS_PER_BATTLE);
+	private static final IntChecker check = new IntChecker(Config.BATTLE.DIVISIONS_PER_BATTLE);
 	
 	private enum STATE {
 		WARNING,

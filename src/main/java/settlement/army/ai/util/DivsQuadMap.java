@@ -4,6 +4,7 @@ import java.util.Arrays;
 
 import init.C;
 import init.RES;
+import init.config.Config;
 import settlement.army.Army;
 import settlement.army.Div;
 import settlement.main.SETT;
@@ -20,7 +21,7 @@ public final class DivsQuadMap {
 	public final static int size = 32;
 	private final QDiv[][] map = new QDiv[SETT.TWIDTH/size][SETT.THEIGHT/size];
 	private final Bitsmap1D artillery = new Bitsmap1D(0, 2, map.length*map[0].length);
-	private final QDiv[] free = new QDiv[RES.config().BATTLE.DIVISIONS_PER_BATTLE];
+	private final QDiv[] free = new QDiv[Config.BATTLE.DIVISIONS_PER_BATTLE];
 	private final CircleCooIterator iter = new CircleCooIterator((int)Math.ceil(Math.sqrt(map[0].length*map[0].length + map.length*map.length)), RES.flooder());
 	private int freeI = 0;
 	private final static int add_scroll = Integer.numberOfTrailingZeros(size*C.TILE_SIZE);

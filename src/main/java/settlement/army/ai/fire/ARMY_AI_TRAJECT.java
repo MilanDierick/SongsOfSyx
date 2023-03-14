@@ -4,6 +4,7 @@ import java.io.IOException;
 
 import game.time.TIME;
 import init.RES;
+import init.config.Config;
 import settlement.army.ai.ARMY_AI.ArmyThread;
 import settlement.main.SETT;
 import snake2d.SlaveThread;
@@ -41,18 +42,21 @@ public final class ARMY_AI_TRAJECT extends ArmyThread{
 		
 		
 		double curr = TIME.currentSecond();
-		double ds = (curr-currentSecond)*RES.config().BATTLE.DIVISIONS_PER_BATTLE;
+		
+		double ds = (curr-currentSecond)*Config.BATTLE.DIVISIONS_PER_BATTLE;
 		if (ds > 0) {
 			int old = divI;
 			while(ds > 0) {
 				
-				if (divI == RES.config().BATTLE.DIVISIONS_PER_BATTLE)
+				
+				if (divI == Config.BATTLE.DIVISIONS_PER_BATTLE)
 					art.update();
 				else {
 					up.update(SETT.ARMIES().division((short) divI), 0);
 				}
 				divI++;
-				divI %= RES.config().BATTLE.DIVISIONS_PER_BATTLE+1;
+				
+				divI %= Config.BATTLE.DIVISIONS_PER_BATTLE+1;
 				if (divI == old)
 					break;
 				ds -= 1;

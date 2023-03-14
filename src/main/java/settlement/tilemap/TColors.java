@@ -134,6 +134,14 @@ public final class TColors {
 		public COLOR def() {
 			return fertile.get(0);
 		}
+		
+		public COLOR dry(int ran) {
+			return dry.getC(ran);
+		}
+		
+		public COLOR winter(int ran) {
+			return winter.getC(ran);
+		}
 	}
 	
 	public final class Minimap {

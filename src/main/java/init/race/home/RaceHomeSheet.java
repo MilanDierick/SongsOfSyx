@@ -63,4 +63,18 @@ public final class RaceHomeSheet {
 			return null;
 	}
 	
+	
+	public Sheets getLikeHell(HOME data) {
+		outer:
+			for (int ai = ani.length-1; ai >= 0; ai--) {
+				int[] amounts = needed[ai];
+				for (int i = 0; i < amounts.length; i++) {
+					if (data.resourceAm(i) < amounts[i])
+						continue outer;
+				}
+				return ani[ai];
+			}
+		return ani[0];
+	}
+	
 }

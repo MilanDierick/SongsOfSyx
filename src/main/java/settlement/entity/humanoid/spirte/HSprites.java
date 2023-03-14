@@ -3,6 +3,7 @@ package settlement.entity.humanoid.spirte;
 import static settlement.entity.humanoid.spirte.HSpriteConst.*;
 
 import game.GAME;
+import init.race.appearence.RAddon;
 import settlement.entity.humanoid.Humanoid;
 import settlement.entity.humanoid.ai.main.AIManager;
 import settlement.entity.humanoid.spirte.HSpriteConst.CLAY;
@@ -430,35 +431,41 @@ public final class HSprites {
 		@Override
 		public void render(Humanoid a, AIManager d, Renderer r, ShadowBatch s, float ds, int x, int y) {
 			Induvidual in2 = a.indu();
-			Appearance ap = STATS.APPEARANCE();
+			StatsAppearance ap = STATS.APPEARANCE();
 			
 			x += CLAY.off;
 			y += CLAY.off;
 
-			TILE_SHEET sheet = a.race().appearance().sheet(in2).lay;
+			TILE_SHEET sheet = a.race().appearance().sheet(in2).sheet.lay;
 			int dir = a.speed.dir().id();
 			int k = dir+(a.spriteoff&1)*8;
 			if (!a.inWater) {
 				s.setHeight(5).setDistance2Ground(0);
-				a.race().appearance().sheet(in2).sleep.render(r, k, x, y);
+				a.race().appearance().sleep.render(r, k, x, y);
 				SETT.PARTICLES().renderDust(x + CLAY.offC, y + CLAY.offC, a.speed.magnitude());
 			}
 
+			for (RAddon add : in2.race().appearance().types.get(ap.gender.get(in2)).addonsBelow) {
+				add.renderLaying(r, dir, x, y, in2, false);
+			}
+			
 			boolean naked = STATS.POP().NAKED.get(in2) == 1;
 			if (!naked)
-				
-			CLAY.pantsC.bind();
-			sheet.render(r, CLAY.PANTS + dir, x, y);
-			
-			if (ap.hasHair(in2))
-				ap.colorHair(in2).bind();
+				ap.colorLegs(in2).bind();
 			else
 				ap.colorSkin(in2).bind();
+			sheet.render(r, CLAY.PANTS + dir, x, y);
 			
+			
+			ap.colorSkin(in2).bind();
 			sheet.render(r, CLAY.HEAD + dir, x, y);
-			COLOR.unbind();
 			
-			a.race().appearance().sheet(in2).sleep.render(r, k, x, y);
+			
+			for (RAddon add : in2.race().appearance().types.get(ap.gender.get(in2)).addonsAbove) {
+				add.renderLaying(r, dir, x, y, in2, false);
+			}
+			COLOR.unbind();
+			a.race().appearance().sleep.render(r, k, x, y);
 
 			
 			if (a.inWater) {
@@ -489,12 +496,12 @@ public final class HSprites {
 		public void render(Humanoid a, AIManager d, Renderer r, ShadowBatch s, float ds, int x, int y) {
 			
 			Induvidual in2 = a.indu();
-			Appearance ap = STATS.APPEARANCE();
+			StatsAppearance ap = STATS.APPEARANCE();
 			
 			x += CLAY.off;
 			y += CLAY.off;
 
-			TILE_SHEET sheet = a.race().appearance().sheet(in2).lay;
+			TILE_SHEET sheet = a.race().appearance().sheet(in2).sheet.lay;
 			int dir = a.speed.dir().id();
 
 			if (a.physics.getZ() != 0) {
@@ -513,28 +520,37 @@ public final class HSprites {
 				SETT.PARTICLES().renderDust(x + CLAY.offC, y + CLAY.offC, a.speed.magnitude());
 			}
 
+			for (RAddon add : in2.race().appearance().types.get(ap.gender.get(in2)).addonsBelow) {
+				add.renderLaying(r, dir, x, y, in2, false);
+			}
+			
 			boolean naked =  STATS.POP().NAKED.get(in2) == 1;
 			if (!naked)
-				CLAY.pantsC.bind();
+				ap.colorLegs(in2).bind();
 			else
 				ap.colorSkin(in2).bind();
 			sheet.render(r, CLAY.PANTS + dir, x, y);
 			ap.colorSkin(in2).bind();
 			sheet.render(r, CLAY.ARMS + dir, x, y);
-			if (ap.hasHair(in2))
-				ap.colorHair(in2).bind();
 			sheet.render(r, CLAY.HEAD + dir, x, y);
+			
 			if (!naked)
 				ap.colorClothes(in2).bind();
 			else
 				ap.colorSkin(in2).bind();
 			sheet.render(r, CLAY.TORSO + dir, x, y);
-			int i = STATS.EQUIP().BATTLEGEAR.stat().indu().get(in2);
-			if (i > 0) {
-				ap.colorArmour(in2).bind();
-				sheet.render(r, CLAY.ARMOR + dir, x, y);
+			
+			for (RAddon add : in2.race().appearance().types.get(ap.gender.get(in2)).addonsAbove) {
+				add.renderLaying(r, dir, x, y, in2, false);
 			}
 			COLOR.unbind();
+			
+//			int i = STATS.EQUIP().BATTLEGEAR.stat().indu().get(in2);
+//			if (i > 0) {
+//				ap.colorArmour(in2).bind();
+//				sheet.render(r, CLAY.ARMOR + dir, x, y);
+//			}
+//			COLOR.unbind();
 
 			OPACITY.O75.bind();
 			
@@ -558,12 +574,12 @@ public final class HSprites {
 		@Override
 		public void renderSimple(Humanoid a, AIManager ai, Renderer r, ShadowBatch s, float ds, int x, int y) {
 			Induvidual in2 = a.indu();
-			Appearance ap = STATS.APPEARANCE();
+			StatsAppearance ap = STATS.APPEARANCE();
 			
 			x += CLAY.off;
 			y += CLAY.off;
 
-			TILE_SHEET sheet = a.race().appearance().sheet(in2).lay;
+			TILE_SHEET sheet = a.race().appearance().sheet(in2).sheet.lay;
 			int dir = a.speed.dir().id();
 
 			if (a.physics.getZ() != 0) {
@@ -584,25 +600,29 @@ public final class HSprites {
 
 			boolean naked =  STATS.POP().NAKED.get(in2) == 1;
 			if (!naked)
-				CLAY.pantsC.bind();
+				ap.colorLegs(in2).bind();
 			else
 				ap.colorSkin(in2).bind();
 			sheet.render(r, CLAY.PANTS + dir, x, y);
 			ap.colorSkin(in2).bind();
 			sheet.render(r, CLAY.ARMS + dir, x, y);
-			if (ap.hasHair(in2))
-				ap.colorHair(in2).bind();
 			sheet.render(r, CLAY.HEAD + dir, x, y);
 			if (!naked)
 				ap.colorClothes(in2).bind();
 			else
 				ap.colorSkin(in2).bind();
 			sheet.render(r, CLAY.TORSO + dir, x, y);
-			int i = STATS.EQUIP().BATTLEGEAR.stat().indu().get(in2);
-			if (i > 0) {
-				ap.colorArmour(in2).bind();
-				sheet.render(r, CLAY.ARMOR + dir, x, y);
+			
+			for (RAddon add : in2.race().appearance().types.get(ap.gender.get(in2)).addonsAbove) {
+				add.renderLaying(r, dir, x, y, in2, false);
 			}
+			COLOR.unbind();
+//			
+//			int i = STATS.EQUIP().BATTLEGEAR.stat().indu().get(in2);
+//			if (i > 0) {
+//				ap.colorArmour(in2).bind();
+//				sheet.render(r, CLAY.ARMOR + dir, x, y);
+//			}
 			COLOR.unbind();
 			
 		}

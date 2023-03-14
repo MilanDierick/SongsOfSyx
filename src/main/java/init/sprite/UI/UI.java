@@ -2,7 +2,6 @@ package init.sprite.UI;
 
 import java.io.IOException;
 
-import init.race.Race;
 import util.colors.GCOLOR;
 
 public class UI {
@@ -11,10 +10,10 @@ public class UI {
 	private static UIPanels panels;
 	private static UIFonts fonts;
 
-	public static void init(Race race) throws IOException {
+	public static void init() throws IOException {
 		GCOLOR.read();
-		fonts = new UIFonts(race);
-		panels = new UIPanels(race);
+		fonts = new UIFonts();
+		panels = new UIPanels();
 		decor = new UIDecor();
 	}
 	

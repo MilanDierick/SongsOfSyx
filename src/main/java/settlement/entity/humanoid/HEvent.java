@@ -1,7 +1,7 @@
 package settlement.entity.humanoid;
 
-import init.RES;
 import init.boostable.BOOSTABLES;
+import init.config.Config;
 import settlement.army.DivMorale;
 import settlement.entity.ENTITY;
 import settlement.entity.ENTITY.ECollision;
@@ -116,7 +116,8 @@ public enum HEvent {
 //				pdamage = Math.max(RND.rFloat()*pdamage, 0);
 				
 				double damage = coll.pierceDamage*RND.rFloat() - BOOSTABLES.BATTLE().ARMOUR.get(a);
-				damage = mom*10*Math.max(damage, 0)*RES.config().BATTLE.DAMAGE;
+				
+				damage = mom*10*Math.max(damage, 0)*Config.BATTLE.DAMAGE;
 				
 				mom = Math.pow(mom, 2 - STATS.NEEDS().EXHASTION.indu().getD(a.indu()));
 				double momDamage = Math.max(mom-RND.rFloat(), 0);

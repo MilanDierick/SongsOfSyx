@@ -1,7 +1,7 @@
 package settlement.army.ai.divs;
 
 import init.C;
-import init.RES;
+import init.config.Config;
 import settlement.army.ai.divs.Plans.Plan;
 import settlement.army.formation.*;
 import snake2d.PathUtilOnline;
@@ -22,7 +22,8 @@ final class ToolMover {
 	private final VectorImp vec = new VectorImp();
 	
 	ToolMover(PathUtilOnline pu){
-		int maxmen = RES.config().BATTLE.MEN_PER_DIVISION;
+		
+		int maxmen = Config.BATTLE.MEN_PER_DIVISION;
 		positions = new DivFormation(maxmen);
 		
 		tosThatHasBeenPlaced = new boolean[maxmen];

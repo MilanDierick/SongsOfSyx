@@ -4,7 +4,7 @@ import game.VERSION;
 import init.error.ErrorHandler;
 import init.paths.PATHS;
 import init.paths.PATHS.PATHS_BASE;
-//import integrations.INTEGRATIONS;
+import integrations.INTEGRATIONS;
 import launcher.LSettings;
 import launcher.Launcher;
 import menu.Menu;
@@ -61,13 +61,13 @@ public class Main {
 		PATHS.init(s.mods(), l != null && l.length() > 0 ? l : null, s.easy.get() == 1);
 
 		D.init();
-//		if (s.rpc.get() == 1) {
-//			INTEGRATIONS.init(false, false);
-//		}
+		if (s.rpc.get() == 1) {
+			INTEGRATIONS.init(false, false);
+		}
 
 		// PreLoader.exit();
 		Menu.start();
-//		INTEGRATIONS.dispose();
+		INTEGRATIONS.dispose();
 		
 	}
 

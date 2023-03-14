@@ -1,8 +1,20 @@
 package init.config;
 
-public class Config {
+import init.paths.PATHS;
 
-	public final ConfigBattle BATTLE = new ConfigBattle();
-	public final ConfigWorld WORLD = new ConfigWorld();
+public class Config {
+	
+	static {
+		if (!PATHS.inited()) {
+			throw new RuntimeException("paths must be inited first!");
+		}
+	}
+	
+	public static final ConfigBattle BATTLE = new ConfigBattle();
+	public static final ConfigWorld WORLD = new ConfigWorld();
+	
+	private Config(){
+		
+	}
 	
 }

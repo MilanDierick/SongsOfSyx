@@ -6,7 +6,7 @@ import java.util.Arrays;
 
 import game.faction.FACTIONS;
 import game.faction.Faction;
-import init.RES;
+import init.config.Config;
 import settlement.main.SETT;
 import snake2d.util.file.*;
 import snake2d.util.misc.CLAMP;
@@ -29,11 +29,14 @@ public final class Army implements Serializable{
 	
 	Army(ArrayList<Army> armies, ArrayList<Div> divisions, int menPerDevision){
 		this.index = armies.add(this);
-		ArrayList<Div> divs = new ArrayList<>(RES.config().BATTLE.DIVISIONS_PER_ARMY);
-		for (int i = 0; i < RES.config().BATTLE.DIVISIONS_PER_ARMY; i++)
+		
+		ArrayList<Div> divs = new ArrayList<>(Config.BATTLE.DIVISIONS_PER_ARMY);
+		
+		for (int i = 0; i < Config.BATTLE.DIVISIONS_PER_ARMY; i++)
 			new Div(divisions, divs, this, menPerDevision);
 		this.divisions = divs;
-		menMax = menPerDevision*RES.config().BATTLE.DIVISIONS_PER_ARMY;
+		
+		menMax = menPerDevision*Config.BATTLE.DIVISIONS_PER_ARMY;
 		bit = 1 << index;
 		moraleData = new long[ArmyMorale.data.longCount()];
 		ArmyMorale.SUPPLIES.setD(this, 1.0);

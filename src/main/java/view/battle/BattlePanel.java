@@ -5,7 +5,9 @@ import static settlement.main.SETT.*;
 import java.io.IOException;
 
 import game.battle.BattleState;
-import init.*;
+import init.C;
+import init.D;
+import init.config.Config;
 import init.settings.S;
 import init.sprite.SPRITES;
 import settlement.army.*;
@@ -255,9 +257,11 @@ public final class BattlePanel implements SAVABLE{
 			protected void clickA() {
 				if (SETT.ARMIES().armies().get(1).men() > 0) {
 					
-					for (int i = 0; i < RES.config().BATTLE.DIVISIONS_PER_ARMY; i++) {
+					
+					for (int i = 0; i < Config.BATTLE.DIVISIONS_PER_ARMY; i++) {
 						di++;
-						di %= RES.config().BATTLE.DIVISIONS_PER_ARMY;
+						
+						di %= Config.BATTLE.DIVISIONS_PER_ARMY;
 						Div d = SETT.ARMIES().armies().get(1).divisions().get(di);
 						if (d.menNrOf() > 0) {
 							d.order().status.get(stat);

@@ -395,7 +395,7 @@ public class ThingsCorpses extends ThingFactory<Corpse>{
 				if (!indu.race().physics.decays) {
 					decay = 0;
 				}
-				STATS.NEEDS().DIRTINESS.stat.indu().setD(indu, decay);
+				STATS.NEEDS().DIRTINESS.stat().indu().setD(indu, decay);
 				
 				if (intact)
 					HCorpseRenderer.renderCorpse(indu, direction, inWater, decay, r, shadows, x, y);
@@ -429,6 +429,8 @@ public class ThingsCorpses extends ThingFactory<Corpse>{
 			this.cause = cause;
 			this.res = (float) ((intact ? 1.0 : 0.5)*(a.hType() == HTYPE.CHILD ? 0.25 : 1));
 			this.burryServiceTile = -1;
+			
+			STATS.APPEARANCE().dead.indu().set(a, 1);
 			
 			if (!SETT.PATH().reachability.is(ctx(), cty())) {
 				for (int di = 0; di < DIR.ALL.size(); di++) {

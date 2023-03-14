@@ -93,7 +93,31 @@ public class StatsPopulation extends StatCollection{
 		WRONGFUL.info().setMatters(true, false);
 
 		
-		NOBLES = new STAT.STATFacade("NOBLES", init) {
+		INT_OE<Induvidual> indu = new INT_OE<Induvidual>() {
+
+			@Override
+			public int get(Induvidual t) {
+				return t.clas() == HCLASS.NOBLE ? 1 : 0;
+			}
+
+			@Override
+			public int min(Induvidual t) {
+				return 0;
+			}
+
+			@Override
+			public int max(Induvidual t) {
+				return 1;
+			}
+
+			@Override
+			public void set(Induvidual t, int i) {
+				
+			}
+			
+		};
+		
+		NOBLES = new STAT.STATFacade("NOBLES", init, indu) {
 			
 			@Override
 			double getDD(HCLASS s, Race r, int daysBack) {
@@ -420,6 +444,7 @@ public class StatsPopulation extends StatCollection{
 
 		private final LIST<PopData> deaths;
 		private final LIST<PopData> enters;
+		private double newEntries = 0;
 		private double timer = 0;
 		public final GETTER_TRANSE<Induvidual, CAUSE_ARRIVE> arrive;
 
@@ -466,6 +491,7 @@ public class StatsPopulation extends StatCollection{
 					for (double[] ds : wrongful)
 						file.ds(ds);
 					file.d(timer);
+					file.d(newEntries);
 				}
 				
 				@Override
@@ -473,6 +499,7 @@ public class StatsPopulation extends StatCollection{
 					for (double[] ds : wrongful)
 						file.ds(ds);
 					timer = file.d();
+					newEntries = file.d();
 				}
 				
 				@Override
@@ -480,6 +507,7 @@ public class StatsPopulation extends StatCollection{
 					for (double[] ds : wrongful)
 						Arrays.fill(ds, 0);
 					timer = 0;
+					newEntries = 0;
 				}
 			});
 			
@@ -487,6 +515,13 @@ public class StatsPopulation extends StatCollection{
 				
 				@Override
 				public void update(double ds) {
+					{
+						double d = newEntries/128.0;
+						if (d < 1)
+							d = 0;
+						newEntries -= d*ds;
+						newEntries = CLAMP.d(newEntries, 0, Double.MAX_VALUE);
+					}
 					timer+= ds;
 					if (timer < TIME.secondsPerDay) { 
 						return;
@@ -507,6 +542,12 @@ public class StatsPopulation extends StatCollection{
 				}
 			});
 
+
+			
+		}
+		
+		public double newEntries() {
+			return newEntries /128;
 		}
 		
 		public LIST<PopData> leaves(){
@@ -521,6 +562,8 @@ public class StatsPopulation extends StatCollection{
 			if (c != null) {
 				arrive.set(i, c);
 				enters.get(c.index()).inc(i);
+				if (c.fromoutside && i.player())
+					newEntries ++;
 			}
 		}
 		
@@ -610,7 +653,7 @@ public class StatsPopulation extends StatCollection{
 			NATIVE = new Type(1, "NATIVES", init);
 			FORMER_SLAVE = new Type(2, "FORMER_SLAVES", init);
 			EX_CON = new Type(3, "EX_CON", init);
-			new StatsBoosts.StatBoosterStat(init, EX_CON, new BBoost(BOOSTABLES.BEHAVIOUR().LAWFULNESS, 2, true));
+			new StatBoosterStat(EX_CON, new BBoost(BOOSTABLES.BEHAVIOUR().LAWFULNESS, 2, true));
 			all = new Type[] {
 				IMMIGRANT,NATIVE,FORMER_SLAVE,EX_CON
 			};

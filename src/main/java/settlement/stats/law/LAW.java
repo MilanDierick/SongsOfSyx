@@ -24,6 +24,7 @@ public final class LAW extends SettResource{
 	private final Prisoners prisoners = new Prisoners();
 	private final Processing processing = new Processing();
 	private final LawRate law = new LawRate();
+	private final Curfew curfew = new Curfew();
 	public static final double HI_RATE = 1.0/200;
 	private double rate = 0;
 	private int upI = -1;
@@ -45,6 +46,7 @@ public final class LAW extends SettResource{
 		crimes.saver.save(file);
 		processing.saver.save(file);
 		law.saver.save(file);
+		curfew.saver.save(file);
 	}
 	
 	@Override
@@ -53,6 +55,7 @@ public final class LAW extends SettResource{
 		processing.saver.load(file);
 		law.saver.load(file);
 		upI = -1;
+		curfew.saver.load(file);
 	}
 	
 	@Override
@@ -61,6 +64,7 @@ public final class LAW extends SettResource{
 		processing.saver.clear();
 		law.saver.clear();
 		upI = -1;
+		curfew.saver.clear();
 	}
 	
 	@Override
@@ -68,6 +72,7 @@ public final class LAW extends SettResource{
 		processing.update(ds);
 		crimes.update(ds);
 		law.update(ds);
+		curfew.update(ds);
 	}
 	
 	public static Prisoners prisoners() {
@@ -84,6 +89,10 @@ public final class LAW extends SettResource{
 
 	public static LawRate law() {
 		return self.law;
+	}
+	
+	public static Curfew curfew() {
+		return self.curfew;
 	}
 	
 	private static double POPI = 1.0/8000;

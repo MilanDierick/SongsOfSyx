@@ -1,10 +1,8 @@
 package world.army;
 
-import init.boostable.BOOSTABLE;
-import init.boostable.BOOSTABLES;
+import init.boostable.*;
 import settlement.stats.STAT;
 import settlement.stats.STATS;
-import settlement.stats.StatsBoosts.StatBooster;
 import settlement.stats.StatsEquippables.EQUIPPABLE_MILITARY;
 
 final class WDivBoosts {
@@ -20,11 +18,11 @@ final class WDivBoosts {
 	}
 	
 	private void add(STAT s, double[] aa) {
-		for (StatBooster ss : s.boosts()) {
+		for (BBooster ss : s.boosts()) {
 			if (ss.boost.isMul())
-				aa[ss.boost.boost.index] *= ss.boost.value();
+				aa[ss.boost.boostable.index] *= ss.boost.value();
 			else
-				aa[ss.boost.boost.index] += ss.boost.value();
+				aa[ss.boost.boostable.index] += ss.boost.value();
 		}
 	}
 
@@ -56,10 +54,10 @@ final class WDivBoosts {
 	
 	public double equip(WDIV d, BOOSTABLE bo) {
 		double mul = 1;
-		double add = bo.defValue;
+		double add = bo.defAdd;
 		for (EQUIPPABLE_MILITARY mi : STATS.EQUIP().military_all()) {
-			for (StatBooster bb : mi.boosts()) {
-				if (bb.boost.boost == bo) {
+			for (BBooster bb : mi.boosts()) {
+				if (bb.boost.boostable == bo) {
 					if (bb.boost.isMul())
 						mul *= bb.boost.value()*d.equip(mi)/mi.max();
 				}
@@ -70,10 +68,10 @@ final class WDivBoosts {
 	
 	public double equipMax(WDIV d, BOOSTABLE bo) {
 		double mul = 1;
-		double add = bo.defValue;
+		double add = bo.defAdd;
 		for (EQUIPPABLE_MILITARY mi : STATS.EQUIP().military_all()) {
-			for (StatBooster bb : mi.boosts()) {
-				if (bb.boost.boost == bo) {
+			for (BBooster bb : mi.boosts()) {
+				if (bb.boost.boostable == bo) {
 					if (bb.boost.isMul())
 						mul *= bb.boost.value();
 				}

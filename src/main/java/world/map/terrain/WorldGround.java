@@ -5,25 +5,23 @@ import static world.World.*;
 import java.io.IOException;
 
 import game.time.TIME;
+import init.biomes.CLIMATES;
 import init.paths.PATHS;
 import init.sprite.ICON;
 import init.sprite.SPRITES;
 import settlement.main.RenderData;
 import settlement.main.RenderData.RenderIterator;
 import snake2d.*;
-import snake2d.util.color.COLOR;
-import snake2d.util.color.ColorImp;
+import snake2d.util.color.*;
 import snake2d.util.datatypes.AREA;
 import snake2d.util.datatypes.DIR;
-import snake2d.util.file.FileGetter;
-import snake2d.util.file.FilePutter;
+import snake2d.util.file.*;
 import snake2d.util.light.PointLight;
 import snake2d.util.map.MAP_OBJECT;
 import snake2d.util.misc.CLAMP;
 import snake2d.util.sets.*;
-import snake2d.util.sprite.*;
-import util.spritecomposer.*;
-import util.spritecomposer.ComposerThings.ITileSheet;
+import snake2d.util.sprite.SPRITE;
+import snake2d.util.sprite.TILE_SHEET;
 import view.tool.PLACER_TYPE;
 import view.tool.PlacableMulti;
 import view.world.IDebugPanelWorld;
@@ -31,102 +29,58 @@ import world.World;
 
 public class WorldGround extends World.WorldResource {
 
-	private final byte[] data;
-	private final Bitsmap1D types = new Bitsmap1D(0, 3, TAREA());
+	private final Bitsmap1D rotData = new Bitsmap1D(0, 4, TAREA());
+	private final Bitsmap1D ids = new Bitsmap1D(0, 4, TAREA());
 
-	private final ArrayListResize<WGROUND> all = new ArrayListResize<>(10, 16);
+	private final LIST<WGROUND> all;
 	private final COLOR[] seasonColors = new COLOR[64];
 
 	private final PointLight light = new PointLight();
 	
-	private final TILE_SHEET stencil = (new ITileSheet(PATHS.SPRITE().getFolder("world").getFolder("map").get("Ground"), 576, 538) {
-		@Override
-		protected TILE_SHEET init(ComposerUtil c, ComposerSources s, ComposerDests d) {
-			s.singles.init(0, 0, 1, 1, 8, 2, d.s16);
-			s.singles.setSkip(1, 1).pasteEdges(true);
-			return d.s16.saveGame();
-			
-		}
-	}).get();
-	
+	public final WorldGroundSprites sprites = new WorldGroundSprites();
 	
 	public final SPRITE icon = new SPRITE.Imp(ICON.BIG.SIZE) {
 		
 		@Override
 		public void render(SPRITE_RENDERER r, int X1, int X2, int Y1, int Y2) {
-			int d = (Y2-Y1)/2;
-			sheet.render(r, 0, X1, X1+d, Y1, Y1+d);
-			sheet.render(r, 1, X1+d, X1+d*2, Y1, Y1+d);
-			sheet.render(r, 2, X1, X1+d, Y1+d, Y1+d*2);
-			sheet.render(r, 3, X1+d, X1+d*2, Y1+d, Y1+d*2);
-			
+			all.get(0).col.bind();
+			sprites.lush.render(r, 0, X1, X2, Y1, Y2);
+			COLOR.unbind();
 		}
 	};
+
+	private final WGROUND PATCHED_GRASS;
+
 	
-	private final TILE_SHEET sheet = (new ITileSheet() {
-		@Override
-		protected TILE_SHEET init(ComposerUtil c, ComposerSources s, ComposerDests d) {
-			
-			s.singles.init(0, 0, 1, 1, 8, 2, d.s16);
-			s.house.init(0, s.singles.body().y2(), 4, 1, d.s16);
-			s.full.init(0, s.house.body().y2(), 1, 5, 16, 4, d.s16);
-			
-			//lush
-			//s.full.setVar(0).setSkip(64, 0).paste(true);
-			
-			make(c, s, d, 0, 0);
-			
-			//grass
-			make(c, s, d, 0, 1);
-			//patched
-			make(c, s, d, 1, 2);
-			//steppe
-			make(c, s, d, 2, 3);
-			//dessert
-			make(c, s, d, 3, 4);
-			return d.s16.saveGame();
-			
-		}
-		
-		private void make(ComposerUtil c, ComposerSources s, ComposerDests d, int bg, int fg) {
-			s.full.setVar(bg).setSkip(64, 0).paste(false);
-			s.full.setVar(fg).setSkip(16, 0).pasteStenciled(s.house.setVar(0), 0);
-			s.full.setVar(fg).setSkip(16, 16).pasteStenciled(s.house.setVar(1), 0);
-			s.full.setVar(fg).setSkip(16, 32).pasteStenciled(s.house.setVar(2), 0);
-			for (int i = 0; i < 16; i++) {
-				s.full.setVar(fg).setSkip(1, 32+i).pasteStenciled(s.singles.setSkip(0, 1), 0);
-			}
-			//s.full.setVar(fg).setSkip(16, 48).pasteStenciled(s.house.setVar(3), 0);
-			s.full.setVar(fg).setSkip(32, 0).paste(true);
-			
-
-		}
-	}).get();
-
-	public final WGROUND LUSH = new WGROUND("lush lands", 0.8f, 0);
-	
-	public final WGROUND GRASS_LAND = new WGROUND("grassland", 0.65f, 0);
-	
-	public final WGROUND PATCHED_GRASS = new WGROUND("patched grass", 0.5f, 0);
-	
-	public final WGROUND STEPPE = new WGROUND("steppe", 0.35f, 4);
-	
-	public final WGROUND DESERT = new WGROUND("desert", 0.1f, 2);
-
-
-
-
-	private final static int SET = 16;
-	private final static int FULL_ROW = 6 * 16;
-	private final static int FULLS = 4 * 16;
 
 	public WorldGround() throws IOException{
 
-		data = new byte[TAREA()];
 		light.setGreen(1).setRed(2).setBlue(0.5);
 		light.setFalloff(1);
-		all.trim();
+		
+		final int am = 9;
+		final int pg = am/2;
+		
+		ArrayList<WGROUND> all = new ArrayList<>(16);
+		
+		Json json = new Json(PATHS.CONFIG().get("GenerationWorld")).json("GROUND");
+		
+		COLOR[] cols = COLOR.interpolate(new ColorImp(json, "COLOR_WET"), new ColorImp(json, "COLOR_DRY"), am);
+		
+		for (int i = 0; i < am; i++) {
+			float f = (float) (0.8-0.7*i/(am-1));
+			int bg = i < pg ? i+1 : i-1;
+			if (i == pg)
+				bg = pg;
+			new WGROUND(all, "ground: " + i, f, bg, cols[i]);
+		}
 
+		PATCHED_GRASS = all.get(pg);
+		
+		
+		this.all = all;
+		
+		
 		for (WGROUND g : all) {
 			IDebugPanelWorld.add(g);
 		}
@@ -145,6 +99,7 @@ public class WorldGround extends World.WorldResource {
 			seasonColors[(int) i] = p;
 
 		}
+
 	}
 
 	public LIST<WGROUND> all() {
@@ -153,14 +108,20 @@ public class WorldGround extends World.WorldResource {
 
 	@Override
 	protected void save(FilePutter f) {
-		f.bs(data);
-		types.save(f);
+		rotData.save(f);
+		ids.save(f);
 	}
 
 	@Override
 	protected void load(FileGetter f) throws IOException {
-		f.bs(data);
-		types.load(f);
+		rotData.load(f);
+		ids.load(f);
+	}
+	
+	@Override
+	protected void clear() {
+		ids.setAll(0);
+		rotData.setAll(0);
 	}
 
 	public void render(Renderer r, RenderData data, double season) {
@@ -168,30 +129,55 @@ public class WorldGround extends World.WorldResource {
 		RenderIterator it = data.onScreenTiles();
 		int i = (int) (TIME.years().bitPartOf() * seasonColors.length);
 		i %= seasonColors.length;
-		ColorImp.TMP.interpolate(COLOR.WHITE100, seasonColors[i], season).bind();;
+		
+		ColorImp.TMP.interpolate(COLOR.WHITE100, seasonColors[i], season).bind();
+		for (WGROUND g : all) {
+			g.colImp.set(g.col);
+			g.colImp.multiply(ColorImp.TMP);
+		}
+		
+		
 		;
 		CORE.renderer().setUniLight(light);
 		while (it.has()) {
-			getter.get(it.tile()).render(r, it.x(), it.y(), this.data[it.tile()], it.ran() & 0x1F);
+			WGROUND g = all.get(ids.get(it.tile()));
+			int d = rotData.get(it.tile());
+			TILE_SHEET over = g.over;
+			if (over == sprites.desert)
+				over = World.CLIMATE().getter.get(it.tile()) == CLIMATES.COLD() ? sprites.steppe : sprites.desert;
+			if (d == 0x0F) {
+				g.colImp.bind();
+				sprites.renderNormal(sprites.normal, r, it.x(), it.y(), sprites.ran(it.tx(), it.ty()));
+				g.op.bind();
+				sprites.renderNormal(over, r, it.x(), it.y(), sprites.ran(it.tx()+3, it.ty()+6));
+				OPACITY.unbind();
+			}else {
+				WGROUND bg = all.get(g.bg);
+				bg.colImp.bind();
+				sprites.renderNormal(sprites.normal, r, it.x(), it.y(), sprites.ran(it.tx(), it.ty()));
+				bg.op.bind();
+				sprites.renderNormal(over, r, it.x(), it.y(), sprites.ran(it.tx()+3, it.ty()+6));
+				OPACITY.unbind();
+				if (g != bg) {
+					g.colImp.bind();
+					sprites.renderStenciled(sprites.normal, r, it.x(), it.y(), d, sprites.ran(it.tx(), it.ty()), it.ran());
+					g.op.bind();
+					sprites.renderStenciled(over, r, it.x(), it.y(), d, sprites.ran(it.tx()+3, it.ty()+6), it.ran());
+					OPACITY.unbind();
+				}
+			}
 			it.next();
 		}
 		COLOR.unbind();
 
 	}
 
-	public void renderTextures(RenderIterator it, TextureCoords tex) {
-		int t = all.get(types.get(it.tile())).getTile(data[it.tile()], it.ran() & 0x1F);
-		sheet.renderTextured(tex, t, it.x(), it.y());
-	}
 
-	public TextureCoords texture(RenderIterator it) {
-		return sheet.getTexture(all.get(types.get(it.tile())).getTile(data[it.tile()], it.ran() & 0x1F));
-	}
 
 	private void set(int tx, int ty, int code, int data) {
 		int t = tx + ty * TWIDTH();
-		this.data[t] = (byte) data;
-		types.set(t, code);
+		rotData.set(t, data);
+		ids.set(t, code);
 	}
 
 	/**
@@ -217,61 +203,89 @@ public class WorldGround extends World.WorldResource {
 
 		@Override
 		public WGROUND get(int tile) {
-			return all.get(types.get(tile));
+			return all.get(ids.get(tile));
 		}
 	};
 
 	public class WGROUND extends PlacableMulti {
 
 		protected final float fertility;
-		protected final int code = all.add(this);
-
-		protected WGROUND(String name, float fertility, int bg) {
+		protected final int code;
+		private final int bg;
+		private final COLOR col;
+		private final ColorImp colImp = new ColorImp();
+		private final TILE_SHEET over;
+		private final OPACITY op;
+		
+		protected WGROUND(LISTE<WGROUND> all, String name, float fertility, int bg, COLOR col) {
 			super(name);
+			code = all.add(this);
 			this.fertility = fertility;
+			this.bg = bg;
+			this.col = col;
+			
+			double ff = (fertility-0.1)/0.7;
+			
+			if (ff < 0.5) {
+				over = sprites.desert;
+				op = new OpacityImp((int) (0xFF*(1.0-ff*2)));
+				
+			}else {
+				over = sprites.lush;
+				op = new OpacityImp((int) (0xFF*(Math.pow((ff-0.5)*2, 2))));
+			}
+			
 		}
 
 		boolean place(int tx, int ty) {
 			int res = 0;
 			
-			for (int di = 0; di < DIR.ALL.size(); di++) {
-				DIR d = DIR.ALL.get(di);
-				WGROUND neigh = getter.get(tx + d.x(), ty + d.y());
-				if (neigh != null && code-neigh.code > 1) {
-					all.get(code-1).place(tx, ty);
-					return true;
+			if (bg < PATCHED_GRASS.code) {
+				for (int i = 0; i < DIR.ORTHO.size(); i++) {
+					DIR d = DIR.ORTHO.get(i);
+					if (!World.IN_BOUNDS(tx, ty, d))
+						continue;
+					
+					WGROUND neigh = getter.get(tx + d.x(), ty + d.y());
+					
+					if (neigh.code > bg) {
+						all.get(bg).place(tx, ty);
+						return true;	
+					}
+				}
+				
+			}else if (bg > PATCHED_GRASS.code) {
+				
+				for (int i = 0; i < DIR.ORTHO.size(); i++) {
+					DIR d = DIR.ORTHO.get(i);
+					if (!World.IN_BOUNDS(tx, ty, d))
+						continue;
+					
+					WGROUND neigh = getter.get(tx + d.x(), ty + d.y());
+					
+					if (neigh.code < bg) {
+						all.get(bg).place(tx, ty);
+						return true;	
+					}
 				}
 				
 			}
 			
 			for (int i = 0; i < DIR.ORTHO.size(); i++) {
 				DIR d = DIR.ORTHO.get(i);
-				if (joins(tx, ty, d)) {
+				if (!World.IN_BOUNDS(tx, ty, d)) {
 					res |= d.mask();
+					continue;
 				}
+				WGROUND neigh = getter.get(tx + d.x(), ty + d.y());
 				
-				
-			}
-			int sres = 0;
-			for (int i = 0; i < DIR.NORTHO.size(); i++) {
-				DIR d = DIR.NORTHO.get(i);
-				if ((res & d.next(-1).mask()) != 0 && (res & d.next(1).mask()) != 0 && !joins(tx, ty, d))
-					sres |= d.mask();
+				if (neigh.bg == code || neigh.code == code)
+					res |= d.mask();
 				
 			}
-			
-			res |= sres << 4;
-			res &= 0x0FF;
+
 			set(tx, ty, code, res);
 			
-			return false;
-		}
-		
-		private boolean joins(int tx, int ty, DIR d) {
-			WGROUND neigh = getter.get(tx + d.x(), ty + d.y());
-			if (neigh == null || neigh == this || (neigh.code - 1 == this.code)) {
-				return true;
-			}
 			return false;
 		}
 
@@ -280,9 +294,10 @@ public class WorldGround extends World.WorldResource {
 			if (!IN_BOUNDS(tx, ty))
 				return;
 			WGROUND old = getter.get(tx, ty);
-			if (place(tx, ty) || old != getter.get(tx, ty)) {
-				for (int i = 0; i < DIR.ALL.size(); i++) {
-					DIR d = DIR.ALL.get(i);
+			place(tx, ty);
+			if (old != getter.get(tx, ty)) {
+				for (int i = 0; i < DIR.ORTHO.size(); i++) {
+					DIR d = DIR.ORTHO.get(i);
 					if (IN_BOUNDS(tx, ty, d)) {
 						getter.get(tx + d.x(), ty + d.y()).place(tx + d.x(), ty + d.y(), area, type);
 					}
@@ -310,30 +325,9 @@ public class WorldGround extends World.WorldResource {
 		}
 
 		public boolean is(int tx, int ty) {
-			return IN_BOUNDS(tx, ty) && code == types.get(tx + ty * TWIDTH());
-		}
-		
-		protected final void render(Renderer r, int x, int y, int data, int ran) {
-			sheet.render(r, getTile(data&0x0F, ran), x, y);
-			data = data >> 4;
-			data &= 0x0F;
-			if (data > 0) {
-				stencil.renderTextured(sheet.getTexture((code) * FULL_ROW+SET*3), data, x, y);
-			}
+			return IN_BOUNDS(tx, ty) && code == ids.get(tx + ty * TWIDTH());
 		}
 
-		protected int getTile(int data, int ran) {
-			int t = (code) * FULL_ROW;
-			
-			if (data == 0x0F) {
-				t += FULLS;
-				t += ran;
-			} else {
-				t += data;
-				t += SET * (ran % 0x03);
-			}
-			return t;
-		}
 
 		public double fertility() {
 			return fertility;

@@ -77,7 +77,6 @@ public class Humanoid extends ENTITY{
 		ai = new AIManager(this);
 		
 		
-
 //		if (division() != null) {
 //			division().reporter.reportPosition(POPSTATS().division.spot(this), body().cX(), body().cY());
 //		}

@@ -111,7 +111,7 @@ public final class CONSTRUCTION {
 		a.clear();
 		
 		Room r = SETT.ROOMS().map.get(x1, y1);
-		r.upgradeSet(upgrade);
+		r.upgradeSet(x1, y1, upgrade);
 		if (state != null) {
 			if (r instanceof RoomInstance)
 				state.apply((RoomInstance)SETT.ROOMS().map.get(x1, y1));

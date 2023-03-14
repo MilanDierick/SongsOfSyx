@@ -1,9 +1,8 @@
 package init.biomes;
 
-import java.util.Arrays;
-
 import game.time.TIME;
-import init.boostable.*;
+import init.boostable.BBoost;
+import init.boostable.BOOST_HOLDER;
 import init.sprite.ICON;
 import snake2d.util.color.COLOR;
 import snake2d.util.color.ColorImp;
@@ -11,7 +10,7 @@ import snake2d.util.file.Json;
 import snake2d.util.sets.*;
 import util.info.INFO;
 
-public final class CLIMATE extends INFO implements INDEXED{
+public final class CLIMATE extends INFO implements INDEXED, BOOST_HOLDER{
 
 	public final String key;
 	private final int index;
@@ -21,8 +20,7 @@ public final class CLIMATE extends INFO implements INDEXED{
 	public final COLOR color;
 	public final COLOR colorGroundDry;
 	public final COLOR colorGroundWet;
-	
-	Boost booster;
+	ClimateBonus.Boost booster;
 	
 	CLIMATE(LISTE<CLIMATE> all, String key, CharSequence name, CharSequence desc,  Json json){
 		super(name, desc);
@@ -72,54 +70,14 @@ public final class CLIMATE extends INFO implements INDEXED{
 		return CLIMATES.icon(this);
 	}
 	
-	public BOOSTER booster() {
-		return booster;
+	@Override
+	public CharSequence boosterName() {
+		return name;
 	}
 
-	static class Boost implements BOOSTER {
-
-		private final CharSequence name;
-		final double[] mul = new double[BOOSTABLES.all().size()];
-		final double[] add = new double[BOOSTABLES.all().size()];
-		private final LIST<BBoost> boosts;
-		
-		
-		public Boost(CLIMATE c, Json json, double[][] climates) {
-			this.name = c.name;
-			LinkedList<BBoost> boosts = new LinkedList<>();
-			LIST<BBoost> bo = BOOSTABLES.boosts(json);
-			for (BBoost b : bo) {
-				if (climates[b.boost.index][c.index] != 1)
-					continue;
-				boosts.add(b);
-			}
-			Arrays.fill(mul, 1);
-			for (BOOSTABLE b : BOOSTABLES.all()) {
-				if (climates[b.index][c.index()] != 1)
-					boosts.add(new BBoost(b, climates[b.index][c.index()], true));
-			}
-			
-			this.boosts = new ArrayList<BBoost>(boosts);
-			for (BBoost b : boosts) {
-				if (b.isMul()) {
-					mul[b.boost.index()] = b.value();
-				}else
-					add[b.boost.index()] = b.value();
-			}
-			
-		}
-
-		@Override
-		public CharSequence boosterName() {
-			return name;
-		}
-
-		@Override
-		public LIST<BBoost> boosts() {
-			return boosts;
-		}
-		
-		
+	@Override
+	public LIST<BBoost> boosts() {
+		return booster.boosts;
 	}
 	
 }

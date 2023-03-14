@@ -2,7 +2,6 @@ package settlement.room.main.util;
 
 import java.io.IOException;
 
-import game.VERSION;
 import settlement.main.SETT;
 import settlement.room.main.ROOMS.RoomResource;
 import settlement.room.main.Room;
@@ -32,16 +31,7 @@ public class RoomStats extends RoomResource{
 
 	@Override
 	protected void load(FileGetter file) throws IOException {
-		if (VERSION.versionIsBefore(63, 1)) {
-			QueueInteger q = new QueueInteger(55);
-			q.load(file);
-			list.clear();
-			while (q.hasNext())
-				list.list.push(q.poll());
-		}else {
-			list.load(file);
-		}
-		
+		list.load(file);
 		broken.load(file);
 	}
 

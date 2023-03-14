@@ -255,9 +255,9 @@ public class GFORMAT {
 	
 	public static GText f1(GText text, double f) {
 		if (f < 1.0)
-			text.color(GCOLOR.T().IBAD);
+			text.color(GCOLOR.T().IWORST);
 		else if (f > 1.0)
-			text.color(GCOLOR.T().IGOOD);
+			text.color(GCOLOR.T().IGREAT);
 		else
 			text.color(COLOR.WHITE85);
 		text.add(f, 2);

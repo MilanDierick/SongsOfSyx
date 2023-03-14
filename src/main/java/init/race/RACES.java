@@ -5,13 +5,12 @@ import java.io.IOException;
 import init.D;
 import init.paths.PATH;
 import init.paths.PATHS;
-import init.race.appearence.*;
+import init.race.appearence.RaceSprites;
 import init.resources.*;
 import settlement.entity.humanoid.HCLASS;
 import snake2d.Errors;
 import snake2d.util.file.Json;
 import snake2d.util.sets.*;
-import snake2d.util.sprite.TILE_SHEET;
 import util.keymap.RCollection;
 
 public class RACES {
@@ -85,20 +84,11 @@ public class RACES {
 	}
 	
 	public static void expand() throws IOException {
-		PATH p = PATHS.INIT().getFolder("race");
-		PATH pt = PATHS.TEXT().getFolder("race");
-		PATH sg = PATHS.SPRITE().getFolder("race");
 		
-		
-		
-		KeyMap<RAppearence> map = new KeyMap<>();
-		KeyMap<ExtraSprite> sprites = new KeyMap<>();
-		KeyMap<RaceSheet> children = new KeyMap<>();
-		KeyMap<String[]> nn = new KeyMap<>();
-		KeyMap<TILE_SHEET> sk = new KeyMap<>();
+		ExpandInit init = new ExpandInit();
 		
 		for (Race r : i.all) {
-			r.expand(new Json(p.get(r.key)), new Json(pt.get(r.key)), sg, map, sk, children, sprites, nn);
+			r.expand(init);
 		}
 		
 		ArrayList<LIST<RES_AMOUNT>> ress = new ArrayList<>(HCLASS.ALL().size());

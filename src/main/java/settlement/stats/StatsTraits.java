@@ -4,8 +4,7 @@ import java.io.IOException;
 import java.util.Arrays;
 
 import init.D;
-import init.boostable.BBoost;
-import init.boostable.BOOSTABLES;
+import init.boostable.*;
 import init.paths.PATH;
 import init.race.RACES;
 import init.race.Race;
@@ -14,7 +13,6 @@ import settlement.army.Div;
 import settlement.entity.humanoid.HCLASS;
 import settlement.stats.Init.Addable;
 import settlement.stats.Init.Initable;
-import settlement.stats.StatsBoosts.StatBooster;
 import settlement.stats.StatsTraits.StatTrait;
 import snake2d.Errors;
 import snake2d.util.file.*;
@@ -166,12 +164,12 @@ public final class StatsTraits extends RCollection<StatTrait>{
 			return disables;
 		}
 		
-		private static class BoostS extends StatBooster {
+		private static class BoostS extends BBooster.BBoosterImp {
 			
 			private final StatTrait trait;
 			
 			BoostS(Init init, StatTrait t, BBoost bo) {
-				super(init, ""+new Str(¤¤boost).insert(0, t.name), bo);
+				super(""+new Str(¤¤boost).insert(0, t.name), bo, true, true, false);
 				this.trait = t;
 			}
 

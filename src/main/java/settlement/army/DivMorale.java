@@ -4,8 +4,8 @@ import java.io.IOException;
 import java.util.Arrays;
 
 import init.D;
-import init.RES;
 import init.boostable.BOOSTABLES;
+import init.config.Config;
 import snake2d.util.file.*;
 import snake2d.util.misc.CLAMP;
 import snake2d.util.sets.ArrayList;
@@ -91,7 +91,8 @@ public final class DivMorale {
 		@Override
 		public DOUBLE_OE<Div> setD(Div t, double d) {
 			ArmyMorale.CASULTIES.inc(t.army(), -(int)da.getD(t));
-			da.setD(t, CLAMP.d(d, 0, RES.config().BATTLE.MEN_PER_DIVISION));
+			
+			da.setD(t, CLAMP.d(d, 0, Config.BATTLE.MEN_PER_DIVISION));
 			ArmyMorale.CASULTIES.inc(t.army(), (int)da.getD(t));
 			return this;
 		};
@@ -132,7 +133,8 @@ public final class DivMorale {
 		@Override
 		public DOUBLE_OE<Div> setD(Div t, double d) {
 			ArmyMorale.DESERTION.inc(t.army(), -(int)da.getD(t));
-			da.setD(t, CLAMP.d(d, 0, RES.config().BATTLE.MEN_PER_DIVISION));
+			
+			da.setD(t, CLAMP.d(d, 0, Config.BATTLE.MEN_PER_DIVISION));
 			ArmyMorale.DESERTION.inc(t.army(), (int)da.getD(t));
 			return this;
 		};

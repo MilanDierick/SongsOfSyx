@@ -192,6 +192,11 @@ public class GHeader extends HOVERABLE.HoverableAbs{
 				((TITLEABLE) s).hoverInfoGet((GBox)text);
 			super.hoverInfoGet(text);
 		}
+		
+		public HeaderHorizontal increaseWidth(int am) {
+			body.incrW(am);
+			return this;
+		}
 
 	}
 	

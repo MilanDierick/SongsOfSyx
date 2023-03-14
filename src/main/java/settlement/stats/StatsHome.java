@@ -40,12 +40,10 @@ public class StatsHome extends StatCollection{
 	private final LIST<STAT.STATData> currents;
 	private final LIST<INT_OE<Induvidual>> oneExtraRes;
 	public final STAT materials;
-	public final STAT space;
 	
 	StatsHome(Init init){
 		super(init, "HOME");
 		GETTER = new StatHome(init);
-		space = GETTER.statSpace;
 		INT_OE<Induvidual> indu = new INT_OE<Induvidual>() {
 
 			@Override
@@ -321,7 +319,6 @@ public class StatsHome extends StatCollection{
 		private final INT_OE<Induvidual> xx; 
 		private final INT_OE<Induvidual> yy; 
 		private final STATData stat;
-		private final STATData statSpace;
 		public final STAT hasSearched;
 		public final INFO info;
 		
@@ -354,13 +351,6 @@ public class StatsHome extends StatCollection{
 				
 			};
 			stat = new STATData("HOUSED", init, b);
-			statSpace = new STATData("SPACE", init, init.count.new DataNibble()) {
-				
-				@Override
-				public int pdivider(HCLASS c, Race r, int daysback) {
-					return stat.data(c).get(r, daysback);
-				}
-			};
 			
 			
 			init.disposable.add(this);
@@ -392,9 +382,8 @@ public class StatsHome extends StatCollection{
 		}
 		
 		public void set(Humanoid h, HOME home) {
-			if (h.isRemoved() || h != SETT.ENTITIES().getByID(h.id()))
-				throw new RuntimeException("removed!");
-			
+			if (h.isRemoved() || SETT.ENTITIES().getByID(h.id()) != h)
+				throw new RuntimeException(h.isRemoved() + " " +  (SETT.ENTITIES().getByID(h.id()) != h));
 			Induvidual f = h.indu();
 			hasSearched.indu().set(f, 0);
 			stat.removeH(f);
@@ -410,12 +399,10 @@ public class StatsHome extends StatCollection{
 				xx.set(f, home.service().x()+1);
 				yy.set(f, home.service().y()+1);
 				home.occupy(h);
-				statSpace.indu().setD(f, home.space());
 				
 			}else {
 				xx.set(f, 0);
 				yy.set(f, 0);
-				statSpace.indu().setD(f, 0);
 			}
 			
 			stat.addH(f);

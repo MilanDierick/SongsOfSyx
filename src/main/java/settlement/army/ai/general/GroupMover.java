@@ -1,7 +1,7 @@
 package settlement.army.ai.general;
 
 import init.C;
-import init.RES;
+import init.config.Config;
 import settlement.army.Div;
 import settlement.army.DivMorale;
 import settlement.army.ai.general.Groups.GroupLine;
@@ -20,7 +20,7 @@ final class GroupMover {
 
 	
 	private final Context c;
-	private ArrayList<GDiv> findable = new ArrayList<>(RES.config().BATTLE.DIVISIONS_PER_ARMY);
+	private ArrayList<GDiv> findable = new ArrayList<>(Config.BATTLE.DIVISIONS_PER_ARMY);
 	private GroupMoverTracer tracer;
 	private GroupMoverDiv mover;
 	private final VectorImp vec = new VectorImp();

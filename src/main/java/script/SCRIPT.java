@@ -29,16 +29,19 @@ public interface SCRIPT {
 	 */
 	public CharSequence desc();
 	/**
-	 * Will be called before the game has had a chance to become initiated. One could
-	 * potentially use reflection here to do funky stuff, but common practise is to do nothing.
+	 * Will be called before the game has had a chance to become set up. One can use hooks or potentially 
+	 * reflection here to do funky stuff, but common practise is to do nothing.
+	 * Note that this will get called only once after leaving the main menu.
 	 */
 	public void initBeforeGameCreated();
 	
 	/**
 	 * 
-	 * @return the script instance that will be actually updated by the game.
+	 * @return the script instance that will be actually updated by the game. This method is called once when leaving the
+	 * main menu, and once for every game load. Must not be null. The instance should be inited as if a new game was started.
+	 * This method will be called after all game resources have been set up.
 	 */
-	public SCRIPT_INSTANCE initAfterGameCreated();
+	public SCRIPT_INSTANCE createInstance();
 	
 	/**
 	 * A Script is a factory, responisble of creating this. This is where most logic should go.

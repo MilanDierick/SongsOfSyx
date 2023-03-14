@@ -1,13 +1,13 @@
 package settlement.army.ai.util;
 
-import init.RES;
+import init.config.Config;
 import settlement.main.SETT;
 
 public final class ArmyAIUtil {
 	
 	public static final int MAX_AREA_DISTANCE = 3;
 	
-	final DivTDataStatus[] statuses = new DivTDataStatus[RES.config().BATTLE.DIVISIONS_PER_BATTLE];
+	final DivTDataStatus[] statuses = new DivTDataStatus[Config.BATTLE.DIVISIONS_PER_BATTLE];
 	final DivsTileMap map = new DivsTileMap(statuses);
 	final DivsQuadMap quads = new DivsQuadMap(statuses);
 	final DivsSpaceMap space = new DivsSpaceMap(statuses);

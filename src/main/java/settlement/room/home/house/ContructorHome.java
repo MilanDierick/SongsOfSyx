@@ -19,31 +19,32 @@ final class ContructorHome extends Furnisher{
 
 	private final ROOM_HOME blue;
 	
-	final double[] space = new double[] {
-		1.0,
-		0.75,
-		0.5,
-		0,
+	final FurnisherStat occupants = new FurnisherStat.FurnisherStatI(this, 1);
+	
+	public final int[][] maxOccupants = new int[][] {
+		{1,2,3},
+		{2,4,5},
+		{4,7,10},
 	};
 	
-	final FurnisherStat occupants = new FurnisherStat.FurnisherStatI(this, 1);
+	static final int entrance = 2;
 	
 	public final FurnisherItemTile tOpening;
 	public final Sprites sp;
 	public final Floor flooring;
 	protected ContructorHome(RoomInitData init, ROOM_HOME blue)
 			throws IOException {
-		super(init, 4, 1, 88, 44);
+		super(init, 3, 1, 88, 44);
 		
 		flooring = floor.get(0);
-		sp = new Sprites();
+		sp = new Sprites(init.data());
 		
 		
 		
 		
 		this.blue = blue;
 		final FurnisherItemTile ee = new FurnisherItemTile(this, true, sp.theDummy, AVAILABILITY.ROOM, false);
-		ee.setData(2);
+		ee.setData(entrance);
 		ee.noWalls = true;
 		tOpening = ee;
 		final FurnisherItemTile __ = new FurnisherItemTile(this, false, sp.theDummy, AVAILABILITY.ROOM, false);
@@ -59,30 +60,20 @@ final class ContructorHome extends Furnisher{
 		}, 9);
 		
 		create(new FurnisherItemTile[][] {
-			 {xx,xx,xx,xx,xx},
-			 {xx,__,__,__,xx},
-			 {xx,xx,ee,xx,xx},
-		}, 8);
-		
-		create(new FurnisherItemTile[][] {
-			 {xx,xx,xx,xx,xx},
-			 {xx,__,__,__,xx},
-			 {xx,__,__,__,xx},
-			 {xx,__,__,__,xx},
-			 {xx,xx,ee,xx,xx},
-		}, 7);
-		
+			{xx,xx,xx},
+			{xx,__,xx},
+			 {xx,__,xx},
+			 {xx,__,xx},
+			 {xx,ee,xx},
+		}, 15);
 		create(new FurnisherItemTile[][] {
 			 {xx,xx,xx,xx,xx},
 			 {xx,__,__,__,xx},
 			 {xx,__,__,__,xx},
 			 {xx,__,__,__,xx},
 			 {xx,__,__,__,xx},
-			 {xx,__,__,__,xx},
-			 {xx,__,__,__,xx},
-			 {xx,__,__,__,xx},
 			 {xx,xx,ee,xx,xx},
-		}, 7);
+		}, 30);
 		
 	}
 	

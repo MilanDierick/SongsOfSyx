@@ -418,6 +418,8 @@ public abstract class RoomInstance extends Room.RoomInstanceImp implements AREA{
 		return new RoomState.RoomStateInstance(this);
 	}
 	
+	
+	
 	@Override
 	public int upgrade() {
 		return upgrade;

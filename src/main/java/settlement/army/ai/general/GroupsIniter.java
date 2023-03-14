@@ -1,6 +1,6 @@
 package settlement.army.ai.general;
 
-import init.RES;
+import init.config.Config;
 import settlement.army.ai.general.GroupsIniterTargets.Target;
 import settlement.army.ai.general.Pathing.PATHCOST;
 import settlement.army.ai.util.ArmyAIUtil;
@@ -15,16 +15,16 @@ import snake2d.util.sets.LIST;
 final class GroupsIniter {
 	
 	private final ArrayList<GroupDiv> all;
-	private final ArrayList<GroupDiv> divs = new ArrayList<>(RES.config().BATTLE.DIVISIONS_PER_ARMY);
-	private final ArrayList<GroupDiv> groups = new ArrayList<>(RES.config().BATTLE.DIVISIONS_PER_ARMY);
+	private final ArrayList<GroupDiv> divs = new ArrayList<>(Config.BATTLE.DIVISIONS_PER_ARMY);
+	private final ArrayList<GroupDiv> groups = new ArrayList<>(Config.BATTLE.DIVISIONS_PER_ARMY);
 	private final Context c;
 	private final GroupsIniterTargets targets;
-	private final IntChecker checker = new IntChecker(RES.config().BATTLE.DIVISIONS_PER_ARMY);
+	private final IntChecker checker = new IntChecker(Config.BATTLE.DIVISIONS_PER_ARMY);
 	
 	GroupsIniter(Context c){
 		this.c = c;
 		targets = new GroupsIniterTargets(c);
-		ArrayList<GroupDiv> all = new ArrayList<>(RES.config().BATTLE.DIVISIONS_PER_ARMY);
+		ArrayList<GroupDiv> all = new ArrayList<>(Config.BATTLE.DIVISIONS_PER_ARMY);
 		for (GDiv d : c.divs)
 			all.add(new GroupDiv(d));
 		this.all = all;

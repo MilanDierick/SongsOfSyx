@@ -1,7 +1,7 @@
 package settlement.army.ai.general;
 
 import init.C;
-import init.RES;
+import init.config.Config;
 import settlement.army.Army;
 import settlement.army.Div;
 import settlement.army.ai.util.ArmyAIUtil;
@@ -15,16 +15,16 @@ import snake2d.util.sets.*;
 
 final class GroupsIniterTargets {
 
-	private final ArrayList<Target> active = new ArrayList<>(RES.config().BATTLE.DIVISIONS_PER_ARMY);
+	private final ArrayList<Target> active = new ArrayList<>(Config.BATTLE.DIVISIONS_PER_ARMY);
 	private final LIST<Target> all;
 	
-	private final ArrayList<TargetDiv> tmpEnemy = new ArrayList<>(RES.config().BATTLE.DIVISIONS_PER_ARMY);
-	private final ArrayList<TargetDiv> tmpEnemy2 = new ArrayList<>(RES.config().BATTLE.DIVISIONS_PER_ARMY);
+	private final ArrayList<TargetDiv> tmpEnemy = new ArrayList<>(Config.BATTLE.DIVISIONS_PER_ARMY);
+	private final ArrayList<TargetDiv> tmpEnemy2 = new ArrayList<>(Config.BATTLE.DIVISIONS_PER_ARMY);
 	private final LIST<TargetDiv> allEnemy;
 	
 	private final Context c;
 	private final Army a;
-	private final IntChecker check = new IntChecker(RES.config().BATTLE.DIVISIONS_PER_ARMY);
+	private final IntChecker check = new IntChecker(Config.BATTLE.DIVISIONS_PER_ARMY);
 	private final DivTDataStatus status = new DivTDataStatus();
 	
 	private int MAX_DIST = 64;
@@ -33,12 +33,14 @@ final class GroupsIniterTargets {
 		
 		this.a = c.army.enemy();
 		this.c = c;
-		ArrayList<Target> all = new ArrayList<>(RES.config().BATTLE.DIVISIONS_PER_ARMY);
+		
+		ArrayList<Target> all = new ArrayList<>(Config.BATTLE.DIVISIONS_PER_ARMY);
 		while(all.hasRoom())
 			all.add(new Target());
 		this.all = all;
 		
-		ArrayList<TargetDiv> allE = new ArrayList<>(RES.config().BATTLE.DIVISIONS_PER_ARMY);
+		
+		ArrayList<TargetDiv> allE = new ArrayList<>(Config.BATTLE.DIVISIONS_PER_ARMY);
 		while(allE.hasRoom())
 			allE.add(new TargetDiv());
 		this.allEnemy = allE;
@@ -55,7 +57,7 @@ final class GroupsIniterTargets {
 		public final Coo coo = new Coo();
 		public final Coo centre = new Coo();
 		public int men;
-		public ArrayCooShort coos = new ArrayCooShort(RES.config().BATTLE.DIVISIONS_PER_ARMY);
+		public ArrayCooShort coos = new ArrayCooShort(Config.BATTLE.DIVISIONS_PER_ARMY);
 		public double power;
 		private double minPowerAllocated;
 		private double maxPowerAllocated;
@@ -68,7 +70,7 @@ final class GroupsIniterTargets {
 			return maxPowerAllocated;
 		}
 		
-		private final ArrayList<GDiv> divs = new ArrayList<>(RES.config().BATTLE.DIVISIONS_PER_ARMY);
+		private final ArrayList<GDiv> divs = new ArrayList<>(Config.BATTLE.DIVISIONS_PER_ARMY);
 		
 		public void register(GDiv div) {
 			divs.add(div);
@@ -87,7 +89,8 @@ final class GroupsIniterTargets {
 		
 		active.clearSloppy();
 		tmpEnemy.clearSloppy();
-		for (int di = 0; di < RES.config().BATTLE.DIVISIONS_PER_ARMY; di++) {
+		
+		for (int di = 0; di < Config.BATTLE.DIVISIONS_PER_ARMY; di++) {
 			Div d = a.divisions().get(di);
 			if (d.order().active()) {
 				d.order().status.get(status);

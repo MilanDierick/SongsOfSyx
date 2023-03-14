@@ -67,7 +67,7 @@ public final class HTYPE extends INFO implements INDEXED {
 			HCLASS.OTHER,
 			D.g("Deranged"), D.g("Derangeds", "Deranged"),
 			D.g("DerangedD", "Deranged are people who have gone insane. They will do no work, and wander around your city doing erratic things. Can be cured in an asylum."),
-			true, false, false, new ColorImp(30,30,1));
+			false, false, false, new ColorImp(30,30,1));
 	public final static HTYPE NOBILITY = new HTYPE(
 			HCLASS.NOBLE,
 			D.g("Nobility"), D.g("Nobles"),

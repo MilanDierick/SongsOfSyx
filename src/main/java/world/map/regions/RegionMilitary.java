@@ -4,12 +4,11 @@ package world.map.regions;
 
 import game.faction.FACTIONS;
 import game.faction.Faction;
-import init.RES;
+import init.config.Config;
 import init.race.RACES;
 import init.race.Race;
 import settlement.army.DivisionBanners.DivisionBanner;
 import settlement.main.SETT;
-import settlement.stats.STATS;
 import settlement.stats.StatsEquippables.EQUIPPABLE_MILITARY;
 import snake2d.util.file.SAVABLE;
 import snake2d.util.misc.CLAMP;
@@ -97,7 +96,8 @@ public final class RegionMilitary extends RResource {
 			
 			@Override
 			public int max(Region t) {
-				return RES.config().BATTLE.REGION_MAX_MEN;
+				
+				return Config.BATTLE.REGION_MAX_MEN;
 			}
 			
 		};
@@ -106,8 +106,10 @@ public final class RegionMilitary extends RResource {
 			
 			@Override
 			public double getD(Region t) {
-				double i = (int) Math.ceil(RES.config().BATTLE.REGION_MAX_MEN*REGIOND.POP().popValue(t));
-				i = CLAMP.d(i, 0, RES.config().BATTLE.REGION_MAX_MEN);
+				
+				double i = (int) Math.ceil(Config.BATTLE.REGION_MAX_MEN*REGIOND.POP().popValue(t));
+				
+				i = CLAMP.d(i, 0, Config.BATTLE.REGION_MAX_MEN);
 				if (i == 0)
 					return 1;
 				
@@ -116,8 +118,10 @@ public final class RegionMilitary extends RResource {
 			
 			@Override
 			public double next(Region r) {
-				double i = (int) Math.ceil(RES.config().BATTLE.REGION_MAX_MEN*REGIOND.POP().popValue(r));
-				i = CLAMP.d(i, 0, RES.config().BATTLE.REGION_MAX_MEN);
+				
+				double i = (int) Math.ceil(Config.BATTLE.REGION_MAX_MEN*REGIOND.POP().popValue(r));
+				
+				i = CLAMP.d(i, 0, Config.BATTLE.REGION_MAX_MEN);
 				if (i == 0)
 					return 1;
 				return 1 + 0.5*soldiers.get(r)/(i);
@@ -157,8 +161,10 @@ public final class RegionMilitary extends RResource {
 			
 			@Override
 			public double getD(Region t) {
-				int i = (int) (RES.config().BATTLE.REGION_MAX_MEN*REGIOND.POP().popValue(t));
-				i = CLAMP.i(i, 0, RES.config().BATTLE.REGION_MAX_MEN);
+				
+				int i = (int) (Config.BATTLE.REGION_MAX_MEN*REGIOND.POP().popValue(t));
+				
+				i = CLAMP.i(i, 0, Config.BATTLE.REGION_MAX_MEN);
 				return i;
 			}
 			
@@ -190,7 +196,8 @@ public final class RegionMilitary extends RResource {
 			int n = soldiers.get(r);
 			
 			if (r.faction() != null && r.faction().capitolRegion() == r) {
-				t = RES.config().BATTLE.REGION_MAX_MEN;
+				
+				t = Config.BATTLE.REGION_MAX_MEN;
 			}
 		
 			if (t > n) {
@@ -273,7 +280,8 @@ public final class RegionMilitary extends RResource {
 				sols = solRemaining;
 				
 			while(sols > 8 && solRemaining > 0) {
-				int m = CLAMP.i(sols, 0, RES.config().BATTLE.MEN_PER_DIVISION);
+				
+				int m = CLAMP.i(sols, 0, Config.BATTLE.MEN_PER_DIVISION);
 				solRemaining -= m;
 				sols -= m;
 				WDiv d = divs.get(i);
@@ -287,7 +295,8 @@ public final class RegionMilitary extends RResource {
 			}
 			remain += sols;
 		}
-		solRemaining = CLAMP.i(solRemaining, 0, RES.config().BATTLE.MEN_PER_DIVISION);
+		
+		solRemaining = CLAMP.i(solRemaining, 0, Config.BATTLE.MEN_PER_DIVISION);
 		if (solRemaining > 0) {
 			Race big = FACTIONS.player().race();
 			int bb = 0;
@@ -396,9 +405,7 @@ public final class RegionMilitary extends RResource {
 
 		@Override
 		public int equipTarget(EQUIPPABLE_MILITARY e) {
-			if (e == STATS.EQUIP().BATTLEGEAR)
-				return 2;
-			return 0;
+			return e.garrisonAmount();
 		}
 
 		@Override

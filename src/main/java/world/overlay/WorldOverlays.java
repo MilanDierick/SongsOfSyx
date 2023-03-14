@@ -24,6 +24,7 @@ public class WorldOverlays {
 	private final OverlayEdger edger = new OverlayEdger(World.TWIDTH(), World.THEIGHT());
 	private final OverlayThings things = new OverlayThings();
 	private final OverlayArmyMovement army = new OverlayArmyMovement();
+	private final OverlayMineral minerals = new OverlayMineral();
 	
 	public WorldOverlays() {
 		regions.add();
@@ -48,6 +49,8 @@ public class WorldOverlays {
 				landmarks.render(r, s, it, landmarkH);
 			if (army.added())
 				army.render(r, s, it);
+			if (minerals.added())
+				minerals.render(r, s, it);
 
 			it.next();
 		}
@@ -55,6 +58,7 @@ public class WorldOverlays {
 		things.render(r, s, data);
 		army.remove();
 		landmarks.remove();
+		minerals.remove();
 		regionH = null;
 		landmarkH = null;
 		COLOR.unbind();
@@ -95,6 +99,10 @@ public class WorldOverlays {
 	
 	public WorldOverlayer landmarks() {
 		return landmarks;
+	}
+	
+	public WorldOverlayer minerals() {
+		return minerals;
 	}
 	
 	public void hoverLandmark(WorldLandmark landmark) {

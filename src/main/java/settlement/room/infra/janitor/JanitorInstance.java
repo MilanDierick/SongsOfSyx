@@ -32,7 +32,7 @@ final class JanitorInstance extends RoomInstance implements JOBMANAGER_HASER, RO
 		resData = new int[b.res.intsize];
 
 		employees().maxSet((int) blueprintI().constructor.workers.get(this));
-		employees().neededSet((int) 1);
+		employees().neededSet((int) Math.ceil(blueprintI().constructor.workers.get(this)/5.0));
 		activate();
 		int x = 0, y = 0;
 		for (COORDINATE c : body()) {

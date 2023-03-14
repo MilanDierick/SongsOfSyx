@@ -161,7 +161,7 @@ public final class TBush extends TerrainTile{
 		COLOR.unbind();
 	}
 	
-	void render(RenderData.RenderIterator i, SPRITE_RENDERER r, ShadowBatch s, int x, int y, int ran) {
+	public void render(RenderData.RenderIterator i, SPRITE_RENDERER r, ShadowBatch s, int x, int y, int ran) {
 		int ss = (ran&3)*SET;
 		ran = ran >> 2;
 		render(i, r, s, x, y, ran, ss);

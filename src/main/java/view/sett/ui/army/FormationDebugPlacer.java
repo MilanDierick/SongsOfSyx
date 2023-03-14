@@ -3,7 +3,7 @@ package view.sett.ui.army;
 import static settlement.main.SETT.*;
 
 import init.C;
-import init.RES;
+import init.config.Config;
 import init.race.RACES;
 import init.sprite.ICON;
 import init.sprite.ICON.MEDIUM;
@@ -49,7 +49,8 @@ final class FormationDebugPlacer extends PlacableFixedImp{
 		this.team = team;
 		
 		for (int i = 0; i < SIZES; i++) {
-			double s = (i+1)*RES.config().BATTLE.MEN_PER_DIVISION/SIZES;
+			
+			double s = (i+1)*Config.BATTLE.MEN_PER_DIVISION/SIZES;
 			int w = (int) Math.ceil(Math.sqrt(s));
 			int h = (int) Math.ceil(s/w);
 			widths[i] = w;
@@ -166,7 +167,8 @@ final class FormationDebugPlacer extends PlacableFixedImp{
 	}
 	
 	private void place(int tx, int ty) {
-		if (div.menNrOf() < RES.config().BATTLE.MEN_PER_DIVISION) {
+		
+		if (div.menNrOf() < Config.BATTLE.MEN_PER_DIVISION) {
 			HTYPE t = team != ARMIES().player() ? HTYPE.ENEMY : HTYPE.SUBJECT;
 			Humanoid h = new Humanoid(tx*C.TILE_SIZE+C.TILE_SIZEH, ty*C.TILE_SIZE+C.TILE_SIZEH, RACES.all().get(race.get()), t, null);
 			h.setDivision(div);
@@ -182,7 +184,8 @@ final class FormationDebugPlacer extends PlacableFixedImp{
 		for (Div d : team.divisions()) {
 			if (d.menNrOf() == 0) {
 				div = d;
-				div.info.men.set(RES.config().BATTLE.MEN_PER_DIVISION);
+				
+				div.info.men.set(Config.BATTLE.MEN_PER_DIVISION);
 				return true;
 			}
 		}

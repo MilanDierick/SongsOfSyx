@@ -45,14 +45,19 @@ public interface TITLEABLE extends SPRITE{
 		return new GHeader.HeaderHorizontal(name, this, width);
 	}
 	
-	public default HOVERABLE hh(CharSequence name, CharSequence desc, int width) {
-		
-		return new GHeader.HeaderHorizontal(name, this, width).hoverInfoSet(desc);
+	public default GHeader.HeaderHorizontal hh(CharSequence name, CharSequence desc, int width) {
+		GHeader.HeaderHorizontal h = new GHeader.HeaderHorizontal(name, this, width);
+		h.hoverTitleSet(name);
+		h.hoverInfoSet(desc);
+		return h;
 	}
 	
-	public default HOVERABLE hh(CharSequence name, CharSequence desc) {
+	public default GHeader.HeaderHorizontal hh(CharSequence name, CharSequence desc) {
 		
-		return new GHeader.HeaderHorizontal(name, this).hoverInfoSet(desc);
+		GHeader.HeaderHorizontal h = new GHeader.HeaderHorizontal(name, this);
+		h.hoverTitleSet(name);
+		h.hoverInfoSet(desc);
+		return h;
 	}
 	
 	public default void hoverInfoGet(GBox b) {

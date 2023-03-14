@@ -1,10 +1,8 @@
 package view.battle;
 
-import game.faction.FACTIONS;
 import init.D;
-import init.RES;
-import init.biomes.CLIMATES;
 import init.boostable.*;
+import init.config.Config;
 import init.sprite.ICON;
 import init.sprite.SPRITES;
 import init.sprite.UI.UI;
@@ -12,10 +10,8 @@ import settlement.army.Div;
 import settlement.army.DivMorale;
 import settlement.army.DivMorale.DivMoraleFactor;
 import settlement.army.order.DivTDataTask;
-import settlement.main.SETT;
 import settlement.stats.STAT;
 import settlement.stats.STATS;
-import settlement.stats.StatsBoosts.StatBooster;
 import settlement.stats.StatsEquippables.EQUIPPABLE_MILITARY;
 import settlement.stats.StatsEquippables.StatEquippableRange;
 import snake2d.SPRITE_RENDERER;
@@ -81,7 +77,8 @@ public final class DivHoverer {
 
 				@Override
 				public void update(GText text) {
-					text.add(div.menNrOf()).add('/').add(RES.config().BATTLE.MEN_PER_DIVISION);
+					
+					text.add(div.menNrOf()).add('/').add(Config.BATTLE.MEN_PER_DIVISION);
 				}
 			}, 0, 0);
 
@@ -141,7 +138,7 @@ public final class DivHoverer {
 						
 						@Override
 						protected void render(SPRITE_RENDERER r, float ds, boolean isHovered) {
-							double max = b.max(FACTIONS.player());
+							double max = BOOSTABLES.player().max(b);
 							double dd = b.get(div) / max;
 							b.icon().renderC(r, body().x1()+8, body().cY());
 							GMeter.render(r, GMeter.C_ORANGE, dd, body().x1()+20, body().x2(), body().cY()-10, body().cY()+10);
@@ -151,25 +148,10 @@ public final class DivHoverer {
 
 						@Override
 						public void hoverInfoGet(GUI_BOX text) {
-							GBox box = (GBox) text;
 							text.title(b.name);
 							text.text(b.desc);
 							text.NL(8);
-	
-							for (BOOSTER_COLLECTION.SIMPLE bb : div.army().faction().bonus().subs()) {
-								bb.hover(box, b);
-							}
-							
-							CLIMATES.BONUS().hover(box, b, SETT.ENV().climate());
-							
-							for (StatBooster bb : STATS.BOOST().all2(b)) {
-								bb.boost.hoverValue(text, bb.name(), bb.value(div));
-								box.NL();
-							}
-							
-							box.textLL(DicMisc.¤¤Total);
-							box.tab(6);
-							box.add(GFORMAT.f(box.text(), b.get(div)));
+							BoostHoverer.hover(text, b, div);
 							
 						}
 

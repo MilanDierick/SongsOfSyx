@@ -19,7 +19,6 @@ import settlement.room.main.RoomBlueprintIns;
 import settlement.room.main.RoomEmploymentSimple;
 import settlement.stats.STAT;
 import settlement.stats.STATS;
-import settlement.stats.StatsBoosts.StatBooster;
 import settlement.stats.StatsReligion.Religion;
 import settlement.stats.standing.STANDINGS;
 import snake2d.SPRITE_RENDERER;
@@ -254,7 +253,7 @@ final class WikiRace extends Article{
 						b.add(GFORMAT.f(b.text(), race.stats().religion(rr)));
 						
 						b.NL(8);
-						for (StatBooster bb : rr.bonuses) {
+						for (BBooster bb : rr.bonuses) {
 							bb.boost.hover(b);
 							b.NL();
 						}
@@ -446,9 +445,9 @@ final class WikiRace extends Article{
 						public void update(GText text) {
 							double bb = b.race(race);
 							GFORMAT.f(text,  bb);
-							if (bb > b.defValue)
+							if (bb > b.defAdd)
 								text.color(GCOLOR.T().IGREAT);
-							else if(bb < b.defValue)
+							else if(bb < b.defAdd)
 								text.errorify();
 							else
 								text.normalify();

@@ -4,7 +4,7 @@ package settlement.army;
 import java.io.IOException;
 
 import init.C;
-import init.RES;
+import init.config.Config;
 import settlement.army.formation.DivDeployerUser;
 import settlement.main.CapitolArea;
 import settlement.main.SETT;
@@ -19,7 +19,7 @@ public class ArmyManager extends SettResource{
 
 	public static final int ARMIES = 2;
 	public static final int ARMIES_BITS = 0b011;
-	public static final int DIVISIONS = ARMIES*RES.config().BATTLE.DIVISIONS_PER_ARMY;
+	public static final int DIVISIONS = ARMIES*Config.BATTLE.DIVISIONS_PER_ARMY;
 	private final ArrayList<Div> divisions = new ArrayList<>(DIVISIONS);
 	private final ArrayList<Army> armies = new ArrayList<>(ARMIES);
 	public final DivDeployerUser placer;
@@ -29,9 +29,12 @@ public class ArmyManager extends SettResource{
 	public final TargetMap map = new TargetMap();
 	
 	public ArmyManager(SETT s) throws IOException{
-		for (int i = 0; i < ARMIES; i++)
-			new Army(armies, divisions, RES.config().BATTLE.MEN_PER_DIVISION);
-		placer = new DivDeployerUser(armies, RES.config().BATTLE.MEN_PER_DIVISION) {
+		for (int i = 0; i < ARMIES; i++) {
+			
+			new Army(armies, divisions, Config.BATTLE.MEN_PER_DIVISION);
+		}
+		
+		placer = new DivDeployerUser(armies, Config.BATTLE.MEN_PER_DIVISION) {
 			@Override
 			protected boolean blocked(int x, int y) {
 				if (VIEW.b().state() != null && VIEW.b().state().deploying()) {

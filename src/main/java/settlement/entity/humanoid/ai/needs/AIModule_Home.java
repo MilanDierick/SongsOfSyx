@@ -3,6 +3,7 @@ package settlement.entity.humanoid.ai.needs;
 import static settlement.main.SETT.*;
 
 import game.time.TIME;
+import init.D;
 import settlement.entity.humanoid.*;
 import settlement.entity.humanoid.HEvent.HEventData;
 import settlement.entity.humanoid.HPoll.HPollData;
@@ -18,15 +19,24 @@ import settlement.room.home.chamber.ChamberInstance;
 import settlement.room.home.house.HomeHouse;
 import settlement.room.home.house.HomeHouse.DirCoo;
 import settlement.stats.STATS;
+import settlement.stats.law.LAW;
 import snake2d.LOG;
 import snake2d.util.datatypes.DIR;
 import snake2d.util.rnd.RND;
+import snake2d.util.sprite.text.Str;
 
 public final class AIModule_Home extends AIModule{
 
 	private final AIDataBit hasHoused;
 	
 	private static CharSequence ¤¤name = "relaxing";
+	private static CharSequence ¤¤curfew = "Staying off the streets";
+	
+	static{
+		D.ts(AIModule_Home.class);
+	}
+	
+	public static final int CURFEW_PRIO = 5;
 	
 	public AIModule_Home(){
 		hasHoused = AI.data().new AIDataBit();
@@ -92,6 +102,9 @@ public final class AIModule_Home extends AIModule{
 
 	@Override
 	public int getPriority(Humanoid a, AIManager d) {
+		
+		if (LAW.curfew().is())
+			return 5;
 		
 		if (!hasHoused.is(d))
 			return 3;
@@ -264,6 +277,14 @@ public final class AIModule_Home extends AIModule{
 			return null;
 		}
 		
+		@Override
+		protected void name(Humanoid a, AIManager d, Str string) {
+			if (LAW.curfew().is())
+				string.add(¤¤curfew);
+			else
+				string.add(¤¤name);
+		};
+		
 	};
 	
 	private final AIPLAN sleep_home = new AIPLAN.PLANRES() {
@@ -318,6 +339,8 @@ public final class AIModule_Home extends AIModule{
 			};
 			
 			private AISubActivation retry(Humanoid a, AIManager d) {
+				if (LAW.curfew().is())
+					return null;
 				long m = 0;
 				for (int ri = 0; ri < a.race().home().clas(a.indu().clas()).resources().size(); ri++) {
 					if (STATS.HOME().shouldFetch(a, ri)) {
@@ -579,6 +602,14 @@ public final class AIModule_Home extends AIModule{
 			return null;
 		}
 		
+		@Override
+		protected void name(Humanoid a, AIManager d, Str string) {
+			if (LAW.curfew().is())
+				string.add(¤¤curfew);
+			else
+				string.add(¤¤name);
+		};
+		
 	};
 	
 	
@@ -600,8 +631,9 @@ public final class AIModule_Home extends AIModule{
 					f.findableReserve();
 					return exit.set(a, d);
 				}
+				int dist = LAW.curfew().is() ? 256 : 64;
+				AISubActivation s = AI.SUBS().walkTo.serviceInclude(a, d, PATH().finders.indoor, dist);
 				
-				AISubActivation s = AI.SUBS().walkTo.serviceInclude(a, d, PATH().finders.indoor, 64);
 				if (s == null && a.inWater) {
 					PATH().finders.water.findLand(a.physics.tileC(), d.path, 16);
 					if (d.path.isSuccessful()) {
@@ -614,7 +646,6 @@ public final class AIModule_Home extends AIModule{
 					d.planTile.set(d.path.destX(), d.path.destY());
 					return s;
 				}
-				
 				return exit.set(a, d);
 			};
 			
@@ -640,6 +671,8 @@ public final class AIModule_Home extends AIModule{
 			@Override
 			protected AISubActivation setAction(Humanoid a, AIManager d) {
 				d.planByte1 = (byte) (5 + RND.rInt(5));
+				if (LAW.curfew().is())
+					return AI.SUBS().STAND.activateRndDir(a, d);
 				return AI.SUBS().subSleep.activate(a, d);
 			};
 			
@@ -652,7 +685,7 @@ public final class AIModule_Home extends AIModule{
 						return AI.SUBS().subSleep.activate(a, d);
 					}
 					
-					if (!RND.oneIn(7)) {
+					if (!RND.oneIn(7) && !LAW.curfew().is()) {
 						return AI.SUBS().subSleep.activate(a, d);
 					}else {
 						return AI.SUBS().STAND.activateRndDir(a, d);
@@ -683,7 +716,13 @@ public final class AIModule_Home extends AIModule{
 			};
 		};
 
-		
+		@Override
+		protected void name(Humanoid a, AIManager d, Str string) {
+			if (LAW.curfew().is())
+				string.add(¤¤curfew);
+			else
+				string.add(¤¤name);
+		};
 		
 	};
 	

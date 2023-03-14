@@ -276,7 +276,7 @@ final class ToolDefault extends Tool{
 				Room room = ROOMS().map.get(window.tile());
 				if (room != null && room.constructor() != null && room.blueprint() != SETT.ROOMS().THRONE) {
 					SETT.ROOMS().placement.placer.structure.set(window.tile().x(), window.tile().y());
-					VIEW.s().ui.placer.init(room.constructor().blue(), VIEW.s().getWindow().tile().x(), VIEW.s().getWindow().tile().y());
+					VIEW.s().misc.placer.init(room.constructor().blue(), VIEW.s().getWindow().tile().x(), VIEW.s().getWindow().tile().y());
 					return;
 				}
 				
@@ -331,7 +331,7 @@ final class ToolDefault extends Tool{
 		
 		@Override
 		public void exe() {
-			VIEW.s().ui.reconstruct(rRoom.x(), rRoom.y());
+			VIEW.s().misc.reconstruct(rRoom.x(), rRoom.y());
 		}
 	};
 

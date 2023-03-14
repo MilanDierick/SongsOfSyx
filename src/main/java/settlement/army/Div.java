@@ -3,7 +3,7 @@ package settlement.army;
 import java.io.IOException;
 
 import game.GAME;
-import init.RES;
+import init.config.Config;
 import init.race.Race;
 import settlement.army.ai.fire.DivTrajectory;
 import settlement.army.ai.util.DivTDataStatus;
@@ -152,7 +152,7 @@ public final class Div {
 	
 	public final class DivReporter extends HDivStat{
 		
-		private final Bitmap1D unreachablem = new Bitmap1D(RES.config().BATTLE.MEN_PER_DIVISION, false);
+		private final Bitmap1D unreachablem = new Bitmap1D(Config.BATTLE.MEN_PER_DIVISION, false);
 		private short unreachable;
 		
 		public COORDINATE getTile(short spot) {

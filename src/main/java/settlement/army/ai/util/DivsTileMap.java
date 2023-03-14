@@ -2,7 +2,7 @@ package settlement.army.ai.util;
 
 import java.util.Arrays;
 
-import init.RES;
+import init.config.Config;
 import settlement.army.*;
 import settlement.army.formation.DivPositionAbs;
 import settlement.main.SETT;
@@ -18,7 +18,7 @@ public final class DivsTileMap {
 	private final short[] firstTiles = new short[SETT.TAREA];
 	private final Bitsmap1D armies = new Bitsmap1D(0, 2, SETT.TAREA);
 	private final DivTDataStatus[] statuses;
-	private static IntChecker checker = new IntChecker(RES.config().BATTLE.DIVISIONS_PER_ARMY*2);
+	private static IntChecker checker = new IntChecker(Config.BATTLE.DIVISIONS_PER_ARMY*2);
 	
 	private final ArrayList<Div> tmp = new ArrayList<>(16);
 	

@@ -13,6 +13,7 @@ import settlement.room.food.cannibal.ROOM_CANNIBAL;
 import settlement.room.food.farm.ROOM_FARM;
 import settlement.room.food.fish.ROOM_FISHERY;
 import settlement.room.food.hunter.ROOM_HUNTER;
+import settlement.room.food.orchard.ROOM_ORCHARD;
 import settlement.room.food.pasture.ROOM_PASTURE;
 import settlement.room.health.asylum.ROOM_ASYLUM;
 import settlement.room.health.hospital.ROOM_HOSPITAL;
@@ -60,6 +61,7 @@ import settlement.room.military.artillery.ROOM_ARTILLERY;
 import settlement.room.military.barracks.ROOM_BARRACKS;
 import settlement.room.military.supply.ROOM_SUPPLY;
 import settlement.room.service.arena.ROOM_ARENA;
+import settlement.room.service.barber.ROOM_BARBER;
 import settlement.room.service.food.canteen.ROOM_CANTEEN;
 import settlement.room.service.food.eatery.ROOM_EATERY;
 import settlement.room.service.food.tavern.ROOM_TAVERN;
@@ -253,6 +255,15 @@ public final class ROOMS extends TileMap.Resource {
 		}
 
 	}.all();
+	
+	public final LIST<ROOM_ORCHARD> ORCHARDS = new RoomsCreator<ROOM_ORCHARD>(init, ROOM_ORCHARD.type, CATS.FARMS) {
+
+		@Override
+		public ROOM_ORCHARD create(String key, RoomInitData data, RoomCategorySub cat, int index) throws IOException {
+			return new ROOM_ORCHARD(data, key, cat, index);
+		}
+
+	}.all();
 
 	public final LIST<ROOM_PASTURE> PASTURES = new RoomsCreator<ROOM_PASTURE>(init, ROOM_PASTURE.type, CATS.HUSBANDRY) {
 
@@ -357,7 +368,6 @@ public final class ROOMS extends TileMap.Resource {
 
 	}.all();
 
-
 	public final LIST<ROOM_CANTEEN> CANTEENS = new RoomsCreator<ROOM_CANTEEN>(init, "CANTEEN", CATS.ENTERTAINMENT) {
 
 		@Override
@@ -385,8 +395,6 @@ public final class ROOMS extends TileMap.Resource {
 
 	}.all();
 	
-	
-	
 	public final LIST<ROOM_BATH> BATHS = new RoomsCreator<ROOM_BATH>(init, "BATH", CATS.HEALTH) {
 
 		@Override
@@ -396,8 +404,6 @@ public final class ROOMS extends TileMap.Resource {
 
 	}.all();
 	
-
-	
 	public final LIST<ROOM_WELL> WELLS = new RoomsCreator<ROOM_WELL>(init, "WELL", CATS.HEALTH) {
 
 		@Override
@@ -406,9 +412,16 @@ public final class ROOMS extends TileMap.Resource {
 		}
 
 	}.all();
-	
-	public final LIST<ROOM_SERVICE_ACCESS_HASER> HYGINE = new ArrayList<ROOM_SERVICE_ACCESS_HASER>().join(BATHS).join(WELLS);
 
+	public final LIST<ROOM_BARBER> BARBERS = new RoomsCreator<ROOM_BARBER>(init, ROOM_BARBER.TYPE, CATS.HEALTH) {
+
+		@Override
+		public ROOM_BARBER create(String key, RoomInitData data, RoomCategorySub cat, int index) throws IOException {
+			return new ROOM_BARBER(data, index, key, cat);
+		}
+
+	}.all();
+	
 	public final LIST<ROOM_LAVATORY> LAVATORIES = new RoomsCreator<ROOM_LAVATORY>(init, "LAVATORY", CATS.HEALTH) {
 
 		@Override
@@ -418,6 +431,7 @@ public final class ROOMS extends TileMap.Resource {
 
 	}.all();
 	
+	public final LIST<ROOM_SERVICE_ACCESS_HASER> HYGINE = new ArrayList<ROOM_SERVICE_ACCESS_HASER>().join(BATHS).join(WELLS);
 	public final LIST<ROOM_SERVICE_ACCESS_HASER> EAT = new ArrayList<ROOM_SERVICE_ACCESS_HASER>().join(EATERIES).join(CANTEENS);
 	public final LIST<ROOM_SERVICE_ACCESS_HASER> DRINK = new ArrayList<ROOM_SERVICE_ACCESS_HASER>().join(TAVERNS);
 

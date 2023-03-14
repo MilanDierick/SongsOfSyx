@@ -5,6 +5,7 @@ import static settlement.main.SETT.*;
 import game.faction.FACTIONS;
 import init.resources.Edible;
 import init.resources.RESOURCES;
+import settlement.entity.animal.ANIMAL_ROOM_RUINER;
 import settlement.entity.humanoid.Humanoid;
 import settlement.entity.humanoid.ai.main.*;
 import settlement.entity.humanoid.ai.main.AIData.AIDataSuspender;
@@ -13,7 +14,6 @@ import settlement.entity.humanoid.ai.main.AISUB.AISubActivation;
 import settlement.main.SETT;
 import settlement.misc.util.FSERVICE;
 import settlement.path.finder.SFinderMisc.FinderMiscWithoutDest;
-import settlement.room.food.farm.FarmInstance;
 import settlement.room.main.Room;
 import settlement.room.service.food.canteen.ROOM_CANTEEN;
 import settlement.room.service.food.eatery.ROOM_EATERY;
@@ -379,8 +379,8 @@ public final class AIModule_Hunger extends AIModule{
 		@Override
 		public boolean isTile(int tx, int ty) {
 			Room r = SETT.ROOMS().map.get(tx, ty);
-			if (r != null && r instanceof FarmInstance) {
-				return r.destroyTileCan(tx, ty);
+			if (r != null && r instanceof ANIMAL_ROOM_RUINER) {
+				return ((ANIMAL_ROOM_RUINER)r).canBeGraced(tx, ty);
 			}
 			return (TERRAIN().get(tx, ty) instanceof TGrowable) && ((TGrowable)TERRAIN().get(tx, ty)).isEdible(tx, ty) && ((TGrowable)TERRAIN().get(tx, ty)).size.get(tx, ty) > 0;
 		}
