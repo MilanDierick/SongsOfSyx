@@ -184,6 +184,10 @@ final class DPanel extends ISidePanel{
 		double dd = dec.standingIncrease(cl, race, am);
 		b.add(GFORMAT.percInc(b.text(), dd));
 		
+		b.NL(8);
+		
+		dec.info(b, am);
+		
 	}
 
 	

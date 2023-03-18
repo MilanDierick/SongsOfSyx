@@ -108,6 +108,30 @@ final class InstanceHome extends RoomSingleton {
 		return new State(this, tx, ty);
 	};
 	
+	@Override
+	public int upgrade(int tx, int ty) {
+		HomeHouse h = blueprintI().houses.get(tx, ty, this);
+		int u = h.upgrade();
+		h.done();
+		return u;
+	}
+	
+	@Override
+	public void upgradeSet(int tx, int ty, int upgrade) {
+		HomeHouse h = blueprintI().houses.get(tx, ty, this);
+		h.setUpgrade(upgrade);
+		h.done();
+	}
+	
+	public int upgrade() {
+		return roomI;
+		
+	};
+	
+	public void upgradeSet(int upgrade) {
+		
+	};
+	
 	private static class State extends RoomState {
 
 		/**

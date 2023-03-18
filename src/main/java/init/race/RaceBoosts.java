@@ -2,12 +2,12 @@ package init.race;
 
 import init.D;
 import init.boostable.*;
-import init.boostable.BOOSTER.BOOSTER_IMP_DATA;
+import init.boostable.BOOST_HOLDER.BOOST_HOLDERCOLL;
 import settlement.main.SETT;
 import settlement.room.main.*;
 import snake2d.util.file.Json;
 
-public final class RaceBoosts extends BOOSTER_IMP_DATA {
+public final class RaceBoosts extends BOOST_HOLDERCOLL {
 
 	private final double[] priorities = new double[SETT.ROOMS().employment.ALLS().size()];
 	public static CharSequence ¤¤name = "¤Race Work Skill";
@@ -35,7 +35,6 @@ public final class RaceBoosts extends BOOSTER_IMP_DATA {
 				}
 			};
 		}
-		
 		
 		
 		

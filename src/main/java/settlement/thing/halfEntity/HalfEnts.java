@@ -133,6 +133,11 @@ public class HalfEnts extends SettResource {
 		}
 	}
 
+	@Override
+	protected void afterTick() {
+
+	}
+
 	public LIST<HalfEntity> all(){
 		return ents;
 	}

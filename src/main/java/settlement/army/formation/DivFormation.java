@@ -2,7 +2,7 @@ package settlement.army.formation;
 
 import java.io.IOException;
 
-import init.RES;
+import init.config.Config;
 import settlement.army.order.Copyable;
 import settlement.main.SETT;
 import snake2d.PathUtilOnline.Filler;
@@ -26,7 +26,7 @@ public class DivFormation extends DivPositionAbs implements Copyable<DivFormatio
 	private final byte[] dirMasks;
 	
 	public DivFormation() {
-		this(RES.config().BATTLE.MEN_PER_DIVISION);
+		this(Config.BATTLE.MEN_PER_DIVISION);
 	}
 	
 	public DivFormation(int maxMen) {

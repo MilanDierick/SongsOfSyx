@@ -6,7 +6,6 @@ import init.C;
 import settlement.entity.ENTITY;
 import settlement.entity.humanoid.Humanoid;
 import settlement.main.SETT;
-import settlement.room.food.farm.FarmInstance;
 import snake2d.MButt;
 import snake2d.util.datatypes.DIR;
 import snake2d.util.misc.CLAMP;
@@ -65,8 +64,8 @@ enum State {
 		void grace(Animal a) {
 			int tx = a.physics.tileC().x();
 			int ty = a.physics.tileC().y();
-			if(ROOMS().map.is(tx, ty) && ROOMS().map.get(tx, ty) instanceof FarmInstance) {
-				FarmInstance i = (FarmInstance) ROOMS().map.get(tx, ty);
+			if(ROOMS().map.is(tx, ty) && ROOMS().map.get(tx, ty) instanceof ANIMAL_ROOM_RUINER) {
+				ANIMAL_ROOM_RUINER i = (ANIMAL_ROOM_RUINER) ROOMS().map.get(tx, ty);
 				if (i.canBeGraced(tx, ty))
 					i.grace(tx, ty);
 				else

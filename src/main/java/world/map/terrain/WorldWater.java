@@ -3,9 +3,12 @@ package world.map.terrain;
 import static world.World.*;
 
 import java.io.IOException;
+import java.util.Arrays;
 
 import game.time.TIME;
+import init.C;
 import init.biomes.TERRAINS;
+import init.paths.PATHS;
 import init.sprite.ICON;
 import init.sprite.SPRITES;
 import settlement.main.RenderData;
@@ -16,31 +19,29 @@ import snake2d.util.color.COLOR;
 import snake2d.util.color.ColorImp;
 import snake2d.util.datatypes.AREA;
 import snake2d.util.datatypes.DIR;
-import snake2d.util.file.FileGetter;
-import snake2d.util.file.FilePutter;
+import snake2d.util.file.*;
 import snake2d.util.map.MAP_BOOLEAN;
-import snake2d.util.map.MAP_BOOLEANE;
+import snake2d.util.map.MAP_OBJECT;
 import snake2d.util.sets.*;
 import snake2d.util.sprite.SPRITE;
-import snake2d.util.sprite.TextureCoords;
 import view.tool.*;
 import view.world.IDebugPanelWorld;
-import world.World;
 import world.World.WorldResource;
+import world.map.terrain.WorldWater.WATER;
 
-public class WorldWater extends WorldResource{
+public class WorldWater extends WorldResource implements MAP_OBJECT<WATER>{
 
-	private final Bitsmap1D tiles = new Bitsmap1D(-1, 3, TAREA());
+	private final Bitsmap1D tiles = new Bitsmap1D(-1, 4, TAREA());
 	private final byte[] data;
 	private final ArrayListResize<WATER> all = new ArrayListResize<>(255, 255);
 	private final COLOR[] seasonColors = new COLOR[64];
-	
+	private final WorldWaterSprites sprites = new WorldWaterSprites();
 	
 	public final WATER NOTHING = new WATER("clear") {
 		
 		
 		@Override
-		boolean render(Renderer r, int data, RenderIterator it) {
+		boolean render(SPRITE_RENDERER r, int data, RenderIterator it) {
 			return false;
 		}
 		
@@ -59,31 +60,28 @@ public class WorldWater extends WorldResource{
 			return null;
 		}; 
 		
-		
-		@Override
-		public ICON.MEDIUM getIcon() {
-			return SPRITES.icons().m.cancel;
-		}
-		
 		@Override
 		boolean isFertile() {
 			return false;
 		}
 
 	};
-	public final WATER LAKE = new Lake();
-	public final WATER OCEAN = new Ocean();
-	public final WATER ABYSS = new Abyss();
+	
+	public final OpenSet LAKE;
+	public final OpenSet OCEAN;
 	public final WATER RIVER = new River();
-	public final DeltaLake DELTA_LAKE = new DeltaLake();
-	public final DeltaOcean DELTA_OCEAN = new DeltaOcean();
+	public final WATER RIVER_SMALL = new RiverSmall();
+	
 	public final SPRITE iconSweet;
 	public final SPRITE iconSalt;
 	
-	private final WorldWaterAnimation animation = new WorldWaterAnimation();
-	
-	public WorldWater(){
+	public WorldWater() throws IOException{
 
+		Json js = new Json(PATHS.CONFIG().get("GenerationWorld")).json("WATER");
+
+		LAKE = new OpenSet("lake", new ColorImp(js, "COLOR_LAKE_SHORE"), new ColorImp(js, "COLOR_LAKE"), true);
+		OCEAN = new OpenSet("ocean", new ColorImp(js, "COLOR_OCEAN_SHORE"), new ColorImp(js, "COLOR_OCEAN"), false);
+		
 		data = new byte[TAREA()];
 		all.trim();
 		
@@ -108,11 +106,8 @@ public class WorldWater extends WorldResource{
 			
 			@Override
 			public void render(SPRITE_RENDERER r, int X1, int X2, int Y1, int Y2) {
-				int d = (Y2-Y1)/2;
-				World.sprites().lake.render(r, DIR.S.mask() | DIR.E.mask(), X1, X1+d, Y1, Y1+d);
-				World.sprites().lake.render(r, DIR.S.mask() | DIR.W.mask(), X1+d, X1+d*2, Y1, Y1+d);
-				World.sprites().lake.render(r, DIR.N.mask() | DIR.E.mask(), X1, X1+d, Y1+d, Y1+d*2);
-				World.sprites().lake.render(r, DIR.N.mask() | DIR.W.mask(), X1+d, X1+d*2, Y1+d, Y1+d*2);
+				((Normal)LAKE.normal).renderIcon(r, X1, Y1, X2-X1);
+				
 			}
 		};
 		
@@ -120,11 +115,8 @@ public class WorldWater extends WorldResource{
 			
 			@Override
 			public void render(SPRITE_RENDERER r, int X1, int X2, int Y1, int Y2) {
-				int d = (Y2-Y1)/2;
-				World.sprites().ocean.render(r, DIR.S.mask() | DIR.E.mask(), X1, X1+d, Y1, Y1+d);
-				World.sprites().ocean.render(r, DIR.S.mask() | DIR.W.mask(), X1+d, X1+d*2, Y1, Y1+d);
-				World.sprites().ocean.render(r, DIR.N.mask() | DIR.E.mask(), X1, X1+d, Y1+d, Y1+d*2);
-				World.sprites().ocean.render(r, DIR.N.mask() | DIR.W.mask(), X1+d, X1+d*2, Y1+d, Y1+d*2);
+				((Normal)OCEAN.normal).renderIcon(r, X1, Y1, X2-X1);
+				
 			}
 		};
 		
@@ -148,8 +140,42 @@ public class WorldWater extends WorldResource{
 	}
 	
 	@Override
+	protected void clear() {
+		tiles.setAll(0);
+		Arrays.fill(data, (byte)0);
+	}
+	
+	@Override
 	protected void update(float ds) {
-		animation.update(ds);
+		sprites.update(ds);
+	}
+	
+	public void renderShorelines(Renderer r, RenderData data, double season){
+		
+		RenderIterator it = data.onScreenTiles();
+
+		while(it.has()) {
+			ColorImp.TMP.bind();
+			if (get(it.tx(), it.ty()).renderShore(r, dataGet(it.tile()), it)) {
+				it.hiddenSet();
+			}
+			it.next();
+		}
+		COLOR.unbind();
+	}
+	
+	public void renderMid(Renderer r, RenderData data, double season){
+		
+		RenderIterator it = data.onScreenTiles();
+
+		while(it.has()) {
+			ColorImp.TMP.bind();
+			if (get(it.tx(), it.ty()).renderMid(r, dataGet(it.tile()), it)) {
+				it.hiddenSet();
+			}
+			it.next();
+		}
+		COLOR.unbind();
 	}
 	
 	public void render(Renderer r, RenderData data, double season){
@@ -159,8 +185,11 @@ public class WorldWater extends WorldResource{
 		int i = (int) (TIME.years().bitPartOf()*seasonColors.length);
 		i %= seasonColors.length;
 		ColorImp.TMP.interpolate(COLOR.WHITE100, seasonColors[i], season).bind();
+		LAKE.update(i, ColorImp.TMP);
+		OCEAN.update(i, ColorImp.TMP);
 		
 		while(it.has()) {
+			ColorImp.TMP.bind();
 			if (get(it.tx(), it.ty()).render(r, dataGet(it.tile()), it)) {
 				it.hiddenSet();
 			}
@@ -169,13 +198,6 @@ public class WorldWater extends WorldResource{
 		COLOR.unbind();
 	}
 	
-	private int codeGet(int tx, int ty) {
-		return codeGet(tx+ty*TWIDTH());
-	}
-	
-	private int codeGet(int tile) {
-		return tiles.get(tile);
-	}
 	
 	private int dataGet(int tile) {
 		return data[tile] & 0xFF;
@@ -189,71 +211,16 @@ public class WorldWater extends WorldResource{
 		data[tile] = (byte) d;
 	}
 	
-	public MAP_BOOLEAN has = new MAP_BOOLEAN() {
-		@Override
-		public boolean is(int tx, int ty) {
-			if (!IN_BOUNDS(tx, ty))
-				return false;
-			return !NOTHING.is(tx, ty);
-		}
-		
-		@Override
-		public boolean is(int tile) {
-			return all.get(codeGet(tile)) != NOTHING;
-		}
-	};
-	
-	public MAP_BOOLEAN fertile = new MAP_BOOLEAN() {
-		
-		@Override
-		public boolean is(int tx, int ty) {
-			return get(tx, ty).isFertile();
-		}
-		
-		@Override
-		public boolean is(int tile) {
-			return all.get(codeGet(tile)).isFertile();
-		}
-	};
-	
-	public MAP_BOOLEAN coversTile = new MAP_BOOLEAN() {
-		
-		@Override
-		public boolean is(int tx, int ty) {
-			if (IN_BOUNDS(tx, ty))
-				return is(tx+ty*TWIDTH());
-			return false;
-		}
-		
-		@Override
-		public boolean is(int tile) {
-			return all.get(codeGet(tile)).coversCompleatly(tile);
-		}
-	};
-	
+	@Override
 	public WATER get(int tx, int ty){
 		if (!IN_BOUNDS(tx, ty))
 			return NOTHING;
-		return all.get(codeGet(tx, ty)); 
+		return all.get(tiles.get(tx+ty*TWIDTH())); 
 	}
 	
-	public boolean borders(int x, int y, WATER terrain){
-		
-		for (int i = 0; i < DIR.ORTHO.size(); i++) {
-			if (terrain.is(x, y, DIR.ORTHO.get(i)))
-				return true;
-		}	
-		return false;
-	}
-	
-	public int bordersCount(int x, int y, WATER tiles) {
-		
-		int j = 0;
-		for (int i = 0; i < DIR.ORTHO.size(); i++) {
-			if (tiles.is(x, y, DIR.ORTHO.get(i)))
-				j++;
-		}	
-		return j;
+	@Override
+	public WATER get(int tile) {
+		return all.get(tiles.get(tile)); 
 	}
 	
 	public abstract class WATER extends PlacableMulti implements MAP_BOOLEAN{
@@ -275,9 +242,9 @@ public class WorldWater extends WorldResource{
 		@Override
 		public void place(int tx, int ty, AREA area, PLACER_TYPE type) {
 			if(IN_BOUNDS(tx, ty)) {
-				int old = codeGet(tx, ty);
+				int old = tiles.get(tx+ty*TWIDTH());
 				pplace(tx, ty);
-				if (old != codeGet(tx, ty)) {
+				if (old != tiles.get(tx+ty*TWIDTH())) {
 					for (int i = 0; i < DIR.ALL.size(); i++) {
 						DIR d = DIR.ALL.get(i);
 						get(tx+d.x(), ty+d.y()).pplace(tx+d.x(), ty+d.y());
@@ -296,7 +263,7 @@ public class WorldWater extends WorldResource{
 		
 		@Override
 		public boolean is(int tile) {
-			return all.get(codeGet(tile)) == this; 
+			return all.get(tiles.get(tile)) == this; 
 		}
 		
 		@Override
@@ -306,8 +273,13 @@ public class WorldWater extends WorldResource{
 			return is(tx+ty*TWIDTH()); 
 		}
 		
-		abstract boolean render(Renderer r, int data, RenderIterator it);
-		
+		abstract boolean render(SPRITE_RENDERER r, int data, RenderIterator it);
+		boolean renderShore(SPRITE_RENDERER r, int data, RenderIterator it) {
+			return false;
+		}
+		boolean renderMid(SPRITE_RENDERER r, int data, RenderIterator it) {
+			return false;
+		}
 		abstract boolean isFertile();
 
 		@Override
@@ -315,97 +287,80 @@ public class WorldWater extends WorldResource{
 			return NOTHING;
 		}
 		
+		@Override
+		public final SPRITE getIcon() {
+			return SPRITES.icons().m.cancel;
+		}
+		
 	}
 	
-	class Lake extends WATER{
+	public final class OpenSet {
 
-		private final int NORMALS = 0;
-		private final int CORNERS = NORMALS+8*16;
-		private final int SINGLES = CORNERS + 16;
+		private final COLOR cShore;
+		private final COLOR cWater;
+		private final ColorImp col = new ColorImp();
+	
+		public final WATER normal;
+		public final WATER deep;
+		public final WATER delta;
 		
-		private Lake() {
-			super("lake");
+		private OpenSet(String name, COLOR cShore, COLOR cWater, boolean isFertile) {
+			this.cShore = cShore;
+			this.cWater = cWater;
+			
+			delta = new Delta(name + " delta", this);
+			normal = new Normal(name, this, isFertile);
+			deep = new Deep(name, this, isFertile);
+		}
+		
+		void update(double ts, COLOR season) {
+			col.set(cWater);
+			col.multiply(season);
+		}
+		
+		public MAP_BOOLEAN is = new MAP_BOOLEAN() {
+			
+			@Override
+			public boolean is(int tx, int ty) {
+				return normal.is(tx, ty) || deep.is(tx, ty) || delta.is(tx, ty);
+			}
+			
+			@Override
+			public boolean is(int tile) {
+				return normal.is(tile) || deep.is(tile) || delta.is(tile);
+			}
+		};
+		
+		public MAP_BOOLEAN isOpen = new MAP_BOOLEAN() {
+			
+			@Override
+			public boolean is(int tx, int ty) {
+				return normal.is(tx, ty) || deep.is(tx, ty);
+			}
+			
+			@Override
+			public boolean is(int tile) {
+				return normal.is(tile) || deep.is(tile);
+			}
+		};
+
+	}
+	
+	private final class Normal extends WATER {
+
+		private final OpenSet set;
+		private final boolean fertile;
+		
+		private Normal(String name, OpenSet set, boolean fertile) {
+			super(name);
+			this.set = set;
+			this.fertile = fertile;
 		}
 
+		
 		@Override
 		boolean coversCompleatly(int tile) {
 			return dataGet(tile) == 0x0F;
-		}
-
-		@Override
-		void pplace(int tx, int ty) {
-			placeRaw(tx, ty);
-			int res = 0;
-			for (int i = 0; i < DIR.ORTHO.size(); i++) {
-				DIR d = DIR.ORTHO.get(i);
-				if (!IN_BOUNDS(tx, ty, d) || this.is(tx, ty, d) || DELTA_LAKE.is(tx, ty ,d)) {
-					res |= d.mask();
-				}
-			}
-			int edge = 0;
-			for (int i = 0; i < DIR.NORTHO.size(); i++) {
-				DIR d = DIR.NORTHO.get(i);
-				if (!is(tx, ty, d) && is(tx, ty, d.next(-1)) && is(tx, ty, d.next(1))) {
-					edge |= d.mask();
-					break;
-				}
-			}
-			if (res == 0x0F) {
-				MOUNTAIN().clear(tx, ty);
-				FOREST().amount.set(tx, ty, 0);
-			}
-			res |= edge << 4;
-			
-			dataSet(tx, ty, res);
-		}
-
-		@Override
-		boolean render(Renderer r, int data, RenderIterator it) {
-
-			if (data == 0) {
-				World.sprites().lake.render(r, SINGLES+(it.ran()&0x0F), it.x(), it.y());
-				animation.render(it);
-				return false;
-			}
-			
-			int corners = data >> 4;
-			data &= 0x0F;
-			World.sprites().lake.render(r, data+(it.ran()&7)*16, it.x(), it.y());
-			if (corners != 0) {
-				World.sprites().lake.render(r, CORNERS + corners, it.x(), it.y());
-			}
-			animation.render(it);
-			return data == 0x0F;
-		}
-
-		@Override
-		public CharSequence isPlacable(int tx, int ty, AREA area, PLACER_TYPE type) {
-			return null;
-		}
-
-		@Override
-		public ICON.MEDIUM getIcon() {
-			return World.sprites().icons.lake;
-		}
-		
-		@Override
-		boolean isFertile() {
-			return true;
-		}
-	}
-	
-	private class Ocean extends WATER{
-
-		private final int NORMALS = 0;
-		private final int CORNERS = NORMALS+8*16;
-		
-		protected Ocean() {
-			super("ocean");
-		}
-
-		@Override
-		boolean coversCompleatly(int tile) {
-			return (dataGet(tile)) == 0x0F;
 		}
 
 		@Override
@@ -423,7 +378,6 @@ public class WorldWater extends WorldResource{
 				DIR d = DIR.NORTHO.get(i);
 				if (!joins(tx, ty, d) && joins(tx, ty, d.next(-1)) && joins(tx, ty, d.next(1))) {
 					edge |= d.mask();
-					break;
 				}
 			}
 			if (res == 0x0F) {
@@ -435,47 +389,59 @@ public class WorldWater extends WorldResource{
 		}
 		
 		private boolean joins(int tx, int ty, DIR d) {
-			return !IN_BOUNDS(tx, ty, d) || is(tx, ty, d) || ABYSS.is(tx, ty, d) || DELTA_OCEAN.is(tx, ty, d);
+			return !IN_BOUNDS(tx, ty, d) || is(tx, ty, d) || set.deep.is(tx, ty, d) || set.delta.is(tx, ty, d);
 		}
-
+		
 		@Override
-		boolean render(Renderer r, int data, RenderIterator it) {
-			int corners = data >> 4;
-			data &= 0x0F;
-			World.sprites().ocean.render(r, data+(it.ran()&7)*16, it.x(), it.y());
-			if (corners != 0) {
-				World.sprites().ocean.render(r, CORNERS + corners, it.x(), it.y());
-			}
-			animation.render(it);
+		boolean render(SPRITE_RENDERER r, int data, RenderIterator it) {
+			int d = data & 0x0F;
+			int c = (data >> 4)&0x0F;
+			set.col.bind();
+			sprites.render(r, it, d, c);
+			return data == 0x0F;
+		}
+		
+		@Override
+		boolean renderShore(SPRITE_RENDERER r, int data, RenderIterator it) {
+			set.cShore.bind();
+			int d = data & 0x0F;
+			int c = (data >> 4)&0x0F;
+			sprites.renderBackground(r, it, d, c);
 			return data == 0x0F;
 		}
 
 		@Override
 		public CharSequence isPlacable(int tx, int ty, AREA area, PLACER_TYPE type) {
-			// TODO Auto-generated method stub
 			return null;
 		}
 		
 		@Override
-		public ICON.MEDIUM getIcon() {
-			return World.sprites().icons.ocean;
-		}
-		
-		@Override
 		boolean isFertile() {
-			return false;
+			return fertile;
 		}
 		
+		public void renderIcon(SPRITE_RENDERER r, int x, int y, int dim) {
+			set.cShore.bind();
+			sprites.bgSingles.render(r, 0, x, x+dim, y, y+dim);
+			sprites.bgSingles.render(r, 0, x, x+dim, y, y+dim);
+			set.cWater.bind();
+			sprites.sheetSingles.render(r, 0, x, x+dim, y, y+dim);
+			COLOR.unbind();
+		}
+
 	}
 	
-	class Abyss extends WATER{
+	private final class Deep extends WATER {
 
-		private final int start = 8*16+16;
+		private final OpenSet set;
+		private final boolean fertile;
 		
-		private Abyss() {
-			super("abyss");
+		private Deep(String name, OpenSet set, boolean fertile) {
+			super(name);
+			this.set = set;
+			this.fertile = fertile;
 		}
-
+		
 		@Override
 		boolean coversCompleatly(int tile) {
 			return true;
@@ -485,7 +451,7 @@ public class WorldWater extends WorldResource{
 		void pplace(int tx, int ty) {
 			
 			if (isPlacable(tx, ty, null, null) != null) {
-				OCEAN.pplace(tx, ty);
+				set.normal.pplace(tx, ty);
 				return;
 			}
 			
@@ -503,11 +469,9 @@ public class WorldWater extends WorldResource{
 		}
 
 		@Override
-		boolean render(Renderer r, int data, RenderIterator it) {
-			data += start;
-			World.sprites().ocean.render(r, data+(it.ran()&7)*16, it.x(), it.y());
-			
-			animation.render(it);
+		boolean render(SPRITE_RENDERER r, int data, RenderIterator it) {
+			set.col.bind();
+			sprites.renderDeep(r, it, data&0x0F);
 			return true;
 		}
 		
@@ -515,26 +479,22 @@ public class WorldWater extends WorldResource{
 		public CharSequence isPlacable(int tx, int ty, AREA area, PLACER_TYPE type) {
 			for (int i = 0; i < DIR.ORTHO.size(); i++) {
 				DIR d = DIR.ORTHO.get(i);
-				if (IN_BOUNDS(tx, ty, d) && !is(tx, ty, d) && !OCEAN.is(tx, ty, d))
+				if (IN_BOUNDS(tx, ty, d) && !is(tx, ty, d) && !set.normal.is(tx, ty, d))
 					return "";
-				if (DELTA_OCEAN.is(tx, ty))
+				if (set.delta.is(tx, ty))
 					return "";
 			}
 			return null;
 		}
 		
 		@Override
-		public ICON.MEDIUM getIcon() {
-			return World.sprites().icons.abyss;
-		}
-		
-		@Override
 		boolean isFertile() {
-			return false;
+			return fertile;
 		}
+
 	}
-	
-	final class River extends WATER{
+
+	private final class River extends WATER{
 
 		private River() {
 			super("river");
@@ -553,10 +513,10 @@ public class WorldWater extends WorldResource{
 				DIR d = DIR.ORTHO.get(i);
 				if (!IN_BOUNDS(tx, ty, d) || this.is(tx, ty, d)) {
 					res |= d.mask();
-				}else if(DELTA_LAKE.is(tx, ty, d) || DELTA_OCEAN.is(tx, ty, d)) {
+				}else if(LAKE.delta.is(tx, ty, d) || OCEAN.delta.is(tx, ty, d)) {
 					int x = tx+d.x()*2;
 					int y = ty+d.y()*2;
-					if (OCEAN.is(x, y) || LAKE.is(x, y)) {
+					if (OCEAN.normal.is(x, y) || LAKE.normal.is(x, y)) {
 						res |= d.mask();
 					}
 				}
@@ -569,9 +529,17 @@ public class WorldWater extends WorldResource{
 		}
 
 		@Override
-		boolean render(Renderer r, int data, RenderIterator it) {
-			World.sprites().river.render(r, data+(it.ran()&7)*16, it.x(), it.y());
-			animation.render(it);
+		boolean render(SPRITE_RENDERER r, int data, RenderIterator it) {
+			LAKE.col.bind();
+			sprites.riverFG.render(r, data+(it.ran()&7)*16, it.x(), it.y());
+			sprites.renderTexture(it);
+			return false;
+		}
+		
+		@Override
+		boolean renderShore(SPRITE_RENDERER r, int data, RenderIterator it) {
+			LAKE.cShore.bind();
+			sprites.riverBG.render(r, data+(it.ran()&7)*16, it.x(), it.y());
 			return false;
 		}
 
@@ -582,48 +550,106 @@ public class WorldWater extends WorldResource{
 		}
 		
 		@Override
-		public ICON.MEDIUM getIcon() {
-			return World.sprites().icons.river;
+		boolean isFertile() {
+			return true;
+		}
+		
+	}
+	
+	private final class RiverSmall extends WATER{
+
+		private RiverSmall() {
+			super("river small");
+		}
+
+		@Override
+		boolean coversCompleatly(int tile) {
+			return dataGet(tile) == 0x0F;
+		}
+
+		@Override
+		void pplace(int tx, int ty) {
+			placeRaw(tx, ty);
+			int res = 0;
+			int other = 0;
+			for (int i = 0; i < DIR.ORTHO.size(); i++) {
+				DIR d = DIR.ORTHO.get(i);
+				if (!IN_BOUNDS(tx, ty, d) || this.is(tx, ty, d)) {
+					res |= d.mask();
+				}else if(get(tx, ty, d) != NOTHING) {
+					res |= d.mask();
+					if (!this.is(tx, ty, d))
+						other |= d.mask();
+				}
+			}
+			dataSet(tx, ty, res | (other <<4));
+		}
+
+		@Override
+		boolean renderMid(SPRITE_RENDERER r, int data, RenderIterator it) {
+			LAKE.col.bind();
+			int o = data >>> 4;
+			data &= 0x0F;
+			sprites.riverSmallFG.render(r, data+(it.ran()&7)*16, it.x(), it.y());
+			if (o != 0) {
+				for (int i = 0; i < DIR.ORTHO.size(); i++) {
+					DIR d = DIR.ORTHO.get(i);
+					if ((d.mask() & o) != 0) {
+						int x = it.x()+d.x()*C.TILE_SIZE;
+						int y = it.y()+d.y()*C.TILE_SIZE;
+						int da = d.perpendicular().mask();
+						sprites.riverSmallFG.render(r, da+(it.ran()&7)*16, x, y);
+					}
+				}
+			}
+			
+			return false;
+		}
+		
+		@Override
+		boolean renderShore(SPRITE_RENDERER r, int data, RenderIterator it) {
+			LAKE.cShore.bind();
+			int o = data >>> 4;
+			data &= 0x0F;
+			sprites.riverSmallBG.render(r, data+(it.ran()&7)*16, it.x(), it.y());
+			if (o != 0) {
+				for (int i = 0; i < DIR.ORTHO.size(); i++) {
+					DIR d = DIR.ORTHO.get(i);
+					if ((d.mask() & o) != 0) {
+						int x = it.x()+d.x()*C.TILE_SIZE;
+						int y = it.y()+d.y()*C.TILE_SIZE;
+						int da = d.perpendicular().mask();
+						sprites.riverSmallBG.render(r, da+(it.ran()&7)*16, x, y);
+					}
+				}
+			}
+			return false;
+		}
+
+		@Override
+		public CharSequence isPlacable(int tx, int ty, AREA area, PLACER_TYPE type) {
+			return null;
 		}
 		
 		@Override
 		boolean isFertile() {
 			return true;
 		}
-		
-		public final MAP_BOOLEANE crossing = new MAP_BOOLEANE() {
-			
-			@Override
-			public boolean is(int tx, int ty) {
-				// TODO Auto-generated method stub
-				return false;
-			}
-			
-			@Override
-			public boolean is(int tile) {
-				// TODO Auto-generated method stub
-				return false;
-			}
-			
-			@Override
-			public MAP_BOOLEANE set(int tx, int ty, boolean value) {
-				// TODO Auto-generated method stub
-				return null;
-			}
-			
-			@Override
-			public MAP_BOOLEANE set(int tile, boolean value) {
-				// TODO Auto-generated method stub
-				return null;
-			}
-		};
+
+		@Override
+		boolean render(SPRITE_RENDERER r, int data, RenderIterator it) {
+			return false;
+		}
 		
 	}
 	
-	final class DeltaLake extends WATER{
+	private final class Delta extends WATER {
 
-		private DeltaLake() {
-			super("lake delta");
+		private final OpenSet set;
+		
+		private Delta(String name, OpenSet set) {
+			super(name);
+			this.set = set;
 		}
 
 		@Override
@@ -634,7 +660,7 @@ public class WorldWater extends WorldResource{
 		@Override
 		void pplace(int tx, int ty) {
 			if (isPlacable(tx, ty, null, null) != null) {
-				LAKE.pplace(tx, ty);
+				set.normal.pplace(tx, ty);
 				return;
 			}
 			
@@ -642,7 +668,7 @@ public class WorldWater extends WorldResource{
 			int res = 0;
 			for (int i = 0; i < DIR.ORTHO.size(); i++) {
 				DIR d = DIR.ORTHO.get(i);
-				if (LAKE.is(tx, ty, d)) {
+				if (set.normal.is(tx, ty, d)) {
 					res = i;
 					break;
 				}
@@ -652,111 +678,30 @@ public class WorldWater extends WorldResource{
 		}
 
 		@Override
-		boolean render(Renderer r, int data, RenderIterator it) {
-			data += 16*9;
-			World.sprites().river.render(r, data+(it.ran()&3)*4, it.x(), it.y());
-			animation.render(it);
+		boolean render(SPRITE_RENDERER r, int data, RenderIterator it) {
+			RIVER.render(r, DIR.ORTHO.get(data).mask()|DIR.ORTHO.get(data).perpendicular().mask(), it);
+			set.col.bind();
+			sprites.delta.render(r, data+(it.ran()&3)*4, it.x(), it.y());
+			return false;
+		}
+		
+		@Override
+		boolean renderShore(SPRITE_RENDERER r, int data, RenderIterator it) {
+			RIVER.renderShore(r,  DIR.ORTHO.get(data).mask()|DIR.ORTHO.get(data).perpendicular().mask(), it);
+			set.cShore.bind();
+			sprites.deltaShore.render(r, data+(it.ran()&3)*4, it.x(), it.y());
 			return false;
 		}
 		
 		@Override
 		public CharSequence isPlacable(int tx, int ty, AREA area, PLACER_TYPE type) {
-			return bordersCount(tx, ty, LAKE) == 1 && + bordersCount(tx, ty, OCEAN) == 0 ? null : "";
-		}
-		
-		private final ICON.MEDIUM icon = new ICON.MEDIUM() {
-			@Override
-			public void renderTextured(TextureCoords texture, int X1, int X2, int Y1, int Y2) {
-				World.sprites().icons.lake.renderTextured(texture, X1, X2, Y1, Y2);
-				World.sprites().icons.river.renderTextured(texture, X1, X2, Y1, Y2);
-			}
-			
-			@Override
-			public void render(SPRITE_RENDERER r, int X1, int X2, int Y1, int Y2) {
-				World.sprites().icons.lake.render(r, X1, X2, Y1, Y2);
-				World.sprites().icons.river.render(r, X1, X2, Y1, Y2);
-			}
-		};
-		
-		@Override
-		public ICON.MEDIUM getIcon() {
-			return icon;
+			return bordersCount(tx, ty, set.normal) == 1 ? null : "";
 		}
 		
 		@Override
 		boolean isFertile() {
 			return true;
 		}
-		
-	}
-	
-	final class DeltaOcean extends WATER{
-
-		private DeltaOcean() {
-			super("ocean delta");
-		}
-
-		@Override
-		boolean coversCompleatly(int tile) {
-			return false;
-		}
-
-		@Override
-		void pplace(int tx, int ty) {
-			if (isPlacable(tx, ty, null, null) != null) {
-				OCEAN.pplace(tx, ty);
-				return;
-			}
-			
-			placeRaw(tx, ty);
-			int res = 0;
-			for (int i = 0; i < DIR.ORTHO.size(); i++) {
-				DIR d = DIR.ORTHO.get(i);
-				if (OCEAN.is(tx, ty, d) || ABYSS.is(tx, ty, d)) {
-					res = i;
-					break;
-				}
-			}
-			dataSet(tx, ty, res);
-		}
-
-		@Override
-		boolean render(Renderer r, int data, RenderIterator it) {
-			data += 16*8;
-			World.sprites().river.render(r, data+(it.ran()&3)*4, it.x(), it.y());
-			animation.render(it);
-			return false;
-		}
-
-		@Override
-		public CharSequence isPlacable(int tx, int ty, AREA area, PLACER_TYPE type) {
-			return bordersCount(tx, ty, LAKE) == 0 && (bordersCount(tx, ty, OCEAN) == 1 || bordersCount(tx, ty, ABYSS) == 1) ? null : "";
-		}
-		
-		private final ICON.MEDIUM icon = new ICON.MEDIUM() {
-			@Override
-			public void renderTextured(TextureCoords texture, int X1, int X2, int Y1, int Y2) {
-				World.sprites().icons.ocean.renderTextured(texture, X1, X2, Y1, Y2);
-				World.sprites().icons.river.renderTextured(texture, X1, X2, Y1, Y2);
-			}
-			
-			@Override
-			public void render(SPRITE_RENDERER r, int X1, int X2, int Y1, int Y2) {
-				World.sprites().icons.ocean.render(r, X1, X2, Y1, Y2);
-				World.sprites().icons.river.render(r, X1, X2, Y1, Y2);
-			}
-		};
-		
-		@Override
-		public ICON.MEDIUM getIcon() {
-			return icon;
-		}
-		
-		@Override
-		boolean isFertile() {
-			return true;
-		}
-		
 	}
 	
 	public boolean canCrossRiver(int fromX, int fromY, int toX, int toY) {
@@ -771,51 +716,12 @@ public class WorldWater extends WorldResource{
 		
 		@Override
 		public boolean is(int tx, int ty) {
-			return RIVER.is(tx, ty) || DELTA_LAKE.is(tx, ty) || DELTA_OCEAN.is(tx, ty);
+			return RIVER.is(tx, ty) || LAKE.delta.is(tx, ty) || OCEAN.delta.is(tx, ty);
 		}
 		
 		@Override
 		public boolean is(int tile) {
-			return RIVER.is(tile) || DELTA_LAKE.is(tile) || DELTA_OCEAN.is(tile);
-		}
-	};
-	
-	public MAP_BOOLEAN isOCEAN = new MAP_BOOLEAN() {
-		
-		@Override
-		public boolean is(int tx, int ty) {
-			return OCEAN.is(tx, ty) || ABYSS.is(tx, ty);
-		}
-		
-		@Override
-		public boolean is(int tile) {
-			return OCEAN.is(tile) || ABYSS.is(tile);
-		}
-	};
-	
-	public MAP_BOOLEAN isOceany = new MAP_BOOLEAN() {
-		
-		@Override
-		public boolean is(int tx, int ty) {
-			return OCEAN.is(tx, ty) || ABYSS.is(tx, ty) || DELTA_OCEAN.is(tx, ty);
-		}
-		
-		@Override
-		public boolean is(int tile) {
-			return OCEAN.is(tile) || ABYSS.is(tile) || DELTA_OCEAN.is(tile);
-		}
-	};
-	
-	public MAP_BOOLEAN isLaky = new MAP_BOOLEAN() {
-		
-		@Override
-		public boolean is(int tx, int ty) {
-			return DELTA_LAKE.is(tx, ty) || LAKE.is(tx, ty);
-		}
-		
-		@Override
-		public boolean is(int tile) {
-			return DELTA_LAKE.is(tile) || LAKE.is(tile);
+			return RIVER.is(tile) || LAKE.delta.is(tile) || OCEAN.delta.is(tile);
 		}
 	};
 	
@@ -823,12 +729,12 @@ public class WorldWater extends WorldResource{
 		
 		@Override
 		public boolean is(int tx, int ty) {
-			return DELTA_LAKE.is(tx, ty) || DELTA_OCEAN.is(tx, ty);
+			return get(tx, ty) instanceof Delta;
 		}
 		
 		@Override
 		public boolean is(int tile) {
-			return DELTA_LAKE.is(tile) || DELTA_OCEAN.is(tile);
+			return get(tile) instanceof Delta;
 		}
 	};
 	
@@ -837,28 +743,28 @@ public class WorldWater extends WorldResource{
 			info.add(TERRAINS.WET(), 0.125);
 			info.addFertility(0.05);
 			return 0.125;
-		}else if (DELTA_OCEAN.is(tx, ty)) {
+		}else if (OCEAN.delta.is(tx, ty)) {
 			info.add(TERRAINS.WET(), 0.25);
 			info.add(TERRAINS.OCEAN(), 0.5);
 			return 0.75;
-		}else if (DELTA_LAKE.is(tx, ty)) {
+		}else if (LAKE.delta.is(tx, ty)) {
 			info.add(TERRAINS.WET(), 0.25);
 			info.add(TERRAINS.WET(), 0.5);
 			info.addFertility(0.1);
 			return 0.75;
-		}else if (OCEAN.is(tx, ty) || ABYSS.is(tx, ty)) {
+		}else if (OCEAN.isOpen.is(tx, ty)) {
 			double m = 0.5;
 			for (DIR d : DIR.ORTHO) {
-				if (isOceany.is(tx, ty, d)) {
+				if (OCEAN.is.is(tx, ty, d)) {
 					m += 0.25/2;
 				}
 			}
 			info.add(TERRAINS.OCEAN(), m);
 			return m;
-		}else if (LAKE.is(tx, ty)) {
+		}else if (LAKE.isOpen.is(tx, ty)) {
 			double m = 0.5;
 			for (DIR d : DIR.ORTHO) {
-				if (isLaky.is(tx, ty, d)) {
+				if (LAKE.is.is(tx, ty, d)) {
 					m += 0.25/2;
 				}
 			}
@@ -868,6 +774,67 @@ public class WorldWater extends WorldResource{
 		}
 		return 0;
 			
+	}
+	
+	public MAP_BOOLEAN has = new MAP_BOOLEAN() {
+		@Override
+		public boolean is(int tx, int ty) {
+			if (!IN_BOUNDS(tx, ty))
+				return false;
+			return !NOTHING.is(tx, ty);
+		}
+		
+		@Override
+		public boolean is(int tile) {
+			return all.get(tiles.get(tile)) != NOTHING;
+		}
+	};
+	
+	public MAP_BOOLEAN fertile = new MAP_BOOLEAN() {
+		
+		@Override
+		public boolean is(int tx, int ty) {
+			return get(tx, ty).isFertile();
+		}
+		
+		@Override
+		public boolean is(int tile) {
+			return all.get(tiles.get(tile)).isFertile();
+		}
+	};
+	
+	public MAP_BOOLEAN coversTile = new MAP_BOOLEAN() {
+		
+		@Override
+		public boolean is(int tx, int ty) {
+			if (IN_BOUNDS(tx, ty))
+				return is(tx+ty*TWIDTH());
+			return false;
+		}
+		
+		@Override
+		public boolean is(int tile) {
+			return all.get(tiles.get(tile)).coversCompleatly(tile);
+		}
+	};
+	
+	public boolean borders(int x, int y, WATER terrain){
+		
+		for (int i = 0; i < DIR.ORTHO.size(); i++) {
+			if (terrain.is(x, y, DIR.ORTHO.get(i)))
+				return true;
+		}	
+		return false;
+	}
+	
+	public int bordersCount(int x, int y, WATER tiles) {
+		
+		int j = 0;
+		for (int i = 0; i < DIR.ORTHO.size(); i++) {
+			if (tiles.is(x, y, DIR.ORTHO.get(i)))
+				j++;
+		}	
+		return j;
 	}
 	
 }

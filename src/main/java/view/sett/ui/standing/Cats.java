@@ -1,6 +1,8 @@
 package view.sett.ui.standing;
 
 import game.GAME;
+import init.race.RACES;
+import init.race.Race;
 import settlement.entity.humanoid.HCLASS;
 import settlement.stats.*;
 import snake2d.util.gui.renderable.RENDEROBJ;
@@ -30,7 +32,7 @@ final class Cats {
 		add(new CatOccupation(cl));
 		add(new CatGovern(cl));
 		for (StatCollection c : STATS.COLLECTIONS()) {
-			if (panels[c.index()] == null)
+			if (panels[c.index()] == null && hasStanding(c))
 				add(new CatDummy(cl, c));
 		}
 		
@@ -65,6 +67,20 @@ final class Cats {
 		}
 		return biggest;
 		
+	}
+	
+	private boolean hasStanding(StatCollection c) {
+		for (STAT s : c.all()) {
+			for (HCLASS cl : HCLASS.ALL) {
+				for (Race r : RACES.all()) {
+					if (s.standing().max(cl, r) > 0) {
+						return true;
+					}
+				}
+			}
+			
+		}
+		return false;
 	}
 	
 	static class Cat extends ISidePanel {

@@ -359,7 +359,7 @@ final class BioData {
 			new IInsert("HEALTH") {
 				@Override
 				public void set(Humanoid a, Str str) {
-					double def = BOOSTABLES.PHYSICS().HEALTH.defValue;
+					double def = BOOSTABLES.PHYSICS().HEALTH.defAdd;
 					if (BOOSTABLES.PHYSICS().HEALTH.get(a) < def)
 						str.add(¤¤poor);
 					else if (BOOSTABLES.PHYSICS().HEALTH.get(a) < 1.5)

@@ -11,7 +11,6 @@ import snake2d.util.misc.CLAMP;
 import snake2d.util.rnd.HeightMap;
 import snake2d.util.rnd.RND;
 import world.World;
-import world.map.terrain.WorldGround.WGROUND;
 
 class GeneratorSeasoner {
 	
@@ -135,21 +134,14 @@ class GeneratorSeasoner {
 			double d = climate[c.y()][c.x()]/highest;
 			FERTILITY().setter.set(c, d);
 			
+
+			d -= 0.20;
+			d /= 0.8;
+			d *= 2.5;
 			
-			WGROUND worst = c.y() <= equator ? GROUND().STEPPE : GROUND().DESERT;
-			
-			if (d < 0.20) {
-				worst.placeRaw(c.x(), c.y());
-				
-			}else if (d < 0.3){
-				GROUND().STEPPE.placeRaw(c.x(), c.y());
-			}else if (d < 0.4) {
-				GROUND().PATCHED_GRASS.placeRaw(c.x(), c.y());
-			}else if (d < 0.5) {
-				GROUND().GRASS_LAND.placeRaw(c.x(), c.y());
-			}else {
-				GROUND().LUSH.placeRaw(c.x(), c.y());
-			}
+			int i = (int) Math.round((GROUND().all().size()-1)*(1.0-d));
+			i = CLAMP.i(i, 0, GROUND().all().size()-1);
+			GROUND().all().get(i).placeRaw(c.x(), c.y());
 			
 		}
 		

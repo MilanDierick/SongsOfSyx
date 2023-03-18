@@ -19,6 +19,18 @@ public interface HISTORY_INT extends INT, HISTORY{
 		return getD(0);
 	}
 	
+	public default int getPeriod(int from, int to) {
+		double am = 0;
+		final int k = from-to;
+		for (int i = 0; i < k; i++) {
+			am += (i+1)*get(to+i);
+		}
+		double tot = k*(k+1)*0.5;
+		am /= tot;
+		return (int) Math.ceil(am);
+	}
+	
+	
 	public interface HISTORY_INTE extends HISTORY_INT, HISTORYE, INTE{
 		
 	}

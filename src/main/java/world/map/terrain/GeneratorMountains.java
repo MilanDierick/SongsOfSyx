@@ -2,7 +2,6 @@ package world.map.terrain;
 
 import static world.World.*;
 
-import game.GameConRandom;
 import snake2d.util.datatypes.COORDINATE;
 import snake2d.util.datatypes.VectorImp;
 import snake2d.util.map.MAP_BOOLEANE;
@@ -14,7 +13,7 @@ class GeneratorMountains{
 	private final MAP_BOOLEANE checker;
 	private final VectorImp vec = new VectorImp();
 	
-	GeneratorMountains(GameConRandom spec, HeightMap height){
+	GeneratorMountains(HeightMap height){
 		
 		polly = new Polymap(TWIDTH(), THEIGHT(), (int) (60*(TWIDTH()/256.0)), 1.0);
 		polly.checkInit();

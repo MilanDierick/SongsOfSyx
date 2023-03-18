@@ -3,13 +3,11 @@ package init.race;
 import java.io.IOException;
 
 import game.tourism.TourismRace;
-import init.paths.PATH;
 import init.race.appearence.RAppearence;
 import init.race.home.RaceHome;
 import init.resources.*;
 import snake2d.util.file.Json;
 import snake2d.util.sets.*;
-import snake2d.util.sprite.TILE_SHEET;
 import util.keymap.KEY_COLLECTION;
 
 public class Race implements INDEXED{
@@ -31,7 +29,10 @@ public class Race implements INDEXED{
 	
 	private RAppearence appearance;
 	
-	private LIST<RES_AMOUNT> resources;
+	private static final LIST<RES_AMOUNT> rNo = new ArrayList<RES_AMOUNT>(0);
+	
+	private LIST<RES_AMOUNT> resources = rNo;
+	private LIST<RES_AMOUNT> resourceGroom = rNo;
 	
 	public Race(String key, Json data, Json text, ArrayList<Race> list){
 				
@@ -44,9 +45,11 @@ public class Race implements INDEXED{
 		behaviour = new RaceProp(data);
 	}
 	
-	void expand(Json data, Json text, PATH sg, KeyMap<RAppearence> appearances, KeyMap<TILE_SHEET> skelleton, KeyMap<init.race.appearence.RaceSheet> children,  KeyMap<init.race.appearence.ExtraSprite> sprites, KeyMap<String[]> names) throws IOException {
+	void expand(ExpandInit init) throws IOException {
+		
+		Json data = new Json(init.p.get(key));
 		physics = new Physics(data);
-		appearance = new RAppearence(this, sg, data, skelleton, appearances, children, sprites, names, physics.hitBoxsize());
+		appearance = new RAppearence(this, data, init, physics.hitBoxsize());
 		pref = new RacePreferrence(data);
 		
 		bonuses = new RaceBoosts(this, data);
@@ -62,7 +65,10 @@ public class Race implements INDEXED{
 				resources.add(new RES_AMOUNT.Imp(r, (int)ds[r.index()]));
 			}
 		}
-		this.resources = new ArrayList<>(resources);
+		if (data.has("RESOURCES"))
+			this.resources = RES_AMOUNT.make(data.json("RESOURCES"));
+		if (data.has("RESOURCE_GROOMING"))
+			resourceGroom = RES_AMOUNT.make(data.json("RESOURCE_GROOMING"));
 		this.home = new RaceHome(data.value("HOME"));
 		bio = new Bio(data, this);
 		tourism = new TourismRace(data, this);
@@ -106,10 +112,11 @@ public class Race implements INDEXED{
 	}
 	
 	public LIST<RES_AMOUNT> resources(){
-		if (resources == null) {
-			
-		}
 		return resources;
+	}
+	
+	public LIST<RES_AMOUNT> resourcesGroom(){
+		return resourceGroom;
 	}
 
 	@Override

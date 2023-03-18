@@ -31,6 +31,7 @@ public final class SENTRY extends SettResource{
 	private final PeopleSpawner spawn = new PeopleSpawner();
 	private final Immigration im = new Immigration();
 	private boolean besieged;
+	private double besigeTime = 0;
 //	private final Invador invador = new Invador();
 	
 	public void add(Race race, HTYPE type, int amount) {
@@ -95,7 +96,8 @@ public final class SENTRY extends SettResource{
 
 		}
 		
-		
+		if (besieged)
+			besigeTime += ds;
 		
 		if (isClosed) {
 			spawn.update(0);
@@ -115,6 +117,7 @@ public final class SENTRY extends SettResource{
 		file.bool(isClosed);
 		file.d(checkTimer);
 		file.bool(besieged);
+		file.d(besigeTime);
 	}
 	
 	@Override
@@ -124,6 +127,7 @@ public final class SENTRY extends SettResource{
 		isClosed = file.bool();
 		checkTimer = file.d();
 		besieged = file.bool();
+		besigeTime = file.d();
 	}
 	
 	@Override
@@ -133,6 +137,7 @@ public final class SENTRY extends SettResource{
 		isClosed = false;
 		checkTimer = 0;
 		besieged = false;
+		besigeTime = 0;
 	}
 	
 	public Immigration immi() {
@@ -145,6 +150,10 @@ public final class SENTRY extends SettResource{
 	
 	public boolean beseiged() {
 		return besieged;
+	}
+	
+	public double besigeTime() {
+		return besigeTime;
 	}
 	
 }

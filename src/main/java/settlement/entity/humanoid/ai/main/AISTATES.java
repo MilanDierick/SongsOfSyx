@@ -321,7 +321,7 @@ public class AISTATES {
 					}
 					d.stateTimer -= ds;
 					if (d.stateTimer <= 0) {
-						LOG.ln(ds + " " + a.tc() + " " + a.body().cX() + " " + d.X + " " + a.speed.nX() + " " + a.speed.magnitude() + " " + a.speed.magintudeMax() + " " + BOOSTABLES.PHYSICS().SPEED.get(a.indu())*C.TILE_SIZE + " " + d.plan() + " " + d.plansub());
+						LOG.ln(ds + " " + a.tc() + " " + a.body().cX() + " " + d.X + " " + a.speed.nX() + " " + a.speed.magnitude() + " " + a.speed.magintudeMax() + " " + BOOSTABLES.PHYSICS().SPEED.get(a.indu())*C.TILE_SIZE);
 //						GAME.Notify(a.speed.magnitude() + " " + a.physics.tileC() + " " + d.path + " " + a.speed.nX()
 //								+ " " + a.speed.nY());
 						d.stateTimer = (10f);

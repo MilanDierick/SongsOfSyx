@@ -192,10 +192,5 @@ public class WorldCamp extends WorldBuilding{
 		
 		
 	}
-	
-	public void generate() {
-		clear();
-		new Generator(this);
-	}
 
 }

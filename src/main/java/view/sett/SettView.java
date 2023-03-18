@@ -37,9 +37,12 @@ public class SettView extends VIEW.ViewSub{
 			0);
 	public final Inters interrupters = new Inters();
 	boolean hasPlaced = false;
-	
+	{
+		UISettMap.clear();
+	}
 	private final SettViewStart start = new SettViewStart();
-	public final SettUI ui = new SettUI(uiManager);
+	public final UISettManagePanel ui;
+	public final SettUI misc = new SettUI(uiManager);
 	public final ISidePanels panels;
 	public final ToolManager tools = new ToolManager(uiManager, window);
 	public final IDebugPanelSett debug;
@@ -67,10 +70,11 @@ public class SettView extends VIEW.ViewSub{
 		
 		UIPanelTop pan = new UIPanelTop(uiManager);
 		pan.addNoti();
+		ui = new UISettManagePanel(pan);
+		
 		window.setzoomoutMax(3);
 		tools.setDefault(new ToolDefault(tools));
 		debug = new IDebugPanelSett(uiManager);
-		new SettPanel(pan, this);
 		mini = new UIMinimap(pan, uiManager, UIPanelTop.HEIGHT, true, true, true, true, true, window);
 		panels = new ISidePanels(uiManager, 0);
 		battle = new SBattleView();

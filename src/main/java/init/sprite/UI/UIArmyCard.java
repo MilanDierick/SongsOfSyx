@@ -2,7 +2,7 @@ package init.sprite.UI;
 
 import java.io.IOException;
 
-import init.RES;
+import init.config.Config;
 import init.paths.PATHS;
 import settlement.army.Div;
 import settlement.army.DivMorale;
@@ -143,7 +143,9 @@ public final class UIArmyCard implements DIMENSION {
 		
 
 		
-		GMeter.renderDelta(r, (double)(div.menNrOf()-DivMorale.CASULTIES.getD(div)-DivMorale.DESERTION.getD(div))/RES.config().BATTLE.MEN_PER_DIVISION, (double)div.menNrOf()/RES.config().BATTLE.MEN_PER_DIVISION, x1+2, x1+width-2, y1+height-14, y1+height-4);
+		
+		
+		GMeter.renderDelta(r, (double)(div.menNrOf()-DivMorale.CASULTIES.getD(div)-DivMorale.DESERTION.getD(div))/Config.BATTLE.MEN_PER_DIVISION, (double)div.menNrOf()/Config.BATTLE.MEN_PER_DIVISION, x1+2, x1+width-2, y1+height-14, y1+height-4);
 		OPACITY.unbind();
 		
 		

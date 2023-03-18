@@ -4,9 +4,9 @@ import static settlement.entity.humanoid.spirte.HSpriteConst.*;
 
 import game.GAME;
 import init.C;
-import init.race.appearence.ExtraSprite;
+import init.race.appearence.RAddon;
+import init.race.appearence.RExtras;
 import init.resources.RESOURCE;
-import settlement.entity.humanoid.HTYPE;
 import settlement.entity.humanoid.Humanoid;
 import settlement.entity.humanoid.ai.main.AIManager;
 import settlement.stats.*;
@@ -87,7 +87,7 @@ public abstract class HSprite {
 		public void render(Humanoid a, AIManager d, Renderer r, ShadowBatch s, float ds, int x, int y) {
 			
 			Induvidual in2 = a.indu();
-			Appearance ap = STATS.APPEARANCE();
+			StatsAppearance ap = STATS.APPEARANCE();
 			
 			a.spriteTimer = Math.abs(a.spriteTimer) % torsos.length;
 			
@@ -96,8 +96,8 @@ public abstract class HSprite {
 				return;
 			}
 			
-			TILE_SHEET sp = a.race().appearance().sheet(in2).sheet;
-			ExtraSprite ex = a.race().appearance().extra;
+			TILE_SHEET sp = a.race().appearance().sheet(in2).sheet.sheet;
+			RExtras ex = a.race().appearance().extra;
 			int dir = getDir(a, a.spriteTimer);
 			
 			//FEET
@@ -150,35 +150,19 @@ public abstract class HSprite {
 						y + a.race().appearance().off + a.body().width() / 2, a.speed.dir());
 			}
 
-			//BEARD
-			if (ap.hasBeard(in2)) {
-				ap.colorBeard(in2).bind();
-				sp.render(r, dir + IBEARD, x, y);
-			}
-			
-			if (in2.hType() == HTYPE.NOBILITY) {
-				COLOR.unbind();
-				sp.render(r, dir + INOBLE, x, y);
+			for (RAddon add : in2.race().appearance().types.get(ap.gender.get(in2)).addonsBelow) {
+				add.renderStanding(r, dir, x, y, in2, false);
 			}
 
 			//HEAD
 			ap.colorSkin(in2).bind();
 			sp.render(r, dir + IHEAD, x, y);
 
-			//HAIR
-			if (ap.hasHair(in2)) {
-				ap.colorHair(in2).bind();
-				sp.render(r, dir + IHAIR, x, y);
+			
+			for (RAddon add : in2.race().appearance().types.get(ap.gender.get(in2)).addonsAbove) {
+				add.renderStanding(r, dir, x, y, in2, false);
 			}
-
-			//ARMOUR
-//			int i = Stats.Armor.getI5(a);
-			int i = STATS.EQUIP().BATTLEGEAR.stat().indu().get(in2);
-			if (i > 0) {
-				ap.colorArmour(in2).bind();
-				sp.render(r, dir + IARMOR, x, y);
-				COLOR.unbind();
-			}
+			
 			COLOR.unbind();
 
 			//GRIT  - WOUNDS
@@ -190,20 +174,20 @@ public abstract class HSprite {
 			
 			//SHADOWS
 			s.setHeight(10).setDistance2Ground(0);
-			a.race().appearance().sheet(in2).sheet.render(s, dir + ISHADOW, x, y);
+			a.race().appearance().sheet(in2).sheet.sheet.render(s, dir + ISHADOW, x, y);
 			
 
 		}
 		
 		private void renderWater(Humanoid a, Renderer r, ShadowBatch s, float ds, int x, int y) {
 			Induvidual in2 = a.indu();
-			Appearance ap = STATS.APPEARANCE();
+			StatsAppearance ap = STATS.APPEARANCE();
 			a.relTimer += ds * 5;
 			
 			if (a.relTimer >= swim.length)
 				a.relTimer = 0;
 			
-			TILE_SHEET sp = a.race().appearance().sheet(in2).sheet;
+			TILE_SHEET sp = a.race().appearance().sheet(in2).sheet.sheet;
 			int dir = getDir(a, a.spriteTimer);
 			
 			int torso = swim[(int)a.relTimer];
@@ -219,33 +203,16 @@ public abstract class HSprite {
 				COLOR.unbind();
 			}
 
-			//BEARD
-			if (ap.hasBeard(in2)) {
-				ap.colorBeard(in2).bind();
-				sp.render(r, dir + IBEARD, x, y);
-			}
-			
-			if (in2.hType() == HTYPE.NOBILITY) {
-				COLOR.unbind();
-				sp.render(r, dir + INOBLE, x, y);
+			for (RAddon add : in2.race().appearance().types.get(ap.gender.get(in2)).addonsBelow) {
+				add.renderStanding(r, dir, x, y, in2, false);
 			}
 
 			//HEAD
 			ap.colorSkin(in2).bind();
 			sp.render(r, dir + IHEAD, x, y);
 
-			//HAIR
-			if (ap.hasHair(in2)) {
-				ap.colorHair(in2).bind();
-				sp.render(r, dir + IHAIR, x, y);
-			}
-
-			//ARMOUR
-			int i = STATS.EQUIP().BATTLEGEAR.stat().indu().get(in2);
-			if (i > 0) {
-				ap.colorArmour(in2).bind();
-				sp.render(r, dir + IARMOR, x, y);
-				COLOR.unbind();
+			for (RAddon add : in2.race().appearance().types.get(ap.gender.get(in2)).addonsAbove) {
+				add.renderStanding(r, dir, x, y, in2, false);
 			}
 			COLOR.unbind();
 
@@ -258,12 +225,12 @@ public abstract class HSprite {
 		@Override
 		public void renderSimple(Humanoid a, AIManager d, Renderer r, ShadowBatch s, float ds, int x, int y) {
 			Induvidual in2 = a.indu();
-			Appearance ap = STATS.APPEARANCE();
+			StatsAppearance ap = STATS.APPEARANCE();
 			
 			a.spriteTimer = Math.abs(a.spriteTimer) % torsos.length;
 			
-			TILE_SHEET sp = a.race().appearance().sheet(in2).sheet;
-			ExtraSprite ex = a.race().appearance().extra;
+			TILE_SHEET sp = a.race().appearance().sheet(in2).sheet.sheet;
+			RExtras ex = a.race().appearance().extra;
 			int dir = getDir(a, a.spriteTimer);
 			
 			
@@ -301,32 +268,15 @@ public abstract class HSprite {
 					w.renderLaying(r, dx-C.TILE_SIZEH, dy -C.TILE_SIZEH, 0b1111, am);
 				}
 			}
-
-			if (in2.hType() == HTYPE.NOBILITY) {
-				COLOR.unbind();
-				sp.render(r, dir + INOBLE, x, y);
-			}
 			
-			//HAIR
-			if (ap.hasHair(in2)) {
-				ap.colorHair(in2).bind();
-				sp.render(r, dir + IHAIR, x, y);
+			for (RAddon add : in2.race().appearance().types.get(ap.gender.get(in2)).addonsAbove) {
+				add.renderStanding(r, dir, x, y, in2, false);
 			}
-
-			//ARMOUR
-//			int i = Stats.Armor.getI5(a);
-			int i = STATS.EQUIP().BATTLEGEAR.stat().indu().get(in2);
-			if (i > 0) {
-				ap.colorArmour(in2).bind();
-				sp.render(r, dir + IARMOR, x, y);
-				COLOR.unbind();
-			}
-			COLOR.unbind();
 			
 			//SHADOWS
 			if (!a.inWater) {
 				s.setHeight(10).setDistance2Ground(0);
-				a.race().appearance().sheet(in2).sheet.render(s, dir + ISHADOW, x, y);
+				a.race().appearance().sheet(in2).sheet.sheet.render(s, dir + ISHADOW, x, y);
 			}
 			
 		}

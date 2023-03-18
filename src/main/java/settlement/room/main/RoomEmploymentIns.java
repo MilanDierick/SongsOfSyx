@@ -88,16 +88,16 @@ public final class RoomEmploymentIns implements Serializable{
 
 				double am = needed();
 				if (am == 0) {
-					neededSet(1);
+					neededSetAdjustWorkload(1);
 				}else if (last >= 0.95 && EffLast >= 100 && needed()-employed() <= 1) {
-					neededSet(needed()+1);
+					neededSetAdjustWorkload(needed()+1);
 
 				}else if(am > 1 && employed()-needed() <= 1) {
 					double p = Math.max(EffLast*EffLastI, last);
 					int needed = (int) Math.ceil(p*(employed()+1.0));
 					
 					int fire = CLAMP.i(employed()-needed, 0, (int)Math.ceil(employed()/5.0));
-					neededSet(needed()-fire);
+					neededSetAdjustWorkload(needed()-fire);
 					
 				}	
 				
@@ -142,6 +142,16 @@ public final class RoomEmploymentIns implements Serializable{
 	}
 	
 	public void neededSet(int target) {
+		
+		target = CLAMP.i(target, 0, max());
+		if (target != workersTarget) {
+			remove();
+			workersTarget = (short) target;
+			add();
+		}
+	}
+	
+	private void neededSetAdjustWorkload(int target) {
 		
 		target = CLAMP.i(target, 0, max());
 		if (target != workersTarget) {

@@ -130,7 +130,7 @@ class GeneratorWaterFin {
 		for (int i = 0; i < GRID.tiles().size(); i++) {
 			COORDINATE coo = area.ts().get(i);
 			SettlementGrid.Tile ut = GRID.tile(i);
-			if (!World.WATER().isLaky.is(coo) && !World.WATER().isOceany.is(coo)) {
+			if (!World.WATER().LAKE.is.is(coo) && !World.WATER().OCEAN.is.is(coo)) {
 				int sx = ut.coo(DIR.NW).x();
 				int sy = ut.coo(DIR.NW).y();
 				int dx = ut.coo(DIR.SE).x();

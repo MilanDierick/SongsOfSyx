@@ -111,7 +111,8 @@ public final class ToolPlacer extends Tool{
 		}
 			
 		panel.addTitle(placer.name());
-		panel.addButton(buttExit);
+		if (exitAlso)
+			panel.addButton(buttExit);
 		
 		uis.add(panel);
 	}

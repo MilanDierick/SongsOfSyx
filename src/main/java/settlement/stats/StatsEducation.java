@@ -8,7 +8,6 @@ import init.race.Race;
 import settlement.room.main.RoomBlueprintIns;
 import settlement.room.main.RoomEmploymentSimple;
 import settlement.stats.STAT.STATData;
-import settlement.stats.StatsBoosts.StatBoosterStat;
 import snake2d.util.file.*;
 import snake2d.util.rnd.RND;
 import snake2d.util.sets.Bitmap1D;
@@ -69,11 +68,11 @@ public class StatsEducation extends StatCollection {
 				RoomEmploymentSimple e = ((RoomBlueprintIns<?>)br.room).employment();
 				if (e != null) {
 					if (e.educationFactor > 0) {
-						new StatBoosterStat(init, EDUCATION, new BBoost(br, e.educationFactor, false));
+						new StatBoosterStat(EDUCATION, new BBoost(br, e.educationFactor, false));
 					}
 					if (e.indoctorFactor > 0) {
 						
-						new StatBoosterStat(init, INDOCTRINATION, new BBoost(br, e.indoctorFactor, false));
+						new StatBoosterStat(INDOCTRINATION, new BBoost(br, e.indoctorFactor, false));
 					}
 					
 				}

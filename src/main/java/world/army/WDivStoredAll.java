@@ -3,7 +3,7 @@ package world.army;
 import java.io.IOException;
 import java.util.Arrays;
 
-import init.RES;
+import init.config.Config;
 import init.race.RACES;
 import init.race.Race;
 import settlement.army.Div;
@@ -21,7 +21,7 @@ import world.entity.army.WArmy;
 public final class WDivStoredAll {
 
 	
-	private final WDivStored[] divs = new WDivStored[RES.config().BATTLE.DIVISIONS_PER_ARMY];
+	private final WDivStored[] divs = new WDivStored[Config.BATTLE.DIVISIONS_PER_ARMY];
 	int amount;
 	final int[] ramounts = new int [RACES.all().size()];
 	private double upD;
@@ -121,8 +121,10 @@ public final class WDivStoredAll {
 			if (d.army() == null && d.men() > 0) {
 				Humanoid h = d.popSoldier(returnPoints.get().x(), returnPoints.get().y(), HTYPE.RECRUIT);
 				if (h != null) {
+					
 					Div dd = SETT.ARMIES().player().divisions().get(d.index());
-					if (dd.menNrOf() < RES.config().BATTLE.MEN_PER_DIVISION)
+					
+					if (dd.menNrOf() < Config.BATTLE.MEN_PER_DIVISION)
 						h.setDivision(dd);
 				}
 				return;

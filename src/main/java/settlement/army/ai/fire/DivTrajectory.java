@@ -3,7 +3,7 @@ package settlement.army.ai.fire;
 import java.io.IOException;
 import java.util.Arrays;
 
-import init.RES;
+import init.config.Config;
 import settlement.army.order.Copyable;
 import settlement.thing.projectiles.Trajectory;
 import snake2d.util.file.FileGetter;
@@ -11,7 +11,7 @@ import snake2d.util.file.FilePutter;
 
 public final class DivTrajectory implements Copyable<DivTrajectory>{
 
-	private final float[] data = new float[RES.config().BATTLE.MEN_PER_DIVISION*3];
+	private final float[] data = new float[Config.BATTLE.MEN_PER_DIVISION*3];
 	private boolean any;
 	
 	public DivTrajectory() {

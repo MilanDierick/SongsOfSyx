@@ -1,7 +1,7 @@
 package settlement.army.ai.general;
 
 import init.C;
-import init.RES;
+import init.config.Config;
 import settlement.army.ai.general.Groups.GroupLine;
 import settlement.army.ai.util.ArmyAIUtil;
 import settlement.main.SETT;
@@ -11,7 +11,7 @@ import snake2d.util.sets.ArrayList;
 final class GroupCharger {
 
 	private final Context c;
-	private final ArrayList<GDiv> chargers = new ArrayList<>(RES.config().BATTLE.DIVISIONS_PER_ARMY);
+	private final ArrayList<GDiv> chargers = new ArrayList<>(Config.BATTLE.DIVISIONS_PER_ARMY);
 	private final VectorImp vec = new VectorImp();
 	
 	public GroupCharger(Context c) {

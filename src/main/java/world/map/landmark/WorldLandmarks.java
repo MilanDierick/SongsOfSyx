@@ -4,8 +4,6 @@ import static world.World.*;
 
 import java.io.IOException;
 
-import game.GameConRandom;
-import init.RES;
 import snake2d.util.file.FileGetter;
 import snake2d.util.file.FilePutter;
 import snake2d.util.map.MAP_OBJECTE;
@@ -85,9 +83,13 @@ public final class WorldLandmarks extends WorldResource {
 		mapID.load(file);
 	}
 	
-	public void generate(GameConRandom r) {
-		RES.loader().print("creating landmarks...");
-		new GeneratorLandmarks();
+	@Override
+	protected void clear() {
+		mapID.setAll(0);
+		for (WorldLandmark a : areas)
+			if (a != null)
+				a.clear();
+		super.clear();
 	}
 	
 

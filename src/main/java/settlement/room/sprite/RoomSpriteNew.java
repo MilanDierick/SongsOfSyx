@@ -62,7 +62,7 @@ public abstract class RoomSpriteNew implements RoomSprite{
 		Room r = SETT.ROOMS().map.get(it.tx(), it.ty());
 		if (r == null)
 			return sheets[0];
-		return sheets[CLAMP.i(r.upgrade(), 0, sheets.length-1)];
+		return sheets[CLAMP.i(r.upgrade(it.tx(), it.ty()), 0, sheets.length-1)];
 	}
 	
 	public SheetPair sheetPair(RenderIterator it, int ran) {

@@ -19,20 +19,22 @@ import view.main.VIEW;
 import view.subview.GameWindow;
 import view.tool.ToolManager;
 import view.ui.UIPanelTop;
-import view.world.generator.WorldViewGenerator;
 import world.World;
 
 public class WorldView extends VIEW.ViewSub{
 	
-	public final GameWindow window = new GameWindow( 
-			1,
-			C.DIM(),
-			PIXELS(),
-			C.TILE_SIZE*5);
+	public final GameWindow window = createwindow();
 
+	public static GameWindow createwindow() {
+		return new GameWindow( 
+				1,
+				C.DIM(),
+				PIXELS(),
+				C.TILE_SIZE*5);
+	}
+	
 	
 	public final ToolManager tools;
-	public final WorldViewGenerator viewGenerator = new WorldViewGenerator(window);
 	public final WorldUI  UI  = new WorldUI(uiManager);
 	public final ISidePanels panels = new ISidePanels(uiManager, 0);
 	final IDebugPanelWorld debug = new IDebugPanelWorld(uiManager);
@@ -42,7 +44,7 @@ public class WorldView extends VIEW.ViewSub{
 		UIPanelTop p = new UIPanelTop(uiManager);
 		p.addNoti();
 		new WorldViewPanel(p);
-		new WorldIIMinimap(p, uiManager);
+		new WorldIIMinimap(p, uiManager, window);
 		tools = new ToolManager(uiManager, window);
 		tools.setDefault(new ToolDefault(tools));
 	}

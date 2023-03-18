@@ -2,21 +2,24 @@ package view.sett.ui.bottom;
 
 import static settlement.main.SETT.*;
 
+import settlement.main.SETT;
 import snake2d.util.gui.GUI_BOX;
 import snake2d.util.gui.GuiSection;
 import snake2d.util.gui.clickable.CLICKABLE;
 import snake2d.util.misc.ACTION;
+import util.data.GETTER.GETTER_IMP;
 import util.gui.misc.GBox;
 import util.gui.misc.GButt;
 import view.keyboard.KEYS;
 import view.keyboard.KeyButt;
 import view.main.VIEW;
+import view.sett.ui.room.construction.UIRoomPlacer;
 import view.tool.PLACABLE;
 
 final class Clear extends GuiSection{
 
 	
-	Clear(){
+	Clear(UIRoomPlacer placer, GETTER_IMP<ACTION> last){
 		
 		int i = 0;
 		for (PLACABLE p : JOBS().clears) {
@@ -47,6 +50,10 @@ final class Clear extends GuiSection{
 			
 			addDownC(0, c);
 		}
+		
+		addDownC(0, PopupRooms.butt(SETT.ROOMS().BUILDER, placer, last));
+		
+		
 	}
 	
 	public GuiSection get() {

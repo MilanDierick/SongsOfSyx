@@ -69,7 +69,7 @@ final class InfoBonuses extends ISidePanel{
 			bo.icon().render(r, body().x1(), body().y1());
 			if (hovered != null) {
 				for (BBoost b : hovered.boosts()) {
-					if (b.boost == bo)
+					if (b.boostable == bo)
 						isHovered = true;
 				}
 			}
@@ -94,7 +94,7 @@ final class InfoBonuses extends ISidePanel{
 			GBox box = (GBox) text;
 			for (TECH t : TECHS.ALL()) {
 				for (BBoost b : t.boosts()) {
-					if (b.boost == bo) {
+					if (b.boostable == bo) {
 						SPRITE c = FACTIONS.player().tech.level(t) > 0 ? GCOLOR.T().IGOOD : GCOLOR.T().INACTIVE;
 						box.add(c);
 						b.hover(box);

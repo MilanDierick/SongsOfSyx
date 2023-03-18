@@ -113,11 +113,11 @@ public abstract class Room implements Serializable, INDEXED{
 	
 	public abstract int resAmount(int ri, int upgrade);
 	
-	public int upgrade() {
+	public int upgrade(int tx, int ty) {
 		return 0;
 	}
 	
-	public void upgradeSet(int upgrade) {
+	public void upgradeSet(int tx, int ty, int upgrade) {
 		
 	}
 
@@ -207,6 +207,24 @@ public abstract class Room implements Serializable, INDEXED{
 		@Override
 		public int area(int tx, int ty) {
 			return area();
+		}
+		
+		@Override
+		public int upgrade(int tx, int ty) {
+			return upgrade();
+		}
+		
+		@Override
+		public void upgradeSet(int tx, int ty, int upgrade) {
+			upgradeSet(upgrade);
+		}
+		
+		public int upgrade() {
+			return 0;
+		}
+		
+		public void upgradeSet(int upgrade) {
+			
 		}
 		
 	}

@@ -5,15 +5,13 @@ import java.util.Arrays;
 
 import game.GAME;
 import game.faction.FBonus;
-import init.biomes.CLIMATES;
 import init.boostable.*;
-import init.boostable.BOOSTER_COLLECTION.BOOSTER_COLLECTION_IMP;
-import settlement.main.SETT;
+import init.boostable.BOOST_LOOKUP.BOOSTER_LOOKUP_IMP;
 import snake2d.util.file.*;
 import snake2d.util.sets.*;
 import util.dic.DicMisc;
 
-public final class PBonus extends BOOSTER_COLLECTION_IMP implements FBonus{
+public final class PBonus extends BOOSTER_LOOKUP_IMP implements FBonus{
 
 	final Player player;
 
@@ -28,8 +26,7 @@ public final class PBonus extends BOOSTER_COLLECTION_IMP implements FBonus{
 		this.player = player;
 		Arrays.fill(cahcheI, -1);
 		Arrays.fill(cache_mul, 1.0);
-		all = new ArrayList<BOOSTER_COLLECTION.SIMPLE>(
-				new Climate(),
+		all = new ArrayList<BOOST_LOOKUP.SIMPLE>(
 				exp,
 				new PBonusSetting(boosts),
 				GAME.NOBLE().BOOSTER, 
@@ -38,7 +35,7 @@ public final class PBonus extends BOOSTER_COLLECTION_IMP implements FBonus{
 				player.tech().BOOSTER
 				);
 		
-		for (BOOSTER_COLLECTION c : all) {
+		for (BOOST_LOOKUP c : all) {
 			init(c);
 		}
 	}
@@ -58,45 +55,6 @@ public final class PBonus extends BOOSTER_COLLECTION_IMP implements FBonus{
 	public double mul(BOOSTABLE tech) {
 		setCache(tech);
 		return cache_mul[tech.index];
-	}
-	
-	private static class Climate implements SIMPLE {
-
-		@Override
-		public double minAdd(BOOSTABLE b) {
-			return CLIMATES.BONUS().minAdd(b);
-		}
-
-		@Override
-		public double maxAdd(BOOSTABLE b) {
-			return CLIMATES.BONUS().maxAdd(b);
-		}
-
-		@Override
-		public double minMul(BOOSTABLE b) {
-			return CLIMATES.BONUS().minMul(b);
-		}
-
-		@Override
-		public double maxMul(BOOSTABLE b) {
-			return CLIMATES.BONUS().maxMul(b);
-		}
-
-		@Override
-		public CharSequence name() {
-			return CLIMATES.BONUS().name();
-		}
-
-		@Override
-		public double add(BOOSTABLE b) {
-			return CLIMATES.BONUS().add(b, SETT.ENV().climate());
-		}
-
-		@Override
-		public double mul(BOOSTABLE b) {
-			return CLIMATES.BONUS().mul(b, SETT.ENV().climate());
-		}
-		
 	}
 
 	private void setCache(BOOSTABLE tech) {

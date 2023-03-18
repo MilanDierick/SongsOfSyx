@@ -3,7 +3,7 @@ package world.map.buildings;
 import game.GAME;
 import game.time.TIME;
 import init.C;
-import init.RES;
+import init.config.Config;
 import settlement.main.RenderData;
 import snake2d.CORE;
 import snake2d.SPRITE_RENDERER;
@@ -188,7 +188,7 @@ class UrbanCentre {
 				for (int x = 0; x < 2; x++) {
 					int t = mTownFarms[y+ty][x+tx];
 					if (t != -1 && p >= (it.ran()&0x07)) {
-						World.BUILDINGS().sprites.farms.render(r, it.ran() % 24, it.x()+x*C.TILE_SIZEH, it.y()+y*C.TILE_SIZEH);
+						World.BUILDINGS().sprites.farms.render(r, it.ran() % 16, it.x()+x*C.TILE_SIZEH, it.y()+y*C.TILE_SIZEH);
 					}
 					
 				}
@@ -236,7 +236,8 @@ class UrbanCentre {
 			int ty = (data/4);
 			
 			Region reg = World.REGIONS().getter.get(it.tile());
-			double p = REGIOND.faction(reg).capitol().population.total().get()/(double)RES.config().WORLD.POPULATION_MAX_CAPITOL;
+			
+			double p = REGIOND.faction(reg).capitol().population.total().get()/(double)Config.WORLD.POPULATION_MAX_CAPITOL;
 
 			s.setSoft();
 			s.setHeight(1);

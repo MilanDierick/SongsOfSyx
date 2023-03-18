@@ -2,7 +2,6 @@ package settlement.weather;
 
 import java.io.IOException;
 
-import game.VERSION;
 import game.time.TIME;
 import settlement.main.SETT;
 import snake2d.util.file.*;
@@ -117,26 +116,13 @@ final class RainEvent {
 		
 		@Override
 		public void load(FileGetter file) throws IOException {
-			if (VERSION.versionIsBefore(63, 14)) {
-				file.d();
-				file.d();
-				file.d();
-				file.d();
-				file.d();
-				file.d();
-				file.d();
-				if (!VERSION.versionIsBefore(63, 13))
-					file.i();
-				clear();
-			}else {
-				downfall = file.d();
-				time= file.d();
-				thunder= file.d();
-				cloud= file.d();
-				timeToNext= file.d();
-				droughtNext = file.d();
-				droughtLength = file.d();
-			}
+			downfall = file.d();
+			time= file.d();
+			thunder= file.d();
+			cloud= file.d();
+			timeToNext= file.d();
+			droughtNext = file.d();
+			droughtLength = file.d();
 		}
 		
 		@Override

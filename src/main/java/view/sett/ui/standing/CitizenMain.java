@@ -37,7 +37,7 @@ import view.sett.ui.standing.decree.UIDecreeButt;
 
 final class CitizenMain extends GuiSection {
 
-	static Race current = GAME.player().race();
+	static Race current;
 	static int width = 220;
 	private final INT.IntImp hov = new INT.IntImp();
 
@@ -59,6 +59,8 @@ final class CitizenMain extends GuiSection {
 	
 	@Override
 	public void render(SPRITE_RENDERER r, float ds) {
+		if (current == null)
+			current = GAME.player().race();
 		super.render(r, ds);
 		hov.set(-1);
 	}

@@ -28,6 +28,7 @@ final class GeneratorDistances {
 	}
 
 	void fix(Region r){
+
 		neighCheck.init();
 		neighTemp.clear();
 		
@@ -66,7 +67,6 @@ final class GeneratorDistances {
 		short[] distances = new short[neighTemp.size()];
 		for (int i = 0; i < distances.length; i++)
 			distances[i] = (short) neighTemp.get(i);
-		
 		r.distances = distances;
 		
 		RES.flooder().done();

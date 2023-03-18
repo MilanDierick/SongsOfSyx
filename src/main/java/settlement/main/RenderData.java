@@ -273,6 +273,14 @@ public class RenderData {
 			return tile;
 		}
 		
+		public int oX() {
+			return offX;
+		}
+		
+		public int oY() {
+			return offY;
+		}
+		
 		public int x(){
 			return (x+offX);
 		}

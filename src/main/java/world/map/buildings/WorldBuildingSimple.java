@@ -33,8 +33,13 @@ public abstract class WorldBuildingSimple extends WorldBuilding{
 					DIR d = DIR.ORTHO.get(i);
 					int dx = tx+d.x();
 					int dy = ty +d.y();
-					if (IN_BOUNDS(dx, dy))
-						BUILDINGS().map.set(dx+dy*TWIDTH(), BUILDINGS().map.get(dx, dy));
+					if (IN_BOUNDS(dx, dy)) {
+						WorldBuilding b = BUILDINGS().map.get(dx, dy);
+						BUILDINGS().map.set(dx+dy*TWIDTH(), b);
+						if (b instanceof WorldBuildingSimple)
+						data().set(dx, dy, ((WorldBuildingSimple)b).fix(dx, dy));
+						
+					}
 				}
 				
 			}

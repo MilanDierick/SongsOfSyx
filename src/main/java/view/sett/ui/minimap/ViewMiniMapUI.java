@@ -5,6 +5,7 @@ import init.D;
 import init.sprite.SPRITES;
 import init.sprite.UI.UI;
 import settlement.entity.ENTITY;
+import settlement.entity.humanoid.HTYPE;
 import settlement.entity.humanoid.Humanoid;
 import settlement.main.SETT;
 import settlement.room.main.RoomBlueprint;
@@ -34,7 +35,7 @@ final class ViewMiniMapUI extends GuiSection {
 	
 	static final COLOR other = COLOR.WHITE85;
 	static final COLOR enemy = new ColorShifting(new ColorImp(30, 5, 5), new ColorImp(128, 0, 0)).setSpeed(0.4);
-	
+	static final COLOR warn = new ColorImp(100, 100, 0);
 	final static COLOR good = new ColorImp(0, 0, 100);
 	final static COLOR bad = new ColorImp(100, 0, 0);
 	
@@ -273,6 +274,9 @@ final class ViewMiniMapUI extends GuiSection {
 			if (e instanceof Humanoid) {
 				Humanoid h = (Humanoid) e;
 				if (h.indu().hostile()) {
+					if (h.indu().hType() == HTYPE.ENEMY && h.division() == null) {
+						return warn;
+					}
 					return enemy;
 				}
 				return good;

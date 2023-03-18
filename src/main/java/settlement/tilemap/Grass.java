@@ -248,7 +248,7 @@ public class Grass extends TileMap.Resource{
 					}
 //					
 					int mm = 0;
-					if (CORE.renderer().getZoomout() <= 1) {
+					if (CORE.renderer().getZoomout() <= 1 && !SETT.ROOMS().map.is(i.tile())) {
 						if (current.get(i.tx(), i.ty(), DIR.W) == 0) {
 							mm |= 1;
 							x = i.x()-8*C.SCALE;

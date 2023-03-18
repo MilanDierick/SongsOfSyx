@@ -1,12 +1,12 @@
 package game.faction;
 
-import init.boostable.BOOSTER_COLLECTION;
+import init.boostable.BOOST_LOOKUP;
 import snake2d.util.sets.LIST;
 import util.dic.DicMisc;
 
-public interface FBonus extends BOOSTER_COLLECTION.SIMPLE {
+public interface FBonus extends BOOST_LOOKUP.SIMPLE {
 
-	public LIST<BOOSTER_COLLECTION.SIMPLE> subs();
+	public LIST<BOOST_LOOKUP.SIMPLE> subs();
 
 	@Override
 	public default CharSequence name() {

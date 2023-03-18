@@ -40,7 +40,7 @@ final class GeneratorMinerals {
 		for (TERRAIN t : TERRAINS.ALL()) {
 			double total = 0;
 			for (Minable m : RESOURCES.minables().all()) {
-				total += area.info.get(t)*m.terrain(t);
+				total += area.info.get(t).getD()*m.terrain(t);
 			}
 			log(t.name + " " + total + " " + area.info.get(t));
 			int fail = 1000;
@@ -48,9 +48,9 @@ final class GeneratorMinerals {
 			while(am > 0 && fail-- > 0) {
 				double target = RND.rFloat()*total;
 				for (Minable m : RESOURCES.minables().all()) {
-					target -= area.info.get(t)*m.terrain(t);
+					target -= area.info.get(t).getD()*m.terrain(t);
 					if (target <= 0) {
-						log(m.resource.name + " " + area.info.get(t)*m.terrain(t) + " " + total);
+						log(m.resource.name + " " + area.info.get(t).getD()*m.terrain(t) + " " + total);
 						double size = RND.rExpo();
 						double amount = 1.0-RND.rExpo();
 						am -= size*amount;

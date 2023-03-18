@@ -16,21 +16,24 @@ public class HistoryInt implements HISTORY_INT.HISTORY_INTE, SAVABLE {
 	private final TIMECYCLE c;
 	private final boolean keep;
 	private INFO info;
+	private final int max;
 	
 	public HistoryInt(int size, TIMECYCLE c, boolean keep) {
-		history = new int[size];
-		bitSinceStart = c.bitsSinceStart();
-		this.c = c;
-		this.keep = keep;
-		info = null;
+		this(null, null, size, c, keep, Integer.MAX_VALUE);
 	}
 	
 	public HistoryInt(CharSequence name, CharSequence desc, int size, TIMECYCLE c, boolean keep) {
+		this(name, desc, size, c, keep, Integer.MAX_VALUE);
+	}
+	
+	public HistoryInt(CharSequence name, CharSequence desc, int size, TIMECYCLE c, boolean keep, int max) {
 		history = new int[size];
 		bitSinceStart = c.bitsSinceStart();
 		this.c = c;
 		this.keep = keep;
-		info = new INFO(name, desc);
+		if (name != null)
+			info = new INFO(name, desc);
+		this.max = max;
 	}
 
 	@Override
@@ -125,7 +128,7 @@ public class HistoryInt implements HISTORY_INT.HISTORY_INTE, SAVABLE {
 
 	@Override
 	public int max() {
-		return Integer.MAX_VALUE;
+		return max;
 	}
 
 	@Override

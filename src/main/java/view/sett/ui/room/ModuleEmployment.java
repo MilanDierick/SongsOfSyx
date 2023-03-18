@@ -15,6 +15,7 @@ import settlement.room.main.job.ROOM_EMPLOY_AUTO;
 import settlement.stats.STATS;
 import settlement.stats.StatsEquippables;
 import settlement.stats.StatsEquippables.StatEquippableWork;
+import settlement.stats.StatsMultipliers.StatMultiplierWork;
 import snake2d.SPRITE_RENDERER;
 import snake2d.util.datatypes.DIR;
 import snake2d.util.gui.GUI_BOX;
@@ -124,6 +125,15 @@ final class ModuleEmployment implements ModuleMaker {
 				grid.add(r);
 			}
 			
+			grid.add(new GStat() {
+
+				@Override
+				public void update(GText text) {
+					GFORMAT.perc(text, blueprint.employment().accidentsPerYear*100 / (1+BOOSTABLES.CIVICS().ACCIDENT.get(null, null)));
+					
+				}
+			}.hh(SPRITES.icons().s.death).hoverInfoSet(DicMisc.¤¤AccidentRate));
+			
 			for (StatEquippableWork w : STATS.EQUIP().work()) {
 				if (w.max(blueprint.employment()) > 0) {
 					
@@ -210,6 +220,20 @@ final class ModuleEmployment implements ModuleMaker {
 					t.employees().neededSet(t.employees().needed()-25);
 				}
 			});
+			
+			if (STATS.MULTIPLIERS().OVERTIME.canMark(blueprint)) {
+				appliers.add(new UIRoomBulkApplier(STATS.MULTIPLIERS().OVERTIME.name) {
+					
+					@Override
+					protected void apply(RoomInstance t) {
+						for (Humanoid a : t.employees().employees()) {
+							if (STATS.MULTIPLIERS().OVERTIME.canBeMarked(a.indu()))
+								STATS.MULTIPLIERS().OVERTIME.mark(a, true);
+						}
+					
+					}
+				});
+			}
 			
 			if (blueprint.employmentExtra() != null)
 				sorts.add(new GTSort<RoomInstance>(DicMisc.¤¤Workload) {
@@ -535,6 +559,49 @@ final class ModuleEmployment implements ModuleMaker {
 			}.repetativeSet(true).hoverInfoSet(¤¤WORKERS_INSPECT);
 			s.addRightC(12, r);
 			
+			if (STATS.MULTIPLIERS().OVERTIME.canMark(blueprint)) {
+				
+				StatMultiplierWork mm = STATS.MULTIPLIERS().OVERTIME;
+				
+				CLICKABLE c = new GButt.ButtPanel(mm.icon) {
+					
+					boolean someactive;
+					boolean someEmployed;
+					
+					@Override
+					protected void renAction() {
+						
+						someactive = false;
+						someEmployed = get.get().employees().employed() > 0;
+						for (Humanoid h : get.get().employees().employees()) {
+							if (!mm.canBeMarked(h.indu()))
+								someactive = true;
+						}
+						
+						activeSet(someEmployed);
+						selectedSet(someactive);
+					};
+					
+					@Override
+					public void hoverInfoGet(GUI_BOX text) {
+						GBox b = (GBox) text;
+						
+						b.title(mm.name);
+						b.text(mm.desc);
+					}
+					
+					@Override
+					protected void clickA() {
+						for (Humanoid h : get.get().employees().employees()) {
+							mm.mark(h, !someactive);
+						}
+					}
+					
+				}.setDim(40, 40);
+				
+				s.addRightC(12, c);
+			}
+			
 			if ((blueprint instanceof ROOM_EMPLOY_AUTO)) {
 				CLICKABLE c = new GButt.CheckboxTitle(¤¤AUTO) {
 					@Override
@@ -553,6 +620,8 @@ final class ModuleEmployment implements ModuleMaker {
 				s.addRelBody(4, DIR.S, c);
 				
 			}
+			
+			
 			
 			s.addRelBody(2, DIR.N, new GHeader(DicMisc.¤¤Employment));
 			

@@ -127,7 +127,6 @@ public final class AIModule_NeedsForDeed extends AIModule{
 					Lavatory l = get(a, d);
 					a.speed.setDirCurrent(l.getDir());
 					STATS.NEEDS().CONSTIPATION.fix(a.indu());
-					STATS.NEEDS().DIRTINESS.inc(a.indu(), 1);
 					return sub.activate(a, d);
 				}
 				
@@ -214,7 +213,6 @@ public final class AIModule_NeedsForDeed extends AIModule{
 				@Override
 				protected AISubActivation res(Humanoid a, AIManager d) {
 					can(a, d);
-					STATS.NEEDS().DIRTINESS.inc(a.indu(), -1);
 					return null;
 				}
 				

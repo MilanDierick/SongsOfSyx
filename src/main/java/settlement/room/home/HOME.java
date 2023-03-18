@@ -20,14 +20,6 @@ public interface HOME extends AREA{
 	 */
 	public HOME occupy(Humanoid h);
 	
-	/**
-	 * only called by stats
-	 * @param h
-	 */
-//	public void updateEmploymentStatus(Humanoid h);
-	
-	public double space();
-	
 	public Humanoid occupant(int oi);
 	
 	public int occupants();

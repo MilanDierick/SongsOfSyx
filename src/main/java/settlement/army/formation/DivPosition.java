@@ -1,12 +1,12 @@
 package settlement.army.formation;
 
-import init.RES;
+import init.config.Config;
 import settlement.army.order.Copyable;
 
 public class DivPosition extends DivPositionAbs implements Copyable<DivPosition>{
 	
 	public DivPosition() {
-		super(RES.config().BATTLE.MEN_PER_DIVISION);
+		super(Config.BATTLE.MEN_PER_DIVISION);
 	}
 	
 	public DivPosition(int maxMen) {

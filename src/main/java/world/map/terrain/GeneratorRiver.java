@@ -6,6 +6,7 @@ import java.util.Collections;
 import java.util.LinkedList;
 
 import snake2d.util.datatypes.Coo;
+import snake2d.util.datatypes.DIR;
 import snake2d.util.rnd.RND;
 import world.World;
 
@@ -18,16 +19,128 @@ class GeneratorRiver {
 	private static boolean fromOcean = false;
 
 	GeneratorRiver() {
-		riveride();
+		largeRivers();
+		smallRivers();
 	}
 
-	static int riveride() {
-
+	private void smallRivers() {
+		
 		LinkedList<Coo> coo = new LinkedList<Coo>();
 
-		for (int y = 0; y < THEIGHT() - 1; y++) {
-			for (int x = 0; x < TWIDTH() - 1; x++) {
-				if (isDeltable(x, y) && RND.rInt(9) == 0) {
+		for (int y = 0; y < THEIGHT(); y++) {
+			for (int x = 0; x < TWIDTH(); x++) {
+				
+				if (smallStart(x, y) != null) {
+					coo.add(new Coo(x, y));
+				}
+			}
+		}
+
+		Collections.shuffle(coo);
+		
+		double am = 200*World.TAREA()/(224.0*224.0);
+		
+		while (am-- > 0) {
+			Coo c = coo.removeFirst();
+			
+			if (smallRiver(c.x(), c.y()))
+				;
+			
+			
+		}
+	}
+	
+	private DIR smallStart(int tx, int ty) {
+		if (!World.WATER().is(tx, ty))
+			return null;
+		
+		int ri = RND.rInt(DIR.ORTHO.size());
+		
+		for (int i = 0; i < DIR.ORTHO.size(); i++) {
+			DIR d = DIR.ORTHO.getC(ri+i);
+			
+			if (!IN_BOUNDS(tx, ty, d))
+				continue;
+			if (!MOUNTAIN().is(tx+d.x(), ty+d.y()) && WATER().get(tx, ty, d) == WATER().NOTHING)
+				return d;
+		}
+		return null;
+	}
+	
+	private boolean smallRiver(int sx, int sy) {
+		
+		DIR d = smallStart(sx, sy);
+		if (d == null)
+			return false;
+		
+		sx += d.x();
+		sy += d.y();
+		
+
+		if (!IN_BOUNDS(sx, sy))
+			return false;
+		if (MOUNTAIN().is(sx, sy))
+			return false;
+		if (WATER().get(sx, sy) != WATER().NOTHING)
+			return false;
+		
+		for (int di = 0; di < DIR.ORTHO.size(); di++) {
+			DIR d2 = DIR.ORTHO.get(di);
+			if (WATER().RIVER_SMALL.is(sx, sy, d2))
+				return false;
+		}
+		
+		int straights = 2;
+		
+		return smallRiver(sx, sy, d, straights, 24);
+	}
+	
+	private boolean smallRiver(int tx, int ty, DIR dir, int straights, int length){
+		if (length-- < 0)
+			return false;
+		if (!World.IN_BOUNDS(tx, ty))
+			return smallSuccess(tx, ty);
+		if (MOUNTAIN().is(tx, ty))
+			return false;
+		
+		for (int di = 0; di < DIR.ORTHO.size(); di++) {
+			DIR d2 = DIR.ORTHO.get(di);
+			if (d2.perpendicular() == dir)
+				continue;
+			if (WATER().get(tx, ty, d2) != WATER().NOTHING) {
+				return smallSuccess(tx, ty);
+			}
+		}
+		
+		straights --;
+		if (straights <= 0) {
+			dir = dir.next(2*RND.rInt0(1));
+			straights = 3;
+		}
+		
+		if (smallRiver(tx+dir.x(), ty+dir.y(), dir, straights, length)) {
+			return smallSuccess(tx, ty);
+		}
+		return false;
+	}
+	
+	private boolean smallSuccess(int tx, int ty) {
+		WATER().RIVER_SMALL.placeRaw(tx, ty);
+		return true;
+	}
+	
+	static int largeRivers() {
+
+		
+		double am = 10*World.TAREA()/(224.0*224.0);
+		
+		
+		
+		LinkedList<Coo> coo = new LinkedList<Coo>();
+
+		for (int y = 0; y < THEIGHT(); y++) {
+			for (int x = 0; x < TWIDTH(); x++) {
+				if (isDeltable(x, y)) {
 					coo.add(new Coo(x, y));
 				}
 			}
@@ -38,7 +151,7 @@ class GeneratorRiver {
 		int x;
 		int y;
 
-		while (!coo.isEmpty()) {
+		while (!coo.isEmpty() && am > 0) {
 
 			Coo v = coo.removeFirst();
 
@@ -48,7 +161,7 @@ class GeneratorRiver {
 			if (WATER().RIVER.is(x, y))
 				continue;
 
-			maxLength = 7 + RND.rInt(TWIDTH() - 1);
+			maxLength = 16 + RND.rInt(TWIDTH() - 1);
 
 			if (WATER().has.is(x, y - 1)) {
 				dX = 0;
@@ -66,12 +179,13 @@ class GeneratorRiver {
 				continue;
 			}
 
-			fromOcean = WATER().bordersCount(x, y, WATER().OCEAN) == 1;
+			fromOcean = WATER().bordersCount(x, y, WATER().OCEAN.normal) == 1;
 
 			trials = 0;
 
 			if (start(y, x, 0, false, false, 0)) {
 				placeDelta(x, y);
+				am--;
 			}
 
 		}
@@ -82,7 +196,7 @@ class GeneratorRiver {
 			dX = -1 + RND.rInt(3);
 			dY = dX == 0 ? -1 + RND.rInt(3) : 0;
 			trials = 0;
-			maxLength = 7 + RND.rInt(TWIDTH() - 1);
+			maxLength = 16 + RND.rInt(TWIDTH() - 1);
 			branch(y, x, 0, false, false, 0);
 		}
 		
@@ -90,15 +204,15 @@ class GeneratorRiver {
 	}
 
 	private static void placeDelta(int x, int y) {
-		if (WATER().DELTA_LAKE.isPlacable(x, y, null, null) == null) {
-			WATER().DELTA_LAKE.placeRaw(x, y);
+		if (WATER().LAKE.delta.isPlacable(x, y, null, null) == null) {
+			WATER().LAKE.delta.placeRaw(x, y);
 		} else {
-			WATER().DELTA_OCEAN.placeRaw(x, y);
+			WATER().OCEAN.delta.placeRaw(x, y);
 		}
 	}
 
 	private static boolean isDeltable(int x, int y) {
-		if (WATER().DELTA_LAKE.isPlacable(x, y, null, null) == null || WATER().DELTA_OCEAN.isPlacable(x, y, null, null) == null) {
+		if (WATER().LAKE.delta.isPlacable(x, y, null, null) == null || WATER().OCEAN.delta.isPlacable(x, y, null, null) == null) {
 			return true;
 		}
 		return false;
@@ -120,7 +234,7 @@ class GeneratorRiver {
 		if (length > 0 && isDeltable(x, y)) {
 			if (length < 3)
 				return false;
-			if (fromOcean && WATER().OCEAN.is(x, y))
+			if (fromOcean && WATER().OCEAN.normal.is(x, y))
 				return false;
 			if (straight <= 1)
 				return false;
@@ -142,7 +256,7 @@ class GeneratorRiver {
 			return false;
 		}
 
-		if (fromOcean && length > 2 && WATER().borders(x, y, WATER().OCEAN))
+		if (fromOcean && length > 2 && WATER().borders(x, y, WATER().OCEAN.normal))
 			return false;
 
 		if ((x == TWIDTH() - 1 || y == THEIGHT() - 1 || x == 0 || y == 0)) {

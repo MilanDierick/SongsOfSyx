@@ -24,7 +24,8 @@ public final class FactionNPC extends Faction{
 	private final FBonus bonus = new Bonus();
 	
 	public FactionNPC(Race race, LISTE<Faction> all, UpdaterNPC up){
-		super(race, all);
+		super(all);
+		ri = race.index;
 		NPCProduction.all();
 	}
 	

@@ -9,16 +9,12 @@ import game.faction.player.PLocks.PLocker;
 import game.statistics.G_REQ;
 import init.D;
 import init.boostable.*;
-import init.boostable.BOOSTER.BOOSTER_IMP_DATA;
-import init.boostable.BOOSTER_COLLECTION.BOOSTER_COLLECTION_IMP;
-import init.boostable.BOOSTER_COLLECTION.SIMPLE;
+import init.boostable.BOOST_HOLDER.BOOST_HOLDERCOLL;
+import init.boostable.BOOST_LOOKUP.BOOSTER_LOOKUP_IMP;
+import init.boostable.BOOST_LOOKUP.SIMPLE;
 import init.paths.PATH;
 import init.paths.PATHS;
 import init.tech.Unlocks;
-import settlement.room.industry.module.Industry;
-import settlement.room.main.RoomBlueprint;
-import settlement.room.main.RoomBlueprintImp;
-import settlement.tilemap.Floors.Floor;
 import snake2d.util.file.*;
 import snake2d.util.sets.*;
 import util.info.INFO;
@@ -83,88 +79,21 @@ public final class PTitles {
 	
 	public final PLocker locker = new PLocker(¤¤Unlocks) {
 
-		
 		@Override
-		public CharSequence unlockText(Floor f) {
-			s.clear();
-			for (PTitle t : all()) {
-				if (t.selected || t.unlock == null)
-					continue;
-				for (Floor ff : t.unlock.unlocksRoads()) {
-					if (f == ff) {
-						s.add(t.name);
-						s.NL();
-					}
-				}
-			}
-			return s;
-		}
-		
-		@Override
-		public CharSequence unlockText(Industry f) {
-			s.clear();
-			for (PTitle t : all()) {
-				if (t.selected || t.unlock == null)
-					continue;
-				for (Industry ff : t.unlock.unlocksIndustry()) {
-					if (f == ff) {
-						s.add(t.name);
-						s.NL();
-					}
-				}
-			}
-			return s;
-		}
-		
-		@Override
-		public CharSequence unlockText(RoomBlueprint f) {
-			s.clear();
-			for (PTitle t : all()) {
-				if (t.selected || t.unlock == null)
-					continue;
-				for (RoomBlueprintImp ff : t.unlock.roomsUnlocks()) {
-					if (f == ff) {
-						s.add(t.name);
-						s.NL();
-					}
-				}
-			}
-			return s;
+		protected int unlocks() {
+			return all().size();
 		}
 
 		@Override
-		public int lockedUpgrades(RoomBlueprint b) {
-			int am = 0;
-			for (PTitle t : all()) {
-				if (t.selected || t.unlock == null)
-					continue;
-				for (RoomBlueprintImp bb : t.unlock.unlocksUpgrades()) {
-					if (b == bb) {
-						am++;
-					}
-				}
-			}
-			return am;
-		}
-
-		@Override
-		public CharSequence unlockTextUpgrade(RoomBlueprint b) {
-			s.clear();
-			for (PTitle t : all()) {
-				if (t.selected || t.unlock == null)
-					continue;
-				for (RoomBlueprintImp bb : t.unlock.unlocksUpgrades()) {
-					if (b == bb) {
-						s.add(t.name);
-						s.NL();
-					}
-				}
-			}
-			return s;
+		protected Unlocks unlock(int i) {
+			PTitle t = all().get(i);
+			if (t.selected)
+				return null;
+			return t.unlock;
 		}
 	};
 	
-	private class Boost extends BOOSTER_COLLECTION_IMP implements SIMPLE {
+	private class Boost extends BOOSTER_LOOKUP_IMP implements SIMPLE {
 
 		private final double[] add = new double[BOOSTABLES.all().size()];
 		private final double[] mul = new double[BOOSTABLES.all().size()];
@@ -174,6 +103,7 @@ public final class PTitles {
 			for (PTitle t : titles)
 				init(t.boost);
 			setBonuses();
+			makeBoosters(this, true, false, true);
 		}
 
 		@Override
@@ -194,9 +124,9 @@ public final class PTitles {
 				if (t.selected()) {
 					for (BBoost b : t.boost.boosts()) {
 						if (b.isMul())
-							mul[b.boost.index()] *= b.value();
+							mul[b.boostable.index()] *= b.value();
 						else
-							add[b.boost.index()] += b.value();
+							add[b.boostable.index()] += b.value();
 					}
 				}
 			}
@@ -333,7 +263,7 @@ public final class PTitles {
 		private boolean selected;
 		private boolean isNew;
 		private boolean unlocked;
-		public final BOOSTER_IMP_DATA boost;
+		private final BOOST_HOLDERCOLL boost;
 		public final Unlocks unlock;
 		
 		
@@ -341,14 +271,9 @@ public final class PTitles {
 			super(jtext);
 			this.key = key;
 			index = all.add(this);
-			boost = new BOOSTER_IMP_DATA(name, jdata);
+			boost = new BOOST_HOLDERCOLL(name, jdata);
 			reqs = G_REQ.READ(jdata);
-			if (jdata.has("UNLOCKS")) {
-				unlock = new Unlocks(name, jdata.json("UNLOCKS"));
-			}else {
-				unlock = null;
-			}
-			
+			unlock = new Unlocks(name, jdata);
 		}
 
 		@Override

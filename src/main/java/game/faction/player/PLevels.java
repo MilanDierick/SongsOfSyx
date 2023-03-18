@@ -7,18 +7,16 @@ import game.faction.FACTIONS;
 import game.faction.player.PLocks.PLocker;
 import init.D;
 import init.boostable.*;
-import init.boostable.BOOSTER_COLLECTION.BOOSTER_COLLECTION_IMP;
-import init.boostable.BOOSTER_COLLECTION.SIMPLE;
+import init.boostable.BOOST_LOOKUP.BOOSTER_LOOKUP_IMP;
+import init.boostable.BOOST_LOOKUP.SIMPLE;
 import init.paths.PATH;
 import init.paths.PATHS;
 import init.tech.Unlocks;
 import settlement.entity.humanoid.HCLASS;
 import settlement.main.SETT;
-import settlement.room.industry.module.Industry;
 import settlement.room.main.RoomBlueprint;
 import settlement.room.main.RoomBlueprintImp;
 import settlement.stats.STATS;
-import settlement.tilemap.Floors.Floor;
 import snake2d.Errors;
 import snake2d.SPRITE_RENDERER;
 import snake2d.util.datatypes.DIR;
@@ -60,7 +58,7 @@ public final class PLevels {
 	private Level current;
 	private boolean increase;
 	private final int[] roomLock = new int[SETT.ROOMS().all().size()];
-	public BOOSTER_COLLECTION.SIMPLE BOOSTER;
+	public BOOST_LOOKUP.SIMPLE BOOSTER;
 	private final Boost boost;
 	
 	public PLevels() {
@@ -111,7 +109,7 @@ public final class PLevels {
 		BOOSTER = boost;
 	}
 	
-	private class Boost extends BOOSTER_COLLECTION_IMP implements SIMPLE {
+	private class Boost extends BOOSTER_LOOKUP_IMP implements SIMPLE {
 
 		private final double[] add = new double[BOOSTABLES.all().size()];
 		private final double[] mul = new double[BOOSTABLES.all().size()];
@@ -121,6 +119,7 @@ public final class PLevels {
 			for (Level t : levels)
 				init(t);
 			setBonuses(0);
+			makeBoosters(this, true, false, true);
 		}
 
 		@Override
@@ -140,9 +139,9 @@ public final class PLevels {
 			for (int l = 0; l <= i; l++) {
 				for (BBoost b : levels.get(l).boosts()) {
 					if (b.isMul())
-						mul[b.boost.index()] *= b.value();
+						mul[b.boostable.index()] *= b.value();
 					else
-						add[b.boost.index()] += b.value();
+						add[b.boostable.index()] += b.value();
 				}
 			}
 		}
@@ -211,6 +210,7 @@ public final class PLevels {
 			male = t.text("MALE");
 			female = t.text("FEMALE");
 			desc = t.text("DESC");
+			
 		}
 		
 		public int popNeeded() {
@@ -226,6 +226,11 @@ public final class PLevels {
 		}
 
 		@Override
+		public CharSequence boosterName() {
+			return male;
+		}
+		
+		@Override
 		public int index() {
 			return index;
 		}
@@ -239,6 +244,7 @@ public final class PLevels {
 			b.add(b.text().errorify().add(¤¤PopReq));
 			b.add(GFORMAT.i(b.text(), popNeeded()));
 			b.NL();
+			
 			super.hoverInfoGet(text);
 			
 		}
@@ -246,74 +252,14 @@ public final class PLevels {
 
 	public final PLocker locker = new PLocker(¤¤UnlocksByTech) {
 
-		
 		@Override
-		public CharSequence unlockText(Floor f) {
-			s.clear();
-			for (int i = current().index()+1; i < all().size(); i++) {
-				for (Floor ff : all().get(i).unlocksRoads()) {
-					if (f == ff) {
-						s.add(all().get(i).name());
-						s.NL();
-					}
-				}
-			}
-			return s;
-		}
-		
-		@Override
-		public CharSequence unlockText(Industry f) {
-			s.clear();
-			for (int i = current().index()+1; i < all().size(); i++) {
-				for (Industry ff : all().get(i).unlocksIndustry()) {
-					if (f == ff) {
-						s.add(all().get(i).name());
-						s.NL();
-					}
-				}
-			}
-			return s;
-		}
-		
-		@Override
-		public CharSequence unlockText(RoomBlueprint f) {
-			s.clear();
-			for (int i = current().index()+1; i < all().size(); i++) {
-				for (RoomBlueprintImp ff : all().get(i).roomsUnlocks()) {
-					if (f == ff) {
-						s.add(all().get(i).name());
-						s.NL();
-					}
-				}
-			}
-			return s;
+		protected int unlocks() {
+			return all().size() - (current().index()+1);
 		}
 
 		@Override
-		public int lockedUpgrades(RoomBlueprint b) {
-			int am = 0;
-			for (int i = current().index()+1; i < all().size(); i++) {
-				for (RoomBlueprintImp bb : all().get(i).unlocksUpgrades()) {
-					if (b == bb) {
-						am++;
-					}
-				}
-			}
-			return am;
-		}
-
-		@Override
-		public CharSequence unlockTextUpgrade(RoomBlueprint b) {
-			s.clear();
-			for (int i = current().index()+1; i < all().size(); i++) {
-				for (RoomBlueprintImp bb : all().get(i).unlocksUpgrades()) {
-					if (b == bb) {
-						s.add(all().get(i).name());
-						s.NL();
-					}
-				}
-			}
-			return s;
+		protected Unlocks unlock(int i) {
+			return all().get(current().index()+1 +i);
 		}
 	};
 	

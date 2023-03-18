@@ -29,10 +29,10 @@ class GeneratorLake {
 			//WorldWater.AreaTileWater w = area.water(i);
 			COORDINATE wt = area.ts().get(i);
 			
-			if (!World.WATER().isLaky.is(wt))
+			if (!World.WATER().LAKE.is.is(wt))
 				continue;
 			for (DIR d : t.getDirs()) {
-				if (World.WATER().isLaky.is(wt, d)) {
+				if (World.WATER().LAKE.is.is(wt, d)) {
 					sink(t.cooInner(d));
 				}
 			}

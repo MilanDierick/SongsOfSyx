@@ -4,6 +4,7 @@ import game.battle.Conflict.Side;
 import game.faction.FACTIONS;
 import game.faction.Faction;
 import init.RES;
+import init.config.Config;
 import init.race.RACES;
 import init.race.Race;
 import init.resources.ArmySupply;
@@ -166,8 +167,8 @@ class Resolver {
 	
 	public static class PlayerBattle {
 		
-		private WInduStored[][] divs = new WInduStored[RES.config().BATTLE.DIVISIONS_PER_ARMY][];
-		private int[] enemySurvivors = new int[RES.config().BATTLE.DIVISIONS_PER_ARMY];
+		private WInduStored[][] divs = new WInduStored[Config.BATTLE.DIVISIONS_PER_ARMY][];
+		private int[] enemySurvivors = new int[Config.BATTLE.DIVISIONS_PER_ARMY];
 		private int[] capturedPlayer = new int[RACES.all().size()];
 		private int[] capturedEnemy = new int[RACES.all().size()];
 		private final Result result;
@@ -178,7 +179,8 @@ class Resolver {
 			else
 				result = (timer || SETT.ARMIES().player().men() == 0) ? Result.DEFEAT : Result.VICTORY; 
 			
-			int[] count = new int[RES.config().BATTLE.DIVISIONS_PER_ARMY];
+			
+			int[] count = new int[Config.BATTLE.DIVISIONS_PER_ARMY];
 			
 			if (retreat || timer) {
 				int losses = (int) Math.ceil(SETT.ARMIES().enemy().men()*Conflict.retreatPenalty);
@@ -212,15 +214,19 @@ class Resolver {
 							capturedEnemy[h.race().index]++;
 						else
 							capturedPlayer[h.race().index]++;
-					}else if (d.index() >= RES.config().BATTLE.DIVISIONS_PER_ARMY) {
-						enemySurvivors[d.index() - RES.config().BATTLE.DIVISIONS_PER_ARMY] ++;
-					}else {
-						if (count[d.index()] >= divs[d.index()].length) {
-							
-						}else {
-							divs[d.index()][count[d.index()]++] = new WInduStored(h);
-						}
+					} else {
 						
+						if (d.index() >= Config.BATTLE.DIVISIONS_PER_ARMY) {
+							
+							enemySurvivors[d.index() - Config.BATTLE.DIVISIONS_PER_ARMY] ++;
+						}else {
+							if (count[d.index()] >= divs[d.index()].length) {
+								
+							}else {
+								divs[d.index()][count[d.index()]++] = new WInduStored(h);
+							}
+							
+						}
 					}
 				}
 			}
@@ -304,7 +310,8 @@ class Resolver {
 		
 		int ai = 0;
 		for (WArmy a : side) {
-			if (di >= RES.config().BATTLE.DIVISIONS_PER_ARMY)
+			
+			if (di >= Config.BATTLE.DIVISIONS_PER_ARMY)
 				break;
 			if (!side.mustFight[ai]) {
 				for (int i = 0; i < a.divs().size(); i++) {
@@ -312,7 +319,8 @@ class Resolver {
 					survivors[di] = d.men();
 					max[di] = d.men();
 					di++;
-					if (di >= RES.config().BATTLE.DIVISIONS_PER_ARMY)
+					
+					if (di >= Config.BATTLE.DIVISIONS_PER_ARMY)
 						break;
 				}
 			}else {
@@ -327,7 +335,8 @@ class Resolver {
 					captured[d.race().index()] += cc;
 					max[di] = d.men();
 					di++;
-					if (di >= RES.config().BATTLE.DIVISIONS_PER_ARMY)
+					
+					if (di >= Config.BATTLE.DIVISIONS_PER_ARMY)
 						break;
 				}
 			}
@@ -391,7 +400,8 @@ class Resolver {
 		
 		for (WArmy a : side) {
 			int dii = di;
-			if (dii >= RES.config().BATTLE.DIVISIONS_PER_ARMY)
+			
+			if (dii >= Config.BATTLE.DIVISIONS_PER_ARMY)
 				break;
 			int[] ll = new int[STATS.EQUIP().military_all().size()]; 
 			for (int i = 0; i < a.divs().size(); i++) {
@@ -404,7 +414,8 @@ class Resolver {
 					ll[m.indexMilitary()] += lost;
 				}
 				dii++;
-				if (dii >= RES.config().BATTLE.DIVISIONS_PER_ARMY)
+				
+				if (dii >= Config.BATTLE.DIVISIONS_PER_ARMY)
 					break;
 			}
 
@@ -415,7 +426,8 @@ class Resolver {
 				else
 					d.resolve(survivorDivs[di], CLAMP.d(side.dPower + d.experience(), 0, STATS.BATTLE().COMBAT_EXPERIENCE.indu().max(null)));
 				di++;
-				if (di >= RES.config().BATTLE.DIVISIONS_PER_ARMY)
+				
+				if (di >= Config.BATTLE.DIVISIONS_PER_ARMY)
 					break;
 			}
 			

@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.util.Arrays;
 
 import game.faction.Faction;
-import init.RES;
+import init.config.Config;
 import init.race.RACES;
 import init.race.Race;
 import settlement.army.DivisionBanners.DivisionBanner;
@@ -46,7 +46,9 @@ public final class WDivRegional implements WDIV, SAVABLE{
 	
 	public void init(Race race, double amount, int training, int trainingR, WArmy a) {
 
-		menTarget = (short) CLAMP.i((int)Math.ceil(amount*RES.config().BATTLE.MEN_PER_DIVISION), 0, RES.config().BATTLE.MEN_PER_DIVISION);
+		
+		
+		menTarget = (short) CLAMP.i((int)Math.ceil(amount*Config.BATTLE.MEN_PER_DIVISION), 0, Config.BATTLE.MEN_PER_DIVISION);
 		this.trainingM = (byte) CLAMP.i(training, 0, 15);
 		men = 0;
 		armyI = a.armyIndex();

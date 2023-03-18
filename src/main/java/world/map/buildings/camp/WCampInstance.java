@@ -2,7 +2,6 @@ package world.map.buildings.camp;
 
 import java.io.IOException;
 
-import game.VERSION;
 import game.faction.FACTIONS;
 import game.faction.Faction;
 import game.statistics.G_REQ;
@@ -41,7 +40,7 @@ public class WCampInstance implements INDEXED{
 		this.size = size;
 		this.ran = (int) ran;
 		name.clear().add(t.names.getC((int) this.ran));
-		name.insert(0, t.race.appearance().types.getC(RND.rInt()&0x0FF).names.lastNamesNoble.getC(RND.rInt(0x0FFFF)));
+		name.insert(0, t.race.appearance().lastNamesNoble.getC(RND.rInt(0x0FFFF)));
 		max = (int) (t.min + (t.max-t.min)*size);
 		replenishRateDay = (t.reMin + (t.reMax-t.reMin)*size);
 		coo = new ShortCoo(tx, ty);
@@ -88,8 +87,7 @@ public class WCampInstance implements INDEXED{
 		WCampInstance ins = new WCampInstance(index, c.x(), c.y(), t, size, ran);
 		ins.factionI = fi;
 		World.BUILDINGS().camp.factions.add(ins, 1);
-		if (!VERSION.versionIsBefore(63, 7))
-			ins.name.load(file);
+		ins.name.load(file);	
 		return ins;
 	}
 	

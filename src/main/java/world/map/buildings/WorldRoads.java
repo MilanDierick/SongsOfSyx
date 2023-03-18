@@ -46,27 +46,52 @@ public final class WorldRoads extends World.WorldResource implements MAP_PLACER{
 	void render(SPRITE_RENDERER r, ShadowBatch s, RenderIterator it) {
 		
 		if (road.get(it.tile())) {
-			int set = 16 * 4;
-			Region reg = REGIONS().setter.get(it.tile());
-			if (reg != null) {
-				double v = REGIOND.POP().popValue(reg);
-				if (roadMini.get(it.tile())) {
-					if (v > 0.7) {
-						World.BUILDINGS().sprites.roads.render(r,
-								roadData.get(it.tile()) + set + 16 * (it.ran() & 0b011), it.x(), it.y());
-					} else if (v > 0.3) {
-						World.BUILDINGS().sprites.roads.render(r, roadData.get(it.tile()) + 16 * (it.ran() & 0b011),
-								it.x(), it.y());
-					}
-				} else {
-					int k = (int) ((v + 0.3) * 2);
-					World.BUILDINGS().sprites.roads.render(r,
-							roadData.get(it.tile()) + k * set + 16 * (it.ran() & 0b011), it.x(), it.y());
+			
+			int level = level(it.tile());
+			if (level >= 0) {
+				World.BUILDINGS().sprites.roads.render(r,
+						roadData.get(it.tile()) + level*16*4 + 16 * (it.ran() & 0b011), it.x(), it.y());
+			}
+		}
+		
+	}
+	
+	private int level(int tile) {
+		Region reg = REGIONS().setter.get(tile);
+		if (reg != null) {
+			double v = REGIOND.POP().popValue(reg);
+			if (roadMini.get(tile)) {
+				if (v > 0.7) {
+					return 1;
+				} else if (v > 0.3) {
+					return 0;
 				}
+			} else {
+				return (int) ((v + 0.3) * 2);
+			}
 
-			} else if (!roadMini.get(it.tile()))
-				World.BUILDINGS().sprites.roads.render(r, roadData.get(it.tile()) + 16 * (it.ran() & 0b011), it.x(),
-						it.y());
+		} else if (!roadMini.get(tile))
+			return 0;
+		return -1;
+	}
+	
+	public void renderBridge(SPRITE_RENDERER r, ShadowBatch s, RenderIterator it) {
+		if (road.get(it.tile()) && WATER().RIVER.is(it.tile())) {
+			int level = level(it.tile());
+			if (level >= 0) {
+				int data = roadData.get(it.tile());
+				for (int di = 0; di < DIR.ORTHO.size(); di++) {
+					DIR dir = DIR.ORTHO.getC(di);
+					if ((data & dir.mask()) != 0 && !WATER().has.is(it.tx()+dir.x(), it.ty()+dir.y()) && !WATER().has.is(it.tx()-dir.x(), it.ty()-dir.y())){
+						World.BUILDINGS().sprites.bridge.render(r, level*4+ di, it.x(), it.y());
+						return;
+					}
+					
+					
+				}
+				
+				
+			}
 		}
 		
 	}
@@ -183,5 +208,7 @@ public final class WorldRoads extends World.WorldResource implements MAP_PLACER{
 			return this;
 		}
 	};
+
+
 	
 }

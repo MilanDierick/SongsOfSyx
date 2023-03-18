@@ -4,7 +4,7 @@ import java.util.Arrays;
 
 import game.time.TIME;
 import init.D;
-import init.RES;
+import init.config.Config;
 import init.race.RACES;
 import init.race.Race;
 import init.resources.RESOURCE;
@@ -243,7 +243,8 @@ public final class RegionTaxes extends RResource{
 		
 		@Override
 		public double getD(Region r) {
-			return Math.ceil(RES.config().WORLD.TRIBUTE*REGIOND.POP().total.get(r)/18.0);
+			
+			return Math.ceil(Config.WORLD.TRIBUTE*REGIOND.POP().total.get(r)/18.0);
 		}
 		
 		@Override

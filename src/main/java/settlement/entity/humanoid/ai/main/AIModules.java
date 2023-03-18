@@ -48,6 +48,7 @@ public final class AIModules {
 	final AIModule health = new AIModule_Health();
 	final AIModule equipment = new AIModule_Equipment();
 	final AIModule_Hygine hygine = new AIModule_Hygine();
+	final AIModule_Groom groom = new AIModule_Groom();
 	public final AIModule_Work work = new AIModule_Work();
 	public final AIModule_Battle battle = new AIModule_Battle();
 	final AIModule_NeedsForDeed need4deed = new AIModule_NeedsForDeed();
@@ -69,6 +70,7 @@ public final class AIModules {
 	private final LIST<AIModule> std = new ArrayList<>(
 			hunger,
 			drink,
+			groom,
 			religion,
 			health,
 			equipment,

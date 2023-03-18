@@ -4,6 +4,7 @@ import java.io.IOException;
 
 import game.time.TIME;
 import init.RES;
+import init.config.Config;
 import settlement.army.Div;
 import settlement.army.ai.ARMY_AI;
 import settlement.army.ai.ARMY_AI.ArmyThread;
@@ -15,7 +16,7 @@ public final class ARMY_AI_DIVS extends ArmyThread{
 
 	private int divI = 0;
 	private int upI = 0;
-	private final AIManager[] ais = new AIManager[RES.config().BATTLE.DIVISIONS_PER_ARMY*2];
+	private final AIManager[] ais = new AIManager[Config.BATTLE.DIVISIONS_PER_ARMY*2];
 	public final Tools tools = new Tools();
 	public final Plans plans;
 	static ARMY_AI_DIVS self;

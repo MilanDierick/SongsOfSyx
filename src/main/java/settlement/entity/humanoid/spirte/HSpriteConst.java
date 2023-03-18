@@ -7,7 +7,6 @@ import init.race.Race;
 import settlement.stats.Induvidual;
 import settlement.stats.STATS;
 import snake2d.util.color.COLOR;
-import snake2d.util.color.ColorImp;
 import snake2d.util.sprite.TILE_SHEET;
 
 final class HSpriteConst {
@@ -36,11 +35,7 @@ final class HSpriteConst {
 	final static int ITORSO_OUT2 = i++ * NR;
 
 	final static int IHEAD = i++ * NR;
-	final static int IBEARD = i++ * NR;
-	final static int IHAIR = i++ * NR;
-	final static int IARMOR = i++ * NR;
 	final static int ISHADOW = i++ * NR;
-	final static int INOBLE = i++ * NR;
 
 	
 	final static int[][] ITOOL = new int[][] {
@@ -73,14 +68,14 @@ final class HSpriteConst {
 
 
 	public static void filth(Induvidual indu, int torse, int x, int y) {
-		double am = STATS.NEEDS().DIRTINESS.stat.indu().getD(indu);
-		texture(indu.race().appearance().sheet(indu).sheet, RACES.sprites().grit, am, indu.randomness(), torse, x, y);
+		double am = STATS.NEEDS().DIRTINESS.stat().indu().getD(indu);
+		texture(indu.race().appearance().sheet(indu).sheet.sheet, RACES.sprites().grit, am, indu.randomness(), torse, x, y);
 	}
 	
 	public static void blood(Induvidual indu, int torse, int x, int y) {
 		double am = STATS.NEEDS().INJURIES.count.getD(indu);
 		indu.race().appearance().colors.blood.bind();
-		texture(indu.race().appearance().sheet(indu).sheet, RACES.sprites().blood, am, indu.randomness(), torse, x, y);
+		texture(indu.race().appearance().sheet(indu).sheet.sheet, RACES.sprites().blood, am, indu.randomness(), torse, x, y);
 		COLOR.unbind();
 	}
 
@@ -94,7 +89,7 @@ final class HSpriteConst {
 	}
 	
 	public static void water(Induvidual indu, int dir, int torso, int x, int y) {
-		indu.race().appearance().sheet(indu).sheet.renderTextured(indu.race().appearance().extra.water.getTexture(CLAY.exWATER[GAME.intervals().get05() & 0b011] + dir),  torso, x, y);
+		indu.race().appearance().sheet(indu).sheet.sheet.renderTextured(indu.race().appearance().extra.water.getTexture(CLAY.exWATER[GAME.intervals().get05() & 0b011] + dir),  torso, x, y);
 	}
 
 	
@@ -104,29 +99,26 @@ final class HSpriteConst {
 		static final int TORSO = i++ * NR;
 		static final int ARMS = i++ * NR;
 		static final int HEAD = i++ * NR;
-		static final int ARMOR = i++ * NR;
 		static final int SHADOW = i++ * NR;
 		static{i = 0;}
 		private static final int[] exWATER = new int[] {0, NR, 2 *NR, 3 *NR};
-		
-		public static final COLOR pantsC = new ColorImp(64, 25, 0);
 
 		static final int off = (24 - 32) * C.SCALE / 2;
 		static final int offC = 32 * C.SCALE / 2;
 		
 		public static void filth(Induvidual indu, int dir, int x, int y) {
-			double am = STATS.NEEDS().DIRTINESS.stat.indu().getD(indu);
-			texture(indu.race().appearance().sheet(indu).lay, RACES.sprites().Lgrit, am, indu.randomness(), dir, x, y);
+			double am = STATS.NEEDS().DIRTINESS.stat().indu().getD(indu);
+			texture(indu.race().appearance().sheet(indu).sheet.lay, RACES.sprites().Lgrit, am, indu.randomness(), dir, x, y);
 		}
 		
 		public static void filth(Race race, boolean adult, double am, int dir, int ran, int x, int y) {
-			texture(adult ? race.appearance().adult().lay : race.appearance().child().lay, RACES.sprites().Lgrit, am, ran, dir, x, y);
+			texture(adult ? race.appearance().adult().sheet.lay : race.appearance().child().sheet.lay, RACES.sprites().Lgrit, am, ran, dir, x, y);
 		}
 		
 		public static void blood(Induvidual indu, int dir, int x, int y) {
 			double am = STATS.NEEDS().INJURIES.count.getD(indu);
 			indu.race().appearance().colors.blood.bind();
-			texture(indu.race().appearance().sheet(indu).lay, RACES.sprites().Lblood, am, indu.randomness(), dir, x, y);
+			texture(indu.race().appearance().sheet(indu).sheet.lay, RACES.sprites().Lblood, am, indu.randomness(), dir, x, y);
 			COLOR.unbind();
 		}
 
@@ -140,7 +132,7 @@ final class HSpriteConst {
 		}
 		
 		public static void water(Induvidual indu, int dir, int x, int y) {
-			indu.race().appearance().sheet(indu).lay.renderTextured(indu.race().appearance().extra.Lwater.getTexture(CLAY.exWATER[GAME.intervals().get05() & 0b011] + dir),  CLAY.SHADOW+dir, x, y);
+			indu.race().appearance().sheet(indu).sheet.lay.renderTextured(indu.race().appearance().extra.Lwater.getTexture(CLAY.exWATER[GAME.intervals().get05() & 0b011] + dir),  CLAY.SHADOW+dir, x, y);
 		}
 		
 		

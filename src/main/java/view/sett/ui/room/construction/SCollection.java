@@ -65,7 +65,7 @@ final class SCollection {
 		
 		@Override
 		protected void clickA() {
-			VIEW.s().ui.placer.init(state.collection.rooms().get(k), state.collection);
+			VIEW.s().misc.placer.init(state.collection.rooms().get(k), state.collection);
 		}
 		
 		@Override

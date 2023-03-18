@@ -6,9 +6,7 @@ import game.GAME;
 import game.GameSaver;
 import init.biomes.*;
 import init.boostable.BOOSTABLES;
-import init.config.Config;
 import init.disease.DISEASES;
-import init.race.RACES;
 import init.resources.RESOURCES;
 import init.sound.SOUND;
 import init.sprite.SPRITES;
@@ -45,17 +43,16 @@ public class RES {
 		private final SlaveThread general2 = new SlaveThread("Battle-Divs", 1.0/60);
 		private final SlaveThread general3 = new SlaveThread("Battle-util", 1.0/60);
 		private final SlaveThread general4 = new SlaveThread("Battle-traject", 1.0/60);
-		final Config config;
 		TextureHolder texture;
 		
-		private Data(int race) throws IOException{
+		private Data() throws IOException{
 			RES.data = this;
 			
 			
 			
 
 			CORE.checkIn();
-			UI.init(RACES.all().get(race));
+			UI.init();
 			CORE.checkIn();
 			sprites = new SPRITES(this);
 			CORE.checkIn();
@@ -135,8 +132,6 @@ public class RES {
 				}
 			});
 			
-			
-			config = new Config();
 //			debugger.add(debugger.new Value("pathLoad", 0, Formatter.PERCENTAGE){
 //				protected double getValue(){
 //					return pathManager.getLoadPercent();
@@ -148,8 +143,8 @@ public class RES {
 		
 	}
 	
-	public RES(int race) throws IOException{
-		new Data(race);
+	public RES() throws IOException{
+		new Data();
 		
 	}
 	
@@ -221,11 +216,6 @@ public class RES {
 	public static ArrayCooShort coos() {
 		return data.coos;
 	}
-
-	
-	public static Config config() {
-		return data.config;
-	}
 	
 	public static RANMAP ran1() {
 		return data.ran1;
@@ -238,5 +228,6 @@ public class RES {
 	public static AreaTmp AREA() {
 		return data.areaTmp;
 	}
+
 
 }

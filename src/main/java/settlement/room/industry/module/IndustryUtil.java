@@ -2,17 +2,12 @@ package settlement.room.industry.module;
 
 import java.util.Arrays;
 
-import game.faction.FACTIONS;
-import init.boostable.BOOSTABLE;
-import init.boostable.BOOSTER_COLLECTION.SIMPLE;
-import init.boostable.BoostHoverer;
-import init.race.RACES;
+import init.boostable.*;
 import settlement.entity.ENTITY;
 import settlement.entity.humanoid.Humanoid;
 import settlement.room.industry.module.Industry.RoomBoost;
 import settlement.room.main.RoomInstance;
 import settlement.stats.STATS;
-import settlement.stats.StatsBoosts.StatBooster;
 import snake2d.util.gui.GUI_BOX;
 import snake2d.util.sets.LIST;
 import util.dic.DicMisc;
@@ -124,7 +119,9 @@ public final class IndustryUtil {
 		GBox b = (GBox) text;
 
 		
-		LIST<StatBooster> allBoosts = STATS.BOOST().muls(bonus);
+		double mul = (1.0-0.75*ins.getDegrade());
+		
+		LIST<BBooster> allBoosts = BOOSTABLES.player().muls(bonus);
 		{
 			Arrays.fill(values, 0);
 			double am = 0;
@@ -132,11 +129,10 @@ public final class IndustryUtil {
 			for (Humanoid a : ins.employees().employees()) {
 				int i = 0;
 				am++;
-				for (StatBooster boost : allBoosts) {
+				for (BBooster boost : allBoosts) {
 					values[i] += boost.value(a.indu());
 					i++;
 				}
-				values[i] += a.race().bonus().mul(bonus);
 			}
 			if (am > 0) {
 				for (int i = 0; i <= allBoosts.size(); i++) {
@@ -147,16 +143,9 @@ public final class IndustryUtil {
 		}
 		
 		
-		
-		double mul = (1.0-0.75*ins.getDegrade());
-		
-		
 		{
 			b.textLL(DicMisc.¤¤Multipliers);
 			b.NL();
-			
-			
-			
 			
 			if (ins.degrader(ins.mX(), ins.mY()) != null) {
 				BoostHoverer.hoverMultiplier(text, DicMisc.¤¤Degrade, mul, 0.25, 1);
@@ -179,25 +168,10 @@ public final class IndustryUtil {
 				}
 			}
 			
-			for (SIMPLE bb : FACTIONS.player().bonus().subs()){
-				if (bb.minMul(bonus) != 1 || bb.maxMul(bonus) != 1) {
-					double bbb = bb.mul(bonus);
-					mul *= bbb;
-					BoostHoverer.hoverMultiplier(b, bb.name(), bbb, bb.minMul(bonus), bb.maxMul(bonus));
-					b.NL();
-				}
-			}
-			
 			for (int i = 0; i < allBoosts.size(); i++) {
 				mul *= values[i];
-				BoostHoverer.hoverMultiplier(b, allBoosts.get(i).name(), values[i], STATS.BOOST().minMul(bonus), STATS.BOOST().maxMul(bonus));
-				b.NL();
-			}
-			
-			if (RACES.bonus().maxMul(bonus) != 1 || RACES.bonus().minMul(bonus) != 1) {
-				int i = allBoosts.size();
-				mul *= values[i];
-				BoostHoverer.hoverMultiplier(b, RACES.name(), values[i], RACES.bonus().minMul(bonus), RACES.bonus().maxMul(bonus));
+				BBooster bb = allBoosts.get(i);
+				BoostHoverer.hoverMultiplier(b, bb.name(), values[i], bb.boost.start, bb.boost.end);
 				b.NL();
 			}
 			
@@ -209,7 +183,7 @@ public final class IndustryUtil {
 
 		}
 		
-		allBoosts = STATS.BOOST().adders(bonus);
+		allBoosts = BOOSTABLES.player().adders(bonus);
 		{
 			Arrays.fill(values, 0);
 			double am = 0;
@@ -220,11 +194,10 @@ public final class IndustryUtil {
 					if (STATS.WORK().EMPLOYED.get(a) == ins) {
 						int i = 0;
 						am++;
-						for (StatBooster boost : allBoosts) {
+						for (BBooster boost : allBoosts) {
 							values[i] += boost.value(a.indu());
 							i++;
 						}
-						values[i] += a.race().bonus().add(bonus);
 					}
 					
 				}
@@ -243,25 +216,10 @@ public final class IndustryUtil {
 			b.NL();
 			
 			
-			for (SIMPLE bb : FACTIONS.player().bonus().subs()){
-				if (bb.minAdd(bonus) != 0 || bb.maxAdd(bonus) != 0) {
-					double bbb = bb.add(bonus);
-					add += bbb;
-					BoostHoverer.hoverAddative(b, bb.name(), bbb, bb.minAdd(bonus), bb.maxAdd(bonus));
-					b.NL();
-				}
-			}
-			
 			for (int i = 0; i < allBoosts.size(); i++) {
 				add += values[i];
-				BoostHoverer.hoverAddative(b, allBoosts.get(i).name(), values[i], STATS.BOOST().minAdd(bonus), STATS.BOOST().maxAdd(bonus));
-				b.NL();
-			}
-			
-			if (RACES.bonus().maxAdd(bonus) != 0 || RACES.bonus().minAdd(bonus) != 0) {
-				int i = allBoosts.size();
-				add += values[i];
-				BoostHoverer.hoverMultiplier(b, RACES.name(), values[i], RACES.bonus().minAdd(bonus), RACES.bonus().maxAdd(bonus));
+				BBooster bb = allBoosts.get(i);
+				BoostHoverer.hoverAddative(b, bb.name(), values[i], bb.boost.start, bb.boost.end);
 				b.NL();
 			}
 			

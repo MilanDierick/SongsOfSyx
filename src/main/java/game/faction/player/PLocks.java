@@ -1,5 +1,6 @@
 package game.faction.player;
 
+import init.tech.Unlocks;
 import settlement.room.industry.module.Industry;
 import settlement.room.main.RoomBlueprint;
 import settlement.room.main.RoomBlueprintImp;
@@ -103,11 +104,89 @@ public final class PLocks {
 			this.prefix = prefix;
 		}
 		
-		public abstract CharSequence unlockText(RoomBlueprint b);
-		public abstract CharSequence unlockText(Industry b);
-		public abstract CharSequence unlockText(Floor f);
-		public abstract int lockedUpgrades(RoomBlueprint b);
-		public abstract CharSequence unlockTextUpgrade(RoomBlueprint b);
+		protected abstract int unlocks();
+		protected abstract Unlocks unlock(int i);
+		
+		public CharSequence unlockText(Floor f) {
+			s.clear();
+			for (int i = 0; i < unlocks(); i++) {
+				Unlocks u = unlock(i);
+				if (u == null)
+					continue;
+				for (Floor ff : u.unlocksRoads()) {
+					if (f == ff) {
+						s.add(u.boosterName());
+						s.NL();
+					}
+				}
+			}
+			return s;
+		}
+		
+		public CharSequence unlockText(Industry f) {
+			s.clear();
+			for (int i = 0; i < unlocks(); i++) {
+				Unlocks u = unlock(i);
+				if (u == null)
+					continue;
+				for (Industry ff : u.unlocksIndustry()) {
+					if (f == ff) {
+						s.add(u.boosterName());
+						s.NL();
+					}
+				}
+			}
+			return s;
+			
+		}
+
+		public CharSequence unlockText(RoomBlueprint f) {
+			
+			s.clear();
+			for (int i = 0; i < unlocks(); i++) {
+				Unlocks u = unlock(i);
+				if (u == null)
+					continue;
+				for (RoomBlueprintImp ff : u.roomsUnlocks()) {
+					if (f == ff) {
+						s.add(u.boosterName());
+						s.NL();
+					}
+				}
+			}
+			return s;
+		}
+
+		public int lockedUpgrades(RoomBlueprint b) {
+			int am = 0;
+			for (int i = 0; i < unlocks(); i++) {
+				Unlocks u = unlock(i);
+				if (u == null)
+					continue;
+				for (RoomBlueprintImp bb : u.unlocksUpgrades()) {
+					if (b == bb) {
+						am++;
+					}
+				}
+			}
+			return am;
+		}
+
+		public CharSequence unlockTextUpgrade(RoomBlueprint b) {
+			s.clear();
+			for (int i = 0; i < unlocks(); i++) {
+				Unlocks u = unlock(i);
+				if (u == null)
+					continue;
+				for (RoomBlueprintImp bb : u.unlocksUpgrades()) {
+					if (b == bb) {
+						s.add(u.boosterName());
+						s.NL();
+					}
+				}
+			}
+			return s;
+		}
 	}
 	
 }

@@ -5,7 +5,10 @@ import init.D;
 public class DicMisc {
 
 	public static CharSequence empty = "";
+	public static CharSequence ¤¤AccidentRate = "¤Accident Rate";
 	public static CharSequence ¤¤Shape = "¤Shape";
+	public static CharSequence ¤¤Unavailable = "¤Unavailable";
+	public static CharSequence ¤¤Back = "¤Back";
 	public static CharSequence ¤¤Problem = "¤Problem";
 	public static CharSequence ¤¤Round = "¤Round";
 	public static CharSequence ¤¤Square = "¤Square";
@@ -62,12 +65,15 @@ public class DicMisc {
 	public static CharSequence ¤¤Accuracy = "¤Accuracy";
 	public static CharSequence ¤¤Capacity = "¤Capacity";
 	public static CharSequence ¤¤Access = "¤Access";
+	public static CharSequence ¤¤Terrain = "¤Terrain";
 	public static CharSequence ¤¤Count = "¤Count";
 	public static CharSequence ¤¤Effectivness = "¤Effectiveness";
 	public static CharSequence ¤¤Punishment = "¤Punishment";
 	public static CharSequence ¤¤Speed = "¤Speed";
 	public static CharSequence ¤¤Encyclopedia = "¤Encyclopedia";
 	public static CharSequence ¤¤Activated = "¤Activated";
+	public static CharSequence ¤¤Activate = "¤Activate";
+	public static CharSequence ¤¤Deactivate = "¤Deactivate";
 	public static CharSequence ¤¤ConsumptionRate = "¤Consumption Rate";
 	public static CharSequence ¤¤Crime = "¤Crime";
 	public static CharSequence ¤¤Home = "¤Home";
@@ -93,7 +99,7 @@ public class DicMisc {
 	public static CharSequence ¤¤Allocated = "¤Allocated";
 	public static CharSequence ¤¤Free = "¤Free";
 	public static CharSequence ¤¤Fertility = "¤Fertility";
-	public static CharSequence ¤¤FertilityD = "¤Fertility increases farm and pasture output and allows for more wild crops to grow.";
+	public static CharSequence ¤¤FertilityD = "¤Fertility increases farm, pasture and orchard output and allows for more wild crops to grow.";
 	public static CharSequence ¤¤Undo = "¤Undo";
 	public static CharSequence ¤¤Copy = "¤Copy";
 	public static CharSequence ¤¤Total = "¤Total";

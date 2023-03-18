@@ -32,6 +32,7 @@ import settlement.path.PATHING;
 import settlement.room.main.ROOMS;
 import settlement.room.main.throne.THRONE;
 import settlement.stats.STATS;
+import settlement.stats.health.HEALTH;
 import settlement.stats.law.LAW;
 import settlement.stats.standing.STANDINGS;
 import settlement.thing.THINGS;
@@ -227,7 +228,6 @@ public final class SETT extends GameResource{
 		return i.weather;
 	}
 	
-
 	public static SENTRY ENTRY(){
 		return i.entry;
 	}
@@ -277,7 +277,7 @@ public final class SETT extends GameResource{
 		
 		STATS.create();
 		STANDINGS.create();
-		
+		new HEALTH();
 		IDebugPanelSett.add("Regenerate settlement", new ACTION() {
 			
 			@Override

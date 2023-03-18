@@ -12,7 +12,6 @@ import snake2d.util.file.FilePutter;
 import snake2d.util.misc.CLAMP;
 import snake2d.util.rnd.RND;
 import snake2d.util.sprite.text.Str;
-import view.main.MessageText;
 
 public final class WeatherTemp extends WeatherThing{
 
@@ -24,11 +23,6 @@ public final class WeatherTemp extends WeatherThing{
 	public static CharSequence ¤¤name = "¤Temperature";
 	public static CharSequence ¤¤desc = "¤Temperature is determined by climate, season and chance. Extreme temperatures on either end causes your subjects to be exposed and can lead to death. Hearths warms subjects. Skinny dipping in natural bodies of water cools subjects. Clothes help greatly with both warmth and cold.";
 	public static double div = 4.0/60.0;
-	
-	private static CharSequence ¤¤ExtremeTemp = "Extreme Temperatures";
-	private static CharSequence ¤¤ExtremeTempHot = "The temperature is rising to an extreme level today. Make sure you have ways for subjects to cool down!";
-	private static CharSequence ¤¤ExtremeTempCold = "The temperature has plunged to record lows. Make sure our hearths are stocked with wood.";
-	
 	
 	static {
 		D.ts(WeatherTemp.class);
@@ -45,23 +39,7 @@ public final class WeatherTemp extends WeatherThing{
 
 		if (dayLast != TIME.days().bitsSinceStart()) {
 			dayLast = TIME.days().bitsSinceStart();
-			target = average(TIME.years().bitPartOf());
-			double ran = RND.rFloat();
-			for (int i = 0; i < 5; i++) {
-				ran*= ran;
-			}
-			ran *= 0.25;
-			ran += RND.rFloat()*div;
-			ran *= RND.rSign();
-			target += ran;
-			target = CLAMP.d(target, 0, 1.0);
-			if (ran < -0.15 && target < 0.4) {
-				new MessageText(¤¤ExtremeTemp, ¤¤ExtremeTempCold).send();
-			}else if (ran > 0.15 && target > 0.6) {
-				new MessageText(¤¤ExtremeTemp, ¤¤ExtremeTempHot).send();
-			}
-			
-			
+			target = average(TIME.years().bitPartOf()) + RND.rFloat()*div*RND.rSign();		
 		}
 		
 		double t = target * (TIME.light().nightIs() ? (1.0-div*TIME.light().partOfCircular()) : 1);
@@ -80,6 +58,7 @@ public final class WeatherTemp extends WeatherThing{
 	
 	public void setTarget(double target) {
 		this.target = target;
+		dayLast = TIME.days().bitsSinceStart();
 	}
 	
 	private double average(CLIMATE c, double partOfYear) {

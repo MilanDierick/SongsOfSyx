@@ -153,7 +153,7 @@ final class Level extends GuiSection{
 			
 			int m = 0;
 			for (BBoost b : l.boosts()) {
-				s.addRightC(80, b.boost.icon());
+				s.addRightC(80, b.boostable.icon());
 				if (m++ > 4)
 					break;
 			}

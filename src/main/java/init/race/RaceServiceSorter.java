@@ -7,6 +7,7 @@ import java.util.Comparator;
 
 import settlement.entity.humanoid.HCLASS;
 import settlement.main.SETT;
+import settlement.room.service.barber.ROOM_BARBER;
 import settlement.room.service.lavatory.ROOM_LAVATORY;
 import settlement.room.service.module.RoomServiceDataAccess.ROOM_SERVICE_ACCESS_HASER;
 import settlement.stats.STANDING;
@@ -20,6 +21,7 @@ public final class RaceServiceSorter {
 	public final LIST<LIST<ROOM_SERVICE_ACCESS_HASER>> EAT;
 	public final LIST<LIST<ROOM_SERVICE_ACCESS_HASER>> DRINK;
 	public final LIST<LIST<ROOM_LAVATORY>> SHIT;
+	public final LIST<LIST<ROOM_BARBER>> BARBER;
 	public final LIST<LIST<StatGrave>> GRAVES;
 	
 	private final boolean[][] entertains = new boolean[HCLASS.ALL.size()][SETT.ROOMS().ENTERTAINMENT.size()];
@@ -49,6 +51,15 @@ public final class RaceServiceSorter {
 			}
 		
 		}.sort(ROOMS().LAVATORIES, race);
+		
+		BARBER = new Sorter<ROOM_BARBER>() {
+
+			@Override
+			STANDING standing(ROOM_BARBER t) {
+				return t.service().stats().total().standing();
+			}
+		
+		}.sort(ROOMS().BARBERS, race);
 		
 		Sorter<StatGrave> serG = new Sorter<StatGrave>() {
 

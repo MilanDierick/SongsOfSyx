@@ -4,8 +4,8 @@ import java.io.IOException;
 import java.util.Arrays;
 
 import game.time.TIME;
-import init.RES;
 import init.boostable.BOOSTABLES;
+import init.config.Config;
 import init.race.RACES;
 import init.race.Race;
 import settlement.army.Div;
@@ -284,7 +284,8 @@ public class WINDU {
 		
 		public WDivGeneration(int men) {
 			indus = new WInduStored[men];
-			if (men > RES.config().BATTLE.MEN_PER_DIVISION)
+			
+			if (men > Config.BATTLE.MEN_PER_DIVISION)
 				throw new RuntimeException();
 		}
 		

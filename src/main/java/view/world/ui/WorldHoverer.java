@@ -132,6 +132,13 @@ public class WorldHoverer {
 				
 			}
 		}
+		
+		b.NL();
+		for (int i = 0; i < r.distances(); i++) {
+			b.text(r.distanceNeigh(i).name());
+			b.add(b.text().add(r.distance(i)));
+			b.NL();
+		}
 	}
 	
 	private static class DivCardsR implements SPRITE {

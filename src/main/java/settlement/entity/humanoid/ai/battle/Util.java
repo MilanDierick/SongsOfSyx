@@ -1,8 +1,8 @@
 package settlement.entity.humanoid.ai.battle;
 
 import init.C;
-import init.RES;
 import init.boostable.BOOSTABLES;
+import init.config.Config;
 import init.sound.SOUND;
 import settlement.army.Div;
 import settlement.entity.ENTITY;
@@ -67,7 +67,8 @@ final class Util {
 	public static double getAttackValue(ENTITY other, double otherFaceDot, Humanoid a, double aFaceDot) {
 		double def = 0.1 + Math.max(other.getDefenceSkill(otherFaceDot), 0);
 		double attack = ((0.1 + BOOSTABLES.BATTLE().OFFENCE.get(a))*aFaceDot);
-		attack -= (def*RND.rFloat()*4*RES.config().BATTLE.BLOCK_CHANCE);
+		
+		attack -= (def*RND.rFloat()*4*Config.BATTLE.BLOCK_CHANCE);
 		return CLAMP.d(attack, 0, 1);
 	}
 	

@@ -199,11 +199,6 @@ public final class ChamberInstance extends RoomInstance implements JOBMANAGER_HA
 	}
 
 	@Override
-	public double space() {
-		return 1.0;
-	}
-
-	@Override
 	public int resourceAm(int ri) {
 		if (occupant() == null)
 			return 0;

@@ -2,13 +2,13 @@ package settlement.stats;
 
 import game.time.TIME;
 import game.time.TIMECYCLE;
+import init.boostable.BBooster.BBoosterImp;
 import init.race.*;
 import settlement.army.Div;
 import settlement.entity.humanoid.HCLASS;
 import settlement.stats.Init.Addable;
 import settlement.stats.Init.Updatable2;
 import settlement.stats.STANDING.StandingDef;
-import settlement.stats.StatsBoosts.StatBooster;
 import snake2d.util.file.Json;
 import snake2d.util.sets.*;
 import util.data.INT_O;
@@ -20,7 +20,7 @@ public abstract class STAT implements INDEXED, SETT_STATISTICS {
 
 	private StatDecree decree;
 
-	LinkedList<StatBooster> boosts = new LinkedList<>();
+	LinkedList<BBoosterImp> boosts = new LinkedList<>();
 	
 	abstract public INT_OE<Induvidual> indu();
 
@@ -47,10 +47,137 @@ public abstract class STAT implements INDEXED, SETT_STATISTICS {
 		return false;
 	}
 	
-	public LIST<StatBooster> boosts(){
+	public LIST<BBoosterImp> boosts(){
 		return boosts;
 	}
 
+	static class STATInduOnly extends STAT {
+
+		private final int index;
+		private final INT_OE<Induvidual> indu;
+		private final StatInfo info;
+		private final String key;
+		private final STANDING happiness;
+		private final static HISTORY_INT_OBJECT<Race> data = new HISTORY_INT_OBJECT<Race>() {
+
+			@Override
+			public int min(Race t) {
+				return 0;
+			}
+
+			@Override
+			public int max(Race t) {
+				return 1;
+			}
+
+			@Override
+			public double getD(Race t, int fromZero) {
+				return 0;
+			}
+
+			@Override
+			public TIMECYCLE time() {
+				return TIME.days();
+			}
+
+			@Override
+			public int historyRecords() {
+				return STATS.DAYS_SAVED;
+			}
+
+			@Override
+			public int get(Race t, int fromZero) {
+				return 0;
+			}
+		
+		};
+		private final static INT_O<Div> div = new INT_O<Div>() {
+
+			@Override
+			public int get(Div t) {
+				return 0;
+			}
+
+			@Override
+			public int min(Div t) {
+				// TODO Auto-generated method stub
+				return 0;
+			}
+
+			@Override
+			public int max(Div t) {
+				return 1;
+			}
+
+		
+		};
+
+		STATInduOnly(String key, Init init, INT_OE<Induvidual> data) {
+			index = init.stats.add(this);
+			this.key = key;
+			info = new StatInfo(init.jText.json(key));
+			happiness = new STANDING(this, (StandingDef)null);
+			this.indu = data;
+
+		}
+
+		@Override
+		public int pdivider(HCLASS c, Race r, int daysback) {
+			return 1;
+		}
+
+		@Override
+		public int dataDivider() {
+			return indu.max(null);
+		}
+
+		@Override
+		public INT_OE<Induvidual> indu() {
+			return indu;
+		}
+
+		@Override
+		public StatInfo info() {
+			return info;
+		}
+
+		@Override
+		public STANDING standing() {
+			return happiness;
+		}
+
+		@Override
+		public int index() {
+			return index;
+		}
+
+		@Override
+		public HISTORY_INT_OBJECT<Race> data() {
+			return data(null);
+		}
+
+		@Override
+		public HISTORY_INT_OBJECT<Race> data(HCLASS c) {
+			return data;
+		}
+
+		@Override
+		public INT_O<Div> div() {
+			return div;
+		}
+
+		@Override
+		public String key() {
+			return key;
+		}
+
+		@Override
+		public boolean hasIndu() {
+			return key != null && key.length() > 0;
+		}
+
+	}
+	
 	static class STATData extends STAT implements Addable {
 
 		private final int index;
@@ -402,6 +529,50 @@ public abstract class STAT implements INDEXED, SETT_STATISTICS {
 
 				});
 			}
+			datas.add(new HISTORY_INT_OBJECT<Race>() {
+
+				@Override
+				public int min(Race t) {
+					return 0;
+				}
+
+				@Override
+				public int max(Race t) {
+					return dataDivider() * pdivider(null, t, 0);
+				}
+
+				@Override
+				public double getD(Race t, int fromZero) {
+					double am = 0;
+					for (int hi = 0; hi < 0; hi++) {
+						HCLASS cl = HCLASS.ALL().get(hi);
+						if (cl.player) {
+							am += STATS.POP().POP.data(cl).get(null, fromZero)*getDD(cl, null, fromZero);
+						}
+					}
+					double pop = STATS.POP().POP.data().get(null, fromZero);
+					if (pop == 0)
+						return am > 0 ? 1 : 0;
+					return am/pop;
+				}
+
+				@Override
+				public TIMECYCLE time() {
+					return TIME.days();
+				}
+
+				@Override
+				public int historyRecords() {
+					return STATS.DAYS_SAVED;
+				}
+
+				@Override
+				public int get(Race t, int fromZero) {
+					double d = dataDivider() * pdivider(null, t, 0);
+					return (int) (getD(t, fromZero) * d);
+				}
+
+			});
 			happiness = new STANDING(this, def);
 			div = new INT_O<Div>() {
 

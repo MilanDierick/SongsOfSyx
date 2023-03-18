@@ -4,7 +4,7 @@ import java.util.Arrays;
 
 import game.battle.Conflict.Side;
 import game.battle.Resolver.SideResult;
-import init.RES;
+import init.config.Config;
 import init.race.RACES;
 import init.race.Race;
 import init.resources.RESOURCE;
@@ -39,7 +39,7 @@ import world.map.regions.REGIOND;
 
 public final class PromptUtil {
 
-	private final CardA[] cardas = new CardA[RES.config().BATTLE.DIVISIONS_PER_ARMY];
+	private final CardA[] cardas = new CardA[Config.BATTLE.DIVISIONS_PER_ARMY];
 	private final GText name = new GText(UI.FONT().H2, 32);
 	private final GText soldiers = new GText(UI.FONT().M, 32);
 	

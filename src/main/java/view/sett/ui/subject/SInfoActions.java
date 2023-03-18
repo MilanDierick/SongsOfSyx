@@ -267,7 +267,7 @@ final class SInfoActions extends GuiSection{
 			
 			@Override
 			protected void renAction() {
-				activeSet(m.available(a.a.indu().clas()) && !m.consumeIs(a.a) && (!m.markIs(a.a) || m.maxAmount(a.a.indu().clas(), a.a.race()) > 0));
+				activeSet(m.available(a.a.indu().clas()) && !m.consumeIs(a.a) && (m.markIs(a.a) || m.canBeMarked(a.a.indu())));
 				selectedSet(m.markIs(a.a) || m.consumeIs(a.a));
 			};
 			
@@ -288,7 +288,7 @@ final class SInfoActions extends GuiSection{
 					b.add(GFORMAT.percInc(b.text(), m.multiplier(a.a)-1));
 				}else if(m.markIs(a.a)) {
 					b.textL(¤¤ActionMarked);
-				}else if(m.maxAmount(a.a.indu().clas(), a.a.race()) == 0) {
+				}else if(!m.canBeMarked(a.a.indu())) {
 					b.error(¤¤ActionCantBe);
 					b.NL(4);
 					m.info(b, 1);
@@ -297,7 +297,12 @@ final class SInfoActions extends GuiSection{
 					b.textLL(STANDINGS.get(a.a.indu().clas()).info().name);
 					b.tab(5);
 					b.add(GFORMAT.percInc(b.text(), m.max(a.a.indu().clas(), a.a.indu().race())-1));
+					b.NL(8);
+					m.info(b, 1);
 				}
+				
+				
+				
 			}
 			
 			@Override
@@ -347,7 +352,7 @@ final class SInfoActions extends GuiSection{
 			for (BBoost bo : n.BOOSTER.boosts()) {
 				if (am++ > 14)
 					break;
-				boo.addRightC(8, bo.boost.icon());
+				boo.addRightC(8, bo.boostable.icon());
 			}
 			
 			

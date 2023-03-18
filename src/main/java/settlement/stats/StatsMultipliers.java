@@ -1,19 +1,21 @@
 package settlement.stats;
 
 import java.io.IOException;
+import java.util.Arrays;
 
 import game.GAME;
 import game.faction.FACTIONS;
 import game.time.TIME;
 import init.D;
-import init.boostable.BOOSTABLE;
-import init.boostable.BOOSTABLES;
+import init.boostable.*;
 import init.race.RACES;
 import init.race.Race;
 import init.sprite.SPRITES;
+import settlement.army.Div;
 import settlement.entity.EntityIterator;
 import settlement.entity.humanoid.*;
 import settlement.main.SETT;
+import settlement.room.main.*;
 import settlement.stats.Init.*;
 import settlement.stats.SETT_STATISTICS.SettStatistics;
 import settlement.stats.law.LAW;
@@ -46,6 +48,7 @@ public final class StatsMultipliers {
 	public final StatMultiplierAction DRINK;
 	public final StatMultiplierAction HANDOUT;
 	public final StatMultiplierAction DAY_OFF;
+	public final StatMultiplierWork OVERTIME;
 	
 	public final RCollection<StatMultiplier> MAP;
 	private static CharSequence ¤¤bonusDesc = "¤Boosts from different aspects such as technologies.";
@@ -68,6 +71,8 @@ public final class StatsMultipliers {
 		DRINK = new StatMultiplierActionImp("DRINKS", init, all, SETT.ROOMS().TAVERNS.get(0).iconBig().nomal, HCLASS.CITIZEN);
 		HANDOUT = new Handout("HANDOUT", init, all, SPRITES.icons().s.money, HCLASS.CITIZEN);
 		DAY_OFF = new StatMultiplierActionImp("DAY_OFF", init, all, new SPRITE.Twin(SPRITES.icons().m.workshop, SPRITES.icons().m.anti), HCLASS.SLAVE, HCLASS.CITIZEN);
+		OVERTIME = new StatMultiplierWork("OVERTIME", init, all, new SPRITE.Twin(SPRITES.icons().m.workshop, SPRITES.icons().m.arrow_up), HCLASS.SLAVE, HCLASS.CITIZEN);
+		
 		
 		this.all = new ArrayList<>(all);
 		
@@ -251,7 +256,7 @@ public final class StatsMultipliers {
 
 		@Override
 		public double max(HCLASS cl, Race race) {
-			return boost(cl).max(FACTIONS.player());
+			return BOOSTABLES.player().max(boost(cl));
 		}
 
 		@Override
@@ -309,11 +314,20 @@ public final class StatsMultipliers {
 		public abstract boolean canUnmark();
 		public abstract int unmarkable(HCLASS cl, Race race);
 		public abstract void unmark(HCLASS cl, Race race);
-		public abstract boolean markIs(Humanoid a);
+		public boolean markIs(Humanoid a) {
+			return markIs(a.indu());
+		}
+		public abstract boolean markIs(Induvidual a);
+		public boolean canBeMarked(Induvidual a) {
+			return maxAmount(a.clas(), a.race()) > 0;
+		}
 		public abstract void mark(HCLASS cl, Race race, int amount);
 		public abstract void mark(Humanoid a, boolean set);
 		public abstract void consume(Humanoid a);
-		public abstract boolean consumeIs(Humanoid a);
+		public final boolean consumeIs(Humanoid a) {
+			return consumeIs(a.indu());
+		}
+		public abstract boolean consumeIs(Induvidual a);
 		public abstract int maxAmount(HCLASS cl, Race race);
 		public void info(GBox box, int amount) {
 			
@@ -361,8 +375,8 @@ public final class StatsMultipliers {
 		}
 
 		@Override
-		public boolean markIs(Humanoid a) {
-			return in.get(a.indu()) == 1;
+		public boolean markIs(Induvidual a) {
+			return in.get(a) == 1;
 		}
 
 		@Override
@@ -383,7 +397,7 @@ public final class StatsMultipliers {
 
 				@Override
 				protected boolean processAndShouldBreakH(Humanoid h, int ie) {
-					if (h.race() == race && h.indu().clas() == HCLASS.CITIZEN && !markIs(h)) {
+					if (h.race() == race && h.indu().clas() == HCLASS.CITIZEN && !markIs(h.indu())) {
 						mark(h, true);
 						amount--;
 						if (amount <= 0)
@@ -411,7 +425,7 @@ public final class StatsMultipliers {
 
 				@Override
 				protected boolean processAndShouldBreakH(Humanoid h, int ie) {
-					if (h.race() == race && h.indu().clas() == HCLASS.CITIZEN && markIs(h)) {
+					if (h.race() == race && h.indu().clas() == HCLASS.CITIZEN && markIs(h.indu())) {
 						mark(h, false);
 					}
 					return false;
@@ -439,7 +453,7 @@ public final class StatsMultipliers {
 		}
 
 		@Override
-		public boolean consumeIs(Humanoid a) {
+		public boolean consumeIs(Induvidual a) {
 			return false;
 		}
 		
@@ -482,7 +496,7 @@ public final class StatsMultipliers {
 		}
 		
 		@Override
-		public boolean markIs(Humanoid a) {
+		public boolean markIs(Induvidual a) {
 			return false;
 		}
 
@@ -578,7 +592,7 @@ public final class StatsMultipliers {
 		}
 		
 		@Override
-		public boolean consumeIs(Humanoid a) {
+		public boolean consumeIs(Induvidual a) {
 			return false;
 		}
 
@@ -646,8 +660,8 @@ public final class StatsMultipliers {
 		}
 
 		@Override
-		public boolean markIs(Humanoid a) {
-			return iSelected.get(a.indu()) != 0;
+		public boolean markIs(Induvidual a) {
+			return iSelected.get(a) != 0;
 		}
 
 		@Override
@@ -660,8 +674,8 @@ public final class StatsMultipliers {
 		}
 		
 		@Override
-		public boolean consumeIs(Humanoid a) {
-			return iActive.get(a.indu()) != 0;
+		public boolean consumeIs(Induvidual a) {
+			return iActive.get(a) != 0;
 		}
 
 		@Override
@@ -678,7 +692,7 @@ public final class StatsMultipliers {
 			new Iter(cl, race, amount) {
 				@Override
 				protected boolean processAndShouldBreakH(Humanoid h, int ie) {
-					if (h.indu().clas() == cl && h.race() == race && !markIs(h) && iActive.get(h.indu()) == 0) {
+					if (h.indu().clas() == cl && h.race() == race && !markIs(h.indu()) && iActive.get(h.indu()) == 0) {
 						mark(h, true);
 						amount --;
 						return amount <= 0;
@@ -735,7 +749,7 @@ public final class StatsMultipliers {
 			new Iter(cl, race, 1) {
 				@Override
 				protected boolean processAndShouldBreakH(Humanoid h, int ie) {
-					if (h.indu().clas() == cl && h.race() == race && markIs(h)) {
+					if (h.indu().clas() == cl && h.race() == race && markIs(h.indu())) {
 						mark(h, false);
 					}
 					return false;
@@ -744,6 +758,119 @@ public final class StatsMultipliers {
 			
 		}
 		
+		
+	}
+	
+	public static class StatMultiplierWork extends StatMultiplierActionImp implements Addable, Updatable{
+
+		public final LIST<RoomBlueprintImp> ROOMS;
+		private final boolean[] roomsB = new boolean[SETT.ROOMS().AMOUNT_OF_BLUEPRINTS];
+		private int[][] available = new int[HCLASS.ALL.size()][RACES.all().size()+1];
+		private int ai = -121;
+		
+		private StatMultiplierWork(String key, Init init, LISTE<StatMultiplier> all, SPRITE icon, HCLASS... cl) {
+			super(key, init, all, icon, cl);
+			
+			LinkedList<RoomBlueprintImp> rooms = new LinkedList<>();
+			
+			
+			for (BOOSTABLERoom b : BOOSTABLES.ROOMS().rooms()) {
+				if (!roomsB[b.room.index()]) {
+					roomsB[b.room.index()] = true;
+					rooms.add(b.room);
+					new Booster(init, this, new BBoost(b, 1, false));
+				}
+			}
+			
+			new Booster(init, this, new BBoost(BOOSTABLES.CIVICS().ACCIDENT, 0.5, true));
+			
+			ROOMS = new ArrayList<RoomBlueprintImp>(rooms);
+		}
+		
+		private final EntityIterator.Humans iter = new EntityIterator.Humans() {
+			
+			@Override
+			protected boolean processAndShouldBreakH(Humanoid h, int ie) {
+				if (canBeMarked(h.indu())) {
+					available[h.indu().clas().index()][h.race().index] ++;
+					available[h.indu().clas().index()][RACES.all().size()] ++;
+				}
+				return false;
+			}
+		};
+		
+		@Override
+		public int maxAmount(HCLASS cl, Race race) {
+			
+			if (Math.abs(ai-GAME.updateI()) > 120) {
+				for (int[] i : available)
+				Arrays.fill(i, 0);
+				iter.iterate();
+			}
+			
+			int ri = race == null ? RACES.all().size() : race.index();
+			return available[cl.index()][ri];
+			
+		}
+		
+		@Override
+		public void mark(HCLASS cl, Race race, int amount) {
+			new Iter(cl, race, amount) {
+				@Override
+				protected boolean processAndShouldBreakH(Humanoid h, int ie) {
+					if (h.indu().clas() == cl && h.race() == race && !markIs(h.indu()) && iActive.get(h.indu()) == 0) {
+						if (canBeMarked(h.indu())) {
+							mark(h, true);
+							amount --;
+							return amount <= 0;
+						}
+					}
+					return false;
+				}
+			};
+		}
+		
+		public boolean canMark(RoomBlueprint b) {
+			return roomsB[b.index()];
+		}
+		
+		@Override
+		public boolean canBeMarked(Induvidual a) {
+			if (a.player() && !markIs(a) && !consumeIs(a)) {
+				RoomInstance ins = STATS.WORK().EMPLOYED.get(a);
+				if (ins != null && roomsB[ins.blueprint().index()]) {
+					return true;
+				}
+			}
+			return false;
+		}
+		
+		private static final class Booster extends BBooster.BBoosterImp {
+
+			private final StatMultiplierWork stat;
+
+			Booster(Init init, StatMultiplierWork stat, BBoost boost) {
+				super(stat.name, boost, true, false, false);
+				this.stat = stat;
+			}
+
+			@Override
+			public double pvalue(Induvidual v) {
+				return CLAMP.d(stat.iActive.get(v), 0, 1);
+			}
+
+			@Override
+			public double pvalue(HCLASS c, Race r) {
+				return stat.active.data(c).getD(r);
+			}
+
+			@Override
+			public double pvalue(Div v) {
+				return 0;
+			}
+
+
+		}
 		
 	}
 	
@@ -784,6 +911,8 @@ public final class StatsMultipliers {
 		public boolean canUnmark() {
 			return false;
 		}
+		
+		
 		
 	}
 	
@@ -866,4 +995,6 @@ public final class StatsMultipliers {
 		}
 		
 	}
+	
+
 }

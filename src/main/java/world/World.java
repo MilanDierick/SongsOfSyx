@@ -4,7 +4,6 @@ import java.io.IOException;
 
 import game.GAME;
 import game.GAME.GameResource;
-import game.GameConRandom;
 import game.time.TIME;
 import init.C;
 import init.RES;
@@ -17,7 +16,6 @@ import snake2d.util.color.RGB;
 import snake2d.util.datatypes.*;
 import snake2d.util.file.FileGetter;
 import snake2d.util.file.FilePutter;
-import snake2d.util.rnd.RND;
 import snake2d.util.sets.ArrayList;
 import util.rendering.ShadowBatch;
 import world.ai.WorldAI;
@@ -111,6 +109,10 @@ public class World extends GameResource{
 		return w.armies;
 	}
 	
+	public static WorldMinerals MINERALS() {
+		return w.MINABLES;
+	}
+	
 	public static WorldBuildings BUILDINGS() {
 		return w.buildings;
 	}
@@ -143,6 +145,10 @@ public class World extends GameResource{
 		w.top = r;
 	}
 	
+	public static WorldGen GEN() {
+		return w.stage;
+	}
+	
 	private final class Data {
 		
 		private final ArrayList<WorldResource> resources = new ArrayList<WorldResource>(100);
@@ -160,6 +166,7 @@ public class World extends GameResource{
 		private final WorldForest FOREST;
 		private final WEntities ENTITIES;
 		private final WorldMountain mountain;
+		private final WorldMinerals MINABLES;
 		private final WorldClimate climate;
 		private final WorldFertility fertility;
 		private final Regions areas;
@@ -170,14 +177,14 @@ public class World extends GameResource{
 		private final WorldMinimap minimap;
 		private final WorldOverlays overlay;
 		private final WorldAI ai;
+		private final WorldGen stage;
 		private WorldTopRenderable top;
 		
 		
 		private final ShadowBatch.Real shadowBatch = new ShadowBatch.Real();
 		private final ShadowBatch shadowDummy = new ShadowBatch.Dummy();
-		private GameConRandom random;
 		
-		Data(int tileSizeX, int tileSizeY) throws IOException{
+		private Data(int tileSizeX, int tileSizeY) throws IOException{
 			w = this;
 			tWidth = tileSizeX;
 			tHeight = tileSizeY;
@@ -193,6 +200,7 @@ public class World extends GameResource{
 			sprites = new Sprites();
 			
 			mountain = new WorldMountain();
+			MINABLES = new WorldMinerals();
 			climate = new WorldClimate();
 			fertility = new WorldFertility();
 			water = new WorldWater();
@@ -207,31 +215,7 @@ public class World extends GameResource{
 			renData = new RenderData(tWidth, tHeight);
 			minimap = new WorldMinimap();
 			overlay = new WorldOverlays();
-		}
-		
-		public void generate(GameConRandom random) {
-			this.random = random;
-			for (WorldResource r : resources) {
-				r.clear();
-			}
-			RND.setSeed(RND.seed());
-			new WorldTerrainGenerator(random);
-			CORE.checkIn();
-
-			buildings.generate(random);
-			CORE.checkIn();
-			landmarks.generate(random);
-			CORE.checkIn();
-			areas.generate();
-			CORE.checkIn();
-			buildings.camp.generate();
-			
-			
-			minimap.repaint();
-		}
-		
-		public void initGenerated() {
-			areas.generateRoad();
+			stage = new WorldGen(World.this);
 		}
 	
 		protected void save(FilePutter file) {
@@ -242,12 +226,6 @@ public class World extends GameResource{
 				RES.loader().print("Saving world: " + i + "/" + resources.size());
 				r.save(file);
 				file.mark(r);
-			}
-			if (random != null) {
-				file.bool(true);
-				random.save(file);
-			}else {
-				file.bool(false);
 			}
 		}
 		
@@ -263,11 +241,6 @@ public class World extends GameResource{
 				r.load(file);
 				file.check(r);
 			}
-			if (file.bool()) {
-				random = new GameConRandom(null);
-				random.load(file);
-			}
-			
 		}
 		
 		public void render(Renderer r, float ds, int zoomout,
@@ -318,10 +291,12 @@ public class World extends GameResource{
 				BUILDINGS().renderAboveTerrain(r, s, renData);
 			r.newLayer(false, zoomout);
 			
-
+			MINABLES.render(r, renData, seasonValue);
+			r.newLayer(false, zoomout);
 			
 			water.render(r, renData, seasonValue);
 			r.newLayer(false, zoomout);
+			
 			
 			FOREST.render(r, s, renData);
 			r.newLayer(false, zoomout);
@@ -329,6 +304,8 @@ public class World extends GameResource{
 			mountain.render(r, s, renData);
 			r.newLayer(false, zoomout);
 
+			water.renderMid(r, renData, seasonValue);
+			r.newLayer(false, zoomout);
 			
 			ENTITIES.renderBelowTerrain(r, s, ds, renWindow, offX, offY);
 			r.newLayer(false, zoomout);
@@ -338,6 +315,9 @@ public class World extends GameResource{
 			
 			GROUND.render(r, renData, seasonValue);
 			buildings.renderAboveGround(r, s, renData);
+			water.renderShorelines(r, renData, seasonValue);
+			
+			REGIONS().renderBorders(r, s, renData, zoomout);
 			
 			r.newLayer(false, zoomout);
 			
@@ -350,31 +330,39 @@ public class World extends GameResource{
 		new Data(tileSizeX, tileSizeY);
 	}
 
-	public void generate(GameConRandom random) {
-		RND.setSeed(RND.rInt(999999999));
-		w.generate(random);
+	static void clear() {
+		for (WorldResource r : w.resources) {
+			r.clear();
+		}
 	}
 	
-	public void regenerate() {
-		w.generate(w.random);
-	}
-	
-	public void generateInit() {
-		w.initGenerated();
-	}
-	
-	public static GameConRandom conRandom() {
-		return w.random;
-	}
+//	public void generate(GameConRandom random) {
+//		RND.setSeed(RND.rInt(999999999));
+//		w.generate(random);
+//	}
+//	
+//	public void regenerate() {
+//		w.generate(w.random);
+//	}
+//	
+//	public void generateInit() {
+//		w.initGenerated();
+//	}
+//	
+//	public static GameConRandom conRandom() {
+//		return w.random;
+//	}
 
 	@Override
 	protected void save(FilePutter saveFile) {
 		w.save(saveFile);
+		w.stage.save(saveFile);
 	}
 	
 	@Override
 	protected void load(FileGetter file) throws IOException {
 		w.load(file);
+		w.stage.load(file);
 	}
 	
 	@Override

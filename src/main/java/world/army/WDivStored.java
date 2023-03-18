@@ -4,8 +4,8 @@ import java.io.IOException;
 
 import game.faction.FACTIONS;
 import game.faction.Faction;
-import init.RES;
 import init.boostable.BOOSTABLES;
+import init.config.Config;
 import init.race.Race;
 import settlement.army.Div;
 import settlement.army.DivisionBanners.DivisionBanner;
@@ -35,7 +35,7 @@ class WDivStored implements WDIV, SAVABLE{
 	private int induviduals = 0;
 	private int armyI = -1;
 	private final int index;
-	private ArrayList<WInduStored> all = new ArrayList<>(RES.config().BATTLE.MEN_PER_DIVISION);
+	private ArrayList<WInduStored> all = new ArrayList<>(Config.BATTLE.MEN_PER_DIVISION);
 	private int experience;
 	private int trainingM;
 	private int trainingR;

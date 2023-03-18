@@ -4,7 +4,6 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Modifier;
 import java.net.URL;
-import java.net.URLClassLoader;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.util.jar.JarEntry;
@@ -12,20 +11,17 @@ import java.util.jar.JarInputStream;
 
 import init.paths.PATH;
 import init.paths.PATHS;
-import snake2d.*;
-import snake2d.util.file.FileGetter;
-import snake2d.util.file.FilePutter;
+import snake2d.Errors;
+import snake2d.LOG;
 import snake2d.util.sets.*;
 
-public final class ScriptLoad{
+final class ScriptLoad{
 	
 	private static KeyMap<LinkedList<ScriptLoad>> cache = new KeyMap<>();
 	
 	public final SCRIPT script;
 	public final String className;
 	public final String file;
-	
-	private static ClassLoader loader = ClassLoader.getSystemClassLoader();
 	
 	private ScriptLoad(SCRIPT script, String cn, String file){
 		this.script = script;
@@ -39,54 +35,6 @@ public final class ScriptLoad{
 	
 	public static LIST<ScriptLoad> getAll(){
 		return new ArrayList<>(new Init().compileScripts(PATHS.SCRIPT().jar.getFiles()));
-	}
-	
-	public static ScriptLoad get(FileGetter file) throws IOException{
-		String cn = file.chars();
-		String fileN = file.chars();
-		LIST<ScriptLoad> ls = get(fileN);
-		
-		for (ScriptLoad l : ls) {
-			if (l.className.equals(cn))
-				return l;
-		}
-		
-		return null;
-		
-	}
-	
-	public static LIST<ScriptLoad> load(FileGetter f) throws IOException{
-		LinkedList<ScriptLoad> files = new LinkedList<>();
-		int am = f.i();
-		for (int i = 0; i < am; i++) {
-			String cn = f.chars();
-			String fileN = f.chars();
-			LIST<ScriptLoad> ls = get(fileN);
-			for (ScriptLoad l : ls) {
-				if (l.className.equals(cn))
-					files.add(l);;
-			}
-		}
-		return new ArrayList<ScriptLoad>(files);
-		
-	}
-	
-	public static void save(LIST<ScriptLoad> scripts, FilePutter f) {
-		f.i(scripts.size());
-		for (ScriptLoad l : scripts) {
-			f.chars(l.className);
-			f.chars(l.file);
-		}
-	}
-
-	public void save(FilePutter file) {
-		file.chars(className);
-		file.chars(this.file);
-		
-	}
-	
-	public static ClassLoader getLoader() {
-		return loader;
 	}
 	
 	private static class Init {
@@ -172,40 +120,44 @@ public final class ScriptLoad{
 		}
 		
 		private void loadScripts() {
-			URL[] urls = new URL[urlList.size()];
-			for (int i = 0; i < urls.length; i++) {
-				urls[i] = urlList.removeFirst();
+			LOG.ln("SCRIPTS");
+			if (!(ClassLoader.getSystemClassLoader() instanceof SyxClassLoader)) {
+				LOG.err("JVM is not run with argument: -Djava.system.class.loader=script.SyxClassLoader . Code mods can not be loaded.");
+				return;
 			}
 			
-			try (URLClassLoader loader = new URLClassLoader(urls, getClass().getClassLoader())) {
-				ScriptLoad.loader = loader;
-				for (String className : classToJar.keys()) {
-					Class<?> s;
-					try {
-						s = loader.loadClass(className);
-					} catch (ClassNotFoundException e1) {
-						throw new RuntimeException(e1);
-					}
-
-					if (SCRIPT.class.isAssignableFrom(s) && !Modifier.isAbstract(s.getModifiers())) {
-						try {
-							SCRIPT sc = (SCRIPT)s.newInstance();
-							all.add(new ScriptLoad(sc, className, classToJar.get(className)));
-							LOG.ln(" -script available: : " + sc.name());
-						}catch(IllegalAccessException e) {
-							throw new Errors.DataError(className + " could not be created. Probably cause would be a non-public constructor, or constructor parameters", classToJar.get(className));
-						} catch (InstantiationException e) {
-							e.printStackTrace();
-							throw new RuntimeException("some weirdness with loading scripts. See std err");
-						}
-						
-						
-					}
+			SyxClassLoader loader = (SyxClassLoader) ClassLoader.getSystemClassLoader();
+			
+			while(!urlList.isEmpty()) {
+				URL l = urlList.removeFirst();
+				LOG.ln("injecting: " + l.getPath());
+				loader.add(l);
+			}
+			
+			
+			
+			for (String className : classToJar.keys()) {
+				Class<?> s;
+				try {
+					s = loader.loadClass(className);
+				} catch (ClassNotFoundException e1) {
+					throw new RuntimeException(e1);
 				}
-				
 
-			} catch (IOException e) {
-				throw new RuntimeException(e);
+				if (SCRIPT.class.isAssignableFrom(s) && !Modifier.isAbstract(s.getModifiers())) {
+					try {
+						SCRIPT sc = (SCRIPT)s.newInstance();
+						all.add(new ScriptLoad(sc, className, classToJar.get(className)));
+						LOG.ln(" -script available: : " + sc.name());
+					}catch(IllegalAccessException e) {
+						throw new Errors.DataError(className + " could not be created. Probably cause would be a non-public constructor, or constructor parameters", classToJar.get(className));
+					} catch (InstantiationException e) {
+						e.printStackTrace();
+						throw new RuntimeException("some weirdness with loading scripts. See std err");
+					}
+					
+					
+				}
 			}
 		}
 		

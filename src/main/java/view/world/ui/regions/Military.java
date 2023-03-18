@@ -3,7 +3,7 @@ package view.world.ui.regions;
 import static view.world.ui.regions.UIRegion.*;
 
 import game.faction.FACTIONS;
-import init.RES;
+import init.config.Config;
 import init.sprite.ICON;
 import init.sprite.SPRITES;
 import snake2d.SPRITE_RENDERER;
@@ -30,7 +30,8 @@ final class Military extends GuiSection{
 		
 		RegionMilitary m = REGIOND.MILITARY();
 		
-		Card[] divs = new Card[RES.config().BATTLE.REGION_MAX_DIVS];
+		
+		Card[] divs = new Card[Config.BATTLE.REGION_MAX_DIVS];
 		for (int i = 0; i < divs.length; i++)
 			divs[i] = new Card(i);
 		
@@ -63,7 +64,8 @@ final class Military extends GuiSection{
 
 			@Override
 			double next() {
-				return (double)REGIOND.MILITARY().soldiers_target.next(reg)/RES.config().BATTLE.REGION_MAX_MEN;
+				
+				return (double)REGIOND.MILITARY().soldiers_target.next(reg)/Config.BATTLE.REGION_MAX_MEN;
 			}
 		});
 		

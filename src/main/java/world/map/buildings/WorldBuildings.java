@@ -4,7 +4,6 @@ import static world.World.*;
 
 import java.io.IOException;
 
-import game.GameConRandom;
 import init.paths.PATH;
 import init.paths.PATHS;
 import settlement.main.RenderData;
@@ -64,12 +63,17 @@ public class WorldBuildings extends WorldResource{
 			b.load(file);
 	}
 	
-	public void generate(GameConRandom r) {
+	@Override
+	protected void clear() {
 		for (WorldBuilding b : all)
 			b.clear();
 		ids.clear();
-		new Generator();
 	}
+	
+//	public void generate() {
+//		clear();
+//		new Generator();
+//	}
 	
 	public void renderAboveGround(SPRITE_RENDERER r, ShadowBatch s, RenderData rdata){
 		
@@ -127,6 +131,7 @@ public class WorldBuildings extends WorldResource{
 			WorldBuilding b = all.get(ids.get(it.tile()));
 			if (b != nothing)	
 				b.renderAboveTerrain(r, s, it, this.data[it.tile()]);
+			roads.renderBridge(r, s, it);
 			it.next();
 			
 		}

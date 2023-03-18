@@ -2,7 +2,7 @@ package settlement.army.order;
 
 import java.io.IOException;
 
-import init.RES;
+import init.config.Config;
 import settlement.army.Div;
 import settlement.army.ai.divs.PathDiv;
 import settlement.army.ai.fire.DivTrajectory;
@@ -31,8 +31,10 @@ public class DivTData {
 	
 	DivTData(int index) {
 		this.index = index;
-		next = new DivTDataResource<DivFormation>(new DivFormation(RES.config().BATTLE.MEN_PER_DIVISION));
-		dest = new DivTDataResource<DivFormation>(new DivFormation(RES.config().BATTLE.MEN_PER_DIVISION));
+		
+		next = new DivTDataResource<DivFormation>(new DivFormation(Config.BATTLE.MEN_PER_DIVISION));
+		
+		dest = new DivTDataResource<DivFormation>(new DivFormation(Config.BATTLE.MEN_PER_DIVISION));
 		path = new DivTDataResource<PathDiv>(new PathDiv());
 		current = new DivTDataResource<DivPosition>(new DivPosition());
 		status = new DivTDataResource<DivTDataStatus>(new DivTDataStatus());

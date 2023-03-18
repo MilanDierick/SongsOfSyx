@@ -96,7 +96,7 @@ final class SInfoPortrait extends GuiSection{
 				
 				@Override
 				protected void clickA() {
-					if (!S.get().developer)
+					if (S.get().developer)
 						SDebugInput.activate(p.indu(), a.a);
 					else
 						VIEW.s().ui.standing.openAccess(a.a.race());

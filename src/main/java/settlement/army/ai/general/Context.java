@@ -3,7 +3,7 @@ package settlement.army.ai.general;
 import java.io.IOException;
 
 import init.C;
-import init.RES;
+import init.config.Config;
 import settlement.army.Army;
 import settlement.army.Div;
 import settlement.army.ai.fire.DivTrajectory;
@@ -26,7 +26,8 @@ class Context implements SAVABLE{
 	public final Army army = SETT.ARMIES().enemy();
 	public final LIST<GDiv> divs;
 	{
-		ArrayList<GDiv> divs = new ArrayList<>(RES.config().BATTLE.DIVISIONS_PER_ARMY);
+		
+		ArrayList<GDiv> divs = new ArrayList<>(Config.BATTLE.DIVISIONS_PER_ARMY);
 		for (int i = 0; i < divs.max(); i++)
 			divs.add(new GDiv(i, this));
 		this.divs = divs;
@@ -37,7 +38,7 @@ class Context implements SAVABLE{
 	public final PathingMap pmap = new PathingMap(this);
 	public final DivDeployer deployer = new DivDeployer(flooder);
 	public final CircleCooIterator circle = new CircleCooIterator(25, flooder.getFlooder());
-	public final ArrayList<Div> tmpList = new ArrayList<>(RES.config().BATTLE.DIVISIONS_PER_ARMY);
+	public final ArrayList<Div> tmpList = new ArrayList<>(Config.BATTLE.DIVISIONS_PER_ARMY);
 	public final DivFormation form = new DivFormation();
 	public final DivFinder divFinder = new DivFinder(this);
 	public final AbsMap absMap = new AbsMap(1);

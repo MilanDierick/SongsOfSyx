@@ -65,6 +65,15 @@ public abstract class PlacableSimple implements PLACABLE{
 	public void renderOverlay(int x, int y, SPRITE_RENDERER r, float ds, GameWindow window) {
 		
 	}
+
+	public void placeInfo(GBox hoverBox, int cx, int cy) {
+		
+		
+	}
+	
+	public void renderAction(int cx, int cy) {
+		
+	}
 	
 
 

@@ -3,7 +3,6 @@ package settlement.room.food.pasture;
 import java.io.IOException;
 
 import game.time.TIME;
-import init.D;
 import init.biomes.CLIMATE;
 import init.biomes.CLIMATES;
 import init.boostable.BOOSTABLE;
@@ -23,18 +22,11 @@ import settlement.room.main.furnisher.Furnisher;
 import settlement.room.main.job.ROOM_EMPLOY_AUTO;
 import settlement.room.main.job.RoomResStorage;
 import settlement.room.main.util.RoomInitData;
-import snake2d.util.MATH;
 import snake2d.util.file.FileGetter;
 import snake2d.util.file.FilePutter;
-import snake2d.util.misc.ACTION;
-import snake2d.util.rnd.RND;
 import snake2d.util.sets.*;
-import snake2d.util.sprite.text.Str;
 import util.gui.misc.GBox;
 import util.gui.misc.GText;
-import view.main.MessageText;
-import view.main.VIEW;
-import view.sett.IDebugPanelSett;
 import view.sett.ui.room.UIRoomModule;
 
 public final class ROOM_PASTURE extends RoomBlueprintIns<PastureInstance> implements INDUSTRY_HASER, ROOM_EMPLOY_AUTO{
@@ -50,14 +42,6 @@ public final class ROOM_PASTURE extends RoomBlueprintIns<PastureInstance> implem
 	
 	final double ANIMALS_PER_TILE;
 	final static double WORKERS_PER_TILE = 1.0/64;
-	
-	private final Event eventer = new Event();	
-	private static CharSequence ¤¤mTitle = "¤Livestock Dying";
-	private static CharSequence ¤¤mBody = "¤Terrible news! our {0} have been afflicted by a disease. As a countermeasure, our herders have culled the sick animals, {1}% of them.";
-
-	static {
-		D.ts(ROOM_PASTURE.class);
-	}
 
 	final RoomResStorage s1 = new RoomResStorage(0b01111111) {
 		@Override
@@ -129,7 +113,7 @@ public final class ROOM_PASTURE extends RoomBlueprintIns<PastureInstance> implem
 	
 	@Override
 	protected void update(float ds) {
-		eventer.update(ds);
+
 	}
 	
 	@Override
@@ -141,19 +125,16 @@ public final class ROOM_PASTURE extends RoomBlueprintIns<PastureInstance> implem
 	@Override
 	protected void saveP(FilePutter saveFile){
 		productionData.save(saveFile);
-		saveFile.d(eventer.time);
 	}
 	
 	@Override
 	protected void loadP(FileGetter saveFile) throws IOException{
 		productionData.load(saveFile);
-		eventer.time = saveFile.d();
 	}
 	
 	@Override
 	protected void clearP() {
 		productionData.clear();
-		eventer.time = 0;
 	}
 	
 	@Override
@@ -211,56 +192,5 @@ public final class ROOM_PASTURE extends RoomBlueprintIns<PastureInstance> implem
 		
 	}
 	
-	private final class Event {
-		
-		private double time;
-		
-		Event(){
-			IDebugPanelSett.add("Event: " + key, new ACTION() {
-				
-				@Override
-				public void exe() {
-					event();
-				}
-			});
-		}
-		
-		void update(double ds) {
-			
-			if (VIEW.b().isActive())
-				return;
-			
-			time -= ds;
-			if (time > 0)
-				return;
-			
-			if (employment().employed() > 25) {
-				event();
-			}
-			
-			time += (1 + RND.rFloat())*SETT.ROOMS().PASTURES.size()*4*TIME.years().bitSeconds();
-		}
-		
-		private void event() {
-			
-			if (instancesSize() == 0)
-				return;
-			
-			double death = 0.2 + MATH.pow15.pow(RND.rFloat())*0.8;
-			int tot = 0;
-			
-			for (int i = 0; i < instancesSize(); i++) {
-				PastureInstance ins = getInstance(i);
-				int d = (int) Math.ceil(Math.ceil(ins.animalsCurrent*death)); 
-				tot += ins.kill(d);
-			}
-			
-			if (tot > 0) {
-				new MessageText(¤¤mTitle).paragraph(Str.TMP.clear().add(¤¤mBody).insert(0, species.names).insert(1, (int)(100*(death)))).send();
-				 
-			}
-		}
-		
-	}
 
 }

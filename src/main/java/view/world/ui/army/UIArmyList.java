@@ -3,7 +3,7 @@ package view.world.ui.army;
 import game.GAME;
 import game.faction.FACTIONS;
 import game.faction.Faction;
-import init.RES;
+import init.config.Config;
 import init.race.RACES;
 import init.race.Race;
 import init.sprite.SPRITES;
@@ -148,7 +148,9 @@ final class UIArmyList extends ISidePanel{
 				
 				@Override
 				public void render(SPRITE_RENDERER r, float ds) {
-					GMeter.renderDelta(r, (double)WARMYD.men(null).get(g())/RES.config().BATTLE.MEN_PER_ARMY, (double)WARMYD.men(null).target().get(g())/RES.config().BATTLE.MEN_PER_ARMY, body);
+					
+					
+					GMeter.renderDelta(r, (double)WARMYD.men(null).get(g())/Config.BATTLE.MEN_PER_ARMY, (double)WARMYD.men(null).target().get(g())/Config.BATTLE.MEN_PER_ARMY, body);
 				}
 			});
 			

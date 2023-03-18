@@ -7,8 +7,8 @@ import game.GAME;
 import game.GAME.GameResource;
 import init.D;
 import init.boostable.*;
-import init.boostable.BOOSTER_COLLECTION.BOOSTER_COLLECTION_IMP;
-import init.boostable.BOOSTER_COLLECTION.SIMPLE;
+import init.boostable.BOOST_LOOKUP.BOOSTER_LOOKUP_IMP;
+import init.boostable.BOOST_LOOKUP.SIMPLE;
 import settlement.entity.humanoid.HTYPE;
 import settlement.entity.humanoid.Humanoid;
 import snake2d.Errors;
@@ -111,7 +111,7 @@ public final class NOBILITIES extends GameResource{
 		D.ts(NOBILITIES.class);
 	}
 	
-	private class Boost extends BOOSTER_COLLECTION_IMP implements SIMPLE {
+	private class Boost extends BOOSTER_LOOKUP_IMP implements SIMPLE {
 
 		private final double[] add = new double[BOOSTABLES.all().size()];
 		private final double[] mul = new double[BOOSTABLES.all().size()];
@@ -121,6 +121,8 @@ public final class NOBILITIES extends GameResource{
 			for (Nobility t : titles)
 				init(t.BOOSTER);
 			setBonuses();
+			makeBoosters(this, true, false, true);
+			
 		}
 
 		@Override
@@ -141,9 +143,9 @@ public final class NOBILITIES extends GameResource{
 				if (t.subject() != null) {
 					for (BBoost b : t.BOOSTER.boosts()) {
 						if (b.isMul())
-							mul[b.boost.index()] *= b.value();
+							mul[b.boostable.index()] *= b.value();
 						else
-							add[b.boost.index()] += b.value();
+							add[b.boostable.index()] += b.value();
 					}
 				}
 			}

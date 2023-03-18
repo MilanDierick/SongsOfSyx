@@ -5,7 +5,7 @@ import java.util.Arrays;
 import game.faction.FACTIONS;
 import game.time.TIME;
 import init.D;
-import init.RES;
+import init.config.Config;
 import init.resources.ArmySupply;
 import init.resources.RESOURCES;
 import init.settings.S;
@@ -50,7 +50,7 @@ import world.map.regions.Region;
 final class UIArmy extends ISidePanel{
 
 	static WArmy army;
-	private boolean[] selected = new boolean[RES.config().BATTLE.DIVISIONS_PER_ARMY];
+	private boolean[] selected = new boolean[Config.BATTLE.DIVISIONS_PER_ARMY];
 	private Button clicked;
 	private boolean dragging;
 	private ToolMove tool = new ToolMove();
@@ -374,7 +374,8 @@ final class UIArmy extends ISidePanel{
 							}
 						}
 						
-						return a != army && a.divs().size() + am < RES.config().BATTLE.DIVISIONS_PER_ARMY && Math.abs(a.ctx()-army.ctx()) + Math.abs(a.cty()-army.cty()) < 4;
+						
+						return a != army && a.divs().size() + am < Config.BATTLE.DIVISIONS_PER_ARMY && Math.abs(a.ctx()-army.ctx()) + Math.abs(a.cty()-army.cty()) < 4;
 						
 					}
 				};
@@ -403,13 +404,15 @@ final class UIArmy extends ISidePanel{
 		
 		
 		
-		ArrayList<GuiSection> rows = new ArrayList<GuiSection>((int)Math.ceil(RES.config().BATTLE.DIVISIONS_PER_ARMY/(double)am));
+		
+		ArrayList<GuiSection> rows = new ArrayList<GuiSection>((int)Math.ceil(Config.BATTLE.DIVISIONS_PER_ARMY/(double)am));
 
 		for (int i = 0; i < rows.max(); i++) {
 			rows.add(new GuiSection());
 		}
 		
-		for (int i = 0; i < RES.config().BATTLE.DIVISIONS_PER_ARMY; i++) {
+		
+		for (int i = 0; i < Config.BATTLE.DIVISIONS_PER_ARMY; i++) {
 			
 			GuiSection s = rows.get(i/am);
 			s.addRightC(2, new Button(i));

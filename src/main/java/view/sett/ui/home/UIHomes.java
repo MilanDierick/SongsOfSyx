@@ -1,5 +1,6 @@
 package view.sett.ui.home;
 
+import game.faction.FACTIONS;
 import init.sprite.SPRITES;
 import settlement.main.SETT;
 import snake2d.util.datatypes.DIR;
@@ -7,6 +8,7 @@ import snake2d.util.gui.GUI_BOX;
 import snake2d.util.gui.clickable.CLICKABLE;
 import snake2d.util.misc.ACTION;
 import util.dic.DicMisc;
+import util.gui.misc.GBox;
 import util.gui.misc.GButt;
 import view.interrupter.ISidePanel;
 import view.keyboard.KEYS;
@@ -32,16 +34,16 @@ public class UIHomes extends ISidePanel{
 				}
 			};
 			
-			GButt.ButtPanel c = new GButt.ButtPanel(pp.name()){
+			GButt.ButtPanel c = new GButt.ButtPanel(pp.getIcon()){
 				
 				@Override
 				protected void clickA() {
 					VIEW.s().tools.place(pp);
 				};
 				
-			}.icon(pp.getIcon());
+			};
 			
-			c.setDim(180, 40);
+			c.setDim(60, 40);
 			CLICKABLE cc = KeyButt.wrap(a, c, KEYS.SETT(), "SET_HOMES", pp.name(), pp.desc);
 			section.add(cc);
 		}
@@ -57,7 +59,7 @@ public class UIHomes extends ISidePanel{
 				}
 			};
 			
-			GButt.ButtPanel c = new GButt.ButtPanel(pp.name()){
+			GButt.ButtPanel c = new GButt.ButtPanel(pp.getIcon()){
 				
 				
 				
@@ -66,9 +68,9 @@ public class UIHomes extends ISidePanel{
 					a.exe();
 				};
 				
-			}.icon(pp.getIcon());
+			};
 			
-			c.setDim(180, 40);
+			c.setDim(60, 40);
 			
 			CLICKABLE cc = KeyButt.wrap(a, c, KEYS.SETT(), "MOVE_HOMES", pp.name(), pp.desc);
 			section.addRightC(8, cc);
@@ -76,7 +78,49 @@ public class UIHomes extends ISidePanel{
 		}
 		
 		{
-			GButt.ButtPanel c = new GButt.ButtPanel(DicMisc.¤¤Overlay){
+			
+			PlacableMulti pp = SETT.ROOMS().HOMES.HOME.upgrader();
+			ACTION a = new ACTION() {
+				
+				@Override
+				public void exe() {
+					VIEW.inters().popup.close();
+					VIEW.s().tools.place(pp);
+				}
+			};
+			
+			GButt.ButtPanel c = new GButt.ButtPanel(pp.getIcon()){
+
+				@Override
+				protected void clickA() {
+					a.exe();
+				};
+				
+				@Override
+				protected void renAction() {
+					activeSet(FACTIONS.player().locks.maxUpgrade(SETT.ROOMS().HOMES.HOME) > 0);
+				}
+				
+				@Override
+				public void hoverInfoGet(GUI_BOX text) {
+					super.hoverInfoGet(text);
+					GBox b = (GBox) text;
+					text.NL(8);
+					if (FACTIONS.player().locks.maxUpgrade(SETT.ROOMS().HOMES.HOME) == 0)
+						b.error(FACTIONS.player().locks.unlockTextUpgrade(SETT.ROOMS().HOMES.HOME));
+				}
+				
+			};
+			
+			c.setDim(60, 40);
+			
+			CLICKABLE cc = KeyButt.wrap(a, c, KEYS.SETT(), "UPGRADE_HOMES", pp.name(), pp.desc);
+			section.addRightC(8, cc);
+			
+		}
+		
+		{
+			GButt.ButtPanel c = new GButt.ButtPanel(SPRITES.icons().m.place_brush){
 				
 				@Override
 				protected void clickA() {
@@ -99,8 +143,8 @@ public class UIHomes extends ISidePanel{
 						SETT.OVERLAY().HOMELESS.add();
 				};
 				
-			}.icon(SPRITES.icons().m.place_brush);
-			c.setDim(180, 40);
+			};
+			c.setDim(60, 40);
 			section.addRightC(8, c);
 		}
 		

@@ -64,7 +64,7 @@ final class Node extends GuiSection{
 			
 			isHovered |= VIEW.UI().tech.tree.hoverededTechs[tech.index()] && FACTIONS.player().tech.costOfNextWithRequired(tech) <= FACTIONS.player().tech().available().get();
 			for (BBoost b : tech.boosts()) {
-				if (b.boost == VIEW.UI().tech.tree.hoveredBoost)
+				if (b.boostable == VIEW.UI().tech.tree.hoveredBoost)
 					isHovered = true;
 			}
 			
@@ -111,7 +111,7 @@ final class Node extends GuiSection{
 				SPRITES.icons().m.arrow_up.renderC(r, body().cX()+10, body().cY()-10);
 				COLOR.unbind();
 			}else if(tech.boosts().size() == 1) {
-				tech.boosts().get(0).boost.icon().renderC(r, body().cX(), body().cY());
+				tech.boosts().get(0).boostable.icon().renderC(r, body().cX(), body().cY());
 				GCOLOR.UI().GOOD.hovered.bind();
 				SPRITES.icons().s.plus.renderC(r, body().cX()+12, body().cY()-12);
 				COLOR.unbind();
@@ -126,7 +126,7 @@ final class Node extends GuiSection{
 					
 					int x1 = body().cX()-16*rr/2;
 					for (int x = 0; x < rr; x++) {
-						tech.boosts().get(i-1).boost.icon().render(r, x1, y1);
+						tech.boosts().get(i-1).boostable.icon().render(r, x1, y1);
 						x1 += 16;
 						i--;
 					}
@@ -250,8 +250,8 @@ final class Node extends GuiSection{
 				b.NL();
 				
 				for (BBoost bb : tech.boosts()) {
-					b.add(bb.boost.icon());
-					b.text(bb.boost.name);
+					b.add(bb.boostable.icon());
+					b.text(bb.boostable.name);
 					b.tab(6);
 					b.add(GFORMAT.percGood(b.text(), t.level(tech)*bb.value()));
 					b.tab(9);

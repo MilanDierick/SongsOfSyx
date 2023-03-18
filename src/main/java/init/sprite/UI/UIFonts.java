@@ -4,7 +4,6 @@ import java.io.IOException;
 
 import init.paths.PATH;
 import init.paths.PATHS;
-import init.race.Race;
 import snake2d.util.file.Json;
 import snake2d.util.sets.*;
 import snake2d.util.sprite.text.Font;
@@ -21,7 +20,7 @@ public final class UIFonts{
 	public final Font M;
 	public final LIST<Font> all;
 	
-	UIFonts(Race race) throws IOException{
+	UIFonts() throws IOException{
 
 		Font.setCharset(new Json(PATHS.CONFIG().get("Charset")).text("CHARS"));
 		PATH g = PATHS.SPRITE().getFolder("font");

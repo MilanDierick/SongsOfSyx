@@ -50,7 +50,7 @@ class ScExamples implements SCREEN{
 		load.clickActionSet(new ACTION() {
 			@Override
 			public void exe() {
-				loader.load(PATHS.MISC().EXAMPLES.get(saves[selectedSave].fullName));
+				loader.load(PATHS.MISC().EXAMPLES.get(saves[selectedSave].fullName), false);
 			}
 		});
 		load.activeSet(false);

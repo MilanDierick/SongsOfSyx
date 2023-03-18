@@ -21,7 +21,7 @@ import util.dic.DicMisc;
 import util.gui.misc.GBox;
 import util.info.GFORMAT;
 
-public class Unlocks implements BOOSTER {
+public class Unlocks implements BOOST_HOLDER {
 
 	protected final LIST<BBoost> bonuses;
 	protected final LIST<RoomBlueprintImp> roomUnlocks;
@@ -100,7 +100,7 @@ public class Unlocks implements BOOSTER {
 			b.NL();
 		}
 		
-		BOOSTER.hover(b, bonuses);
+		BOOST_HOLDER.hover(b, bonuses);
 		
 		if (roomsUnlocks().size() > 0) {
 			b.NL(8);

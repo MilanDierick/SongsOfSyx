@@ -58,7 +58,7 @@ public final class Minable implements INDEXED{
 		final HashMap<String, TILE_SHEET> spriteMap = new HashMap<>();
 		
 		Util util = new Util();
-		String[] files = pd.getFiles();
+		String[] files = pd.getFiles(1,31);
 		final ArrayList<Minable> res = new ArrayList<>(files.length);
 		
 		return new RCollection<Minable>("MINABLE") {

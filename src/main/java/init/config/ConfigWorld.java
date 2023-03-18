@@ -10,6 +10,7 @@ public final class ConfigWorld {
 	public final double TRADE_COST_PER_TILE;
 	public final int POPULATION_MAX_CAPITOL;
 	public final int REGION_SIZE;
+	public final int WORLD_SIZE;
 	
 	ConfigWorld(){
 		Json j = new Json(PATHS.CONFIG().get("World"));
@@ -18,6 +19,7 @@ public final class ConfigWorld {
 		TRADE_COST_PER_TILE = j.d("TRADE_COST_PER_TILE", 0, 1000);
 		POPULATION_MAX_CAPITOL = j.i("POPULATION_MAX_CAPITOL", 101, 256000);
 		REGION_SIZE = j.i("REGION_GENERATION_SIZE", 100, 10000);
+		WORLD_SIZE = j.i("TILE_DIMENSION", 128, 512);
 	}
 	
 }

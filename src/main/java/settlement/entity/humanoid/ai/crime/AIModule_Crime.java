@@ -73,24 +73,16 @@ public final class AIModule_Crime extends AIModule{
 	@Override
 	protected void update(Humanoid a, AIManager d, boolean newDay, int byteDelta, int updateOfDay) {
 		
-		double rate = LAW.getCrimeRate(a)*di;
-//		ii++;
-//		acc += rate;
-//		if (day != TIME.days().bitsSinceStart()) {
-//			day = TIME.days().bitsSinceStart();
-//			System.out.println(max + " " + acc + " " + acc/ii + " " + ii + " " + kk);
-//			acc = 0; 
-//			ii = 0;
-//			kk = 0;
-//			max = 0;
-//			
-//		}
-		
-		if (rate >= RND.rFloat()) {
-			crimesToCommit.inc(d, 16);
-//			kk++;
-//			max = Math.max(crimesToCommit.get(d), max);
+		if (LAW.curfew().isSetForADay()) {
+			crimesToCommit.inc(d, -16);
+		}else {
+			if (LAW.getCrimeRate(a)*di >= RND.rFloat()) {
+				crimesToCommit.inc(d, 16);
+//				kk++;
+//				max = Math.max(crimesToCommit.get(d), max);
+			}
 		}
+
 		
 		if (newDay) {
 			int c = ccrimes.get(d);

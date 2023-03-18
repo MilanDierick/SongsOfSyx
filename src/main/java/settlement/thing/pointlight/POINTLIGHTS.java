@@ -106,6 +106,11 @@ public class POINTLIGHTS extends SettResource {
 		
 	}
 
+	@Override
+	protected void afterTick() {
+
+	}
+
 	public void render(Renderer r, ShadowBatch s, float ds, RECTANGLE renWindow, int offX, int offY) {
 		Sparks.update(ds);
 		LightModel.flickerr(ds);

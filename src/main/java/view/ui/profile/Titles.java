@@ -139,15 +139,12 @@ final class Titles extends GuiSection{
 			b.NL(8);
 			
 			G_REQ.hover(title.reqs, b);
+			
+			
 
 			b.NL(16);
 			
-			title.boost.hover(b);
-			
-			b.NL(16);
-			
-			if (title.unlock != null)
-				title.unlock.hoverInfoGet(text);
+			title.unlock.hover(b);
 			
 			
 		}

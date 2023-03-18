@@ -21,11 +21,9 @@ public final class FurnisherItemTools {
 		// TODO Auto-generated constructor stub
 	}
 		
-
-	
-	public static void makeFloor(Furnisher f, Floor floor) {
+	public static FurnisherItemTile makeFloorTile(Furnisher f, Floor floor) {
 		
-		FurnisherItemTile cc;
+		;
 		
 		RoomSprite ca = new RoomSprite.Imp() {
 			
@@ -90,7 +88,13 @@ public final class FurnisherItemTools {
 			
 		};
 		
-		cc = new FurnisherItemTile(f, false, ca, AVAILABILITY.ROOM, false);
+		return new FurnisherItemTile(f, false, ca, AVAILABILITY.ROOM, false);
+	}
+	
+	
+	public static void makeFloor(Furnisher f, Floor floor) {
+		
+		FurnisherItemTile cc = makeFloorTile(f, floor);
 
 		makeArea(f, cc);
 		

@@ -18,7 +18,7 @@ import view.sett.ui.room.UIRoomModule;
 
 final class HomeHoverer extends UIRoomModule{
 
-	private static CharSequence ¤¤Residents = "¤{0} Residents ({1})";
+	private static CharSequence ¤¤Residents = "¤{0}  ({1})";
 	private static CharSequence ¤¤VacantFor = "¤{0} Vacancies ({1})";
 	
 	static {
@@ -40,6 +40,11 @@ final class HomeHoverer extends UIRoomModule{
 		
 		if (h == null)
 			return;
+		
+		box.textL(DicMisc.¤¤Upgrade);
+		box.tab(6);
+		box.add(GFORMAT.iofkInv(box.text(), h.upgrade(), SETT.ROOMS().HOMES.HOME.upgrades().max()));
+		box.NL(8);
 		
 		if (h.occupants() > 0){
 			GText t = box.text();

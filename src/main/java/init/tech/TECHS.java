@@ -153,7 +153,7 @@ public final class TECHS {
 			LinkedList<TechBoost> li = new LinkedList<>();
 			for (TECH t : ALL) {
 				for (BBoost bb : t.boosts()) {
-					if (bb.boost == b)
+					if (bb.boostable == b)
 						li.add(new TechBoost(t, bb));
 				}
 			}

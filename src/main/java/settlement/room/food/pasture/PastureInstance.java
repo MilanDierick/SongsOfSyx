@@ -127,7 +127,7 @@ public final class PastureInstance extends RoomInstance implements JOBMANAGER_HA
 		blueprintI().productionData.updateRoom(this);
 	}
 	
-	int kill(int killAmount) {
+	public int kill(int killAmount) {
 		int kill = 0;
 		if (killAmount > 0) {
 			for (ENTITY e : ENTITIES().fillTiles(body())){
@@ -402,5 +402,8 @@ public final class PastureInstance extends RoomInstance implements JOBMANAGER_HA
 		return skill/work;
 	}
 	
+	public int animalsCurrent() {
+		return animalsCurrent;
+	}
 
 }

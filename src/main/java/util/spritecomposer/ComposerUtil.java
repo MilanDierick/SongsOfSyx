@@ -303,7 +303,7 @@ public final class ComposerUtil {
 
 	}
 	
-	SnakeImage getSource() {
+	public SnakeImage getSource() {
 		return TexSource;
 	}
 

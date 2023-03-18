@@ -3,7 +3,6 @@ package settlement.stats.law;
 import java.io.IOException;
 import java.util.Arrays;
 
-import game.VERSION;
 import game.time.TIME;
 import init.paths.PATHS;
 import init.race.RACES;
@@ -85,8 +84,6 @@ public final class Processing {
 			for (SAVABLE s : savers)
 				s.load(file);
 			upD = file.d();
-			if (VERSION.versionIsBefore(63, 6))
-				clear();
 		}
 		
 		@Override

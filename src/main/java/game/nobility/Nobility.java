@@ -4,7 +4,7 @@ import java.io.IOException;
 
 import game.time.TIME;
 import init.boostable.*;
-import init.boostable.BOOSTER.BOOSTER_IMP_DATA;
+import init.boostable.BOOST_HOLDER.BOOST_HOLDERCOLL;
 import settlement.entity.ENTITY;
 import settlement.entity.humanoid.Humanoid;
 import settlement.main.SETT;
@@ -27,7 +27,7 @@ public final class Nobility implements INDEXED{
 	private double repInc = 1;
 	private static final double upI = 1.0/(TIME.secondsPerDay*32);
 	private final LIST<RoomBlueprintIns<?>> rooms;
-	public final BOOSTER_IMP_DATA BOOSTER;
+	public final BOOST_HOLDERCOLL BOOSTER;
 	
 	Nobility(String key, Init init){
 		index = init.all.add(this);
@@ -36,14 +36,14 @@ public final class Nobility implements INDEXED{
 		info = new INFO(jtext);
 
 
-		BOOSTER = new BOOSTER.BOOSTER_IMP_DATA(info.name, jdata);
+		BOOSTER = new BOOST_HOLDER.BOOST_HOLDERCOLL(info.name, jdata);
 		
 		color = new ColorImp(jdata);
 		{
 			ArrayList<RoomBlueprintIns<?>> rooms = new ArrayList<>(SETT.ROOMS().all().size());
 			for (BBoost bo : BOOSTER.boosts()) {
-				if (bo.boost instanceof BOOSTABLERoom) {
-					RoomBlueprintImp p = ((BOOSTABLERoom)bo.boost).room;
+				if (bo.boostable instanceof BOOSTABLERoom) {
+					RoomBlueprintImp p = ((BOOSTABLERoom)bo.boostable).room;
 					RoomBlueprintIns<?> b = (RoomBlueprintIns<?>) p;
 					rooms.add(b);
 				}

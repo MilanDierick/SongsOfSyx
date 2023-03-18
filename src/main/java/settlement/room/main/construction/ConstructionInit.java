@@ -32,7 +32,7 @@ public class ConstructionInit {
 	}
 	
 	public ConstructionInit(Room room, int rx, int ry) {
-		this(room.upgrade(), room.constructor(), findStructure(rx, ry), room.degrader(rx, ry) == null ? 0 : room.degrader(rx, ry).getData(), room.makeState(rx, ry));
+		this(room.upgrade(rx, ry), room.constructor(), findStructure(rx, ry), room.degrader(rx, ry) == null ? 0 : room.degrader(rx, ry).getData(), room.makeState(rx, ry));
 	}
 	
 	public static TBuilding findStructure(int rx, int ry) {

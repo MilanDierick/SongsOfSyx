@@ -3,7 +3,7 @@ package settlement.stats;
 import java.io.IOException;
 import java.util.Arrays;
 
-import init.RES;
+import init.config.Config;
 import init.race.Race;
 import settlement.army.Div;
 import settlement.entity.humanoid.HCLASS;
@@ -34,7 +34,7 @@ public interface SETT_STATISTICS {
 
 		private final DataStat[] datas = new DataStat[HCLASS.ALL().size()];
 		private final DataStat total;
-		private int[] divData = new int[RES.config().BATTLE.DIVISIONS_PER_ARMY*2];
+		private int[] divData = new int[Config.BATTLE.DIVISIONS_PER_ARMY*2];
 		private final INFO info;
 		
 		SettStatistics(Init init, CharSequence name, CharSequence desc){

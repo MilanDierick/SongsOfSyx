@@ -93,7 +93,7 @@ public final class UIBuildPanel extends Interrupter{
 		s.addRightC(8, cc);
 		
 		{
-			Clear sec = new Clear();
+			Clear sec = new Clear(placer, lastClicked);
 			CLICKABLE c = new GButt.ButtPanel(SPRITES.icons().m.shovel) {
 				
 				@Override

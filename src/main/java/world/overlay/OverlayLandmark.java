@@ -47,7 +47,6 @@ class OverlayLandmark extends WorldOverlayer{
 			}else {
 				scale = 2;
 			}
-			
 			f.renderCX(r, it.x(), it.y(), a.name, scale);
 			f.renderCX(s, it.x(), it.y(), a.name, scale);
 			

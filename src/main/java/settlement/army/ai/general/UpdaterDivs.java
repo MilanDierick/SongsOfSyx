@@ -1,7 +1,7 @@
 package settlement.army.ai.general;
 
 
-import init.RES;
+import init.config.Config;
 import settlement.army.formation.DivPosition;
 import snake2d.PathTile;
 import snake2d.PathUtilOnline.Flooder;
@@ -19,10 +19,10 @@ final class UpdaterDivs {
 		udiv = new UpdaterDiv(c);
 	}
 
-	private IntChecker dCheck = new IntChecker(RES.config().BATTLE.DIVISIONS_PER_ARMY);
+	private IntChecker dCheck = new IntChecker(Config.BATTLE.DIVISIONS_PER_ARMY);
 	private final UpdaterDiv udiv;
 	private final ArrayCooShort op = new ArrayCooShort(AbsMap.bounds.width()*AbsMap.bounds.height()/2); 
-	private final ArrayList<GDiv> active = new ArrayList<>(RES.config().BATTLE.DIVISIONS_PER_ARMY);
+	private final ArrayList<GDiv> active = new ArrayList<>(Config.BATTLE.DIVISIONS_PER_ARMY);
 	private final DivPosition pos = new DivPosition();
 	
 	public boolean update() {

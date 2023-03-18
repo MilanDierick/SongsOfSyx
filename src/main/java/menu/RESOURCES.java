@@ -32,7 +32,7 @@ final class RESOURCES {
 				TERRAINS.init();
 				new RACES();
 				s = new RSprites();
-				UI.init(RACES.all().get(0));
+				UI.init();
 			}
 		}.get("menu", PATHS.textureSize(), 0);
 		sound = new RSound();

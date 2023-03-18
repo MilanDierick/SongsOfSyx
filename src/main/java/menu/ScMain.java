@@ -2,13 +2,13 @@ package menu;
 
 import static menu.GUI.*;
 
+import game.GAME;
 import game.GameLoader;
 import init.D;
 import init.paths.PATHS;
 import init.sprite.UI.UI;
 import menu.GUI.Button;
-import snake2d.CORE;
-import snake2d.SPRITE_RENDERER;
+import snake2d.*;
 import snake2d.util.datatypes.COORDINATE;
 import snake2d.util.gui.GuiSection;
 import snake2d.util.gui.clickable.CLICKABLE;
@@ -215,7 +215,14 @@ class ScMain implements SCREEN{
 		text.clickActionSet(new ACTION() {
 			@Override
 			public void exe() {
-				menu.start(new GameLoader(PATHS.MISC().SAVES.get("_Tutorial"), "_Tutorial"));
+				menu.start(new GameLoader(PATHS.MISC().SAVES.get("_Tutorial")) {
+					@Override
+					public CORE_STATE getState() {
+						CORE_STATE s = super.getState();
+						GAME.script().appendScript("_Tutorial");
+						return s;
+					}
+				});
 			}
 		});
 		text.activeSet(PATHS.MISC().hasTutorial);

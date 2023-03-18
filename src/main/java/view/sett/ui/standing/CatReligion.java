@@ -2,15 +2,13 @@ package view.sett.ui.standing;
 
 import game.time.TIME;
 import init.D;
-import init.boostable.BOOSTABLE;
-import init.boostable.BOOSTABLES;
+import init.boostable.*;
 import init.race.RACES;
 import init.race.Race;
 import init.sprite.UI.UI;
 import settlement.entity.humanoid.HCLASS;
 import settlement.room.spirit.grave.GraveData;
 import settlement.stats.*;
-import settlement.stats.StatsBoosts.StatBooster;
 import settlement.stats.StatsBurial.StatGrave;
 import settlement.stats.StatsReligion.Religion;
 import snake2d.SPRITE_RENDERER;
@@ -52,10 +50,10 @@ final class CatReligion extends Cat{
 			boolean[] bools = new boolean[BOOSTABLES.all().size()];
 			LinkedList<BOOSTABLE> boosts = new LinkedList<>();
 			for (Religion r : STATS.RELIGION().ALL){
-				for (StatBooster b : r.bonuses) {
-					if (!bools[b.boost.boost.index]) {
-						boosts.add(b.boost.boost);
-						bools[b.boost.boost.index] = true;
+				for (BBooster b : r.bonuses) {
+					if (!bools[b.boost.boostable.index]) {
+						boosts.add(b.boost.boostable);
+						bools[b.boost.boostable.index] = true;
 					}
 				}
 			}
@@ -68,8 +66,8 @@ final class CatReligion extends Cat{
 					public void update(GText text) {
 						double d = 0;
 						for (Religion rr : STATS.RELIGION().ALL) {
-							for (StatBooster sb : rr.bonuses) {
-								if (sb.boost.boost == b) {
+							for (BBooster sb : rr.bonuses) {
+								if (sb.boost.boostable == b) {
 									d += sb.value(cl, CitizenMain.current);
 								}
 							};
@@ -82,8 +80,8 @@ final class CatReligion extends Cat{
 						bb.title(b.name);
 						double d = 0;
 						for (Religion rr : STATS.RELIGION().ALL) {
-							for (StatBooster sb : rr.bonuses) {
-								if (sb.boost.boost == b) {
+							for (BBooster sb : rr.bonuses) {
+								if (sb.boost.boostable == b) {
 									d += sb.boost.value()*sb.value(cl, CitizenMain.current);
 									bb.textL(rr.info.name);
 									bb.tab(7);
@@ -249,7 +247,7 @@ final class CatReligion extends Cat{
 					b.NL(8);
 					b.textLL(BOOSTABLES.INFO().name);
 					b.NL();
-					for (StatBooster bo : ss.bonuses) {
+					for (BBooster bo : ss.bonuses) {
 						bo.boost.hover(text);
 						b.NL();
 					}

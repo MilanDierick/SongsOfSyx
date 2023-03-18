@@ -4,7 +4,7 @@ import java.io.IOException;
 
 import game.faction.FACTIONS;
 import game.faction.Faction;
-import init.RES;
+import init.config.Config;
 import settlement.army.Div;
 import settlement.entity.ENTITY;
 import settlement.entity.humanoid.HTYPE;
@@ -64,7 +64,8 @@ public final class Invador extends SettResource{
 		if (!active.hasRoom())
 			return;
 		
-		int menPerDivision = amount/RES.config().BATTLE.DIVISIONS_PER_ARMY;
+		
+		int menPerDivision = amount/Config.BATTLE.DIVISIONS_PER_ARMY;
 		if (menPerDivision < 50)
 			menPerDivision = 50;
 		if (amount < menPerDivision)

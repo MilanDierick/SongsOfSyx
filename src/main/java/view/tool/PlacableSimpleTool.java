@@ -24,6 +24,8 @@ final class PlacableSimpleTool extends placeFunc {
 				placable.place(cx, cy);
 			}
 			
+		}else {
+			placable.placeInfo(VIEW.hoverBox(), window.pixel().x(), window.pixel().y());
 		}
 		
 	}
@@ -44,6 +46,7 @@ final class PlacableSimpleTool extends placeFunc {
 			placable.renderPlaceHolder(r, window.pixel().rel().x(), window.pixel().rel().y(), true);
 			VIEW.hoverBox().error(problem);
 		}
+		placable.renderAction(cx, cy);
 		COLOR.unbind();
 	}
 

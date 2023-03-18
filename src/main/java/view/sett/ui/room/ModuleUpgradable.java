@@ -184,7 +184,7 @@ final class ModuleUpgradable implements ModuleMaker {
 			box.textL(DicMisc.¤¤Upgrade);
 			box.tab(5);
 			RoomBlueprintImp b = (RoomBlueprintImp) room.blueprint();
-			box.add(GFORMAT.iofk(box.text(), room.upgrade(), b.upgrades().max()));
+			box.add(GFORMAT.iofk(box.text(), room.upgrade(rx, ry), b.upgrades().max()));
 			box.NL();
 		}
 

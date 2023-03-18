@@ -3,6 +3,7 @@ package settlement.room.food.farm;
 import static settlement.main.SETT.*;
 
 import init.resources.RESOURCE;
+import settlement.entity.animal.ANIMAL_ROOM_RUINER;
 import settlement.main.RenderData;
 import settlement.main.RenderData.RenderIterator;
 import settlement.maintenance.ROOM_DEGRADER;
@@ -19,7 +20,7 @@ import snake2d.Renderer;
 import snake2d.util.datatypes.COORDINATE;
 import util.rendering.ShadowBatch;
 
-public final class FarmInstance extends RoomInstance implements JOBMANAGER_HASER, ROOM_PRODUCER {
+final class FarmInstance extends RoomInstance implements JOBMANAGER_HASER, ROOM_PRODUCER,ANIMAL_ROOM_RUINER {
 
 	private static final long serialVersionUID = 1L;
 	private final long[] produceData;
@@ -82,10 +83,12 @@ public final class FarmInstance extends RoomInstance implements JOBMANAGER_HASER
 		return blueprintI().crop.resource;
 	}
 
+	@Override
 	public boolean canBeGraced(int tx, int ty) {
 		return blueprintI().tile(tx, ty).destroyTileCan();
 	}
 
+	@Override
 	public void grace(int tx, int ty) {
 		blueprintI().tile(tx, ty).destroyTile();
 	}

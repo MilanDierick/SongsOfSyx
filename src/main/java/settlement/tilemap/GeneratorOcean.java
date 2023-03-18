@@ -38,10 +38,10 @@ class GeneratorOcean {
 		for (int i = 0; i < GRID.tiles().size(); i++) {
 			COORDINATE c = area.ts().get(i);
 			SettlementGrid.Tile ut = GRID.tile(i);
-			if (World.WATER().isOceany.is(c)) {
+			if (World.WATER().OCEAN.is.is(c)) {
 				add(ut.coo(DIR.C).x(), ut.coo(DIR.C).y());
 				for (DIR d : DIR.ORTHO) {
-					if (World.WATER().isOceany.is(c, d)) {
+					if (World.WATER().OCEAN.is.is(c, d)) {
 						add(ut.coo(d).x(), ut.coo(d).y());
 					}
 				}

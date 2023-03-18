@@ -3,7 +3,7 @@ package settlement.army.ai.general;
 import java.io.IOException;
 
 import game.time.TIME;
-import init.RES;
+import init.config.Config;
 import settlement.army.ai.general.GroupsIniter.GroupDiv;
 import settlement.army.ai.util.ArmyAIUtil;
 import settlement.main.SETT;
@@ -18,15 +18,16 @@ final class Groups implements SAVABLE{
 	private final LIST<GroupLine> all;
 	private final Context c;
 	Bitmap1D mark = new Bitmap1D(SETT.TAREA, false);
-	private ArrayList<GroupLine> active = new ArrayList<>(RES.config().BATTLE.DIVISIONS_PER_ARMY);
-	private ArrayList<GroupLine> waits = new ArrayList<>(RES.config().BATTLE.DIVISIONS_PER_ARMY);
+	private ArrayList<GroupLine> active = new ArrayList<>(Config.BATTLE.DIVISIONS_PER_ARMY);
+	private ArrayList<GroupLine> waits = new ArrayList<>(Config.BATTLE.DIVISIONS_PER_ARMY);
 	private final GroupMover mover;
 	private final GroupsIniter initer;
 	private final GroupCharger charger;
 	
 	Groups(Context c){
 		this.c = c;
-		ArrayList<GroupLine> all = new ArrayList<>(RES.config().BATTLE.DIVISIONS_PER_ARMY);
+		
+		ArrayList<GroupLine> all = new ArrayList<>(Config.BATTLE.DIVISIONS_PER_ARMY);
 		while(all.hasRoom())
 			all.add(new GroupLine());
 
@@ -121,8 +122,8 @@ final class Groups implements SAVABLE{
 			
 		}
 		
-		public Bitmap1D divsAll = new Bitmap1D(RES.config().BATTLE.DIVISIONS_PER_ARMY, false);
-		public Bitmap1D divsTmp = new Bitmap1D(RES.config().BATTLE.DIVISIONS_PER_ARMY, false);
+		public Bitmap1D divsAll = new Bitmap1D(Config.BATTLE.DIVISIONS_PER_ARMY, false);
+		public Bitmap1D divsTmp = new Bitmap1D(Config.BATTLE.DIVISIONS_PER_ARMY, false);
 		public final  VectorImp v = new VectorImp();
 		public int width;
 		public final Coo start = new Coo();

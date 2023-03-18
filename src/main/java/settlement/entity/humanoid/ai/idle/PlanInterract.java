@@ -1,5 +1,6 @@
 package settlement.entity.humanoid.ai.idle;
 
+import game.GAME;
 import game.time.TIME;
 import init.D;
 import init.boostable.BOOSTABLES;
@@ -124,6 +125,8 @@ class PlanInterract {
 			
 			if (backup != null) {
 				if (shouldFight(a, backup)) {
+					if (GAME.events().raceWars.isAtOdds(a.race(), backup.race()))
+						return backup;
 					HOME h = STATS.HOME().GETTER.get(a, this);
 					if (h == null) {
 						return null;
@@ -343,10 +346,8 @@ class PlanInterract {
 	
 	public boolean shouldFight(Humanoid a, Humanoid b) {
 		
-		double c = 1.0-a.race().pref().othersqrt(b.indu().race())*2;
+		double c = 1.0-a.race().pref().other(b.indu().race());
 		
-		
-			
 		long ran = a.indu().randomness() + b.indu().randomness() + TIME.days().bitsSinceStart();
 		double d = CHA*(ran&0x0FFFFFF);
 		return c > d;

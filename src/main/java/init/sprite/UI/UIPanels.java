@@ -4,7 +4,6 @@ import java.io.IOException;
 
 import init.C;
 import init.paths.PATHS;
-import init.race.Race;
 import init.sprite.ICON;
 import snake2d.SPRITE_RENDERER;
 import snake2d.util.sets.ArrayList;
@@ -27,7 +26,7 @@ public final class UIPanels {
 	public final UICons panelL;
 
 
-	UIPanels(Race race) throws IOException {
+	UIPanels() throws IOException {
 
 		panelLarge = new ITileSheet(PATHS.SPRITE_UI().get("Panel"), 760, 332) {
 

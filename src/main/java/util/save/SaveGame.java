@@ -9,13 +9,11 @@ import game.time.TIME;
 import init.D;
 import init.paths.PATH;
 import init.paths.PATHS;
-import script.ScriptLoad;
 import settlement.stats.STATS;
 import snake2d.util.file.FileGetter;
 import snake2d.util.file.Json;
 import snake2d.util.rnd.RND;
 import snake2d.util.sets.ArrayList;
-import snake2d.util.sets.LIST;
 import snake2d.util.sprite.text.Str;
 
 public class SaveGame implements Serializable{
@@ -72,11 +70,7 @@ public class SaveGame implements Serializable{
 			mods.add("'" + PATHS.currentMods().get(i).name + "', version: " + PATHS.currentMods().get(i).version);
 		}
 		
-		LIST<ScriptLoad> loads =  GAME.script().makeCurrent();
-		scripts = new String[loads.size()];
-		int i = 0;
-		for (ScriptLoad l : loads)
-			scripts[i++] = l.file;
+		scripts = GAME.script().currentScripts();
 		
 		timeSaved = System.currentTimeMillis()/(1000*60);
 	}

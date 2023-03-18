@@ -62,16 +62,16 @@ class OverlayRegion extends WorldOverlayer{
 				}
 				
 			}else {
-				for (DIR d : DIR.ORTHO) {
-					int ii = it.tile()+d.x()+d.y()*TWIDTH();
-					Region r2 = World.REGIONS().getter.get(ii);
-					if (!IN_BOUNDS(it.tx(), it.ty(), d) || a == r2)
-						m |= d.mask();
-				}
-				if (m != 0x0F) {
-					SPRITES.cons().BIG.outline_dashed_small.render(r, m, it.x(), it.y());
-				}
-				if (a.faction() != null && a.faction().capitolRegion() == a && CORE.renderer().getZoomout() != 0 && a.fontSize() != 0 && it.tx() == a.textx() && it.ty() == a.texty()) {
+//				for (DIR d : DIR.ORTHO) {
+//					int ii = it.tile()+d.x()+d.y()*TWIDTH();
+//					Region r2 = World.REGIONS().getter.get(ii);
+//					if (!IN_BOUNDS(it.tx(), it.ty(), d) || a == r2)
+//						m |= d.mask();
+//				}
+//				if (m != 0x0F) {
+//					SPRITES.cons().BIG.outline_dashed_small.render(r, m, it.x(), it.y());
+//				}
+				if (CORE.renderer().getZoomout() != 0 && a.fontSize() != 0 && it.tx() == a.textx() && it.ty() == a.texty()) {
 					Font f = UI.FONT().H1;
 					str.clear().add(a.name());
 					int scale = C.SCALE;
@@ -83,8 +83,10 @@ class OverlayRegion extends WorldOverlayer{
 						scale = 3;
 					}
 					s.setHeight(0).setDistance2GroundUI(14);
-					f.render(r, str, it.x(), it.y(), scale);
-					f.render(s, str, it.x(), it.y(), scale);
+					f.renderCX(r, it.x(), it.y(), str, scale);
+					f.renderCX(s, it.x(), it.y(), str, scale);
+//					f.render(r, str, it.x(), it.y(), scale);
+//					f.render(s, str, it.x(), it.y(), scale);
 				}
 			}
 		}

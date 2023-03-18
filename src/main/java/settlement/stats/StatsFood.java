@@ -113,7 +113,7 @@ public class StatsFood extends StatCollection{
 			}
 		});
 		RATIONS.addDecree(d);
-		new StatsBoosts.StatBoosterStat(init, RATIONS, new BBoost(BOOSTABLES.PHYSICS().HEALTH, 1, false));
+		new StatBoosterStat(RATIONS, new BBoost(BOOSTABLES.PHYSICS().HEALTH, 1, false));
 		
 		
 		d = new StatDecree(init, 0, 4, D.g("DrinkT", "Target Drink rations"), 1);
@@ -210,9 +210,9 @@ public class StatsFood extends StatCollection{
 			Induvidual i = h.indu();
 			
 			
-			double hh = STATS.NEEDS().HUNGER.stat.indu().get(i);
+			double hh = STATS.NEEDS().HUNGER.stat().indu().get(i);
 			
-			if (hh == STATS.NEEDS().HUNGER.stat.indu().max(i)) {
+			if (hh == STATS.NEEDS().HUNGER.stat().indu().max(i)) {
 				HumanoidResource.dead = CAUSE_LEAVE.STARVED;
 			}else if (hh > 0x20) {
 				if (STARVATION.indu().get(i) == 0) {
@@ -224,7 +224,7 @@ public class StatsFood extends StatCollection{
 				STARVATION.indu().set(i, 0);
 			}
 			
-			if (STATS.NEEDS().THIRST.stat.indu().isMax(i)) {
+			if (STATS.NEEDS().THIRST.stat().indu().isMax(i)) {
 				DRINK.indu().set(i, 0);
 			}
 		}

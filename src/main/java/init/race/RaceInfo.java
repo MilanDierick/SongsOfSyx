@@ -9,10 +9,11 @@ public final class RaceInfo extends INFO {
 
 	public final String namePosessive;
 	public final String desc_long;
-//	public final LIST<String> firstNames;
-//	public final LIST<String> lastNames;
-//	public final LIST<String> firstNamesNoble;
-//	public final LIST<String> lastNamesNoble;
+	public final String initialChallenge;
+	public final String[] pros;
+	public final String[] cons;
+	
+	
 	public final LIST<String> armyNames;
 	
 	
@@ -20,6 +21,12 @@ public final class RaceInfo extends INFO {
 		super(text);
 		namePosessive = text.text("POSSESSIVE");
 		desc_long = text.text("DESC_LONG");
+		
+		initialChallenge = text.text("CHALLENGE", "");
+		
+		pros = text.textsTry("PROS");
+		cons = text.textsTry("CONS");
+		
 		
 //		firstNames = new ArrayList<>(names.get(json.value("FIRST_NAMES"), json));
 //		lastNames = new ArrayList<>(names.get(json.value("SURNAMES"), json));

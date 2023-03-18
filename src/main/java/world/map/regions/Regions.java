@@ -7,13 +7,17 @@ import java.io.IOException;
 import game.GAME;
 import game.faction.FACTIONS;
 import game.faction.Faction;
-import init.RES;
-import snake2d.util.color.COLOR;
-import snake2d.util.color.ColorImp;
+import init.sprite.SPRITES;
+import settlement.main.RenderData;
+import settlement.main.RenderData.RenderIterator;
+import snake2d.Renderer;
+import snake2d.util.color.*;
+import snake2d.util.datatypes.DIR;
 import snake2d.util.file.FileGetter;
 import snake2d.util.file.FilePutter;
 import snake2d.util.map.*;
 import snake2d.util.sets.*;
+import util.rendering.ShadowBatch;
 import world.World;
 import world.World.WorldResource;
 
@@ -154,21 +158,32 @@ public final class Regions extends WorldResource {
 		besigeUpdateI = file.i();
 	}
 	
-	public void generate() {
+	@Override
+	public void clear() {
+		
 		REGIOND.saver().clear();
+		for (Region r : REGIONS().all())
+			r.clear();
 		for (FRegions r : realms)
 			r.saver.clear();
-		RES.loader().print("building history...");
-		new Generator();
+		mapID.clear();
+		updater.clear();
+		
 	}
 	
-	public void makePlayerRoads() {
-		GeneratorRoad.makePlayer();
-	}
-	
-	public void generateRoad() {
-		new GeneratorRoad();
-	}
+//	public void generate(int px, int py) {
+//		super.clear();
+//		RES.loader().print("building history...");
+//		new Generator(px, py);
+//	}
+//	
+//	public void makePlayerRoads() {
+//		GeneratorRoad.makePlayer();
+//	}
+//	
+//	public void generateRoad() {
+//		new GeneratorRoad();
+//	}
 	
 	@Override
 	protected void update(float ds) {
@@ -198,7 +213,49 @@ public final class Regions extends WorldResource {
 		return realms.get(f.index());
 	}
 	
+	
+	public void renderBorders(Renderer r, ShadowBatch s, RenderData data, int zoomout) {
+		RenderIterator it = data.onScreenTiles(0,0,0,0);
+		
+		OPACITY.O50.bind();
+		while(it.has()) {
+			int m = 0;
+			Region a = World.REGIONS().getter.get(it.tile());
 
+			
+			if (a != null) {
+				boolean large = a.faction() == null;
+				
+				
+				for (DIR d : DIR.ORTHO) {
+					int ii = it.tile()+d.x()+d.y()*TWIDTH();
+					Region r2 = World.REGIONS().getter.get(ii);
+					if (!IN_BOUNDS(it.tx(), it.ty(), d) || a == r2) {
+						m |= d.mask();
+						
+					}else {
+						large |= r2 == null || r2.faction() != a.faction();
+					}
+				}
+				if (m != 0x0F) {
+					if (REGIOND.REALM(a) == null)
+						COLOR.WHITE35.bind();
+					else
+						REGIOND.REALM(a).faction().banner().colorBG().bind();
+					if (large)
+						SPRITES.cons().BIG.outline_dashed.render(r, m, it.x(), it.y());
+					else
+						SPRITES.cons().BIG.outline_dashed_small.render(r, m, it.x(), it.y());
+						
+				}
+			}
+
+			it.next();
+		}
+		COLOR.unbind();
+		OPACITY.unbind();
+		
+	}
 	
 	
 }

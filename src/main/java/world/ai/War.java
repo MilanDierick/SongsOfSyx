@@ -5,7 +5,7 @@ import java.io.IOException;
 import game.faction.FACTIONS;
 import game.faction.Faction;
 import game.time.TIME;
-import init.RES;
+import init.config.Config;
 import init.race.RACES;
 import init.race.Race;
 import snake2d.util.datatypes.COORDINATE;
@@ -119,7 +119,8 @@ final class War extends IUpdater{
 			if (recruitTree.hasMore()) {
 				target *= 0.75;
 			}
-			target = CLAMP.i(target, 0, RES.config().BATTLE.MEN_PER_ARMY);
+			
+			target = CLAMP.i(target, 0, Config.BATTLE.MEN_PER_ARMY);
 			if (target > WARMYD.men(null).target().get(a)) {
 				recruit(f, a, target);
 			}
@@ -141,12 +142,15 @@ final class War extends IUpdater{
 				Race r = RACES.all().get((ri+i)%RACES.all().size());
 				
 				int am = WARMYD.conscriptable(r).get(f)-WARMYD.men(r).target().get(a);
-				am = CLAMP.i(am, 0, RES.config().BATTLE.MEN_PER_DIVISION);
+				
+				am = CLAMP.i(am, 0, Config.BATTLE.MEN_PER_DIVISION);
 				
 				
 				if (am > 0) {
-					am = CLAMP.i(am, 20, RES.config().BATTLE.MEN_PER_DIVISION);
-					WDivRegional d = World.ARMIES().regional().create(r, (double)am/RES.config().BATTLE.MEN_PER_DIVISION, 0,0, a);
+					
+					am = CLAMP.i(am, 20, Config.BATTLE.MEN_PER_DIVISION);
+					
+					WDivRegional d = World.ARMIES().regional().create(r, (double)am/Config.BATTLE.MEN_PER_DIVISION, 0,0, a);
 					d.randomize(((1+f.index())%10)/10.0, 4 + f.index()%12);
 					//d.menSet(d.menTarget());
 					continue main;

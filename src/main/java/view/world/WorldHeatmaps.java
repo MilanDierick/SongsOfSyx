@@ -41,7 +41,7 @@ final class WorldHeatmaps extends GButt.ButtPanel{
 			protected double getValue(int tx, int ty) {
 				info.clear();
 				info.add(tx, ty);
-				return info.fertility();
+				return info.fertility().getD();
 			}
 			
 		});
@@ -57,7 +57,7 @@ final class WorldHeatmaps extends GButt.ButtPanel{
 						info.add(tx, ty);
 						double d = 0;
 						for (TERRAIN t : TERRAINS.ALL()) {
-							d += m.terrain(t)*info.get(t);
+							d += m.terrain(t)*info.get(t).getD();
 						}
 						d /= m.occurance;
 						

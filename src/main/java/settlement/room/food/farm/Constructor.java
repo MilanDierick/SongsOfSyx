@@ -53,7 +53,7 @@ final class Constructor extends Furnisher{
 		}
 		
 	};
-	final FurnisherStat workers = new FurnisherStat(this, 1) {
+	final FurnisherStat workers = new FurnisherStat(this, 0.01) {
 
 		@Override
 		public GText format(GText t, double value) {

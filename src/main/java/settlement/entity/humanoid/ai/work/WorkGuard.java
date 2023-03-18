@@ -7,6 +7,7 @@ import settlement.entity.humanoid.ai.main.AISUB.AISubActivation;
 import settlement.main.SETT;
 import settlement.room.law.guard.GuardInstance;
 import settlement.stats.STATS;
+import settlement.stats.StatsEquippables.EQUIPPABLE_MILITARY;
 import snake2d.util.rnd.RND;
 
 final class WorkGuard extends PlanBlueprint {
@@ -25,7 +26,10 @@ final class WorkGuard extends PlanBlueprint {
 		@Override
 		protected AISubActivation setAction(Humanoid a, AIManager d) {
 			GuardInstance ins = (GuardInstance) work(a);
-			STATS.EQUIP().BATTLEGEAR.set(a.indu(), 1);
+			for (EQUIPPABLE_MILITARY e : STATS.EQUIP().military_all()) {
+				e.stat().indu().set(a.indu(), e.guardAmount());
+			}
+			
 			if (!ins.guardSpot(d.planTile)) {
 				GAME.Notify("WEIRD!!!" + ins.mX() + " " + ins.mY());
 				return null;
@@ -145,7 +149,9 @@ final class WorkGuard extends PlanBlueprint {
 	
 	@Override
 	protected void cancel(Humanoid a, AIManager d) {
-		STATS.EQUIP().BATTLEGEAR.set(a.indu(), 0);
+		for (EQUIPPABLE_MILITARY e : STATS.EQUIP().military_all()) {
+			e.stat().indu().set(a.indu(), 0);
+		}
 		super.cancel(a, d);
 	}
 	
@@ -153,7 +159,9 @@ final class WorkGuard extends PlanBlueprint {
 	protected AISubActivation resume(Humanoid a, AIManager d) {
 		AISubActivation s = super.resume(a, d);
 		if (s == null)
-			STATS.EQUIP().BATTLEGEAR.set(a.indu(), 0);
+			for (EQUIPPABLE_MILITARY e : STATS.EQUIP().military_all()) {
+				e.stat().indu().set(a.indu(), 0);
+			}
 		return s;
 	}
 

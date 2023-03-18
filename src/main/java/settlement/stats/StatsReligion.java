@@ -4,8 +4,7 @@ import java.util.Arrays;
 
 import game.GAME;
 import init.D;
-import init.boostable.BBoost;
-import init.boostable.BOOSTABLES;
+import init.boostable.*;
 import init.paths.PATHS;
 import init.race.Race;
 import settlement.army.Div;
@@ -18,7 +17,6 @@ import settlement.room.spirit.temple.TempleInstance;
 import settlement.stats.Init.*;
 import settlement.stats.SETT_STATISTICS.SettStatistics;
 import settlement.stats.STAT.StatInfo;
-import settlement.stats.StatsBoosts.StatBooster;
 import snake2d.util.color.COLOR;
 import snake2d.util.color.ColorImp;
 import snake2d.util.file.Json;
@@ -309,7 +307,7 @@ public class StatsReligion extends StatCollection {
 		public final COLOR color;
 		public final INFO info;
 		private final double[] liking;
-		public final LIST<StatBooster> bonuses;
+		public final LIST<BBooster> bonuses;
 
 		public final double inclination;
 		
@@ -364,7 +362,7 @@ public class StatsReligion extends StatCollection {
 			for (HCLASS s : HCLASS.ALL)
 				permission.set(s, null, true);
 			init.savables.add(permission);
-			ArrayList<StatBooster> bos = new ArrayList<>(bonuses.size());
+			ArrayList<BBooster> bos = new ArrayList<>(bonuses.size());
 			for (BBoost b : bonuses) {
 				bos.add(new Boo(init, this, b));
 			}
@@ -382,12 +380,12 @@ public class StatsReligion extends StatCollection {
 		
 	}
 	
-	private static class Boo extends StatBooster {
+	private static class Boo extends BBooster.BBoosterImp {
 
 		private final Religion rl;
 		
 		Boo(Init init, Religion rl, BBoost boost) {
-			super(init, ¤¤religion + ": " + rl.info.name, boost);
+			super(¤¤religion + ": " + rl.info.name, boost, true, true, false);
 			this.rl = rl;
 		}
 

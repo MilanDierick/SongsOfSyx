@@ -1,8 +1,7 @@
 package settlement.stats;
 
 import init.D;
-import init.boostable.BBoost;
-import init.boostable.BOOSTABLES;
+import init.boostable.*;
 import init.race.*;
 import settlement.army.Div;
 import settlement.entity.humanoid.*;
@@ -129,15 +128,15 @@ public class StatsWork extends StatCollection{
 				m = Math.max(m, s.healthFactor);
 			}
 			final double I = 1.0/m;
-			new StatsBoosts.StatBooster(init, DicMisc.¤¤Employment, new BBoost(BOOSTABLES.PHYSICS().HEALTH, 1, true)) {
+			new BBooster.BBoosterImp(DicMisc.¤¤Employment, new BBoost(BOOSTABLES.PHYSICS().HEALTH, 1, true), true, true, false) {
 				
 				@Override
-				protected double pvalue(Div v) {
+				public double pvalue(Div v) {
 					return I;
 				}
 				
 				@Override
-				protected double pvalue(HCLASS c, Race r) {
+				public double pvalue(HCLASS c, Race r) {
 					
 					double e = EMPLOYED.stat().data(c).get(r);
 					double pop = STATS.POP().POP.data(c).get(r);
@@ -150,7 +149,7 @@ public class StatsWork extends StatCollection{
 				}
 				
 				@Override
-				protected double pvalue(Induvidual v) {
+				public double pvalue(Induvidual v) {
 					RoomInstance r = EMPLOYED.get(v);
 					if (r != null)
 						return r.blueprintI().employment().healthFactor;
@@ -183,23 +182,22 @@ public class StatsWork extends StatCollection{
 	
 	private final Updatable updater = new Updatable() {
 		
-		private final StatsWorkAccident acc = new StatsWorkAccident();
-		
 		@Override
 		public void update16(Humanoid h, int updateR, boolean day, int ui) {
 			Induvidual i = h.indu();
 		
-			if (day) {
+			if (day) {				
 				WORK_TIME.indu().set(i, 0);
-				if (STATS.MULTIPLIERS().DAY_OFF.markIs(h)) {
+				if (STATS.MULTIPLIERS().OVERTIME.markIs(h)) {
+					STATS.MULTIPLIERS().OVERTIME.consume(h);
+					WORK_TIME.indu().setD(i, 1.0);
+				}else if (STATS.MULTIPLIERS().DAY_OFF.markIs(h)) {
 					STATS.MULTIPLIERS().DAY_OFF.consume(h);
 					WORK_TIME.indu().setD(i, 1.0);
 				}
 			}
 			
 			if (HPoll.Handler.works(h)) {
-				acc.create(h);
-				
 				WORK_TIME.indu().inc(i, 1);
 			}
 			

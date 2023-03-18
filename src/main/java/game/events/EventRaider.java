@@ -8,8 +8,8 @@ import game.events.EVENTS.EventResource;
 import game.faction.FACTIONS;
 import game.time.TIME;
 import init.D;
-import init.RES;
 import init.boostable.BOOSTABLES;
+import init.config.Config;
 import init.race.RACES;
 import init.race.Race;
 import init.sprite.UI.UI;
@@ -330,7 +330,8 @@ public class EventRaider extends EventResource{
 		if (men == 0)
 			men += 30 + RND.rInt(20);
 		
-		double dmen = CLAMP.d(RES.config().BATTLE.MEN_PER_ARMY/(double)rmen, 0, 1);
+		
+		double dmen = CLAMP.d(Config.BATTLE.MEN_PER_ARMY/(double)rmen, 0, 1);
 
 		COORDINATE c = WPathing.random(region);
 		
@@ -359,8 +360,10 @@ public class EventRaider extends EventResource{
 			
 			while (menLeft > 2 && a.divs().canAdd()) {
 				
-				int am = CLAMP.i((int)menLeft, 0, RES.config().BATTLE.MEN_PER_DIVISION);
-				WDivRegional d = World.ARMIES().regional().create(r, (double)am/RES.config().BATTLE.MEN_PER_DIVISION, 0,0, a);
+				
+				int am = CLAMP.i((int)menLeft, 0, Config.BATTLE.MEN_PER_DIVISION);
+				
+				WDivRegional d = World.ARMIES().regional().create(r, (double)am/Config.BATTLE.MEN_PER_DIVISION, 0,0, a);
 				d.randomize(RND.rExpo(), (int)(RND.rExpo()*15));
 				d.menSet(d.menTarget());
 				menLeft -= am;
@@ -369,7 +372,8 @@ public class EventRaider extends EventResource{
 		}
 		
 		if (WARMYD.men(null).get(a) < men) {
-			WDivRegional d = World.ARMIES().regional().create(biggest, (double)CLAMP.d((double)(men-WARMYD.men(null).get(a))/RES.config().BATTLE.MEN_PER_DIVISION, 0.1, 1), 0,0, a);
+			
+			WDivRegional d = World.ARMIES().regional().create(biggest, (double)CLAMP.d((double)(men-WARMYD.men(null).get(a))/Config.BATTLE.MEN_PER_DIVISION, 0.1, 1), 0,0, a);
 			d.randomize(RND.rExpo(), (int)(RND.rExpo()*15));
 			
 		}
@@ -435,8 +439,10 @@ public class EventRaider extends EventResource{
 			
 			while (menLeft > 2 && a.divs().canAdd()) {
 				
-				int am = CLAMP.i((int)menLeft, 0, RES.config().BATTLE.MEN_PER_DIVISION);
-				WDivRegional d = World.ARMIES().regional().create(r, (double)am/RES.config().BATTLE.MEN_PER_DIVISION, 0,0, a);
+				
+				int am = CLAMP.i((int)menLeft, 0, Config.BATTLE.MEN_PER_DIVISION);
+				
+				WDivRegional d = World.ARMIES().regional().create(r, (double)am/Config.BATTLE.MEN_PER_DIVISION, 0,0, a);
 				d.randomize(gear, (int)(training*15));
 				d.menSet(d.menTarget());
 				menLeft -= a.divs().get(a.divs().size()-1).menTarget();
@@ -484,7 +490,8 @@ public class EventRaider extends EventResource{
 			men = 30 + RND.rInt(20);
 		
 		
-		men = CLAMP.i(men, 0, RES.config().BATTLE.MEN_PER_ARMY);
+		
+		men = CLAMP.i(men, 0, Config.BATTLE.MEN_PER_ARMY);
 		
 		double raceTot = 0;
 		Race biggest = RACES.all().get(0);
@@ -504,9 +511,11 @@ public class EventRaider extends EventResource{
 			
 			while (menLeft > 2 && a.divs().canAdd()) {
 				
-				int am = CLAMP.i((int)menLeft, 0, RES.config().BATTLE.MEN_PER_DIVISION);
 				
-				WDivRegional d = World.ARMIES().regional().create(r, (double)am/RES.config().BATTLE.MEN_PER_DIVISION, 0,0, a);
+				int am = CLAMP.i((int)menLeft, 0, Config.BATTLE.MEN_PER_DIVISION);
+				
+				
+				WDivRegional d = World.ARMIES().regional().create(r, (double)am/Config.BATTLE.MEN_PER_DIVISION, 0,0, a);
 				d.randomize(RND.rExpo(), (int)(RND.rExpo()*15));
 				d.menSet(d.menTarget());
 				menLeft -= am;

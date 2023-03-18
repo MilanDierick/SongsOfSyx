@@ -9,7 +9,6 @@ import settlement.main.SETT;
 import settlement.room.infra.monument.ROOM_MONUMENT;
 import settlement.stats.Init.Updatable;
 import settlement.stats.STAT.*;
-import settlement.stats.StatsBoosts.StatBoosterStat;
 import snake2d.util.rnd.RND;
 import snake2d.util.sets.ArrayList;
 import snake2d.util.sets.LIST;
@@ -40,7 +39,7 @@ public class StatsAccess extends StatCollection {
 			info.setOpinion(¤¤more, ¤¤less);
 			STATData d = new STATData(e.key, init, init.count.new DataNibble(), info, e.standing);
 			for (BBoost b : e.bonuses) {
-				d.boosts.add(new StatBoosterStat(init, DicMisc.¤¤Access + ": " + e.name, d, b));
+				d.boosts.add(new StatBoosterStat(DicMisc.¤¤Access + ": " + e.name, d, b));
 			}
 		}
 

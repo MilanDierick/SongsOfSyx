@@ -300,7 +300,7 @@ public final class RegionOwner extends RResource{
 	public void setCapitol(int cx, int cy, Faction faction) {
 		
 		if (!canSetCapitol(cx, cy, faction)) {
-			throw new RuntimeException(""+CapitolPlacablity.whole(cx-1, cy-1));
+			throw new RuntimeException("");
 		}
 		
 		FRegions realm = faction.kingdom().realm();
@@ -334,7 +334,7 @@ public final class RegionOwner extends RResource{
 	public boolean canSetCapitol(int cx, int cy, Faction faction) {
 		
 		Region r = World.REGIONS().getter.get(cx, cy);
-		if (CapitolPlacablity.whole(cx-1, cy-1) != null)
+		if (r == null)
 			return false;
 		
 		if (r.realm() != null && r.realm() != faction.kingdom().realm())

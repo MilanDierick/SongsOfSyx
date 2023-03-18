@@ -54,7 +54,6 @@ public final class RaceHomeClass {
 		mat = new RaceHomeSheet();
 		masterBed = new RaceHomeSheet();
 		statue = new RaceHomeSheet();
-		
 		floors = new Floor[0];
 		fneeded = new int[0][0];
 		

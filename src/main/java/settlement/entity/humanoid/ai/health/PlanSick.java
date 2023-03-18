@@ -28,6 +28,7 @@ class PlanSick extends AIPLAN.PLANRES{
 		AISubActivation s = ho.init(a, d);
 		if (s != null)
 			return s;
+		STATS.WORK().EMPLOYED.set(a, null);
 		return res.set(a, d);
 	}
 	

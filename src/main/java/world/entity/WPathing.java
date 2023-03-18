@@ -418,7 +418,7 @@ public final class WPathing {
 		for (int i = 0; i < 256; i++) {
 			int x1 = r.bounds().x1() + RND.rInt(r.bounds().width());
 			int y1 = r.bounds().y1() + RND.rInt(r.bounds().height());
-			if (World.REGIONS().getter.is(x1, y1, r) && !World.WATER().isOCEAN.is(x1, y1) && !World.WATER().isLaky.is(x1, y1)) {
+			if (World.REGIONS().getter.is(x1, y1, r) && !World.WATER().OCEAN.is.is(x1, y1) && !World.WATER().LAKE.is.is(x1, y1)) {
 				Coo.TMP.set(x1, y1);
 				return Coo.TMP;
 			}

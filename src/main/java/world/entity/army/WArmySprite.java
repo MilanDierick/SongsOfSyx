@@ -4,7 +4,7 @@ import java.io.IOException;
 
 import game.GAME;
 import init.C;
-import init.RES;
+import init.config.Config;
 import init.paths.PATHS;
 import init.sprite.SPRITES;
 import snake2d.Renderer;
@@ -87,7 +87,8 @@ class WArmySprite {
 		
 		
 		
-		int size = (int) Math.ceil(32*(double)WARMYD.men(null).get(a)/RES.config().BATTLE.MEN_PER_ARMY);
+		
+		int size = (int) Math.ceil(32*(double)WARMYD.men(null).get(a)/Config.BATTLE.MEN_PER_ARMY);
 		
 		for (int yy = 0; yy < 4; yy++) {
 			for (int xx = 0; xx < 4; xx++) {

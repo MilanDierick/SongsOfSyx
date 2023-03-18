@@ -4,7 +4,7 @@ import java.io.IOException;
 
 import game.GAME;
 import init.C;
-import init.RES;
+import init.config.Config;
 import init.sprite.SPRITES;
 import settlement.army.Army;
 import settlement.army.Div;
@@ -31,7 +31,7 @@ final class UIPanelUnitCards extends ISidePanel{
 	
 	private static final int divsPerRow = 6;
 	private DivButtons sButtons;
-	private DivButton[] buttons = new DivButton[RES.config().BATTLE.DIVISIONS_PER_ARMY];
+	private DivButton[] buttons = new DivButton[Config.BATTLE.DIVISIONS_PER_ARMY];
 	private int rowTop;
 	private final int max;
 	private final int rows;
@@ -66,7 +66,8 @@ final class UIPanelUnitCards extends ISidePanel{
 			
 			for (int y = 0; y < rows; y++) {
 				for (int x = 0; x < divsPerRow; x++) {
-					if (i < RES.config().BATTLE.DIVISIONS_PER_ARMY) {
+					
+					if (i < Config.BATTLE.DIVISIONS_PER_ARMY) {
 						RENDEROBJ b = buttons[i];
 						b.body().moveX1(SPRITES.armyCard().width()*x);
 						b.body().moveY1(SPRITES.armyCard().height()*y);
@@ -102,14 +103,16 @@ final class UIPanelUnitCards extends ISidePanel{
 		section.add(sButtons);
 		this.army = army;
 		
-		for (int i = 0; i < RES.config().BATTLE.DIVISIONS_PER_ARMY; i++) {
+		
+		for (int i = 0; i < Config.BATTLE.DIVISIONS_PER_ARMY; i++) {
 			buttons[i] = new DivButton(army.divisions().get(i), selection);
 		}
 		this.selection = selection;
 
 		rows = HEIGHT/SPRITES.armyCard().height();
 		
-		max = CLAMP.i((int) Math.ceil((double)RES.config().BATTLE.DIVISIONS_PER_ARMY/divsPerRow) - rows, 0, Integer.MAX_VALUE);
+		
+		max = CLAMP.i((int) Math.ceil((double)Config.BATTLE.DIVISIONS_PER_ARMY/divsPerRow) - rows, 0, Integer.MAX_VALUE);
 		
 		target.set(0);
 		
@@ -135,7 +138,8 @@ final class UIPanelUnitCards extends ISidePanel{
 		
 		@Override
 		public void load(FileGetter file) throws IOException {
-			for (int i = 0; i < RES.config().BATTLE.DIVISIONS_PER_ARMY; i++) {
+			
+			for (int i = 0; i < Config.BATTLE.DIVISIONS_PER_ARMY; i++) {
 				buttons[i] = new DivButton(army.divisions().get(file.i()), selection);
 			}
 			target.set(0);
@@ -143,7 +147,8 @@ final class UIPanelUnitCards extends ISidePanel{
 		
 		@Override
 		public void clear() {
-			for (int i = 0; i < RES.config().BATTLE.DIVISIONS_PER_ARMY; i++) {
+			
+			for (int i = 0; i < Config.BATTLE.DIVISIONS_PER_ARMY; i++) {
 				buttons[i] = new DivButton(army.divisions().get(i), selection);
 			}
 		}

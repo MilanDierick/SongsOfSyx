@@ -6,14 +6,14 @@ import java.util.Arrays;
 import game.time.TIME;
 import init.D;
 import init.boostable.*;
-import init.boostable.BOOSTER_COLLECTION.BOOSTER_COLLECTION_IMP;
-import init.boostable.BOOSTER_COLLECTION.SIMPLE;
+import init.boostable.BOOST_LOOKUP.BOOSTER_LOOKUP_IMP;
+import init.boostable.BOOST_LOOKUP.SIMPLE;
 import snake2d.util.file.*;
 import snake2d.util.sprite.text.Str;
 import util.updating.IUpdater;
 import view.main.MessageText;
 
-final class PBonusExp extends BOOSTER_COLLECTION_IMP implements SIMPLE, SAVABLE{
+final class PBonusExp extends BOOSTER_LOOKUP_IMP implements SIMPLE, SAVABLE{
 
 	private static CharSequence ¤¤name = "¤Experience";
 	private static CharSequence ¤¤mGainedTitle = "¤Experience Gained";
@@ -105,6 +105,8 @@ final class PBonusExp extends BOOSTER_COLLECTION_IMP implements SIMPLE, SAVABLE{
 		for(BOOSTABLE b :BOOSTABLES.ROOMS().all()) {
 			maxAdd[b.index] = boosts[boosts.length-1];
 		}
+		
+		makeBoosters(this, true, false, true);
 	}
 	
 	void update(double ds) {
