@@ -8,6 +8,12 @@ public final class MATH {
 
 	}
 
+	public static boolean isWithin(double d, double from, double to) {
+		if (from < to)
+			return d >= from && d <= to;
+		return d >= from || d <= to;
+	}
+
 	public static int mod(int a, int m) {
 		int remainder = (a % m);
 		a = ((remainder >> 31) & m) + remainder;
@@ -26,19 +32,9 @@ public final class MATH {
 		return current - start;
 	}
 
-	public static boolean isWithin(double d, double from, double to) {
-		if (from < to)
-			return d >= from && d <= to;
-		return d >= from || d <= to;
-	}
-
 	/**
 	 * Math.pow(x,2) is quicker than this fix
 	 * Math.sqrt is almost as quick
-	 *
-	 * @param d
-	 * @param pow2
-	 * @return
 	 */
 	public final static class MPOW {
 
