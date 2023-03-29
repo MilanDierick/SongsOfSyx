@@ -6,7 +6,7 @@
 
     <groupId>com.github.gsos</groupId>
     <artifactId>songsofsyx</artifactId>
-    <version>0.63.45</version>
+    <version>0.64.0</version>
 
     <properties>
         <maven.compiler.source>8</maven.compiler.source>

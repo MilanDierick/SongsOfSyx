@@ -46,15 +46,7 @@ public class KeyMap<T> {
 		}
 	}
 
-	public String keysString() {
-		String res = "";
-		for (String s : map.keySet()) {
-			res += s + ", ";
-		}
-		return res;
-	}
-
-	public LIST<T> all(){
+	public LIST<T> all() {
 		return new ArrayList<T>(map.values());
 	}
 
@@ -66,13 +58,21 @@ public class KeyMap<T> {
 		}
 		Arrays.sort(keys);
 		ArrayList<T> res = new ArrayList<>(keys.length);
-		for(i = 0; i < keys.length; i++)
+		for (i = 0; i < keys.length; i++)
 			res.add(get(keys[i]));
 		return res;
 	}
 
 	public Set<String> keys() {
 		return map.keySet();
+	}
+
+	public String keysString() {
+		StringBuilder res = new StringBuilder();
+		for (String s : keys()) {
+			res.append(s).append(", ");
+		}
+		return res.toString();
 	}
 
 	public LIST<String> keysSorted() {
@@ -83,7 +83,7 @@ public class KeyMap<T> {
 		}
 		Arrays.sort(keys);
 		ArrayList<String> res = new ArrayList<>(keys.length);
-		for(i = 0; i < keys.length; i++)
+		for (i = 0; i < keys.length; i++)
 			res.add(keys[i]);
 		return res;
 	}
