@@ -1,13 +1,14 @@
 package settlement.room.service.nursery;
 
+import game.time.TIME;
 import settlement.entity.humanoid.HTYPE;
 import settlement.entity.humanoid.Humanoid;
 import settlement.main.SETT;
 import settlement.path.AVAILABILITY;
 import settlement.room.industry.module.Industry.IndustryResource;
 import settlement.room.industry.module.IndustryUtil;
-import settlement.stats.CAUSE_ARRIVE;
 import settlement.stats.STATS;
+import settlement.stats.util.CAUSE_ARRIVE;
 import snake2d.util.datatypes.*;
 import snake2d.util.rnd.RND;
 
@@ -25,15 +26,15 @@ final class Util {
 			return;
 		if (ss.usedByKid.get() != 0)
 			return;
-		
-		if (ss.amount.get() != ss.amount.max() || ss.job.jobResourceBitToFetch() != 0) {
+
+		if (ss.amount.get() != ss.amount.max() || ss.job.jobResourceBitToFetch() != null) {
 			ss.age.inc(-1);
 		}else {
 			if (ss.age.get() >= ss.b.BABY_DAYS) {
 				DIR d = spawnDir();
 				Humanoid h = SETT.HUMANOIDS().create(ss.b.race,tx+d.x(), ty+d.y(), HTYPE.CHILD, CAUSE_ARRIVE.BORN);
 				if (h != null) {
-					STATS.POP().AGE.indu().set(h.indu(), 0);
+					STATS.POP().age.BIRTH_DATE.set(h.indu(), TIME.days().bitsSinceStart()-ss.b.BABY_DAYS);
 					STATS.POP().TYPE.NATIVE.set(h.indu());
 				}
 				ss.init(tx, ty);
@@ -76,6 +77,7 @@ final class Util {
 			if (ss.resources[r.index()].get() > 0)
 				SETT.THINGS().resources.create(tx, ty, r.resource, ss.resources[r.index()].get());
 		}
+		ss.remove();
 	}
 	
 	void cancelChildSpot(int tx, int ty) {

@@ -7,13 +7,13 @@ import snake2d.util.datatypes.COORDINATE;
 import snake2d.util.gui.GuiSection;
 import util.gui.misc.GBox;
 import util.gui.misc.GButt;
-import util.gui.panel.GPanelS;
+import util.gui.panel.GPanel;
 
 public final class ITmpPanel extends Interrupter{
 
 	private boolean visable = false;
 	private final GuiSection section = new GuiSection();
-	private GPanelS box = new GPanelS();
+	private GPanel box = new GPanel();
 	private int buttI;
 
 	
@@ -22,7 +22,7 @@ public final class ITmpPanel extends Interrupter{
 		pin();
 		
 		
-		box.setButtBg();
+		box.setButt();
 		show(manager);
 	}
 
@@ -83,7 +83,7 @@ public final class ITmpPanel extends Interrupter{
 		
 		visable = false;
 		buttI = 0;
-		box.titleClear();
+		box.title().clear();
 		section.clear();
 		return true;
 	}

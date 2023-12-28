@@ -1,6 +1,7 @@
 package settlement.room.main.placement;
 
 import game.GAME;
+import game.faction.FResources.RTYPE;
 import settlement.main.SETT;
 import settlement.room.main.MapDataF;
 import settlement.room.main.construction.ConstructionData;
@@ -50,7 +51,7 @@ final class UtilStats {
 			resRemoved[i] += p.blueprint().constructor().areaCost(i, p.instance.upgrade())*0.75;
 			if (resRemoved[i] >= 1) {
 				SETT.THINGS().resources.create(tx,  ty, p.blueprint().constructor().resource(i), (int) resRemoved[i]);
-				GAME.player().res().inDemolition.inc(p.blueprint().constructor().resource(i), (int) resRemoved[i]);
+				GAME.player().res().inc(p.blueprint().constructor().resource(i), RTYPE.CONSTRUCTION, (int) resRemoved[i]);
 				resRemoved[i] -= (int)resRemoved[i];
 			}
 		}
@@ -62,7 +63,7 @@ final class UtilStats {
 			resRemoved[i] += it.cost(i, p.instance.upgrade())*0.75;
 			if (resRemoved[i] >= 1) {
 				SETT.THINGS().resources.create(tx,  ty, p.blueprint().constructor().resource(i), (int) resRemoved[i]);
-				GAME.player().res().inDemolition.inc(p.blueprint().constructor().resource(i), (int) resRemoved[i]);
+				GAME.player().res().inc(p.blueprint().constructor().resource(i), RTYPE.CONSTRUCTION, (int) resRemoved[i]);
 				resRemoved[i] -= (int)resRemoved[i];
 			}
 		}
@@ -97,7 +98,7 @@ final class UtilStats {
 		for (int i = 0; i < placedGroups.length; i++)
 			placedGroups[i] = 0;
 		
-		walls = p.autoWalls.isOn() ? p.door.getWalls() : 0;
+		walls = p.autoWalls.is() ? p.door.getWalls() : 0;
 		int floored = 0;
 		for (COORDINATE c : a.body()) {
 			if (!a.is(c))

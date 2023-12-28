@@ -101,7 +101,7 @@ public class HistoryResource implements HISTORY_COLLECTION<RESOURCE>, INT_OE<RES
 
 	@Override
 	public int min(RESOURCE t) {
-		return 0;
+		return Integer.MIN_VALUE;
 	}
 
 	@Override

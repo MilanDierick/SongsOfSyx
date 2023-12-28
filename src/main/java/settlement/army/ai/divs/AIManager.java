@@ -80,6 +80,7 @@ final class AIManager implements SAVABLE{
 		order.trajectory.get(Plan.traj);
 		Plan.shouldFire = false;
 		Plan.charging = false;
+		Plan.shouldBreak = false;
 		
 		Plan.settings = SETT.ARMIES().divisions().get(order.index).settings;
 		if (Plan.settings.formation == null)
@@ -98,7 +99,7 @@ final class AIManager implements SAVABLE{
 		pp.update(updateI, gamemillis);
 		SETT.ARMIES().divisions().get(order.index).settings.shouldFire = Plan.shouldFire;
 		SETT.ARMIES().divisions().get(order.index).settings.charging = Plan.charging;
-
+		SETT.ARMIES().divisions().get(order.index).settings.shouldbreak = Plan.shouldBreak;
 	}
 
 	@Override

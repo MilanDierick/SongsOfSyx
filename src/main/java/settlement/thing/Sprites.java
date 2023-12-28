@@ -22,31 +22,21 @@ public class Sprites {
 
 		final PATH path = PATHS.SPRITE_SETTLEMENT().getFolder("thing");
 		
-		flesh = (new ITileSheet(path.get("Gore"), 292, 62) {
+		flesh = (new ITileSheet(path.get("Gore"), 236, 62) {
 
 			@Override
 			protected TILE_SHEET init(ComposerUtil c, ComposerSources ss, ComposerDests d) {
 				ComposerDests.Tile t = d.s8;
 				final ComposerSources.Singles s = ss.singles;
-				s.init(0, 0, 1, 1, 10, 4, t);
-				s.setSkip(0, 20).paste(true);
+				s.init(0, 0, 1, 1, 8, 4, t);
+				s.paste(1, true);
 				return t.saveGame();
 
 			}
 		}).get();
 
 
-		bloodPool = (new ITileSheet() {
-
-			@Override
-			protected TILE_SHEET init(ComposerUtil c, ComposerSources ss, ComposerDests d) {
-				ComposerDests.Tile t = d.s8;
-				final ComposerSources.Singles s = ss.singles;
-				s.setSkip(20, 20).paste(true);
-				return t.saveGame();
-
-			}
-		}).get();
+		bloodPool = flesh.slice(32, 64);
 		
 		debris = (new ITileSheet(path.get("Debris"), 292, 34) {
 

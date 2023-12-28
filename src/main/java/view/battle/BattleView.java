@@ -8,7 +8,6 @@ import java.io.IOException;
 import game.GAME;
 import game.battle.BattleState;
 import init.C;
-import settlement.main.RenderData;
 import settlement.main.SETT;
 import settlement.room.main.throne.THRONE;
 import snake2d.MButt;
@@ -17,13 +16,15 @@ import snake2d.util.datatypes.COORDINATE;
 import snake2d.util.file.FileGetter;
 import snake2d.util.file.FilePutter;
 import util.gui.misc.GBox;
+import util.rendering.RenderData;
 import util.rendering.ShadowBatch;
 import view.interrupter.ISidePanels;
 import view.keyboard.KEYS;
 import view.main.VIEW;
 import view.sett.ui.minimap.UIMinimap;
 import view.subview.GameWindow;
-import view.ui.UIPanelTop;
+import view.ui.battle.UIBattle;
+import view.ui.top.UIPanelTop;
 
 public final class BattleView extends VIEW.ViewSub{
 	
@@ -43,6 +44,7 @@ public final class BattleView extends VIEW.ViewSub{
 	public final DivHoverer hoverer = new DivHoverer();
 	
 	public BattleView(){
+		new UIBattle();
 		UIPanelTop pp = new UIPanelTop(uiManager, true);
 		panels = new ISidePanels(uiManager, 0);
 		minimap = new UIMinimap(pp, uiManager, UIPanelTop.HEIGHT, false, false, false, false, false, window);
@@ -134,7 +136,6 @@ public final class BattleView extends VIEW.ViewSub{
 	@Override
 	protected void save(FilePutter file) {
 		window.saver.save(file);
-		panel.save(file);
 		minimap.save(file);
 	}
 	
@@ -142,19 +143,22 @@ public final class BattleView extends VIEW.ViewSub{
 	protected void load(FileGetter file) throws IOException {
 		window.saver.load(file);
 		selection.clear();
-		panel.load(file);
 		minimap.load(file);
 	}
 	
 	public void clear() {
 		selection.clear();
-		panel.clear();
 		minimap.clear();
 	}
 	
 	@Override
 	public void renderBelowTerrain(Renderer r, ShadowBatch s, RenderData data) {
 		renderer.renderBelow(r, data);
+	}
+	
+	@Override
+	protected boolean canSave() {
+		return false;
 	}
 	
 	

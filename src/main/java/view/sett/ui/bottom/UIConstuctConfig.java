@@ -1,18 +1,17 @@
 package view.sett.ui.bottom;
 
 import init.C;
-import init.sprite.SPRITES;
-import init.sprite.UI.UI;
 import snake2d.util.datatypes.DIR;
 import snake2d.util.gui.GUI_BOX;
 import snake2d.util.gui.GuiSection;
 import snake2d.util.gui.clickable.CLICKABLE;
 import snake2d.util.gui.renderable.RENDEROBJ;
+import snake2d.util.misc.ACTION;
 import snake2d.util.sets.LISTE;
 import snake2d.util.sprite.SPRITE;
 import util.gui.misc.GBox;
 import util.gui.misc.GButt;
-import util.gui.panel.GPanelS;
+import util.gui.panel.GPanel;
 import view.main.VIEW;
 import view.tool.PLACABLE;
 import view.tool.ToolConfig;
@@ -21,21 +20,23 @@ class UIConstuctConfig implements ToolConfig{
 
 	protected CharSequence name;
 	protected GuiSection section = new GuiSection();
-	private final GPanelS panel = new GPanelS();
+	private final GPanel panel = new GPanel();
 	private GuiSection full = new GuiSection();
-	CLICKABLE exit = new GButt.Glow(SPRITES.icons().s.cancel, UI.PANEL().panelM.get(0)) {
+	ACTION exit = new ACTION() {
+		
 		@Override
-		protected void clickA() {
+		public void exe() {
 			VIEW.s().tools.placer.deactivate();
-		};
+			
+		}
 	};
+	
 	PLACABLE placer;
 	
 	protected UIConstuctConfig(CharSequence name) {
 		this.name = name;
-		panel.setButtBg();
+		panel.setButt();
 		panel.setTitle(name);
-		panel.titleCenter();
 	}
 	
 	public void activate() {
@@ -58,9 +59,9 @@ class UIConstuctConfig implements ToolConfig{
 		full.body().centerX(C.DIM());
 		full.addRelBody(C.SG*8, DIR.N, section);
 		
-		panel.setButtBg();
+		panel.setButt();
 		panel.inner().set(full);
-		panel.moveExit(exit);
+		panel.clickActionSet(exit);
 		full.add(panel);
 		full.moveLastToBack();
 		full.body().moveY1(75);

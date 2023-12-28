@@ -64,6 +64,8 @@ final class Updater {
 	private void addToMaps(ArmyAIUtil u) {
 		for (short i = 0; i < u.statuses.length; i++) {
 			Div d = SETT.ARMIES().division(i);
+			
+			
 			if (!d.order().active())
 				continue;
 			d.order().next.get(form);
@@ -103,8 +105,6 @@ final class Updater {
 				yy = pos.pixel(best).y();
 			}
 			
-
-			
 			u.statuses[i].cx = xx;
 			u.statuses[i].cy = yy;
 			u.quads.add(d, xx, yy);
@@ -138,8 +138,9 @@ final class Updater {
 			
 			list.clear();
 			u.quads.getNearest(list, s.currentPixelCX(), s.currentPixelCY(), 256*C.TILE_SIZE, d.armyEnemy(), d);
-			double distMax = C.TILE_SIZE*40;
+			double distMax = C.TILE_SIZE*64;
 			distMax *= distMax;
+			double distMin = distMax*0.5;
 			
 			for (int ii = 0; ii < list.size(); ii++) {
 			
@@ -149,14 +150,22 @@ final class Updater {
 				double dist = dx*dx+dy*dy;
 				
 				if (dist < distMax) {
-					DIR dir = DIR.get(dx, dy);
-					if (dir.isOrtho())
-						threatDirs |= dir.mask();
-					else
-						threatDirs |= dir.mask()<<4;
-					threatsides[dir.id()] += Math.max(e.settings.power*e.deployed()*(1.0 - dist/distMax), 0);
+					double threat = Math.max(e.settings.power*(1.0 - Math.sqrt(dist/distMax)), 0);
+					if (dist < distMin) {
+						DIR dir = DIR.get(dx, dy);
+						if (dir.isOrtho())
+							threatDirs |= dir.mask();
+						else
+							threatDirs |= dir.mask()<<4;
+						threatsides[dir.id()] += threat;
+					}
 					
-					enemyThreats += Math.max(e.settings.power*e.deployed()*(1.0 - dist/distMax), 0);
+					
+					
+					
+					
+					
+					enemyThreats += threat;
 					
 				}
 				
@@ -176,7 +185,7 @@ final class Updater {
 				double dist = dx*dx+dy*dy;
 				
 				if (dist < distMax) {
-					friends += Math.max(e.settings.power*e.deployed()*(1.0 - dist/distMax), 0);
+					friends += Math.max(e.settings.power*(1.0 - Math.sqrt(dist/distMax)), 0);
 				}
 				
 				
@@ -198,7 +207,7 @@ final class Updater {
 				}
 				enemyThreats = enemies;
 				
-				friends += d.settings.power*d.deployed();
+				friends += d.settings.power;
 				
 				
 				if (friends > 0) {

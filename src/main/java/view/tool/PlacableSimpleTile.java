@@ -1,9 +1,9 @@
 package view.tool;
 
-import init.sprite.ICON.MEDIUM;
 import init.sprite.SPRITES;
 import snake2d.SPRITE_RENDERER;
 import snake2d.util.color.COLOR;
+import snake2d.util.sprite.SPRITE;
 import util.colors.GCOLORS_MAP;
 import util.gui.misc.GBox;
 import view.subview.GameWindow;
@@ -29,7 +29,7 @@ public abstract class PlacableSimpleTile implements PLACABLE{
 	}
 	
 	@Override
-	public MEDIUM getIcon() {
+	public SPRITE getIcon() {
 		return SPRITES.icons().m.cancel;
 	}
 
@@ -52,7 +52,7 @@ public abstract class PlacableSimpleTile implements PLACABLE{
 	public abstract CharSequence isPlacable(int tx, int ty);
 	public abstract void place(int tx, int ty);
 	
-	public void renderPlaceHolder(SPRITE_RENDERER r, int cx, int cy, boolean isPlacable) {
+	public void renderPlaceHolder(SPRITE_RENDERER r, int tx, int ty, int cx, int cy, boolean isPlacable) {
 		if (!isPlacable)
 			GCOLORS_MAP.map_ok.bind();
 		else
@@ -62,7 +62,7 @@ public abstract class PlacableSimpleTile implements PLACABLE{
 	}
 
 
-	public void renderOverlay(int x, int y, SPRITE_RENDERER r, float ds, GameWindow window) {
+	public void renderOverlay(GameWindow window) {
 		
 	}
 	

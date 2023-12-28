@@ -2,10 +2,8 @@ package menu;
 
 import java.io.IOException;
 
-import init.biomes.CLIMATES;
-import init.biomes.TERRAINS;
+import game.boosting.BOOSTING;
 import init.paths.PATHS;
-import init.race.RACES;
 import init.sprite.UI.UI;
 import util.spritecomposer.Initer;
 
@@ -28,11 +26,10 @@ final class RESOURCES {
 			
 			@Override
 			public void createAssets() throws IOException {
-				CLIMATES.init();
-				TERRAINS.init();
-				new RACES();
-				s = new RSprites();
 				UI.init();
+				BOOSTING.init(null);
+				s = new RSprites();
+				
 			}
 		}.get("menu", PATHS.textureSize(), 0);
 		sound = new RSound();

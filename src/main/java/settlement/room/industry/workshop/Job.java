@@ -2,6 +2,7 @@ package settlement.room.industry.workshop;
 
 import static settlement.main.SETT.*;
 
+import init.resources.RBIT;
 import init.resources.RESOURCE;
 import init.sound.SoundSettlement.Sound;
 import settlement.entity.humanoid.Humanoid;
@@ -47,7 +48,7 @@ class Job{
 	
 	Job(ROOM_WORKSHOP print) {
 		this.print = print;
-		FETCH = new RoomResDeposit() {
+		FETCH = new RoomResDeposit(print) {
 			
 			@Override
 			protected boolean is(int tx, int ty) {
@@ -57,6 +58,36 @@ class Job{
 			@Override
 			protected void hasCallback() {
 				// TODO Auto-generated method stub
+				
+			}
+
+			@Override
+			protected boolean regularJobCanBeReserved(COORDINATE coo) {
+				WorkshopInstance ins = print.get(coo.x(), coo.y());
+				return ins.hasStorage;
+			}
+
+			@Override
+			protected void regularJobStore(COORDINATE coo, int am) {
+				WorkshopInstance ins = print.get(coo.x(), coo.y());
+				int x1 = ins.sx;
+				int y1 = ins.sy;
+				RoomResStorage ss = storage.get(x1, y1, ins);
+				
+				while(ss != null && am > 0) {
+					if (ss.hasRoom()) {
+						ss.deposit();
+						am--;
+						continue;
+					}
+					
+					RoomResStorage sss = storage.get(ss.x()+1, ss.y(), ins);
+					if (sss == null)
+						sss = storage.get(x1, ss.y()+1, ins);
+					ss = sss;
+				}
+				if (am > 0)
+					ins.hasStorage = false;
 				
 			}
 
@@ -104,7 +135,6 @@ class Job{
 		private final Coo coo = new Coo();
 		WorkshopInstance ins;
 		int data;
-		final static String name = "working";
 		
 		Work(){
 		
@@ -149,8 +179,8 @@ class Job{
 		}
 
 		@Override
-		public String jobName() {
-			return name;
+		public CharSequence jobName() {
+			return ins.blueprintI().employment().verb;
 		}
 
 		@Override
@@ -165,8 +195,8 @@ class Job{
 		}
 
 		@Override
-		public long jobResourceBitToFetch() {
-			return 0;
+		public RBIT jobResourceBitToFetch() {
+			return null;
 		}
 
 		@Override

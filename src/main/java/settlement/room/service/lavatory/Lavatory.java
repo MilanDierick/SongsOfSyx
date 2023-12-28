@@ -2,6 +2,7 @@ package settlement.room.service.lavatory;
 
 import static settlement.main.SETT.*;
 
+import init.resources.RBIT;
 import init.resources.RESOURCE;
 import init.sound.SoundSettlement;
 import settlement.entity.humanoid.Humanoid;
@@ -178,8 +179,8 @@ public class Lavatory implements FSERVICE{
 		}
 
 		@Override
-		public long jobResourceBitToFetch() {
-			return 0;
+		public RBIT jobResourceBitToFetch() {
+			return null;
 		}
 
 		@Override

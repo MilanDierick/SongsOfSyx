@@ -1,8 +1,8 @@
 package settlement.path.components;
 
-import util.data.BOOLEAN_OBJECT;
+import util.data.BOOLEANO;
 
-public final class SComponentChecker implements BOOLEAN_OBJECT<SComponent>{
+public final class SComponentChecker implements BOOLEANO<SComponent>{
 
 	private final SComponentLevel level;
 	private short[] neighbourcheck;

@@ -2,7 +2,6 @@ package settlement.room.law.prison;
 
 import java.io.IOException;
 
-import settlement.main.RenderData.RenderIterator;
 import settlement.main.SETT;
 import settlement.path.AVAILABILITY;
 import settlement.room.main.*;
@@ -10,11 +9,12 @@ import settlement.room.main.furnisher.*;
 import settlement.room.main.util.RoomInit;
 import settlement.room.main.util.RoomInitData;
 import settlement.room.sprite.*;
-import settlement.tilemap.Floors.Floor;
+import settlement.tilemap.floor.Floors.Floor;
 import snake2d.Errors;
 import snake2d.SPRITE_RENDERER;
 import snake2d.util.datatypes.*;
 import snake2d.util.file.Json;
+import util.rendering.RenderData.RenderIterator;
 import util.rendering.ShadowBatch;
 
 final class Constructor extends Furnisher{
@@ -37,12 +37,12 @@ final class Constructor extends Furnisher{
 			throws IOException {
 		super(init, 1, 2, 88, 44);
 		this.blue = blue;
-		floor2 = SETT.FLOOR().get(init.data().value("FLOOR2"), init.data());
+		floor2 = SETT.FLOOR().map.get(init.data().value("FLOOR2"), init.data());
 		
 		Json sp = init.data().json("SPRITES");
 		
 		
-		RoomSpriteComboN sWall = new RoomSpriteComboN(sp, "WALLS_COMBO");
+		RoomSpriteCombo sWall = new RoomSpriteCombo(sp, "WALLS_COMBO");
 		RoomSprite1x1 sBars = new RoomSprite1x1(sp, "BARS_1X1");
 		
 		RoomSprite sLatrine = new SCellOther(sWall, sBars, new RoomSprite1x1(sp, "LATRINE_EMPTY_1X1")) {
@@ -218,12 +218,12 @@ final class Constructor extends Furnisher{
 	
 
 	
-	private static class SCellOther extends RoomSpriteComboN{
+	private static class SCellOther extends RoomSpriteCombo{
 
 		private final RoomSprite other;
 		private final RoomSprite1x1 sBars;
 		
-		public SCellOther(RoomSpriteComboN sWall, RoomSprite1x1 sBars, RoomSprite other) throws IOException {
+		public SCellOther(RoomSpriteCombo sWall, RoomSprite1x1 sBars, RoomSprite other) throws IOException {
 			super(sWall);
 			this.sBars = sBars;
 			this.other = other;

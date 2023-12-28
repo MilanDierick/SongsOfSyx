@@ -1,8 +1,8 @@
 package settlement.room.service.food.eatery;
 
-import init.resources.Edible;
-import init.resources.RESOURCES;
-import settlement.main.RenderData;
+import game.GAME;
+import init.resources.*;
+import init.resources.RBIT.RBITImp;
 import settlement.main.SETT;
 import settlement.misc.job.*;
 import settlement.misc.util.RESOURCE_TILE;
@@ -13,10 +13,12 @@ import settlement.room.main.RoomInstance;
 import settlement.room.main.TmpArea;
 import settlement.room.main.job.JobIterator;
 import settlement.room.main.util.RoomInit;
+import settlement.room.service.food.eatery.Crate.Service;
 import settlement.room.service.module.ROOM_SERVICER;
 import settlement.room.service.module.RoomServiceInstance;
 import snake2d.Renderer;
 import snake2d.util.datatypes.COORDINATE;
+import util.rendering.RenderData;
 import util.rendering.ShadowBatch;
 
 final class EateryInstance extends RoomInstance implements JOBMANAGER_HASER, ROOM_PRODUCER, ROOM_SERVICER{
@@ -31,14 +33,14 @@ final class EateryInstance extends RoomInstance implements JOBMANAGER_HASER, ROO
 	private int amountTotal = 0;
 	final int maxAmount;
 	private final JobIterator jobs;
-	private long fetchMask = RESOURCES.EDI().mask;
-	private long useMask = 0;
+	private final RBITImp fetchMask = new RBITImp().clearSet(RESOURCES.EDI().mask);
+	private final RBITImp useMask = new RBITImp();
 	final RoomServiceInstance service;
 
 	EateryInstance(ROOM_EATERY p, TmpArea area, RoomInit init) {
 		super(p, area, init);
 
-		maxAmount = (int) blueprintI().constructor.storage.get(this);
+		maxAmount = 2*(int) blueprintI().constructor.storage.get(this);
 		jobs = new JobIterator(this) {
 			private static final long serialVersionUID = 1L;
 
@@ -60,9 +62,11 @@ final class EateryInstance extends RoomInstance implements JOBMANAGER_HASER, ROO
 		employees().neededSet((int) Math.ceil(blueprintI().constructor.workers.get(this)));
 		activate();
 		
-		for (Edible e : RESOURCES.EDI().all()) {
-			if (e.resource.edibleServe)
-				useMask |= e.resource.bit;
+		for (ResG e : RESOURCES.EDI().all()) {
+			if (e.resource.edibleServe) {
+				useMask.or(e.resource);
+				setMask(e);
+			}
 		}
 	}
 
@@ -83,7 +87,14 @@ final class EateryInstance extends RoomInstance implements JOBMANAGER_HASER, ROO
 		
 	}
 	
-	public int amount(Edible e) {
+	@Override
+	public void updateTileDay(int tx, int ty) {
+		Service s = blueprintI().crate.service(tx, ty);
+		if (s != null)
+			s.check();
+	}
+	
+	public int amount(ResG e) {
 		return amounts[e.index()];
 	}
 	
@@ -91,7 +102,7 @@ final class EateryInstance extends RoomInstance implements JOBMANAGER_HASER, ROO
 		return amountTotal;
 	}
 	
-	public int jobReserved(Edible e) {
+	public int jobReserved(ResG e) {
 		return jobReserved[e.index()];
 	}
 	
@@ -99,24 +110,50 @@ final class EateryInstance extends RoomInstance implements JOBMANAGER_HASER, ROO
 		return serviceReserved;
 	}
 	
-	public long fetchMask() {
-		return fetchMask & useMask;
+	
+	public RBIT fetchMask() {
+		return fetchMask;
 	}
 	
-	public boolean uses(Edible e) {
-		return (useMask & e.resource.bit) != 0;
+	public boolean uses(ResG e) {
+		return useMask.has(e.resource);
 	}
 	
-	public void usesToggle(Edible e) {
-		useMask ^= e.resource.bit;
+	public void usesToggle(ResG e) {
+		useMask.toggle(e.resource);
+		dump(e);
+		for (COORDINATE c : body()) {
+			if (is(c)) {
+				Service ss = blueprintI().crate.service(c.x(), c.y());
+				if (ss != null)
+					ss.check();
+			}
+		}
+		setMask(e);
+	}
+
+	private void dump(ResG e) {
+		if (!useMask.has(e.resource)) {
+			int am = amounts[e.index()];
+			amounts[e.index()] = 0;
+			amountTotal -= am;
+			blueprintI().total -= am;
+			blueprintI().amounts[e.index()] -= am;
+			if (am > 0) {
+				SETT.THINGS().resources.create(mX(), mY(), e.resource, am);
+			}
+		}
+
 	}
 	
-	void jobTally(Edible e, int dReserved, int dAmount) {
+
+	void jobTally(ResG e, int dReserved, int dAmount) {
 		amounts[e.index()] += dAmount;
 		amountTotal += dAmount;
 		blueprintI().total += dAmount;
 		blueprintI().amounts[e.index()] += dAmount;
 		jobReserved[e.index()] += dReserved;
+		dump(e);
 		setMask(e);
 	}
 	
@@ -124,20 +161,24 @@ final class EateryInstance extends RoomInstance implements JOBMANAGER_HASER, ROO
 		serviceReserved += dReserved;
 	}
 	
-	void consume(Edible e, int amount, int tx, int ty) {
+	void consume(ResG e, int amount, int tx, int ty) {
+		if (amount <= 0 || amounts[e.index()]+amount < 0)
+			GAME.Notify("here");
 		jobTally(e, 0, -amount);
 		blueprintI().crate.service(tx, ty).check();
 	}
 	
-	private void setMask(Edible e) {
+	private void setMask(ResG e) {
 		if (amounts[e.index()] + jobReserved[e.index()]*4 <= maxAmount-4) {
-			fetchMask |= e.resource.bit;
-			jobs.searchAgainWithoutResources();
+			fetchMask.or(e.resource);
 		}else {
-			fetchMask &= ~e.resource.bit;
-			if (fetchMask == 0) {
-				jobs.dontSearch();
-			}
+			fetchMask.clear(e.resource);
+		}
+		fetchMask.and(useMask);
+		if (fetchMask.isClear()) {
+			jobs.dontSearch();
+		}else {
+			jobs.searchAgainWithoutResources();
 		}
 	}
 	

@@ -3,7 +3,6 @@ package settlement.room.service.hearth;
 import java.io.IOException;
 
 import init.resources.RESOURCES;
-import settlement.main.RenderData.RenderIterator;
 import settlement.main.SETT;
 import settlement.path.AVAILABILITY;
 import settlement.room.main.*;
@@ -14,6 +13,7 @@ import settlement.room.sprite.*;
 import snake2d.SPRITE_RENDERER;
 import snake2d.util.datatypes.DIR;
 import snake2d.util.file.Json;
+import util.rendering.RenderData.RenderIterator;
 import util.rendering.ShadowBatch;
 
 final class Constructor extends Furnisher{
@@ -52,9 +52,9 @@ final class Constructor extends Furnisher{
 			
 		};
 		
-		final RoomSprite sHearth = new RoomSpriteComboN(sp, "HEARTH_COMBO");
+		final RoomSprite sHearth = new RoomSpriteCombo(sp, "HEARTH_COMBO");
 		
-		final RoomSprite sFire = new RoomSpriteComboN(sHearth) {
+		final RoomSprite sFire = new RoomSpriteCombo(sHearth) {
 			
 			@Override
 			public void renderAbove(SPRITE_RENDERER r, ShadowBatch s, int data, RenderIterator it, double degrade) {
@@ -67,9 +67,7 @@ final class Constructor extends Furnisher{
 				if (blue.is(it.tile())) {
 					HearthInstance ins = blue.getter.get(it.tile());
 					
-					if(ins.wood > 0) {
-						RESOURCES.WOOD().renderLaying(r, it.x(), it.y(), it.ran(), 1+ins.wood/8);
-					}
+					RESOURCES.WOOD().renderLaying(r, it.x(), it.y(), it.ran(), 5);
 					
 					SETT.LIGHTS().hide(it.tx(), it.ty(), ins.used == 0);
 					

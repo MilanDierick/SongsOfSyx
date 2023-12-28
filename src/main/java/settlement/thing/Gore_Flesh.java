@@ -92,11 +92,13 @@ public class Gore_Flesh extends Gore{
 	@Override
 	public void render(Renderer r, ShadowBatch shadows,
 			float ds, int offsetX, int offsetY) {
-		int spriteI = sprite().tiles();
-		bindCol(col, spriteI>>8);
+		int spriteI = ran%sprite().tiles();
+		bindCol(col, ran>>8);
 		sprite().render(r, spriteI, body().x1()+offsetX, body().y1() + offsetY);
-		shadows.setDistance2Ground(2).setHeight(0);
-		sprite().render(shadows, spriteI, body().x1()+offsetX, body().y1() + offsetY);
+		if (spriteI < 32) {
+			shadows.setDistance2Ground(2).setHeight(0);
+			sprite().render(shadows, spriteI, body().x1()+offsetX, body().y1() + offsetY);
+		}
 		COLOR.unbind();
 	}
 

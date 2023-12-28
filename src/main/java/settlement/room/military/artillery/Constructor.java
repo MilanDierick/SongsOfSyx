@@ -5,22 +5,17 @@ import java.io.IOException;
 import init.resources.RESOURCES;
 import init.sprite.SPRITES;
 import init.sprite.game.SheetPair;
-import settlement.main.RenderData.RenderIterator;
 import settlement.main.SETT;
 import settlement.path.AVAILABILITY;
 import settlement.room.main.furnisher.*;
 import settlement.room.main.util.RoomInitData;
 import settlement.room.sprite.*;
-import settlement.tilemap.TFortification;
-import snake2d.Renderer;
+import settlement.tilemap.terrain.TFortification;
 import snake2d.SPRITE_RENDERER;
-import snake2d.util.color.COLOR;
 import snake2d.util.datatypes.AREA;
-import snake2d.util.datatypes.DIR;
 import snake2d.util.file.Json;
-import snake2d.util.sprite.TILE_SHEET;
+import util.rendering.RenderData.RenderIterator;
 import util.rendering.ShadowBatch;
-import util.spritecomposer.*;
 import view.tool.PlacableMessages;
 
 
@@ -30,9 +25,8 @@ abstract class Constructor extends Furnisher{
 	final static int SERVICE = 1;
 
 	protected Constructor(RoomInitData init, ROOM_ARTILLERY blue) throws IOException {
-		super(init, 1, 0, 112, 72);
+		super(init, 1, 0);
 		this.blue = blue;
-		
 		Json js = init.data().json("SPRITES");
 		
 		RoomSpriteXxX sArm = new RoomSpriteXxX(js, "ARM_2X2", 2) {
@@ -151,17 +145,6 @@ abstract class Constructor extends Furnisher{
 	}
 
 	@Override
-	protected TILE_SHEET sheet(ComposerUtil c, ComposerSources s, ComposerDests d, int y1) {
-		s.singles.init(0, y1, 2, 1, 1, 1, d.s16);
-		for (int i = 0; i < 4; i++) {
-			s.singles.setVar(0).pasteRotated(i, true);
-			s.singles.setVar(1).pasteRotated(i, true);
-		}
-		
-		return d.s16.saveGame();
-	}
-
-	@Override
 	public boolean usesArea() {
 		return false;
 	}
@@ -197,15 +180,6 @@ abstract class Constructor extends Furnisher{
 	@Override
 	public void putFloor(int tx, int ty, int upgrade, AREA area) {
 		
-	}
-	
-	public void renderProj(Renderer r, ShadowBatch s, double x, double y, int h, int ran, double dx, double dy, double dz,
-			float ds, int zoomout) {
-		int i = 4*4*8 + DIR.get(dx, dy).id();
-		COLOR.unbind();
-		sheet.render(r, i, (int)x, (int)y);
-		s.setHeight(0).setDistance2Ground(h/4);
-		sheet.renderC(s, i, (int)x, (int)y);
 	}
 
 }

@@ -1,14 +1,17 @@
 package world.map.terrain;
 
-import static world.World.*;
+import static world.WORLD.*;
 
 import snake2d.util.datatypes.DIR;
 import snake2d.util.rnd.HeightMap;
 import snake2d.util.rnd.RND;
+import world.WConfig;
 
 class GeneratorForest {
 	
 	private final HeightMap noise = new  HeightMap(TWIDTH(), THEIGHT(), 16, 4);
+	
+	private double tres = 1.0-WConfig.data.FOREST_AMOUNT;
 	
 	GeneratorForest(float[][] climate){
 		
@@ -64,9 +67,9 @@ class GeneratorForest {
 //			}
 		}
 		
-		if (n > 0.7)  {
-			n-= 0.7;
-			n *= 3.3;
+		if (n > tres)  {
+			n-= tres;
+			n *= 1.0/(1.0-tres);
 			float r = RND.rFloat();
 			n+= RND.rBoolean() ? 0.1*r : -0.1*r;
 			if ( n > 1)

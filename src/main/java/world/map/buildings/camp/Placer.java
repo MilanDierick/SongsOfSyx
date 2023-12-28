@@ -12,8 +12,8 @@ import util.gui.misc.GButt;
 import util.gui.slider.GAllocator;
 import view.tool.PLACABLE;
 import view.tool.PlacableSimpleTile;
-import view.world.IDebugPanelWorld;
-import world.World;
+import view.world.panel.IDebugPanelWorld;
+import world.WORLD;
 
 final class Placer extends PlacableSimpleTile{
 
@@ -82,7 +82,7 @@ final class Placer extends PlacableSimpleTile{
 
 	@Override
 	public void place(int tx, int ty) {
-		World.BUILDINGS().camp.create(tx, ty, type, inte.getD());
+		WORLD.BUILDINGS().camp.create(tx, ty, type, inte.getD());
 		
 	}
 	
@@ -93,7 +93,7 @@ final class Placer extends PlacableSimpleTile{
 	
 	@Override
 	public PLACABLE getUndo() {
-		return World.BUILDINGS().nothing.placer;
+		return WORLD.BUILDINGS().nothing.placer;
 	}
 
 }

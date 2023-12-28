@@ -3,7 +3,7 @@ package util.info;
 import snake2d.util.file.Json;
 import snake2d.util.gui.GUI_BOX;
 import snake2d.util.misc.ACTION;
-import view.wiki.WIKI;
+import view.ui.wiki.WIKI;
 
 public class INFO {
 
@@ -31,7 +31,7 @@ public class INFO {
 	}
 	
 	public INFO(CharSequence name, CharSequence desc) {
-		this(name, name+"s", desc, null);
+		this(""+name, name+"s", desc, null);
 	}
 	
 	public INFO(CharSequence name, CharSequence names, CharSequence desc, ACTION wiki) {

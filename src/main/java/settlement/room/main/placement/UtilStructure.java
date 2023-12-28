@@ -3,8 +3,8 @@ package settlement.room.main.placement;
 import game.GAME;
 import settlement.main.SETT;
 import settlement.misc.job.SETT_JOB;
-import settlement.tilemap.TBuilding;
-import settlement.tilemap.Terrain.TerrainTile;
+import settlement.tilemap.terrain.TBuilding;
+import settlement.tilemap.terrain.Terrain.TerrainTile;
 import snake2d.util.datatypes.COORDINATE;
 import util.data.GETTER.GETTER_IMP;
 
@@ -14,9 +14,7 @@ public final class UtilStructure extends GETTER_IMP<TBuilding> {
 
 	UtilStructure(RoomPlacer p){
 		this.p = p;
-		set(SETT.TERRAIN().BUILDINGS.getAt(0));
-		if (SETT.TERRAIN().BUILDINGS.tryGet("WOOD") != null)
-			set(SETT.TERRAIN().BUILDINGS.tryGet("WOOD"));
+		set(SETT.TERRAIN().BUILDINGS.MUD);
 	}
 	
 	SETT_JOB getWallJob(int tx, int ty) {
@@ -53,21 +51,24 @@ public final class UtilStructure extends GETTER_IMP<TBuilding> {
 					unroofed ++;
 				}
 			}
-			if (p.autoWalls.isOn()) {
+			if (p.autoWalls.is()) {
 				unroofed += p.door.getOpenings();
 			}
 		}
 		return unroofed;
 	}
-	
+	@Override
+	public void set(TBuilding t) {
+		super.set(t);
+	}
 	public int walls() {
-		if (!p.autoWalls.isOn())
+		if (!p.autoWalls.is())
 			return 0;
 		return p.door.getWalls();
 	}
 	
 	public int mountainWalls() {
-		if (!p.autoWalls.isOn())
+		if (!p.autoWalls.is())
 			return 0;
 		return p.door.getMountains();
 	}

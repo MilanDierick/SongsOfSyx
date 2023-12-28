@@ -6,7 +6,7 @@ import snake2d.Renderer;
 import snake2d.util.datatypes.COORDINATE;
 import snake2d.util.gui.GuiSection;
 import util.gui.misc.GBox;
-import util.gui.panel.GPanelL;
+import util.gui.panel.GPanel;
 import view.interrupter.Interrupter;
 
 final class Intr extends Interrupter{
@@ -18,16 +18,22 @@ final class Intr extends Interrupter{
 		v.uiManager.add(this);
 	}
 	
-	public void add(GuiSection s) {
+	public void add(GuiSection s, CharSequence title) {
+		add(s, title, true);
+	}
+	
+	public void add(GuiSection s, CharSequence title, boolean panel) {
 		this.s = s;
-		if (s != null) {
+		if (s != null && panel) {
 			
 			s.body().moveCY(C.HEIGHT()/2);
 			s.body().moveCX(C.WIDTH()/2);
 			
-			GPanelL pan = new GPanelL();
-			pan.getInnerArea().setDim(s.body().width(), s.body().height());
+			GPanel pan = new GPanel();
+			pan.setBig();
+			pan.inner().setDim(s.body().width(), s.body().height());
 			pan.body.centerIn(s);
+			pan.setTitle(title);
 			s.add(pan);
 			s.moveLastToBack();
 			
@@ -38,15 +44,14 @@ final class Intr extends Interrupter{
 	@Override
 	protected boolean hover(COORDINATE mCoo, boolean mouseHasMoved) {
 		if (s != null) {
-			s.hover(mCoo);
-			return true;
+			return s.hover(mCoo);
 		}
 		return false;
 	}
 
 	@Override
 	protected void mouseClick(MButt button) {
-		if (button == MButt.LEFT)
+		if (button == MButt.LEFT && s != null)
 			s.click();
 	}
 
@@ -71,7 +76,7 @@ final class Intr extends Interrupter{
 	
 	@Override
 	public boolean canSave() {
-		return false;
+		return true;
 	}
 	
 

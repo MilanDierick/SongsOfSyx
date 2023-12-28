@@ -11,6 +11,17 @@ public interface RENDEROBJ extends BODY_HOLDERE {
 	public boolean visableIs();
 	public RENDEROBJ visableSet(boolean yes);
 	
+	public default SPRITE asSprite() {
+		return new SPRITE.Imp(body().width(), body().height()) {
+			
+			@Override
+			public void render(SPRITE_RENDERER r, int X1, int X2, int Y1, int Y2) {
+				body().moveX1Y1(X1, Y1);
+				RENDEROBJ.this.render(r, 0);
+			}
+		};
+	}
+	
 	public abstract class RenderImp implements RENDEROBJ {
 		
 		protected final Rec body = new Rec();

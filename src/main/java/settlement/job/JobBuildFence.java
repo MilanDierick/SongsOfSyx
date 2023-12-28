@@ -3,12 +3,13 @@ package settlement.job;
 import static settlement.main.SETT.*;
 
 import game.GAME;
+import game.faction.FResources.RTYPE;
 import init.D;
 import init.sound.SoundSettlement.Sound;
 import init.sprite.SPRITES;
 import settlement.entity.humanoid.Humanoid;
-import settlement.tilemap.TFence;
-import settlement.tilemap.Terrain.TerrainTile;
+import settlement.tilemap.terrain.TFence;
+import settlement.tilemap.terrain.Terrain.TerrainTile;
 import snake2d.SPRITE_RENDERER;
 import snake2d.util.datatypes.DIR;
 import snake2d.util.sets.ArrayList;
@@ -62,7 +63,7 @@ final class JobBuildFence extends JobBuild{
 	@Override
 	protected boolean construct(int tx, int ty) {
 		if (fence.resource != null)
-			GAME.player().res().outConstruction.inc(fence.resource, fence.resAmount);
+			GAME.player().res().inc(fence.resource, RTYPE.CONSTRUCTION, -fence.resAmount);
 		fence.placeFixed(tx, ty);
 		return false;
 	}

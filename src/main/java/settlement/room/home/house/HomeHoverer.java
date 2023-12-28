@@ -4,8 +4,11 @@ import init.D;
 import init.race.appearence.RPortrait;
 import init.resources.RES_AMOUNT;
 import init.sprite.UI.UI;
+import settlement.entity.humanoid.HCLASS;
 import settlement.entity.humanoid.Humanoid;
 import settlement.main.SETT;
+import settlement.room.home.HOMET;
+import settlement.room.home.HomeSettings.HomeSetting;
 import settlement.room.main.Room;
 import settlement.stats.STATS;
 import snake2d.SPRITE_RENDERER;
@@ -19,8 +22,9 @@ import view.sett.ui.room.UIRoomModule;
 final class HomeHoverer extends UIRoomModule{
 
 	private static CharSequence ¤¤Residents = "¤{0}  ({1})";
-	private static CharSequence ¤¤VacantFor = "¤{0} Vacancies ({1})";
-	
+	private static CharSequence ¤¤VacantFor = "¤Vacant for {0}:";
+	private static CharSequence ¤¤Any = "¤Any species of any class.";
+	private static CharSequence ¤¤None = "¤None";
 	static {
 		D.ts(HomeHoverer.class);
 	}
@@ -92,14 +96,59 @@ final class HomeHoverer extends UIRoomModule{
 			
 		}else {
 			
-			box.text(h.setting().desc);
-			
 			GText t = box.text();
 			box.NL();
 			t.add(¤¤VacantFor);
 			t.insert(0, h.occupantsMax());
-			t.insert(1, h.setting().name);
 			box.add(t);
+			box.NL();
+			
+			HomeSetting s = h.setting();
+			
+			if (s.is(HOMET.get(HCLASS.NOBLE, null))) {
+				box.text(HCLASS.NOBLE.names);
+			}else {
+				int a = 0;
+				
+				for (HOMET tt : HOMET.ALLNN()) {
+					if (s.is(tt))
+						a++;
+				}
+				
+				int am = 0;
+				if (a == HOMET.ALLNN().size()) {
+					box.text(¤¤Any);
+				}else if (a == 0) {
+					box.text(¤¤None);
+				}else if (a <= HOMET.ALLNN().size()/2) {
+					for (HOMET tt : HOMET.ALL()) {
+						if (s.is(tt)) {
+							box.add(tt.icon);
+							am++;
+							if (am > 10) {
+								am = 0;
+								box.NL();
+							}
+						}
+					}
+				}else {
+					for (HOMET tt : HOMET.ALLNN()) {
+						if (!s.is(tt)) {
+							box.add(tt.icon);
+							box.rewind(tt.icon.width());
+							box.add(UI.icons().m.anti);
+							am++;
+							if (am> 10) {
+								am = 0;
+								box.NL();
+							}
+						}
+					}
+				}
+			}
+			
+			
+			
 			
 		}
 		

@@ -8,7 +8,6 @@ import init.C;
 import init.resources.RESOURCES;
 import settlement.environment.SettEnvMap.SettEnv;
 import settlement.environment.SettEnvMap.SettEnvValue;
-import settlement.main.RenderData.RenderIterator;
 import settlement.main.SETT;
 import settlement.path.AVAILABILITY;
 import settlement.path.finder.SFinderRoomService;
@@ -24,6 +23,7 @@ import snake2d.util.datatypes.DIR;
 import snake2d.util.file.*;
 import snake2d.util.sets.LISTE;
 import util.gui.misc.GBox;
+import util.rendering.RenderData.RenderIterator;
 import util.rendering.ShadowBatch;
 import view.sett.ui.room.UIRoomModule;
 
@@ -152,7 +152,7 @@ public final class ROOM_TORCH extends RoomBlueprintImp {
 				}
 				
 			};
-			medium = new RoomSpriteComboN(js, "COMBO") {
+			medium = new RoomSpriteCombo(js, "COMBO") {
 				
 				@Override
 				public boolean render(SPRITE_RENDERER r, ShadowBatch s, int data, RenderIterator it, double degrade,

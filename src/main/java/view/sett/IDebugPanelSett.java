@@ -7,7 +7,7 @@ import init.sprite.UI.UI;
 import snake2d.SPRITE_RENDERER;
 import snake2d.util.gui.clickable.CLICKABLE;
 import snake2d.util.misc.ACTION;
-import snake2d.util.misc.TOGGLEBLE;
+import util.data.BOOLEAN.BOOLEAN_MUTABLE;
 import util.gui.misc.GButt;
 import view.interrupter.IDebugPanelAbs;
 import view.interrupter.InterManager;
@@ -28,8 +28,8 @@ public class IDebugPanelSett extends IDebugPanelAbs{
 	}
 	
 	
-	private static CLICKABLE get(CharSequence name, TOGGLEBLE toggle) {
-		GButt.CheckboxTitle c = new GButt.CheckboxTitle(UI.FONT().S.getText(name)) {
+	private static CLICKABLE get(CharSequence name, BOOLEAN_MUTABLE toggle) {
+		GButt.Checkbox c = new GButt.Checkbox(UI.FONT().S.getText(name)) {
 			@Override
 			protected void clickA() {
 				selectedToggle();
@@ -38,7 +38,7 @@ public class IDebugPanelSett extends IDebugPanelAbs{
 			@Override
 			protected void render(SPRITE_RENDERER r, float ds, boolean isActive, boolean isSelected,
 					boolean isHovered) {
-				selectedSet(toggle.isOn());
+				selectedSet(toggle.is());
 				super.render(r, ds, isActive, isSelected, isHovered);
 			}
 		};
@@ -56,7 +56,7 @@ public class IDebugPanelSett extends IDebugPanelAbs{
 		return c;
 	}
 	
-	public static void add(String name, TOGGLEBLE toggle) {
+	public static void add(String name, BOOLEAN_MUTABLE toggle) {
 		put(name, get(name, toggle));
 	}
 	

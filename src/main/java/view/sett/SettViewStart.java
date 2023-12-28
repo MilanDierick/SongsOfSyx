@@ -7,9 +7,6 @@ import java.io.IOException;
 
 import init.C;
 import init.D;
-import init.resources.Minable;
-import init.resources.RESOURCES;
-import init.sprite.ICON;
 import init.sprite.SPRITES;
 import settlement.main.SETT;
 import settlement.stats.STATS;
@@ -17,15 +14,17 @@ import settlement.stats.standing.STANDINGS;
 import snake2d.MButt;
 import snake2d.Renderer;
 import snake2d.util.datatypes.COORDINATE;
+import snake2d.util.datatypes.DIR;
 import snake2d.util.file.FileGetter;
 import snake2d.util.file.FilePutter;
 import snake2d.util.gui.GuiSection;
 import snake2d.util.gui.clickable.CLICKABLE;
 import snake2d.util.gui.renderable.RENDEROBJ;
 import snake2d.util.sets.LISTE;
-import util.gui.misc.*;
-import util.gui.panel.GPanelL;
-import util.info.GFORMAT;
+import snake2d.util.sprite.SPRITE;
+import util.gui.misc.GBox;
+import util.gui.misc.GButt;
+import util.gui.panel.GPanel;
 import view.main.VIEW;
 import view.sett.ui.minimap.UIMinimap;
 import view.subview.GameWindow;
@@ -50,43 +49,45 @@ public class SettViewStart extends VIEW.ViewSub{
 		D.t(this);
 		
 		GuiSection s = new GuiSection();
+		s.body().setDim(200, 1);
+//		{
+//			int x = 0;
+//			for (Minable m : RESOURCES.minables().all()) {
+//				s.add(new GStat() {
+//					
+//					@Override
+//					public void update(GText text) {
+//						GFORMAT.i(text, SETT.MINERALS().totals.get(m));
+//					}
+//					
+//					@Override
+//					public void hoverInfoGet(GBox b) {
+//						b.text(m.name);
+//					};
+//					
+//				}.hv(m.resource.icon()), (x%6)*60, (x/6)*24);
+//				x++;
+//			}
+//		}
+//		
 		{
-			int x = 0;
-			for (Minable m : RESOURCES.minables().all()) {
-				s.add(new GStat() {
-					
-					@Override
-					public void update(GText text) {
-						GFORMAT.i(text, SETT.MINERALS().totals.get(m));
-					}
-					
-					@Override
-					public void hoverInfoGet(GBox b) {
-						b.text(m.name);
-					};
-					
-				}.hv(m.resource.icon()), (x%6)*60, (x/6)*24);
-				x++;
-			}
-		}
-		
-		GPanelL p = new GPanelL(s.body());
-		p.setTitle(D.g("start", "Landing Party"));
-		p.body.moveY1(80);
-		p.body.centerX(C.DIM());
-		s.body().centerIn(p.getInnerArea());
-		s.add(p);
-		s.moveLastToBack();
-		{
-			final CLICKABLE butt = new GButt.Panel(new ICON.MEDIUM.Twin(SPRITES.icons().m.terrain, SPRITES.icons().m.rotate)){
+			final CLICKABLE butt = new GButt.ButtPanel(new SPRITE.Twin(SPRITES.icons().m.terrain, SPRITES.icons().m.rotate)){
 				@Override
 				protected void clickA() {
 					SETT.reGenerate();
 				};
 			};
-			p.centreNavButts(butt.hoverInfoSet(D.g("Regenerate")));
-			s.add(butt);
+			s.addRelBody(4, DIR.S, butt.hoverInfoSet(D.g("Regenerate")));
 		}
+		
+		GPanel p = new GPanel(s.body()).setBig();
+		p.setTitle(D.g("start", "Landing Party"));
+		p.body.moveY1(80);
+		p.body.centerX(C.DIM());
+		s.body().centerIn(p.inner());
+		s.add(p);
+		s.moveLastToBack();
+
 		
 		manager = new ToolManager(uiManager, window);
 		mini = new UIMinimap(null, uiManager, 0, false, false, false, false, true, window);

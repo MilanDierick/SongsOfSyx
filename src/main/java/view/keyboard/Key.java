@@ -6,11 +6,11 @@ import snake2d.util.file.Json;
 import snake2d.util.file.JsonE;
 import snake2d.util.gui.GUI_BOX;
 import snake2d.util.misc.ACTION;
-import snake2d.util.sets.IntHashMap.IntHashMapObject;
+import snake2d.util.sets.INDEXED;
 import snake2d.util.sprite.text.Str;
 import util.gui.misc.GBox;
 
-public final class Key implements IntHashMapObject{
+public final class Key implements INDEXED{
 
 
 	private static Str stmp = new Str(64);
@@ -82,7 +82,7 @@ public final class Key implements IntHashMapObject{
 	}
 	
 	void save(JsonE json) {
-		int i = keyCode == -1 ? -1 : hash();
+		int i = keyCode == -1 ? -1 : index();
 		json.add(key, i);
 	}
 	
@@ -115,7 +115,7 @@ public final class Key implements IntHashMapObject{
 
 		
 		if (keyCode != -1)
-			map.map.remove(hash());		
+			map.map.remove(index());		
 		this.modCode = mod;
 		this.keyCode = key;
 		if (keyCode != -1)
@@ -170,7 +170,7 @@ public final class Key implements IntHashMapObject{
 	}
 	
 	@Override
-	public int hash() {
+	public int index() {
 		return hash(modCode, keyCode);
 	}
 	

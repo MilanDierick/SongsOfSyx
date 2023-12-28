@@ -1,22 +1,22 @@
 package world.map.buildings;
 
-import static world.World.*;
+import static world.WORLD.*;
 
 import java.io.IOException;
 
-import init.paths.PATH;
-import init.paths.PATHS;
-import settlement.main.RenderData;
-import settlement.main.RenderData.RenderIterator;
-import snake2d.SPRITE_RENDERER;
+import game.GAME;
+import game.Profiler;
 import snake2d.util.file.FileGetter;
 import snake2d.util.file.FilePutter;
 import snake2d.util.map.*;
 import snake2d.util.sets.*;
-import util.rendering.ShadowBatch;
-import world.World;
-import world.World.WorldResource;
+import util.rendering.RenderData.RenderIterator;
+import world.WORLD;
+import world.WORLD.WorldResource;
+import world.WRenContext;
 import world.map.buildings.camp.WorldCamp;
+import world.regions.Region;
+import world.regions.data.RD;
 
 public class WorldBuildings extends WorldResource{
 
@@ -26,21 +26,15 @@ public class WorldBuildings extends WorldResource{
 	private final ArrayList<WorldBuilding> all = new ArrayList<>(16);
 	
 	public final WorldBuildingSimple nothing = new BuildingNothing(all);
-	public final WorldBuildingSimple mine = new BuildingMine(all);
 	public final WorldCamp camp = new WorldCamp(all);
 	final BuildingFarm farm;
 	final BuildingVillage village;
-	final UrbanCentre centre;
-	public final WorldRoads roads = new WorldRoads();
 	public final WorldBuildingSprites sprites = new WorldBuildingSprites();
-	
 	
 	public WorldBuildings() throws IOException {
 		
-		PATH p = PATHS.SPRITE().getFolder("world").getFolder("buildings");
-		farm = new BuildingFarm(p, all);
-		village = new BuildingVillage(p, all);
-		centre = new UrbanCentre();
+		farm = new BuildingFarm(all);
+		village = new BuildingVillage(all);
 	}
 	
 	public LIST<WorldBuilding> all(){
@@ -70,77 +64,63 @@ public class WorldBuildings extends WorldResource{
 		ids.clear();
 	}
 	
-//	public void generate() {
-//		clear();
-//		new Generator();
-//	}
-	
-	public void renderAboveGround(SPRITE_RENDERER r, ShadowBatch s, RenderData rdata){
-		
-		
 
-		RenderIterator it = rdata.onScreenTiles();
-		
-		
-		while (it.has()) {
-			
-			if (World.REGIONS().isCentre.is(it.tx(), it.ty()))
-				centre.renderOnGround(r, s, it);
-			
+	public void renderAboveGround(WRenContext con, RenderIterator it){
+
+		{
 			WorldBuilding b = all.get(ids.get(it.tile()));
 			if (b != nothing)	
-				b.renderOnGround(r, it, data[it.tile()]);
-			
-			roads.render(r, s, it);
-			
-			
-			it.next();
+				b.renderOnGround(con.r, it, data[it.tile()]);
 		}
 		
 	}
 	
 	
 
-	public void renderAbove(SPRITE_RENDERER r, ShadowBatch s, RenderData data){
-		
-		
-		RenderIterator it = data.onScreenTiles(0,1,0,1);
-		
-		while(it.has()) {
-			if (World.REGIONS().isCentre.is(it.tx(), it.ty()))
-				centre.renderAbove(r, s, it);
-			
+	public void renderAbove(WRenContext con, RenderIterator it){
+		{
 			WorldBuilding b = all.get(ids.get(it.tile()));
 			if (b != nothing) {
-				b.renderAbove(r, s, it, this.data[it.tile()]);
+				b.renderAbove(con.r, con.s, it, this.data[it.tile()]);
 				
 			}
-			it.next();
-			
 		}
+		
 		
 	}
 	
-	public void renderAboveTerrain(SPRITE_RENDERER r, ShadowBatch s, RenderData data){
+	public void renderAboveTerrain(WRenContext con, RenderIterator it){
+		if (WORLD.MINERALS().get(it.tile()) != null){
+			
+			Region reg = WORLD.REGIONS().map.get(it.tile());
+			
+			if (reg != null && RD.BUILDINGS().levelMine.get(reg)*0x0F >= (it.ran()&0x0F)) {
+				int i = it.ran()&0b1;
+				i*= 4;
+				
+				int m = (GAME.intervals().get02() + (it.ran()>>1))&0b0111;
+				if (m >= 4) {
+					m -= 4;
+					m = 3-m;
+				}
+				i += m;
+				sprites.mines.render(con.r, i, it.x(), it.y());
+			}
+			
+			
 
-		RenderIterator it = data.onScreenTiles(0,0,0,0);
-		
-		while(it.has()) {
-			if (World.REGIONS().isCentre.is(it.tx(), it.ty()))
-				centre.renderAboveTerrain(r, s, it);
+		}else {
 			WorldBuilding b = all.get(ids.get(it.tile()));
 			if (b != nothing)	
-				b.renderAboveTerrain(r, s, it, this.data[it.tile()]);
-			roads.renderBridge(r, s, it);
-			it.next();
-			
+				b.renderAboveTerrain(con.r, con.s, it, this.data[it.tile()]);
 		}
-		
 	}
 	
 	@Override
-	protected void update(float ds) {
+	protected void update(float ds, Profiler prof) {
+		prof.logStart(this);
 		camp.update(ds);
+		prof.logEnd(this);
 	}
 
 	
@@ -160,7 +140,7 @@ public class WorldBuildings extends WorldResource{
 
 		@Override
 		public void set(int tile, WorldBuilding object) {
-			set(tile%World.TWIDTH(), tile/World.TWIDTH(), object);
+			set(tile%WORLD.TWIDTH(), tile/WORLD.TWIDTH(), object);
 		}
 
 		@Override
@@ -217,8 +197,8 @@ public class WorldBuildings extends WorldResource{
 		
 		@Override
 		public int get(int tx, int ty) {
-			if (World.IN_BOUNDS(tx, ty))
-				return get(tx+ty*World.TWIDTH());
+			if (WORLD.IN_BOUNDS(tx, ty))
+				return get(tx+ty*WORLD.TWIDTH());
 			return 0;
 		}
 		
@@ -229,9 +209,9 @@ public class WorldBuildings extends WorldResource{
 		
 		@Override
 		public MAP_INTE set(int tx, int ty, int value) {
-			if (!World.IN_BOUNDS(tx, ty))
+			if (!WORLD.IN_BOUNDS(tx, ty))
 				return this;
-			return set(tx+ty*World.TWIDTH(), value);
+			return set(tx+ty*WORLD.TWIDTH(), value);
 		}
 		
 		@Override
@@ -240,5 +220,11 @@ public class WorldBuildings extends WorldResource{
 			return this;
 		}
 	};
+	
+	@Override
+	protected void initBeforePlay() {
+		for (WorldBuilding b : all)
+			b.initBeforePlay();
+	}
 
 }

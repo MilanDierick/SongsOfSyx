@@ -11,10 +11,10 @@ public final class SettUI {
 
 	public final UIRoomPlacer placer = new UIRoomPlacer();
 	public final UICopier copier = new UICopier();
-	
+	public final UIBuildPanel bottom; 
 	public SettUI(InterManager m){
 		
-		new UIBuildPanel(placer, m);
+		bottom = new UIBuildPanel(placer, m);
 	}
 	
 	public void reconstruct(RoomInstance r) {

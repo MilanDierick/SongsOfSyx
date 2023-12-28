@@ -1,12 +1,12 @@
 package settlement.room.knowledge.laboratory;
 
-import settlement.main.RenderData;
 import settlement.misc.job.*;
 import settlement.room.main.RoomInstance;
 import settlement.room.main.TmpArea;
 import settlement.room.main.job.JobPositions;
 import settlement.room.main.util.RoomInit;
 import snake2d.Renderer;
+import util.rendering.RenderData;
 import util.rendering.ShadowBatch;
 
 final class LaboratoryInstance extends RoomInstance implements JOBMANAGER_HASER{

@@ -4,7 +4,6 @@ import java.io.IOException;
 
 import init.sprite.game.SheetType;
 import init.sprite.game.Sheets;
-import settlement.main.RenderData.RenderIterator;
 import settlement.main.SETT;
 import settlement.path.AVAILABILITY;
 import settlement.room.main.*;
@@ -14,9 +13,8 @@ import settlement.room.main.util.RoomInitData;
 import settlement.room.sprite.*;
 import snake2d.SPRITE_RENDERER;
 import snake2d.util.file.Json;
-import snake2d.util.sprite.TILE_SHEET;
+import util.rendering.RenderData.RenderIterator;
 import util.rendering.ShadowBatch;
-import util.spritecomposer.*;
 
 final class Constructor extends Furnisher {
 
@@ -44,7 +42,7 @@ final class Constructor extends Furnisher {
 			}
 		};
 		
-		RoomSprite stable = new RoomSpriteComboN(js, "TABLE_COMBO") {
+		RoomSprite stable = new RoomSpriteCombo(js, "TABLE_COMBO") {
 			
 			private final RoomSprite top = new RoomSprite1x1(js, "TABLE_ONTOP_1X1");
 			
@@ -138,11 +136,6 @@ final class Constructor extends Furnisher {
 		}, 10);
 		
 		flush(1, 3);
-	}
-
-	@Override
-	protected TILE_SHEET sheet(ComposerUtil c, ComposerSources s, ComposerDests d, int y1) {
-		return null;
 	}
 
 	@Override

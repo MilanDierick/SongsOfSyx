@@ -2,7 +2,6 @@ package settlement.room.law.guard;
 
 import java.io.IOException;
 
-import settlement.main.RenderData.RenderIterator;
 import settlement.main.SETT;
 import settlement.path.AVAILABILITY;
 import settlement.room.main.*;
@@ -10,17 +9,16 @@ import settlement.room.main.furnisher.*;
 import settlement.room.main.util.RoomInit;
 import settlement.room.main.util.RoomInitData;
 import settlement.room.sprite.*;
-import settlement.tilemap.TFortification;
+import settlement.tilemap.terrain.TFortification;
 import snake2d.SPRITE_RENDERER;
 import snake2d.util.datatypes.AREA;
 import snake2d.util.datatypes.DIR;
 import snake2d.util.file.Json;
 import snake2d.util.misc.CLAMP;
-import snake2d.util.sprite.TILE_SHEET;
 import util.gui.misc.GText;
 import util.info.GFORMAT;
+import util.rendering.RenderData.RenderIterator;
 import util.rendering.ShadowBatch;
-import util.spritecomposer.*;
 import view.tool.PlacableMessages;
 
 final class Constructor extends Furnisher{
@@ -79,7 +77,7 @@ final class Constructor extends Furnisher{
 		
 		RoomSprite sbraiser = new RoomSpriteBoxN(sfloor) {
 			
-			RoomSprite top = new RoomSpriteComboN(js, "TORCH_COMBO") {
+			RoomSprite top = new RoomSpriteCombo(js, "TORCH_COMBO") {
 				
 				@Override
 				protected boolean joins(int tx, int ty, int rx, int ry, DIR d, FurnisherItem item) {
@@ -110,7 +108,7 @@ final class Constructor extends Furnisher{
 
 		RoomSprite sFence = new RoomSpriteBoxN(sfloor) {
 			
-			RoomSprite top = new RoomSpriteComboN(js, "FENCE_COMBO") {
+			RoomSprite top = new RoomSpriteCombo(js, "FENCE_COMBO") {
 				
 				@Override
 				protected boolean joins(int tx, int ty, int rx, int ry, DIR d, FurnisherItem item) {
@@ -184,13 +182,6 @@ final class Constructor extends Furnisher{
 		}, 2);
 		
 		flush(1, 3);
-	}
-	
-
-	@Override
-	protected TILE_SHEET sheet(ComposerUtil c, ComposerSources s, ComposerDests d, int y1) {
-	
-		return null;
 	}
 	
 	@Override

@@ -5,7 +5,7 @@ import snake2d.util.sets.*;
 public abstract class KeyPage {
 
 	final ArrayListResize<Key> all = new ArrayListResize<>(64, 1024);
-	final IntHashMap<Key> map = new IntHashMap<Key>();
+	final MapIndexed<Key> map = new MapIndexed<Key>();
 	public final String key;
 	
 	KeyPage(String key){

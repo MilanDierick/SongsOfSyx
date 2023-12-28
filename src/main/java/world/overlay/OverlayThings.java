@@ -1,11 +1,11 @@
 package world.overlay;
 
 import init.sprite.SPRITES;
-import settlement.main.RenderData;
 import snake2d.Renderer;
 import snake2d.util.color.COLOR;
 import snake2d.util.datatypes.Rec;
 import snake2d.util.sets.ArrayList;
+import util.rendering.RenderData;
 import util.rendering.ShadowBatch;
 
 class OverlayThings {
@@ -29,8 +29,7 @@ class OverlayThings {
 	
 	void render(Renderer r, ShadowBatch s, RenderData data) {
 		
-		s.setDistance2GroundUI(3);
-		s.setHeight(0);
+		s.setDistance2GroundUI(8);
 		for (int i = 0; i < ai; i++) {
 			Thing t = objects.get(i);
 			t.color.bind();

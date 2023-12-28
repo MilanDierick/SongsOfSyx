@@ -8,8 +8,8 @@ import init.resources.RES_AMOUNT;
 import settlement.entity.ENTITY;
 import settlement.entity.humanoid.Humanoid;
 import settlement.main.SETT;
-import settlement.room.home.HOME;
-import settlement.room.home.HOME_TYPE;
+import settlement.room.home.*;
+import settlement.room.home.HomeSettings.HomeSetting;
 import settlement.room.main.Room;
 import settlement.room.main.furnisher.FurnisherItem;
 import settlement.room.main.util.RoomAreaWrapper.RoomWrap;
@@ -26,26 +26,38 @@ public final class HomeHouse extends RoomWrap implements HOME{
 	private FurnisherItem it;
 	private final Coo service = new Coo();
 	
-	private final LivingDataD random = 		new LivingDataD(this, 1, 0x0000FFFF);
-	private final LivingDataD lit = 		new LivingDataD(this, 1, 0x00010000);
-	private final LivingDataD upgrade = 	new LivingDataD(this, 1, 0x00F00000);
-	private final LivingDataD isolation = 	new LivingDataD(this, 1, 0xFF000000);
+	
+
+	private final LivingDataD lit = 		new LivingDataD(this, 1, 0b0000_0000_0000_0000_0000_0000_0000_0001);
+	private final LivingDataD upgrade = 	new LivingDataD(this, 1, 0b0000_0000_0000_0000_0000_0000_0000_1110);
+	private final LivingDataD isolation = 	new LivingDataD(this, 1, 0b0000_0000_0000_0000_0000_1111_1111_0000);
+	private final LivingDataD renderTimer = new LivingDataD(this, 1, 0b0000_0000_0000_1111_1111_0000_0000_0000);
+	private final LivingDataD am = 			new LivingDataD(this, 1, 0b0000_0011_1111_0000_0000_0000_0000_0000);
+	private final LivingDataD amOdd = 		new LivingDataD(this, 1, 0b1111_1100_0000_0000_0000_0000_0000_0000);
 	private final LivingDataD setting = 	new LivingDataD(this, 2, 0x0000FFFF);
-	private final LivingDataD am = 			new LivingDataD(this, 2, 0x00FF0000);
-	private final LivingDataD amOdd = 		new LivingDataD(this, 2, 0xFF000000);
-	private final LivingDataD renderTimer = new LivingDataD(this, 3, 0x0000FFFF);
-	private final LivingDataD litTimer = 	new LivingDataD(this, 3, 0xFFFF0000);
+	private final LivingDataD litTimer = 	new LivingDataD(this, 2, 0xFF000000);
+	private final LivingDataD random = 		new LivingDataD(this, 2, 0x00FF0000);
+	
+//	private final LivingDataD random = 		new LivingDataD(this, 1, 0x0000FFFF);
+//	private final LivingDataD lit = 		new LivingDataD(this, 1, 0x00010000);
+//	private final LivingDataD upgrade = 	new LivingDataD(this, 1, 0x00F00000);
+//	private final LivingDataD isolation = 	new LivingDataD(this, 1, 0xFF000000);
+//	private final LivingDataD setting = 	new LivingDataD(this, 2, 0x0000FFFF);
+//	private final LivingDataD am = 			new LivingDataD(this, 2, 0x00FF0000);
+//	private final LivingDataD amOdd = 		new LivingDataD(this, 2, 0xFF000000);
+//	private final LivingDataD renderTimer = new LivingDataD(this, 3, 0x0000FFFF);
+//	private final LivingDataD litTimer = 	new LivingDataD(this, 3, 0xFFFF0000);
 	private final LivingDataD[] resources = new LivingDataD[8];
 	private final LivingDataD[] occupants = new LivingDataD[32];
 	
 	HomeHouse() {
 		for (int i = 0; i < resources.length; i++) {
 			int m = 0x0F << (i)*4;
-			resources[i] = new LivingDataD(this, 4, m);
+			resources[i] = new LivingDataD(this, 3, m);
 		}
 		
 		for (int i = 0; i < occupants.length; i++) {
-			occupants[i] = new LivingDataD(this, 5+i, 0xFFFFFFFF);
+			occupants[i] = new LivingDataD(this, 4+i, 0xFFFFFFFF);
 		}
 	}
 	
@@ -80,7 +92,7 @@ public final class HomeHouse extends RoomWrap implements HOME{
 	}
 
 	HomeHouse create() {
-
+		
 		for (COORDINATE c : body()) {
 			if (is(c)) {
 				SETT.ROOMS().data.set(ROOMS().map.rooma.get(c), c, 0);
@@ -88,7 +100,7 @@ public final class HomeHouse extends RoomWrap implements HOME{
 		}
 		
 		int ran = RND.rInt();
-		
+
 		{
 			int r = RND.rInt(blue().constructor.sp.sp.sprites[it.group.index()].length);
 			random.set(r);
@@ -102,12 +114,14 @@ public final class HomeHouse extends RoomWrap implements HOME{
 					m = s.getData(c.x(), c.y(), c.x()-body().x1(), c.y()-body().y1(), it, ran);
 				}
 				SETT.ROOMS().fData.spriteData.set(c.x(), c.y(), m);
-				SETT.PATH().comps.updateAvailability(c.x(), c.y());
+				SETT.PATH().availability.updateAvailability(c.x(), c.y());
+				SETT.ROOMS().extraBit.set(service, false);
 			}
 		}
-		
+		SETT.ROOMS().extraBit.set(service, true);
 		add();
 		blue().odd.update(service.x(), service.y());
+		
 		return this;
 	}
 	
@@ -179,7 +193,7 @@ public final class HomeHouse extends RoomWrap implements HOME{
 	}
 	
 	public HOME use() {
-		litTimer.set(GAME.updateI()&0x0FFFF);
+		litTimer.set((GAME.updateI()>>8)&0x0FF);
 		if (lit.get() == 1) {
 			return this;
 		}
@@ -220,7 +234,7 @@ public final class HomeHouse extends RoomWrap implements HOME{
 			if (e != null && e instanceof Humanoid) {
 				return (Humanoid) e;
 			}else
-				throw new RuntimeException(oi + " " + body());
+				throw new RuntimeException(oi + " " + body() + " " + e);
 		}
 		return null;
 	}
@@ -249,7 +263,11 @@ public final class HomeHouse extends RoomWrap implements HOME{
 
 		@Override
 		public Sprite get(int tx, int ty) {
-			SpriteConfig sp = blue().constructor.sp.sp.sprites[it.group.index()][random.get()];
+			
+			int ri = random.get();
+			ri %= blue().constructor.sp.sp.sprites[it.group.index()].length;
+			
+			SpriteConfig sp = blue().constructor.sp.sp.sprites[it.group.index()][ri];
 			int dx = tx-body().x1();
 			int dy = ty-body().y1();
 			return sp.get(it.rotation).get(dx, dy);
@@ -262,41 +280,24 @@ public final class HomeHouse extends RoomWrap implements HOME{
 	}
 	
 	@Override
-	public HOME_TYPE availability() {
+	public HomeSetting availability() {
 		if (am.get()-amOdd.get() >= occupantsMax())
 			return null;
 		return psetting();
 	}
 	
-	private HOME_TYPE psetting() {
+	private HomeSetting psetting() {
 		if (occupants() > 0)
-			return HOME_TYPE.getSpecific(occupant(0));
+			return SETT.ROOMS().HOMES.settings.specific(HOMET.get(occupant(0)));
 		return setting();
 	}
 	
-	public HOME_TYPE setting() {
-		return HOME_TYPE.ALL().get(setting.get());
-	}
-	
-	public HomeHouse settingSet(HOME_TYPE h) {
-
-		
-		for (int i = 0; i < am.get(); i++) {
-			Humanoid o = occupant(i);
-			if (!h.isValid(o)) {
-				i--;
-				STATS.HOME().GETTER.set(o, null);
-			}
-		}
-		remove();
-		setting.set(h.index());
-		add();
-		return this;
+	public HomeSetting setting() {
+		return sFiddler.get(setting.get());
 	}
 	
 	private void remove() {
 
-		
 		SETT.ROOMS().HOMES.report(-am.get(), -occupantsMax(), psetting());
 		if (availability() != null) {
 			SETT.PATH().comps.data.home.reportAbsence(service.x(), service.y(), availability());
@@ -359,19 +360,11 @@ public final class HomeHouse extends RoomWrap implements HOME{
 			return;
 		}
 		
-		if (Bits.getDistance(litTimer.get(), GAME.updateI(), 0x0FFFF) > 0x0FFF){
-			lit.set(0);
-			for (COORDINATE c : body()) {
-				if (is(c)) {
-					RoomSprite s = sprite.get(c.x(), c.y());
-					if (s != null) {
-						if (s == blue().constructor.sp.nSta && SETT.LIGHTS().is(c.x(), c.y()))
-							SETT.LIGHTS().remove(c.x(), c.y());
-					}
-				}
-			}
+		if (Bits.getDistance(litTimer.get(), GAME.updateI()>>8, 0x0FF) > 0x0F){
+			turnOffLight();
+			
 		}
-		litTimer.set(GAME.updateI()&0x0FFFF);
+		litTimer.set((GAME.updateI()>>8)&0x0FF);
 	}
 	
 	public DirCoo getService(int tx, int ty) {
@@ -473,5 +466,31 @@ public final class HomeHouse extends RoomWrap implements HOME{
 		return this.upgrade.get();
 	}
 	
+	public final HomeSettings.SettingFiddler sFiddler = new HomeSettings.SettingFiddler() {
+		
+		@Override
+		protected void setIndexOnly(int settingIndex) {
+			setting.set(settingIndex);
+		}
+
+		@Override
+		protected int getCurrentSettingIndex() {
+			return setting.get();
+		}
+
+		@Override
+		protected void setAndReport(int settingIndex, HomeSetting setting) {
+			for (int i = 0; i < am.get(); i++) {
+				Humanoid o = occupant(i);
+				if (!setting.is(o)) {
+					i--;
+					STATS.HOME().GETTER.set(o, null);
+				}
+			}
+			remove();
+			HomeHouse.this.setting.set(settingIndex);
+			add();
+		}
+	};
 	
 }

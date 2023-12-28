@@ -11,7 +11,7 @@ public final class AIModule_Slave extends AIModule{
 	private PlanUprise uprise = new PlanUprise();
 	
 	@Override
-	protected AiPlanActivation getPlan(Humanoid a, AIManager d) {
+	public AiPlanActivation getPlan(Humanoid a, AIManager d) {
 		return uprise.activate(a, d);
 	}
 

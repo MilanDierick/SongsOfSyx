@@ -13,6 +13,9 @@ public final class LOG {
 	
 	private static String lasth;
 	private static int li = 0;
+	private static int lln = 0;
+	private static String tab = "      ";
+	
 	public static void ln() {
 		System.out.println();
 	}
@@ -20,18 +23,35 @@ public final class LOG {
 	private static void header(PrintStream o) {
 		StackTraceElement[] ee = new RuntimeException().getStackTrace();
 		String s = ee[2].getClassName();
-		String ln = "";
+		int ln = 0;
 		if (s.contains(".")) {
 			String ss[] = s.split("\\.");
-			s = ss[ss.length-1] +":";
-			ln = ""+ee[2].getLineNumber();
+			s = ss[ss.length-1];
+			ln = ee[2].getLineNumber();
 		}
 		if (!s.equals(lasth) || li > 250) {
 			o.println();
 			o.print("[GAME]" );
-			o.println(s+ln);
+			//o.print(ee[2]);
+			String cl = ee[2].getClassName();
+			if (cl.indexOf('$') > 0)
+				cl = cl.substring(0, cl.indexOf('$'));
+			o.println(" ("+cl + ".java:" +ln+ ")");
+			
 			li = 0;
+			lln = -1;
 		}
+		if (lln != ln) {
+			lln = ln;
+			String l = "[" + ln + "]";
+			o.print(l);
+			for (int i = 0; i < tab.length()-l.length(); i++)
+				o.print(" ");
+		}else {
+			o.print(tab);
+		}
+		
+		
 		li++;
 		lasth = s;
 	}
@@ -39,48 +59,32 @@ public final class LOG {
 	public static void ln(Object info) {
 		
 		header(System.out);
-		
-		System.out.print("\t");
 		System.out.println(info);
 
 	}
 	
 	public static void ln(Object a, Object b) {
 		
-		header(System.out);
-		
-		System.out.print("\t");
-		System.out.println(a);
-		System.out.print("\t");
-		System.out.println(b);
+		ln(a);
+		ln(b);
 	}
 	
 	public static void ln(Object a, Object b, Object c) {
 		
-		header(System.out);
-		
-		System.out.print("\t");
-		System.out.println(a);
-		System.out.print("\t");
-		System.out.println(b);
-		System.out.print("\t");
-		System.out.println(c);
+		ln(a);
+		ln(b);
+		ln(c);
 	}
 	
 	public static void ln(Object[] info) {
-		header(System.out);
 		for (Object oo : info) {
-			System.out.print("\t");
-			System.out.print(oo);
+			ln(oo);
 		}
-		System.out.println();
 	}
 	
 	public static void err(Object info) {
 		
 		header(System.err);
-		
-		System.err.print("\t");
 		System.err.println(info);
 
 	}
@@ -88,10 +92,8 @@ public final class LOG {
 	public static void err(Object[] info) {
 		header(System.err);
 		for (Object oo : info) {
-			System.err.print("\t");
-			System.err.print(oo);
+			System.err.println(oo);
 		}
-		System.err.println();
 	}
 	
 	public static String bits(long l) {
@@ -112,6 +114,17 @@ public final class LOG {
 			sp++;
 		}
 		return s;
+	}
+	
+	public static String WS(int spaces) {
+		String s = "";
+		for (int i = 0; i < spaces; i++)
+			s += " ";
+		return s;
+	}
+	
+	public static String NL() {
+		return System.lineSeparator();
 	}
 	
 	public static Log l() {

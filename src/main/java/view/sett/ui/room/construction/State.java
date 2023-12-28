@@ -25,7 +25,7 @@ final class State {
 	double problemTimer;
 	
 	public void setItem(int itI) {
-		itemI = CLAMP.i(itI, 0, b.constructor().groups().size());
+		itemI = CLAMP.i(itI, 0, b.constructor().pgroups().size());
 		item[b.index()] = itemI;
 	}
 	

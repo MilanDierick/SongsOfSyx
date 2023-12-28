@@ -5,8 +5,10 @@ import static settlement.main.SETT.*;
 import java.io.IOException;
 import java.io.ObjectStreamException;
 
+import game.Profiler;
 import game.time.TIME;
 import init.C;
+import init.resources.RBIT.RBITImp;
 import settlement.entity.ESpeed;
 import settlement.main.CapitolArea;
 import settlement.main.SETT;
@@ -40,7 +42,7 @@ public class THINGS extends SETT.SettResource{
 	}
 	
 	@Override
-	protected void update(float ds) {
+	protected void update(float ds, Profiler profiler) {
 		if (ds > 0)
 			for (ThingFactory<?> t : all)
 				t.update(ds);	
@@ -85,6 +87,9 @@ public class THINGS extends SETT.SettResource{
 		
 	}
 
+	
+
+	
 	
 	private void addTile(int tx, int ty) {
 		if (!tmp.hasRoom())
@@ -306,20 +311,11 @@ public class THINGS extends SETT.SettResource{
 			}
 			
 			if (res.index() == firstAdded) {
-				if (next != -1) {
-					firstAdded = next;
-				}else {
-					firstAdded = -1;
-				}
+				firstAdded = next;
 			}
 			
 			if (res.index() == lastAdded) {
-				if (prev != -1) {
-					lastAdded = prev;
-				}else {
-					lastAdded = -1;
-				}
-				
+				lastAdded = prev;
 			}
 			
 			
@@ -327,8 +323,6 @@ public class THINGS extends SETT.SettResource{
 			res.addedNext = -1;
 			free.push(res.index());
 			addedHistory.set(added());
-			
-			
 			
 		}
 		
@@ -355,7 +349,23 @@ public class THINGS extends SETT.SettResource{
 			lastAdded = res.index();
 			
 			
+			
 		}
+		
+//		protected void checkForLoop() {
+//			T t = first();
+//			if (t == null)
+//				return;
+//			T o = null;
+//			while(t != null) {
+//				
+//				if (o == null)
+//					o = t;
+//				else if (o == t)
+//					throw new RuntimeException(""+added());
+//				t = next(t);
+//			}
+//		}
 		
 		T nextInLine() {
 			if (free.isEmpty()) {
@@ -363,7 +373,6 @@ public class THINGS extends SETT.SettResource{
 			}
 			short i = free.pop();
 			free.push(i);
-			addedHistory.set(added());
 			T res = all()[i];
 			
 			if (!res.isRemoved())
@@ -404,7 +413,7 @@ public class THINGS extends SETT.SettResource{
 		private final short index; 
 		private Thing next;
 		private Thing prev;
-		protected long resourcemask = 0;
+		protected final RBITImp resourcemask = new RBITImp();
 		
 		/**
 		 * renders this entity at its current position with the adjustment of the offsets.
@@ -426,7 +435,7 @@ public class THINGS extends SETT.SettResource{
 			if (ix == -1)
 				throw new RuntimeException();
 			THINGS m = THINGS();
-			resourcemask = 0;
+			resourcemask.clear();
 			if (next != null) {
 				next.prev = prev;
 			}
@@ -462,15 +471,15 @@ public class THINGS extends SETT.SettResource{
 		final void addColdAsHell() {
 			
 			THINGS m = THINGS();
-			
+			next = null;
 			if (m.grid[iy][ix] == null) {
 				m.grid[iy][ix] = this;
 				return;
 			}
 			
-			resourcemask |= m.grid[iy][ix].resourcemask;
+			resourcemask.or(m.grid[iy][ix].resourcemask);
 			
-			if (m.grid[iy][ix].z() > z()) {
+			if (m.grid[iy][ix].z() >= z()) {
 				m.grid[iy][ix].prev = this;
 				next = m.grid[iy][ix];
 				m.grid[iy][ix] = this;
@@ -544,7 +553,7 @@ public class THINGS extends SETT.SettResource{
 		
 		final void saveP(FilePutter f) {
 			f.bool(!isRemoved());
-			f.l(resourcemask);
+			resourcemask.save(f);
 		}
 		
 		final void loadP(FileGetter f) throws IOException {
@@ -553,7 +562,7 @@ public class THINGS extends SETT.SettResource{
 			next = null;
 			prev = null;
 			if (f.bool()) {
-				resourcemask = f.l();
+				resourcemask.load(f);
 				ix = (short) ctx();
 				iy = (short) cty();
 				addColdAsHell();
@@ -571,7 +580,9 @@ public class THINGS extends SETT.SettResource{
 		
 		public abstract ThingFactory<?> factory();
 		
-		
+		public Thing tileNext() {
+			return next;
+		}
 		
 	}
 	

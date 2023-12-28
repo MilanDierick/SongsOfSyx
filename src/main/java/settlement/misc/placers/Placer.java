@@ -1,9 +1,9 @@
 package settlement.misc.placers;
 
-import init.sprite.ICON.MEDIUM;
 import init.sprite.SPRITES;
 import settlement.main.SETT;
 import snake2d.SPRITE_RENDERER;
+import snake2d.util.sprite.SPRITE;
 import view.tool.PlacableFixedImp;
 
 class Placer extends PlacableFixedImp{
@@ -18,7 +18,7 @@ class Placer extends PlacableFixedImp{
 	}
 	
 	@Override
-	public MEDIUM getIcon() {
+	public SPRITE getIcon() {
 		return SPRITES.icons().m.cancel;
 	}
 

@@ -5,7 +5,6 @@ import static settlement.main.SETT.*;
 import java.io.IOException;
 
 import init.C;
-import settlement.main.RenderData.RenderIterator;
 import settlement.main.SETT;
 import settlement.path.AVAILABILITY;
 import settlement.room.main.*;
@@ -16,6 +15,7 @@ import settlement.room.sprite.*;
 import snake2d.SPRITE_RENDERER;
 import snake2d.util.datatypes.DIR;
 import snake2d.util.file.Json;
+import util.rendering.RenderData.RenderIterator;
 import util.rendering.ShadowBatch;
 
 class Constructor extends Furnisher {
@@ -38,7 +38,7 @@ class Constructor extends Furnisher {
 		sJug = new RoomSprite1x1(sp, "JUG_1X1");
 		sFill = new RoomSprite1x1(sp, "JUG_FILL_1X1");
 		
-		sTable = new RoomSpriteComboN(sp, "TABLE_COMBO") {
+		sTable = new RoomSpriteCombo(sp, "TABLE_COMBO") {
 			
 			@Override
 			public void renderAbove(SPRITE_RENDERER r, ShadowBatch s, int data, RenderIterator it, double degrade) {
@@ -47,7 +47,7 @@ class Constructor extends Furnisher {
 			}
 		};
 		
-		final RoomSprite sTableDec = new RoomSpriteComboN(sTable) {
+		final RoomSprite sTableDec = new RoomSpriteCombo(sTable) {
 			
 			final RoomSprite1x1 top = new RoomSprite1x1(sp, "TABLE_DECOR_1X1");
 			

@@ -52,11 +52,15 @@ final class PlanAttackTile extends PlanWalkAbs{
 				return;
 			int tx = task.targetTile().x();
 			int ty = task.targetTile().y();
+			
+			shouldBreak = true;
 			if (!breakable(tx, ty) || !setStart()) {
 				task.stop();
 				m.order.task.set(task);
 				return;
 			}
+			
+			
 			
 			
 			
@@ -145,12 +149,28 @@ final class PlanAttackTile extends PlanWalkAbs{
 				rm ++;
 			
 			
+			
 			DivFormation res = t.deployer.deployCentre(info.men, settings.formation, dx, dy, vec.nX(), vec.nY(), rm, a);
 			if (res == null || res.deployed() == 0) {
 				task.stop();
 				m.order.task.set(task);
 				return;
 			}
+			
+//			for (int i = 0; i < res.deployed(); i++) {
+//				
+//				for (int di = 0; di < DIR.ORTHO.size(); di++) {
+//					DIR dd = DIR.ORTHO.get(di);
+//					int ddx = res.tile(i).x()+dd.x();
+//					int ddy = res.tile(i).y()+dd.y();
+//					if (availability(ddx, ddy) < 0) {
+//						res.set(i, res.tile(i).x()*C.TILE_SIZE+C.TILE_SIZEH+dd.x()*(C.TILE_SIZEH-2), res.tile(i).y()*C.TILE_SIZE+C.TILE_SIZEH+dd.y()*(C.TILE_SIZEH-2));
+//					}
+//				}
+//				
+//				
+//			}
+			
 			m.order.dest.set(res);
 			setWalkToDest();
 		}
@@ -251,7 +271,7 @@ final class PlanAttackTile extends PlanWalkAbs{
 		
 		@Override
 		void update(int updateI, int gameMillis) {
-			
+			shouldBreak = true;
 			int tx = task.targetTile().x();
 			int ty = task.targetTile().y();
 			if (!breakable(tx, ty)) {
@@ -267,7 +287,7 @@ final class PlanAttackTile extends PlanWalkAbs{
 			}
 			
 			for (int i = 0; i < dest.deployed(); i++) {
-				if (availability(dest.tile(i).x(), dest.tile(i).y()) <0 && SETT.ARMIES().map.attackable.is(dest.tile(i), a)) {
+				if (availability(dest.tile(i).x(), dest.tile(i).y()) < 0 && SETT.ARMIES().map.attackable.is(dest.tile(i), a)) {
 					return;
 				}
 			}

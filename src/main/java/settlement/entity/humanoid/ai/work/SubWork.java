@@ -35,7 +35,7 @@ final class SubWork {
 			iters*= 2;
 			iters &= ~1;
 			if (iters > 0x0FF) {
-				GAME.Notify("bah " + iters + " " + j.jobPerformTime(a));
+				//GAME.Notify("bah " + iters + " " + j.jobPerformTime(a) + " " + j);
 				iters = 0x0FF;
 			}
 			if (iters <= 0) {

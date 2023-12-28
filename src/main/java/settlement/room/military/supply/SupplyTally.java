@@ -16,8 +16,8 @@ import snake2d.util.file.*;
 import snake2d.util.misc.CLAMP;
 import snake2d.util.rnd.RND;
 import util.updating.IUpdater;
-import world.army.WARMYD;
-import world.army.WARMYD.WArmySupply;
+import world.army.AD;
+import world.army.ADSupply;
 import world.entity.army.WArmy;
 
 final class SupplyTally implements SAVABLE{
@@ -32,9 +32,9 @@ final class SupplyTally implements SAVABLE{
 			if (SETT.ENTRY().isClosed())
 				return;
 			
-			int di = RND.rInt(WARMYD.supplies().all.size());
-			for (int i = 0; i < WARMYD.supplies().all.size(); i++) {
-				updateSuppy(WARMYD.supplies().all.get((di+i)%WARMYD.supplies().all.size()));
+			int di = RND.rInt(AD.supplies().all.size());
+			for (int i = 0; i < AD.supplies().all.size(); i++) {
+				updateSuppy(AD.supplies().all.get((di+i)%AD.supplies().all.size()));
 			}
 			
 		}
@@ -71,9 +71,9 @@ final class SupplyTally implements SAVABLE{
 	}
 
 	
-	private void updateSuppy(WArmySupply r) {
+	private void updateSuppy(ADSupply r) {
 		int needed = 0;
-		for (WArmy e : FACTIONS.player().kingdom().armies().all()) {
+		for (WArmy e : FACTIONS.player().armies().all()) {
 			if (e.acceptsSupplies()) {
 				needed += r.needed(e);
 			}
@@ -86,7 +86,7 @@ final class SupplyTally implements SAVABLE{
 		if (needed <= 0)
 			return;
 		double d = CLAMP.d((double)available/needed, 0, 1);
-		for (WArmy e : FACTIONS.player().kingdom().armies().all()) {
+		for (WArmy e : FACTIONS.player().armies().all()) {
 			if (e.acceptsSupplies()) {
 				int am = (int) Math.ceil(r.needed(e)*d);
 				am = CLAMP.i(am, 0, available);

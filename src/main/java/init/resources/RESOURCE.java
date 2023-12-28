@@ -2,17 +2,28 @@ package init.resources;
 
 import java.io.IOException;
 
+import game.boosting.*;
+import game.time.TIME;
 import init.C;
 import init.paths.PATH;
-import init.sprite.ICON;
+import init.race.RACES;
+import init.sprite.SPRITES;
+import init.sprite.UI.Icon;
+import settlement.main.SETT;
+import settlement.room.main.FlatIndustries.IInBoost;
 import snake2d.SPRITE_RENDERER;
 import snake2d.util.color.COLOR;
 import snake2d.util.color.ColorImp;
 import snake2d.util.datatypes.DIR;
 import snake2d.util.file.Json;
+import snake2d.util.gui.GUI_BOX;
 import snake2d.util.misc.CLAMP;
 import snake2d.util.sets.*;
 import snake2d.util.sprite.TILE_SHEET;
+import util.dic.DicRes;
+import util.gui.misc.GBox;
+import util.gui.misc.GText;
+import util.info.GFORMAT;
 import util.info.INFO;
 import util.rendering.ShadowBatch;
 import util.spritecomposer.*;
@@ -22,25 +33,43 @@ public final class RESOURCE extends INFO implements INDEXED{
 	
 	public final String key;
 	private final byte index;
-	public final long bit;
 	private final boolean edible;
 	public final boolean edibleServe;
+	public final boolean drinkable;
+	
 	private final double degradeSpeed;
 	private final Sprite sprite;
+	private final Icon icon;
 	private final TILE_SHEET debris;
 	private final COLOR tint; 
 	private final COLOR miniC;
 	public final int category;
 	LIST<RESOURCE> tradeSameAs = new ArrayList<>(0);
 	
+	final long bitL1;
+	final long bitL2;
+	public final RBIT bit;
+
 	RESOURCE(LISTE<RESOURCE> all, String key, PATH gData, PATH gText, PATH gSprite, PATH gDebris, KeyMap<RESOURCE> map, KeyMap<Sprite> spriteMap, KeyMap<TILE_SHEET> debrisMap) throws IOException{
 		super(new Json(gText.get(key)));
 		Json data = new Json(gData.get(key));
 		this.key = key;
 		index = (byte) all.add(this);
 		map.put(key, this);
-		bit = 1l << index;
+		
+		if (index < 64) {
+			bitL1 = 1l << index;
+			bitL2 = 0;
+		}
+		else {
+			bitL1 = 1l << (index-64);
+			bitL2 = 0;
+		}
+		bit = new RBIT(bitL1, bitL2);
+		
+		
 		edible = data.bool("EDIBLE");
+		drinkable = data.bool("DRINKABLE", false);
 		if (data.has("EDIBLE_DONT_SERVE"))
 			edibleServe = !data.has("EDIBLE_DONT_SERVE");
 		else
@@ -49,7 +78,7 @@ public final class RESOURCE extends INFO implements INDEXED{
 		tint = new ColorImp(data);
 		miniC = new ColorImp(data, "MINIMAP_COLOR");
 		category = data.i("CATEGORY_DEFAULT", 0, 3);
-		
+		icon = SPRITES.icons().get(data);
 		String vSprite = data.value("SPRITE");
 		if (!spriteMap.containsKey(vSprite)) {
 			spriteMap.put(vSprite, new Sprite(gSprite.get(vSprite)));
@@ -71,7 +100,6 @@ public final class RESOURCE extends INFO implements INDEXED{
 		}
 		this.debris = debrisMap.get(vDebris);
 		
-		
 	}
 	
 	public final LIST<RESOURCE> tradeSameAs(){
@@ -91,8 +119,8 @@ public final class RESOURCE extends INFO implements INDEXED{
 		return index;
 	}
 
-	public ICON.MEDIUM icon() {
-		return sprite.icon;
+	public Icon icon() {
+		return icon;
 	}
 
 	private final static int max = 3 + 4*2 + 9 + 16;
@@ -162,6 +190,14 @@ public final class RESOURCE extends INFO implements INDEXED{
 		COLOR.unbind();
 		
 	}
+	
+	public void renderOneC(SPRITE_RENDERER r, int x, int y, int random) {
+		
+		tint.bind();
+		sprite.lay.renderC(r, (random&0b011), x, y);
+		COLOR.unbind();
+		
+	}
 
 	public void renderCarried(SPRITE_RENDERER r, int cx, int cy, DIR d) {
 		tint.bind();
@@ -197,9 +233,9 @@ public final class RESOURCE extends INFO implements INDEXED{
 		return edible;
 	}
 	
-	public boolean isInMask(long fetchMask) {
-		return (bit & fetchMask) != 0;
-	}
+//	public boolean isInMask(long fetchMask) {
+//		return (bit & fetchMask) != 0;
+//	}
 
 	public COLOR miniC() {
 		return miniC;
@@ -208,6 +244,53 @@ public final class RESOURCE extends INFO implements INDEXED{
 	@Override
 	public String toString() {
 		return "" + key + "[" + index + "]";
+	}
+	
+	public Boostable conBoost() {
+		IInBoost bb = SETT.ROOMS().FIndustries.inBoost(this);
+		if (bb != null)
+			return bb.bo;
+		return null;
+	}
+	
+	public double conBoost(BOOSTABLE_O o) {
+		IInBoost bb = SETT.ROOMS().FIndustries.inBoost(this);
+		if (bb != null)
+			return bb.bo.get(o);
+		return 1;
+	}
+	
+	@Override
+	public void hover(GUI_BOX box) {
+		GBox b = (GBox) box;
+		
+		b.title(name);
+		b.text(desc);
+		b.NL(8);
+		b.add(BOOSTABLES.CIVICS().SPOILAGE.icon);
+		b.textLL(DicRes.¤¤SpoilRate);
+		b.add(GFORMAT.perc(b.text(), -degradeSpeed(), 2));
+		b.add(b.text().add('/').add(TIME.years().cycleName()));
+		
+		GText t = b.text();
+		t.add('(');
+		GFORMAT.perc(t, -degradeSpeed()/BOOSTABLES.CIVICS().SPOILAGE.get(RACES.clP(null, null)), 2);
+		t.s();
+		t.add(DicRes.¤¤Stored);
+		t.add(')');
+		b.add(t);
+		
+		b.NL();
+		if (RESOURCES.EDI().is(this)) {
+			b.textL(DicRes.¤¤Edible);
+		}
+		b.NL();
+		if (RESOURCES.DRINKS().is(this)) {
+			b.textL(DicRes.¤¤Drinkable);
+		}
+		
+		b.NL();
+		
 	}
 	
 }

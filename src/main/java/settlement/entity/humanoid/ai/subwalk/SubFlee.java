@@ -10,7 +10,7 @@ import settlement.entity.humanoid.ai.main.*;
 import settlement.entity.humanoid.ai.main.AISTATES.WALK;
 import settlement.entity.humanoid.spirte.HSprites;
 import settlement.main.SETT;
-import settlement.stats.CAUSE_LEAVE;
+import settlement.stats.util.CAUSE_LEAVE;
 import snake2d.util.datatypes.DIR;
 import snake2d.util.rnd.RND;
 

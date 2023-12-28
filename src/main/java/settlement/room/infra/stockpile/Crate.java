@@ -1,5 +1,6 @@
 package settlement.room.infra.stockpile;
 
+import settlement.room.main.RoomInstance;
 import settlement.room.main.job.StorageCrate;
 
 final class Crate extends StorageCrate{
@@ -8,7 +9,6 @@ final class Crate extends StorageCrate{
 	StockpileInstance ins;
 	
 	Crate(ROOM_STOCKPILE b) {
-		super(ROOM_STOCKPILE.CRATE_MAX);
 		this.b = b;
 	}
 
@@ -32,10 +32,15 @@ final class Crate extends StorageCrate{
 	public boolean isfetching() {
 		return resource() != null && ins.getsMaximum(resource());
 	}
-	
+
 	@Override
-	public double spoilRate() {
-		return 0.25;
+	protected int max(RoomInstance ins) {
+		return (int) (b.upgrades().boost(ins.upgrade())-1);
+	}
+
+	@Override
+	protected double spoilRate(RoomInstance ins) {
+		return 0.5 / (1.0+ins.upgrade());
 	}
 	
 

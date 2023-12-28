@@ -1,12 +1,12 @@
 package view.sett.ui.standing.decree;
 
 import init.D;
+import init.race.RACES;
 import init.race.Race;
 import init.sprite.UI.UI;
 import settlement.entity.humanoid.HCLASS;
 import settlement.stats.STATS;
-import settlement.stats.StatsMultipliers.StatMultiplier;
-import settlement.stats.StatsMultipliers.StatMultiplierAction;
+import settlement.stats.muls.StatsMultipliers.StatMultiplier;
 import snake2d.SPRITE_RENDERER;
 import snake2d.util.color.COLOR;
 import snake2d.util.gui.GUI_BOX;
@@ -15,7 +15,6 @@ import util.colors.GCOLOR;
 import util.data.GETTER;
 import util.dic.DicMisc;
 import util.gui.misc.*;
-import util.info.GFORMAT;
 import view.interrupter.ISidePanel;
 import view.main.VIEW;
 
@@ -39,14 +38,6 @@ public final class UIDecreeButt extends GButt.ButtPanel{
 				GCOLOR.T().H1.bind();
 				UI.FONT().H2.render(r, ¤¤title, X1, Y1);
 				t.clear();
-				double mul = 1;
-				for (StatMultiplier m : STATS.MULTIPLIERS().get(cl)) {
-					if (m instanceof StatMultiplierAction)
-						mul *= m.multiplier(cl, race.get(), 0);
-				}
-				GFORMAT.f1(t, mul);
-				t.adjustWidth();
-				t.renderCY(r, X2-t.width()-16, Y1 + (Y2-Y1)/2);
 				COLOR.unbind();
 			}
 		});
@@ -95,21 +86,24 @@ public final class UIDecreeButt extends GButt.ButtPanel{
 	public static void hoverP(StatMultiplier m, GUI_BOX box, HCLASS cl, Race race) {
 		GBox b = (GBox) box;
 		b.textL(m.name);
-		b.tab(6);
-		b.add(GFORMAT.f1(b.text(), m.multiplier(cl, race, 0)));
-		b.tab(8);
-		{
-			GText t = b.text();
-			t.add('(').s();
-			t.add(m.min(cl, race), 2).s().add('-').s();
-			t.add(m.max(cl, race), 2);
-			t.s().add(')');
-			b.add(t);
-		}
-		
 		b.NL();
 		b.text(m.desc);
-		b.NL(8);
+		b.NL();
+		{
+			m.boosters.hover(b, RACES.clP(race, cl), null);
+//			
+//			for (BoostSpec s : m.boosters.all()) {
+//				
+//				double v = s.booster.to();
+//				v -= s.booster.get(s.boostable, RACES.clP(race, cl));
+//				if (s.booster.isMul) {
+//					v += 1;
+//				}
+//				s.booster.hover(box, v);
+//				b.NL();
+//			}
+		}
+		b.sep();
 	}
 	
 	

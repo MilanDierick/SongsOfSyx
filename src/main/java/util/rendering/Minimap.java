@@ -45,7 +45,7 @@ public final class Minimap{
 			int dx = x % TILESIZE;
 			int dy = y % TILESIZE;
 			TextureCoords c = sheet.getTexture(tile);
-			GAME.texture().putPixel(c.x1()+dx, c.y1()+dy, getC(col.red()), getC(col.green()), getC(col.blue()));
+			GAME.texture().putPixel(c.x1+dx, c.y1+dy, getC(col.red()), getC(col.green()), getC(col.blue()));
 		}
 			
 	}
@@ -55,8 +55,8 @@ public final class Minimap{
 		int s = TILESIZE*TILESIZE;
 		byte[] tmp = new byte[s*4];
 		
-		for (int py = 0; py <DIM_PIXEL; py+=TILESIZE) {
-			for (int px = 0; px <DIM_PIXEL; px+=TILESIZE) {
+		for (int py = 0; py < DIM_PIXEL; py+=TILESIZE) {
+			for (int px = 0; px < DIM_PIXEL; px+=TILESIZE) {
 				int tile = px/TILESIZE + (py/TILESIZE)*DIM_TILES;
 				TextureCoords c = sheet.getTexture(tile);
 				for (int y = 0; y < TILESIZE; y++) {
@@ -69,7 +69,7 @@ public final class Minimap{
 						tmp[to+3] = pixels[from+3];
 					}
 				}
-				GAME.texture().putPixelBatch(c.x1(), c.y1(), TILESIZE, tmp);
+				GAME.texture().putPixelBatch(c.x1, c.y1, TILESIZE, tmp);
 			}
 		}
 		
@@ -89,7 +89,7 @@ public final class Minimap{
 		
 	}
 
-	private final TextureCoords.Imp texture = new TextureCoords.Imp();
+	private final TextureCoords texture = new TextureCoords();
 	
 	
 
@@ -196,7 +196,7 @@ public final class Minimap{
 		TextureCoords c = sheet.getTexture(tile);
 		
 		
-		texture.get(c.x1()+dx, c.y1()+dy, w, h);
+		texture.get(c.x1+dx, c.y1+dy, w, h);
 		
 		return texture;
 	}
@@ -206,7 +206,7 @@ public final class Minimap{
 		int dx = tx % TILESIZE;
 		int dy = ty % TILESIZE;
 		TextureCoords c = sheet.getTexture(tile);
-		texture.get(c.x1()+dx, c.y1()+dy, w, h);
+		texture.get(c.x1+dx, c.y1+dy, w, h);
 		
 		return texture;
 	}

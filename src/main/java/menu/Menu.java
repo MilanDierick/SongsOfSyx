@@ -1,12 +1,11 @@
 package menu;
 
 
+import game.faction.player.PTitles;
 import init.C;
 import init.D;
 import init.settings.S;
 import init.sprite.UI.UI;
-import integrations.INTEGRATIONS;
-import integrations.INTER_RPC;
 import snake2d.*;
 import snake2d.CORE.GlJob;
 import snake2d.KeyBoard.KeyEvent;
@@ -26,10 +25,7 @@ public class Menu extends CORE_STATE{
 	final ScExamples examples;
 	final ScRandom sandbox;
 	final ScCredits credits;
-	final ScHallLegends hallOfLegends;
-	final ScHallHeroes hallOfHeroes;
-	final ScHallFame hallOfFame;
-	private SCREEN current;
+	private SC current;
 
 	private Coo mCoo = new Coo();
 	
@@ -44,8 +40,6 @@ public class Menu extends CORE_STATE{
 	private final Intro intro;
 	private static boolean hasIntro = true;
 	private float fadeLight = 0;
-	
-	private final RPC rpc = new RPC();
 	
 	private final CharSequence ¤¤loading = "¤loading...";
 	
@@ -94,9 +88,6 @@ public class Menu extends CORE_STATE{
 		sandbox = new ScRandom(this);
 		campaigns = new ScCampaign(this);
 		load = new ScLoad(this);
-		hallOfLegends = new ScHallLegends(this);
-		hallOfHeroes = new ScHallHeroes(this);
-		hallOfFame = new ScHallFame(this);
 		examples = new ScExamples(this);
 		credits = new ScCredits(this);
 		main = new ScMain(this);
@@ -110,7 +101,7 @@ public class Menu extends CORE_STATE{
 		logo = new Logo();
 
 		S.get().applyRuntimeConfigs();
-		
+		PTitles.achieve();
 		
 	}
 
@@ -129,7 +120,6 @@ public class Menu extends CORE_STATE{
 	@Override
 	public void update(float ds, double slow) {
 		hover(CORE.getInput().getMouse().getCoo(), false);
-		INTEGRATIONS.updateRPC(rpc);
 		if (hasLogo) {
 			hasLogo = logo.update(ds);
 			return;
@@ -201,12 +191,12 @@ public class Menu extends CORE_STATE{
 		
 	}
 
-	void switchScreen(SCREEN screen){
+	void switchScreen(SC screen){
 		current = screen;
 		current.hover(mCoo);
 	}
 	
-	SCREEN screen() {
+	SC screen() {
 		return current;
 	}
 	
@@ -252,23 +242,6 @@ public class Menu extends CORE_STATE{
 				current.poll(key);
 			}
 			
-		}
-		
-	}
-	
-	private final static class RPC implements INTER_RPC{
-
-		private final String title = "Exploring the menu";
-		private final String[] details = new String[0];
-		
-		@Override
-		public String rpcTitle() {
-			return title;
-		}
-
-		@Override
-		public String[] rpcDetails() {
-			return details;
 		}
 		
 	}

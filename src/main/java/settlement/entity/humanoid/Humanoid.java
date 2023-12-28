@@ -5,10 +5,10 @@ import static settlement.main.SETT.*;
 import java.io.IOException;
 
 import game.GAME;
+import game.boosting.BOOSTABLES;
 import game.nobility.Nobility;
 import game.time.TIME;
 import init.C;
-import init.boostable.BOOSTABLES;
 import init.race.Race;
 import init.sound.SOUND;
 import settlement.army.Div;
@@ -19,8 +19,10 @@ import settlement.entity.humanoid.ai.main.*;
 import settlement.entity.humanoid.spirte.HSprite;
 import settlement.main.SETT;
 import settlement.room.main.RoomInstance;
-import settlement.room.service.hygine.bath.ROOM_BATH;
-import settlement.stats.*;
+import settlement.stats.Induvidual;
+import settlement.stats.STATS;
+import settlement.stats.util.CAUSE_ARRIVE;
+import settlement.stats.util.CAUSE_LEAVE;
 import snake2d.Renderer;
 import snake2d.util.color.COLOR;
 import snake2d.util.datatypes.COORDINATE;
@@ -62,7 +64,7 @@ public class Humanoid extends ENTITY{
 	
 	public Humanoid(int x, int y, Race spec, HTYPE type, CAUSE_ARRIVE cause){
 		
-		induvidual = new Induvidual(type, spec, cause);
+		induvidual = new Induvidual(type, spec);
 		
 		physics.initPosition(x, y, spec.physics.hitBoxsize(), spec.physics.hitBoxsize()); 
 		
@@ -81,18 +83,27 @@ public class Humanoid extends ENTITY{
 //			division().reporter.reportPosition(POPSTATS().division.spot(this), body().cX(), body().cY());
 //		}
 		
-		add();
 		initTile(-1, -1);
 		
+
+		
+		add(false);
+		
 		if (isRemoved()) {
-			removeAction();
-		}else {
-			ai.init(this);
-			if (type.player)
-				GAME.stats().SUBJECTS.inc(1);
+			//removeAction();
+			return;
 		}
 		
+		((HumanoidResource) induvidual).add(this, cause);
+		((HumanoidResource) ai).add(this, cause);
 		
+		
+		if (type.player)
+			GAME.count().SUBJECTS.inc(1);
+
+		if (cause == CAUSE_ARRIVE.IMMIGRATED) {
+			STATS.POP().TYPE.IMMIGRANT.set(induvidual);
+		}
 	}
 	
 	public Humanoid(FileGetter file) throws IOException{
@@ -166,13 +177,7 @@ public class Humanoid extends ENTITY{
 	}
 	
 	private void initTile(int ox, int oy) {
-		inWater = TERRAIN().WATER.isOpenNonFrozen(physics.tileC().x(), physics.tileC().y());
-		if (inWater) {
-			int d = SETT.WEATHER().temp.cold() < 0 ? -1 : 0;
-			STATS.NEEDS().EXPOSURE.count.inc(indu(), d);
-		}else if (ROOM_BATH.isPool(physics.tileC().x(), physics.tileC().y())) {
-			inWater = true;
-		}
+		inWater = SETT.ENTITIES().submerged.is(physics.tileC().x(), physics.tileC().y());
 		moveBonus = (float) (PATH().availability.get(physics.tileC()).movementSpeed * (1.0 - 0.5*STATS.NEEDS().INJURIES.count.getD(indu())));
 	}
 	
@@ -205,7 +210,7 @@ public class Humanoid extends ENTITY{
 			if (RND.oneIn(18) && !ROOMS().map.is(physics.tileC())) {
 				int x = physics.tileC().x() + RND.rInt0(9)/8;
 				int y = physics.tileC().y() + RND.rInt0(9)/8;
-				if (IN_BOUNDS(x, y) && !ROOMS().map.is(x,y)) {
+				if (IN_BOUNDS(x, y) && !ROOMS().map.is(x,y) && SETT.FLOOR().getter.get(x, y) == null) {
 					SETT.TILE_MAP().growth.tear(x, y);
 //					if (TERRAIN().clearing.get(x, y).isEasilyCleared())
 //						TERRAIN().clearing.get(x, y).clearAll(x, y);
@@ -227,7 +232,7 @@ public class Humanoid extends ENTITY{
 		
 		if (uS != uSN) {
 			if (!inWater && (uS & 0b001) == 0) {
-				if (STATS.NEEDS().INJURIES.count.get(induvidual) > 0 && RND.rBoolean()) {
+				if (STATS.NEEDS().INJURIES.count.get(induvidual) > RND.rInt(STATS.NEEDS().INJURIES.count.max(induvidual))) {
 					SETT.THINGS().gore.bleed(this, race().appearance().colors.blood);
 				}
 			}
@@ -263,6 +268,7 @@ public class Humanoid extends ENTITY{
 				return true;
 			((HumanoidResource) induvidual).update(this, updateI&0x0FF, day);
 			mark -= 1;
+			mark = (byte) CLAMP.i(mark, 0, 100);
 			
 			physics.setMass(BOOSTABLES.PHYSICS().MASS.get(induvidual));
 			speed.accelerationInit(Math.max(0.2, BOOSTABLES.PHYSICS().ACCELERATION.get(induvidual))*C.TILE_SIZE);
@@ -301,11 +307,20 @@ public class Humanoid extends ENTITY{
 	
 	
 	
-	public boolean inflictDamage(double damage, double damageForce, CAUSE_LEAVE cause) {
+	public boolean inflictDamage(double d, CAUSE_LEAVE cause) {
 		
 		leaveCause = (byte) cause.index();
 		
-		double d = Math.max(damage, damageForce);
+//		double d = damage;
+//		d /= BOOSTABLES.BATTLE().BLUNT_DEFENCE.get(induvidual);
+//		d -= RND.rFloat();
+		
+//		if (SETT.ROOMS().EATERIES.get(0).is(tc())) {
+//			GAME.Notify("here " + tc());
+//		}
+		
+		if (d <= 0)
+			return false;
 		
 		if (d > 0.1) {
 			SETT.THINGS().gore.bleed(this, race().appearance().colors.blood);
@@ -315,30 +330,35 @@ public class Humanoid extends ENTITY{
 			SETT.THINGS().gore.cloud(this, race().appearance().colors.blood);
 		}
 		
-		if (damageForce > 1) {
+		if (d*RND.rFloat() > 1) {
 			SOUND.sett().action.squish.rnd(physics.body());
 			SETT.THINGS().gore.explode(this, race().appearance().colors.blood);
 			STATS.NEEDS().INJURIES.count.setD(induvidual, 1.0);
 			if (division() != null) {
 				DivMorale.CASULTIES.incD(division(), 1);
 			}
+			
 			kill(true, CAUSE_LEAVE.ALL().get(leaveCause));
 			return false;
 		}else {
-			double inj = STATS.NEEDS().INJURIES.count.getD(induvidual);
-			inj += damage;
-			inj = CLAMP.d(inj, 0, 1);
 			
+			int m = STATS.NEEDS().INJURIES.count.max(induvidual);
+			d *= m;
+			int am = STATS.NEEDS().INJURIES.count.get(induvidual) + (int) d;
+			if (RND.rFloat() < (d-am))
+				am++;
 			
-			if (inj >= 1.0) {
-				STATS.NEEDS().INJURIES.count.incD(induvidual, damage*RND.rFloat());
+			if (am >= m) {
+				STATS.NEEDS().INJURIES.count.inc(induvidual, (int) (d*RND.rFloat()));
 				if (division() != null) {
 					DivMorale.CASULTIES.incD(division(), 1);
 				}
-				kill(false, CAUSE_LEAVE.ALL().get(leaveCause));
+				kill(true, CAUSE_LEAVE.ALL().get(leaveCause));
 				return false;
+				
+				
 			}else {
-				STATS.NEEDS().INJURIES.count.setD(induvidual, inj);
+				STATS.NEEDS().INJURIES.count.set(induvidual, am);
 			}
 		}
 		
@@ -352,15 +372,23 @@ public class Humanoid extends ENTITY{
 			return;
 
 		if (indu().hType() == HTYPE.ENEMY) {
-			GAME.stats().ENEMIES_KILLED.inc(1);
+			GAME.count().ENEMIES_KILLED.inc(1);
 		}
+		
+//		if (cause == CAUSE_LEAVE.SLAYED)
+//			ai.debug(this, "");
 		
 		STATS.POP().COUNT.reg(indu(), cause);
 		
 		if (cause.leavesCorpse) {
-			SETT.THINGS().corpses.create(
-					induvidual, body(), speed.dir(), 
-					!gore, cause);
+			if (speed.isZero()) {
+				SETT.THINGS().corpses.create(
+						this, 
+						!gore, cause);
+			}else {
+				
+				SETT.HALFENTS().corpses.make(this, gore, cause);
+			}
 			if (!VIEW.b().isActive()) {
 				if (indu().hType().player || RND.oneIn(5))
 					STATS.EQUIP().drop(this);
@@ -405,6 +433,12 @@ public class Humanoid extends ENTITY{
 	}
 
 	@Override
+	protected void setCollideDamage(ECollision coll, ECollision result) {
+		HPoll.Handler.collideDamage(this, ai, coll, result);
+		
+	}
+	
+	@Override
 	public COLOR minimapColor() {
 		if (indu().hostile())
 			return COLOR.RED100;
@@ -430,10 +464,7 @@ public class Humanoid extends ENTITY{
 
 	}
 
-	@Override
-	protected void setCollideDamage(ECollision coll) {
-		HPoll.Handler.collideDamage(this, ai, coll);
-	}
+
 	
 	@Override
 	public double getDefenceSkill(double dirDot) {
@@ -460,7 +491,7 @@ public class Humanoid extends ENTITY{
 		RoomInstance w = STATS.WORK().EMPLOYED.get(induvidual);
 		if (w != null) {
 			db += (int) (w.blueprintI().employment().getShiftStart()*0x0F);
-			if ((induvidual.randomness() & 1) == 1 && w.blueprintI().employment().worksNights()) {
+			if ((STATS.RAN().get(induvidual, 0) & 1) == 1 && w.blueprintI().employment().worksNights()) {
 				db += 8;
 				db &= 0x0F;
 			}
@@ -473,6 +504,7 @@ public class Humanoid extends ENTITY{
 
 	
 	public void setDivision(Div div) {
+		
 		STATS.BATTLE().DIV.set(this, div);
 		if (div != null)
 			division().reporter.reportPosition(divSpot(), body().cX(), body().cY());
@@ -511,6 +543,7 @@ public class Humanoid extends ENTITY{
 		protected abstract void update(Humanoid h, int updateI, boolean newDay);
 		protected abstract void update(Humanoid h, float ds);
 		protected abstract void cancel(Humanoid h);
+		protected abstract void add(Humanoid h, CAUSE_ARRIVE a);
 		
 		protected abstract void save(FilePutter file);
 		
@@ -545,6 +578,9 @@ public class Humanoid extends ENTITY{
 	
 	public void HTypeSet(HTYPE t, CAUSE_LEAVE leave, CAUSE_ARRIVE arr) {
 		ai.changeType(this, t, leave, arr);
+		physics.setMass(BOOSTABLES.PHYSICS().MASS.get(induvidual));
+		speed.accelerationInit(Math.max(0.2, BOOSTABLES.PHYSICS().ACCELERATION.get(induvidual))*C.TILE_SIZE);
+		speed.magnitudeMaxInit(Math.max(0.2, BOOSTABLES.PHYSICS().SPEED.get(induvidual))*C.TILE_SIZE);
 	}
 	
 	public void interrupt() {

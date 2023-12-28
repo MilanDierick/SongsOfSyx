@@ -6,8 +6,8 @@ import settlement.main.SETT;
 import settlement.room.main.*;
 import settlement.room.service.module.*;
 import settlement.room.service.module.ROOM_SPECTATOR.ROOM_SPECTATOR_HASER;
-import settlement.room.service.module.RoomServiceDataAccess.ROOM_SERVICE_ACCESS_HASER;
-import settlement.room.service.module.RoomServiceDataSimple.ROOM_SERVICE_HASER;
+import settlement.room.service.module.RoomService.ROOM_SERVICE_HASER;
+import settlement.room.service.module.RoomServiceAccess.ROOM_SERVICE_ACCESS_HASER;
 import snake2d.SPRITE_RENDERER;
 import snake2d.util.datatypes.DIR;
 import snake2d.util.gui.GUI_BOX;
@@ -128,7 +128,7 @@ final class ModuleService implements ModuleMaker {
 				grid.add(new GStat() {
 					@Override
 					public void update(GText text) {
-						RoomServiceDataAccess a = ((ROOM_SERVICE_ACCESS_HASER)p).service();
+						RoomServiceAccess a = ((ROOM_SERVICE_ACCESS_HASER)p).service();
 						double d = a.stats().access().data().getD(null);
 						GFORMAT.perc(text, d);
 					}

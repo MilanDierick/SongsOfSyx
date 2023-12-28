@@ -8,10 +8,13 @@ import settlement.entity.humanoid.Humanoid;
 import settlement.entity.humanoid.ai.main.AIManager;
 import settlement.entity.humanoid.spirte.HSpriteConst.CLAY;
 import settlement.main.SETT;
-import settlement.stats.*;
+import settlement.stats.Induvidual;
+import settlement.stats.STATS;
+import settlement.stats.colls.StatsAppearance;
 import snake2d.Renderer;
 import snake2d.util.color.COLOR;
 import snake2d.util.color.OPACITY;
+import snake2d.util.datatypes.DIR;
 import snake2d.util.sprite.TILE_SHEET;
 import util.rendering.ShadowBatch;
 
@@ -93,11 +96,11 @@ public final class HSprites {
 		};
 		
 		@Override
-		protected void renderExtra(Humanoid a, snake2d.Renderer r, util.rendering.ShadowBatch s, float timer, int x, int y) {
+		protected void renderExtra(Induvidual a, DIR dir, Renderer r, ShadowBatch s, double timer, int x, int y) {
 			int qual = 0;
-			int i = ex[(int) a.spriteTimer];
+			int i = ex[(int) timer];
 			a.race().appearance().extra.weapon.render(r,
-					a.speed.dir().id() + IWEAPON[qual][i], x, y);
+					dir.id() + IWEAPON[qual][i], x, y);
 		};
 		
 		@Override
@@ -121,12 +124,12 @@ public final class HSprites {
 		};
 		
 		@Override
-		protected void renderExtra(Humanoid a, snake2d.Renderer r, util.rendering.ShadowBatch s, float timer, int x, int y) {
+		protected void renderExtra(Induvidual a, DIR dir, Renderer r, ShadowBatch s, double timer, int x, int y) {
 			int qual = 0;
-			int i = ex[(int) a.spriteTimer];
+			int i = ex[(int) timer];
 			
 			a.race().appearance().extra.weapon.render(r,
-					a.speed.dir().perpendicular().id() + IWEAPON[qual][i], x, y);
+					dir.perpendicular().id() + IWEAPON[qual][i], x, y);
 		};
 		
 		@Override
@@ -165,12 +168,12 @@ public final class HSprites {
 		};
 		
 		@Override
-		protected void renderExtra(Humanoid a, snake2d.Renderer r, util.rendering.ShadowBatch s, float timer, int x, int y) {
+		protected void renderExtra(Induvidual a, DIR dir, Renderer r, ShadowBatch s, double timer, int x, int y) {
 			int qual = 0;
 			int i = ex[(int) timer];
 			
 			a.race().appearance().extra.tool.render(r,
-					a.speed.dir().id() + ITOOL[qual][i], x, y);
+					dir.id() + ITOOL[qual][i], x, y);
 		};
 	};
 	
@@ -211,10 +214,10 @@ public final class HSprites {
 		};
 		
 		@Override
-		protected void renderExtra(Humanoid a, snake2d.Renderer r, util.rendering.ShadowBatch s, float timer, int x, int y) {
+		protected void renderExtra(Induvidual a, DIR dir, Renderer r, ShadowBatch s, double timer, int x, int y) {
 			int qual = 0;
 			a.race().appearance().extra.tool.render(r,
-					a.speed.dir().id() + ITOOL[qual][ex[(int) timer]], x, y);
+					dir.id() + ITOOL[qual][ex[(int) timer]], x, y);
 		};
 	};
 	
@@ -315,10 +318,8 @@ public final class HSprites {
 	public static final HSprite SWORD_STAND = new HSprite.Standing(0, false, ITORSO_RIGHT) {
 		
 		@Override
-		protected void renderExtra(Humanoid a, snake2d.Renderer r, util.rendering.ShadowBatch s, float timer, int x, int y) {
-			if (a.speed.dir().id() < 0)
-				return;
-			a.race().appearance().extra.weapon.render(r, a.speed.dir().id() + SWORD2, x, y);
+		protected void renderExtra(Induvidual a, DIR dir, Renderer r, ShadowBatch s, double timer, int x, int y) {
+			a.race().appearance().extra.weapon.render(r,dir.id() + SWORD2, x, y);
 		};
 		
 		@Override
@@ -330,8 +331,8 @@ public final class HSprites {
 	public static final HSprite SWORD_STAND_SWAY = new HSprite.Standing(0, false, ITORSO_RIGHT) {
 		
 		@Override
-		protected void renderExtra(Humanoid a, snake2d.Renderer r, util.rendering.ShadowBatch s, float timer, int x, int y) {
-			a.race().appearance().extra.weapon.render(r, a.speed.dir().id() + SWORD2, x, y);
+		protected void renderExtra(Induvidual a, DIR dir, Renderer r, ShadowBatch s, double timer, int x, int y) {
+			a.race().appearance().extra.weapon.render(r, dir.id() + SWORD2, x, y);
 		};
 		
 		@Override
@@ -372,10 +373,10 @@ public final class HSprites {
 		};
 		
 		@Override
-		protected void renderExtra(Humanoid a, snake2d.Renderer r, util.rendering.ShadowBatch s, float timer, int x, int y) {
+		protected void renderExtra(Induvidual a, DIR dir, Renderer r, ShadowBatch s, double timer, int x, int y) {
 			int qual = 0;
 			a.race().appearance().extra.weapon.render(r,
-					a.speed.dir().id() + IWEAPON[qual][ex[(int) timer]], x, y);
+					dir.id() + IWEAPON[qual][ex[(int) timer]], x, y);
 		};
 	};
 	
@@ -394,10 +395,10 @@ public final class HSprites {
 		};
 		
 		@Override
-		protected void renderExtra(Humanoid a, snake2d.Renderer r, util.rendering.ShadowBatch s, float timer, int x, int y) {
+		protected void renderExtra(Induvidual a, DIR dir, Renderer r, ShadowBatch s, double timer, int x, int y) {
 			int qual = 0;
 			a.race().appearance().extra.weapon.render(r,
-					a.speed.dir().id() + IWEAPON[qual][ex[(int) timer]], x, y);
+					dir.id() + IWEAPON[qual][ex[(int) timer]], x, y);
 		};
 	};
 	
@@ -419,10 +420,10 @@ public final class HSprites {
 		};
 		
 		@Override
-		protected void renderExtra(Humanoid a, snake2d.Renderer r, util.rendering.ShadowBatch s, float timer, int x, int y) {
+		protected void renderExtra(Induvidual a, DIR dir, Renderer r, ShadowBatch s, double timer, int x, int y) {
 			int qual = 0;
 			a.race().appearance().extra.weapon.render(r,
-					a.speed.dir().id() + IWEAPON[qual][ex[(int) timer]], x, y);
+					dir.id() + IWEAPON[qual][ex[(int) timer]], x, y);
 		};
 	};
 	

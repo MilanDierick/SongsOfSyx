@@ -1,24 +1,21 @@
 package settlement.entity.humanoid.ai.types.recruit;
 
-import static settlement.main.SETT.*;
-
 import settlement.entity.humanoid.*;
 import settlement.entity.humanoid.HPoll.HPollData;
 import settlement.entity.humanoid.ai.main.*;
 import settlement.entity.humanoid.ai.main.AISUB.AISubActivation;
-import settlement.main.SETT;
 import settlement.misc.job.JOBMANAGER_HASER;
 import settlement.misc.job.SETT_JOB;
 import settlement.room.main.RoomInstance;
-import settlement.room.military.barracks.ROOM_BARRACKS;
+import settlement.room.military.training.barracks.ROOM_BARRACKS;
 import settlement.stats.STATS;
 import snake2d.util.datatypes.COORDINATE;
 import snake2d.util.datatypes.DIR;
 import snake2d.util.rnd.RND;
+import snake2d.util.sprite.text.Str;
 
 final class PlanBarracks extends AIPLAN.PLANRES{
 
-	private final ROOM_BARRACKS b = SETT.ROOMS().BARRACKS;
 	private final AIModule_Recruit module;
 	
 	PlanBarracks(AIModule_Recruit module){
@@ -30,7 +27,7 @@ final class PlanBarracks extends AIPLAN.PLANRES{
 		return inits.set(a, d);
 	}
 	
-	private final Resumer done = new Resumer(b.employment().verb) {
+	private final Resumer done = new Res() {
 		
 		@Override
 		protected AISubActivation setAction(Humanoid a, AIManager d) {
@@ -41,13 +38,7 @@ final class PlanBarracks extends AIPLAN.PLANRES{
 		
 		@Override
 		protected AISubActivation res(Humanoid a, AIManager d) {
-			a.HTypeSet(HTYPE.SUBJECT, null, null);
-			return d.resumeOtherPlan(a, AI.plans().NOP);
-		}
-		
-		@Override
-		public boolean con(Humanoid a, AIManager d) {
-			return true;
+			return null;
 		}
 		
 		@Override
@@ -55,36 +46,15 @@ final class PlanBarracks extends AIPLAN.PLANRES{
 			
 		}
 	};
+
 	
-	private JOBMANAGER_HASER get(Humanoid a) {
-		RoomInstance w = STATS.WORK().EMPLOYED.get(a);
-		if (w == null || w.blueprintI() != SETT.ROOMS().BARRACKS)
-			return null;
-		return (JOBMANAGER_HASER) w;
-	}
+
 	
-	private SETT_JOB job(Humanoid a, AIManager d) {
-		JOBMANAGER_HASER w = get(a);
-		if (w == null)
-			return null;
-		
-		SETT_JOB j = w.getWork().getJob(d.planTile);
-		if (j == null || !j.jobReservedIs(null))
-			return null;
-		
-		if (!module.planShouldContinue(a, d)) {
-			j.jobReserveCancel(null);
-			return null;
-		}
-			
-		return j;
-	}
-	
-	final Resumer inits = new Resumer(b.employment().verb) {
+	final Resumer inits = new Res() {
 		
 		@Override
 		protected AISubActivation setAction(Humanoid a, AIManager d) {
-			JOBMANAGER_HASER w = get(a);
+			JOBMANAGER_HASER w = work(a);
 			
 			if (w == null)
 				return done.set(a, d);
@@ -113,24 +83,13 @@ final class PlanBarracks extends AIPLAN.PLANRES{
 			return walkLast.set(a, d);
 		}
 		
-		@Override
-		public boolean con(Humanoid a, AIManager d) {
-			return true;
-		}
-		
-		@Override
-		public void can(Humanoid a, AIManager d) {
-			SETT_JOB j = job(a, d);
-			if (j != null)
-				j.jobReserveCancel(null);
-		}
 	};
 	
-	final Resumer walkLast = new Resumer(b.employment().verb) {
+	final Resumer walkLast = new Res() {
 		
 		@Override
 		protected AISubActivation setAction(Humanoid a, AIManager d) {
-			COORDINATE man = ROOMS().BARRACKS.faceCoo(d.planTile.x(), d.planTile.y());
+			COORDINATE man = blue(a).faceCoo(d.planTile.x(), d.planTile.y());
 			DIR dir = DIR.get(d.planTile, man);
 			AISTATE s = AI.STATES().WALK2.edge(a, d, dir);
 			a.speed.setDirCurrent(dir);
@@ -146,20 +105,9 @@ final class PlanBarracks extends AIPLAN.PLANRES{
 			return fight.set(a, d);
 		}
 		
-		@Override
-		public boolean con(Humanoid a, AIManager d) {
-			return true;
-		}
-		
-		@Override
-		public void can(Humanoid a, AIManager d) {
-			SETT_JOB j = job(a, d);
-			if (j != null)
-				j.jobReserveCancel(null);
-		}
 	};
 	
-	final Resumer fight = new Resumer(b.employment().verb) {
+	final Resumer fight = new Res() {
 		
 		private final AISUB.Simple sub = new AISUB.Simple() {
 			@Override
@@ -197,6 +145,51 @@ final class PlanBarracks extends AIPLAN.PLANRES{
 			return sub.activate(a, d, AI.STATES().anima.sword.activate(a, d, 5+RND.rFloat(5)));
 		}
 		
+	};
+	
+	@Override
+	public double poll(Humanoid a, AIManager d, HPollData e) {
+		if (e.type == HPoll.WORKING)
+			return 1.0;
+		return super.poll(a, d, e);
+	}
+	
+	private ROOM_BARRACKS blue(Humanoid a) {
+		RoomInstance w = STATS.WORK().EMPLOYED.get(a);
+		if (w != null && w.blueprintI() instanceof ROOM_BARRACKS)
+			return (ROOM_BARRACKS) w.blueprintI();
+		return null;
+	}
+	
+	
+	private JOBMANAGER_HASER work(Humanoid a) {
+		if (blue(a) != null)
+			return (JOBMANAGER_HASER) STATS.WORK().EMPLOYED.get(a);
+		return null;
+	}
+	
+	private SETT_JOB job(Humanoid a, AIManager d) {
+		
+		JOBMANAGER_HASER w = work(a);
+		if (w != null) {
+
+			SETT_JOB j = w.getWork().getJob(d.planTile);
+			if (j == null || !j.jobReservedIs(null))
+				return null;
+			
+			if (!module.planShouldContinue(a, d)) {
+				j.jobReserveCancel(null);
+				return null;
+			}
+				
+			return j;
+			
+		}
+		return null;
+		
+	}
+	
+	private abstract class Res extends Resumer {
 		
 		@Override
 		public boolean con(Humanoid a, AIManager d) {
@@ -210,13 +203,15 @@ final class PlanBarracks extends AIPLAN.PLANRES{
 				j.jobReserveCancel(null);
 		}
 		
-	};
-	
-	@Override
-	public double poll(Humanoid a, AIManager d, HPollData e) {
-		if (e.type == HPoll.WORKING)
-			return 1.0;
-		return super.poll(a, d, e);
+		@Override
+		protected void name(Humanoid a, AIManager d, Str string) {
+			JOBMANAGER_HASER bb = work(a);
+			if (bb == null)
+				return;
+			string.add(STATS.WORK().EMPLOYED.get(a).blueprintI().employment().verb);
+
+		}
+		
 	}
 
 

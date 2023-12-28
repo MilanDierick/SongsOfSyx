@@ -5,11 +5,12 @@ import static settlement.main.SETT.*;
 import game.GAME;
 import game.time.TIME;
 import init.C;
-import init.sprite.ICON;
+import init.sprite.UI.Icon;
 import init.sprite.UI.UI;
 import settlement.entity.ENTITY;
 import settlement.entity.animal.Animal;
 import settlement.entity.animal.spawning.AnimalSpawnSpot;
+import settlement.entity.humanoid.Humanoid;
 import settlement.main.SETT;
 import settlement.room.main.*;
 import settlement.thing.halfEntity.HalfEntity;
@@ -24,20 +25,20 @@ import util.gui.misc.GText;
 import util.gui.panel.GFrame;
 import view.main.VIEW;
 import view.sett.ui.minimap.UIMiniHotSpots.HotspotData;
-import view.sett.ui.minimap.ViewMiniMapUI.EntFunk;
 import view.subview.GameWindow;
 
 final class ViewMinimapMap {
 
 	private final Rec zoomWindow = new Rec(200);
 	private final UIMinimap m;
+	private final ViewMiniMapUI ss;
 	
-	
-	public ViewMinimapMap(UIMinimap m) {
+	public ViewMinimapMap(UIMinimap m, ViewMiniMapUI ss) {
 		this.m = m;
+		this.ss = ss;
 	}
 	
-	void render(Renderer r, float ds, GameWindow window, RECTANGLE absBounds, COORDINATE hoverPixel, EntFunk eFunc, boolean hovered) {
+	void render(Renderer r, float ds, GameWindow window, RECTANGLE absBounds, COORDINATE hoverPixel, boolean hovered) {
 		
 		r.newLayer(false, 0);
 		
@@ -60,7 +61,7 @@ final class ViewMinimapMap {
 			renderRooms(window, absBounds);
 			r.newLayer(true, 0);
 			
-			renderEnts(r, window, absBounds, eFunc, hovered);
+			renderEnts(r, window, absBounds, hovered);
 			r.newLayer(true, 0);
 			renderFractured(r, window, absBounds);
 			
@@ -70,7 +71,7 @@ final class ViewMinimapMap {
 			GAME.s().render(r, ds, 2, hoverPixel.x(), hoverPixel.y(), zoomWindow);
 		}else {
 			
-			renderEnts(r, window, absBounds, eFunc, hovered);
+			renderEnts(r, window, absBounds, hovered);
 			r.newLayer(true, 0);
 			
 			SETT.MINIMAP().render(r, 
@@ -99,19 +100,19 @@ final class ViewMinimapMap {
 	private final Rec tmp = new Rec();
 	
 	private void renderSquares(GameWindow window, RECTANGLE absBounds, boolean hovered){
-		if (ViewMiniMapUI.showGrowables || ViewMiniMapUI.showMinables) {
+		if (ss.showGrowable.is() || ss.showMinerals.is()) {
 			for (TerrainHotSpot s : TILE_MAP().hotspots().ALL()) {
-				if (ViewMiniMapUI.showGrowables && s.type == 0) {
+				if (ss.showGrowable.is() && s.type == 0) {
 					renderSquare(s.body(), COLOR.GREEN100, window, absBounds, hovered);
 					renderSprite(s.icon, s.body().cX(), s.body().cY(), window, absBounds);
 				}
-				else if (ViewMiniMapUI.showMinables && s.type == 1) {
+				else if (ss.showMinerals.is() && s.type == 1) {
 					renderSquare(s.body(), COLOR.RED100, window, absBounds, hovered);
 					renderSprite(s.icon, s.body().cX(), s.body().cY(), window, absBounds);
 				}
 			}
 		}
-		if (ViewMiniMapUI.showAnimal) {
+		if (ss.showAnimals.is()) {
 			for (AnimalSpawnSpot s : SETT.ANIMALS().spawn.all()) {
 				if (s.active()) {
 					tmp.setDim(16 + s.max());
@@ -171,24 +172,19 @@ final class ViewMinimapMap {
 	private COLOR rCol = new ColorShifting(COLOR.WHITE65, COLOR.WHITE150);
 	
 	private void renderRooms(GameWindow window, RECTANGLE absBounds){
-		if (ViewMiniMapUI.showRooms != null) {
-			RoomBlueprintIns<?> b = ViewMiniMapUI.showRooms;
-			renderRooms(b, window, absBounds);
-		}else if (ViewMiniMapUI.showRoomsAll){
-			for (RoomBlueprint bb : SETT.ROOMS().all()) {
-				if (bb instanceof RoomBlueprintIns<?>) {
-					RoomBlueprintIns<?> b = (RoomBlueprintIns<?>) bb;
-					renderRooms(b, window, absBounds);
+		for (RoomBlueprint bb : SETT.ROOMS().all()) {
+			if (bb instanceof RoomBlueprintIns<?>) {
+				RoomBlueprintIns<?> b = (RoomBlueprintIns<?>) bb;
+				for (int i = 0; i < b.instancesSize(); i++) {
+					RoomInstance ins = b.getInstance(i);
+					if (ss.showRoom.is(ins))
+						renderSprite(b.iconBig(), ins.body().cX(), ins.body().cY(), window, absBounds);
 				}
 			}
 		}
-	}
+		
 	
-	private void renderRooms(RoomBlueprintIns<?> b, GameWindow window, RECTANGLE absBounds) {
-		for (int i = 0; i < b.instancesSize(); i++) {
-			RoomInstance ins = b.getInstance(i);
-			renderSprite(b.iconBig(), ins.body().cX(), ins.body().cY(), window, absBounds);
-		}
+		
 	}
 	
 	private void renderSprite(SPRITE icon, int cx, int cy, GameWindow window, RECTANGLE absBounds) {
@@ -341,12 +337,23 @@ final class ViewMinimapMap {
 		
 	}
 	
-	private void renderEnts(Renderer r, GameWindow window, RECTANGLE absBounds, EntFunk func, boolean hovered) {
+	private void renderEnts(Renderer r, GameWindow window, RECTANGLE absBounds, boolean hovered) {
+		boolean ani = ss.showAnimals.is();
 		for (ENTITY e : ENTITIES().getAllEnts()) {
 			if (e == null)
 				continue;
-			if (!ViewMiniMapUI.showAnimal && e instanceof Animal)
+			COLOR c = COLOR.WHITE85;
+			if (e instanceof Animal) {
+				if (!ani)
+					continue;
+			}else if (e instanceof Humanoid) {
+				Humanoid h = (Humanoid) e;
+				if (!ss.showHuman.is(h))
+					continue;
+				c = ss.colorCode.get(h);
+			}else {
 				continue;
+			}
 			if (e.physics.body().isWithin(window.pixels())) {
 				
 				int x1 = absBounds.x1() + ((e.physics.body().x1() - window.pixels().x1())>>window.zoomout());
@@ -355,7 +362,7 @@ final class ViewMinimapMap {
 					continue;
 				COLOR.WHITE100.bind();
 				r.renderParticle(x1+1, y1+1);
-				func.get(e).bind();
+				c.bind();
 				r.renderParticle(x1, y1);
 				
 				
@@ -390,8 +397,8 @@ final class ViewMinimapMap {
 		if (zoomWindow.x2() > C.DIM().width())
 			zoomWindow.moveX2(C.WIDTH());
 		
-		zoomWindow.moveY1(m.y() - ICON.MEDIUM.SIZE - zoomWindow.height() < 0 ? 
-				m.y() + ICON.MEDIUM.SIZE : m.y() - ICON.MEDIUM.SIZE - zoomWindow.height());
+		zoomWindow.moveY1(m.y() - Icon.M - zoomWindow.height() < 0 ? 
+				m.y() + Icon.M : m.y() - Icon.M - zoomWindow.height());
 	}
 	
 	private final GText name = new GText(UI.FONT().H1, 20);
@@ -399,7 +406,7 @@ final class ViewMinimapMap {
 	private void renderHotspots(GameWindow window, RECTANGLE absBounds, boolean hovered) {
 		
 		if (window.zoomout() >= window.zoomoutmax()-1) {
-			name.setFont(UI.FONT().H1S);
+			name.setFont(UI.FONT().H1);
 		}else {
 			name.setFont(UI.FONT().H1);
 		}

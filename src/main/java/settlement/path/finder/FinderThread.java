@@ -1,9 +1,9 @@
 package settlement.path.finder;
 
-import init.C;
+import settlement.main.SETT;
 import settlement.path.components.SCOMPONENTS;
 import snake2d.*;
-import snake2d.Path.PathSync;
+import snake2d.Path.PathFancy;
 import snake2d.util.sets.ArrayList;
 
 public final class FinderThread {
@@ -17,15 +17,20 @@ public final class FinderThread {
 	private final Thread[] threads = new Thread[works.length];
 	
 	public FinderThread(SCOMPONENTS comps) {
+
 		
 		for (Worker w : works) {
-			if (w != null)
+			if (w != null) {
 				w.working = false;
+			}
 		}
+		
+		
+		
 		
 		for (int i = 0; i < threads.length; i++) {
 			
-			works[i] = new Worker(comps);
+			works[i] = new Worker(this, comps);
 			Thread t = new Thread(works[i]);
 			t.setDaemon(true);
 			t.setName("Path offloade #" + i);
@@ -92,43 +97,49 @@ public final class FinderThread {
 		lock = false;
 	}
 	
-	private class Worker implements Runnable {
+	private static class Worker implements Runnable {
 
 		private final PathUtilOnline pather;
 		private final SPathFinderThread fin;
 		private volatile boolean working = true;
 		private volatile boolean stopped;
-		Worker(SCOMPONENTS comps){
-			pather = new PathUtilOnline(C.SETTLE_TSIZE);
+		private FinderThread tt;
+		
+		Worker(FinderThread tt, SCOMPONENTS comps){
+			this.tt = tt;
+			pather = new PathUtilOnline(SETT.TWIDTH);
 			fin = new SPathFinderThread(comps, pather, 13);
 		}
 
 		@Override
 		public void run() {
 			while(working) {
-				if (stopForUp) {
+				if (tt.stopForUp) {
 					stopped = true;
-					while(stopForUp) {
+					if (!working)
+						break;
+					while(tt.stopForUp) {
 						if (!working)
-							return;
+							break;
 						sleep();
+						continue;
 					}
 					continue;
 				}
 				stopped = false;
-				lock();
-				if (queueJob.isEmpty()) {
-					lock = false;
-					stopForUp = true;
+				tt.lock();
+				if (tt.queueJob.isEmpty()) {
+					tt.lock = false;
+					tt.stopForUp = true;
 					stopped = true;
 					Thread.yield();
 					continue;
 				}
 				
 				
-				ThreadPath t = queueJobPath.removeLast();
-				ThreadPathJob j = queueJob.removeLast();
-				lock = false;
+				ThreadPath t = tt.queueJobPath.removeLast();
+				ThreadPathJob j = tt.queueJob.removeLast();
+				tt.lock = false;
 				if (j.doJob(pather, fin, t))
 					t.status = 3;
 				else
@@ -150,7 +161,7 @@ public final class FinderThread {
 	static class ThreadPath {
 
 		private volatile byte status;
-		final PathSync path = new PathSync(SPath.size);
+		final PathFancy path = new PathFancy(SPath.size);
 		short sx,sy,dx,dy;
 		boolean full;
 		volatile short destX,destY;

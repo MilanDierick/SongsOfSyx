@@ -5,7 +5,6 @@ import init.race.RACES;
 import init.race.Race;
 import init.resources.RESOURCE;
 import settlement.entity.animal.AnimalSpecies;
-import settlement.main.RenderData.RenderIterator;
 import settlement.main.SETT;
 import settlement.room.main.util.RoomBits;
 import settlement.thing.THINGS.Thing;
@@ -16,6 +15,7 @@ import snake2d.util.datatypes.COORDINATE;
 import snake2d.util.datatypes.Coo;
 import snake2d.util.misc.CLAMP;
 import snake2d.util.rnd.RND;
+import util.rendering.RenderData.RenderIterator;
 import util.rendering.ShadowBatch;
 
 public abstract class TempleAltar {

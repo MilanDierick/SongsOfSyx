@@ -14,8 +14,8 @@ import settlement.room.main.category.RoomCategorySub;
 import settlement.room.main.furnisher.Furnisher;
 import settlement.room.main.job.ROOM_EMPLOY_AUTO;
 import settlement.room.main.util.RoomInitData;
-import settlement.room.service.module.RoomServiceDataSimple;
-import settlement.room.service.module.RoomServiceDataSimple.ROOM_SERVICE_HASER;
+import settlement.room.service.module.RoomService;
+import settlement.room.service.module.RoomService.ROOM_SERVICE_HASER;
 import snake2d.util.datatypes.DIR;
 import snake2d.util.file.FileGetter;
 import snake2d.util.file.FilePutter;
@@ -24,7 +24,7 @@ import view.sett.ui.room.UIRoomModule;
 
 public final class ROOM_HOSPITAL extends RoomBlueprintIns<HospitalInstance> implements ROOM_SERVICE_HASER, INDUSTRY_HASER, ROOM_EMPLOY_AUTO{
 
-	final RoomServiceDataSimple service;
+	final RoomService service;
 	final Constructor constructor;
 	final Industry consumtion;
 	final LIST<Industry> indus;
@@ -32,7 +32,7 @@ public final class ROOM_HOSPITAL extends RoomBlueprintIns<HospitalInstance> impl
 	public ROOM_HOSPITAL(RoomInitData init, RoomCategorySub block) throws IOException {
 		super(0, init, "_HOSPITAL", block);
 		
-		service = new RoomServiceDataSimple(this, init) {
+		service = new RoomService(this, init) {
 			
 			@Override
 			public FSERVICE service(int tx, int ty) {
@@ -69,7 +69,7 @@ public final class ROOM_HOSPITAL extends RoomBlueprintIns<HospitalInstance> impl
 	}
 	
 	@Override
-	public RoomServiceDataSimple service() {
+	public RoomService service() {
 		return service;
 	}
 

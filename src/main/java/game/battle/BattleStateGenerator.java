@@ -1,85 +1,68 @@
 package game.battle;
 
-import static world.World.*;
+import static world.WORLD.*;
 
 import game.GAME;
-import game.battle.Conflict.Side;
+import game.battle.PlayerBattleSpec.SpecSide;
 import init.RES;
 import init.race.RACES;
 import init.race.Race;
 import settlement.entity.EntityIterator;
 import settlement.entity.humanoid.Humanoid;
 import settlement.main.SETT;
-import settlement.main.SGenerationConfig;
+import settlement.tilemap.generator.Generator;
 import snake2d.Errors;
 import snake2d.PathTile;
 import snake2d.util.datatypes.DIR;
 import snake2d.util.datatypes.Rec;
-import snake2d.util.sets.ArrayList;
 import snake2d.util.sets.LIST;
-import world.World;
-import world.army.WARMYD;
-import world.army.WDIV;
-import world.army.WINDU.WDivGeneration;
-import world.entity.army.WArmy;
-import world.entity.army.WArmyState;
-import world.map.regions.CapitolPlacablity;
-import world.map.regions.REGIOND;
+import world.WORLD;
+import world.army.WDivGeneration;
+import world.map.pathing.WTRAV;
+import world.regions.centre.WCentre;
 
 final class BattleStateGenerator {
 
-	ArrayList<WDivGeneration> side1;
-	ArrayList<WDivGeneration> side2;
+	SpecSide side1;
+	SpecSide side2;
 	private int a1;
 	private int a2;
 	private Race r1;
 	private Race r2;
 	
-	void generate(BattleState s, Conflict conflict, Rec deploymentTiles) {
+	void generate(BattleState s, PlayerBattleSpec spec, Rec deploymentTiles) {
 		
-		side1 = makeSide(conflict.sideA, true);
-		side2 = makeSide(conflict.sideB, false);
-		genMap(conflict);
-		clearMid(conflict);
+		side1 = makeSide(spec.player, true);
+		side2 = makeSide(spec.enemy, false);
+		
+		DIR d = DIR.N;
+		d = DIR.get(spec.player.wCoo, spec.enemy.wCoo);
+
+		if (d == DIR.C)
+			d = DIR.N;
+		
+		if (!d.isOrtho())
+			d = d.next(1);
+		
+		genMap(spec.player.wCoo.x(), spec.player.wCoo.y(), d);
 		SETT.ROOMS().THRONE.init.place(SETT.TILE_BOUNDS.cX(), SETT.TILE_BOUNDS.cY(), 0);
 		SETT.ARMY_AI().pause();
-		genArmies(s, conflict, deploymentTiles);
+		genArmies(s, spec.player, spec.enemy, deploymentTiles, d);
 		SETT.init();
+		Generator.paintMinimap();
 		GAME.update(0, 0);
 		
 
 	}
 	
-	private ArrayList<WDivGeneration> makeSide(Side side, boolean sideA){
-		int am = 0;
-		double art = 0;
-		if (side.garrison() != null) {
-			am += REGIOND.MILITARY().divisions(side.garrison()).size();
-			art += REGIOND.MILITARY().soldiers.get(side.garrison())/150;
-		}
+	private SpecSide makeSide(SpecSide side, boolean sideA){
+
+		double art = side.artillery;
 		
-		for (WArmy a : side) {
-			am += a.divs().size();
-			if (a.state() == WArmyState.fortified)
-				art += WARMYD.men(null).get(a)/150;
-			else
-				art += WARMYD.men(null).get(a)/300;
-		}
+	
+
 		
-		ArrayList<WDivGeneration> res = new ArrayList<>(am);
-		
-		if (side.garrison() != null) {
-			for (WDIV d : REGIOND.MILITARY().divisions(side.garrison())) {
-				res.add(d.generate());
-			}
-		}
-		
-		for (WArmy a : side) {
-			for (int i = 0; i < a.divs().size(); i++) {
-				res.add(a.divs().get(i).generate());
-			}
-		}
-		Race race = getRace(res);
+		Race race = getRace(side.divs);
 		if (sideA) {
 			a1 = (int) art;
 			r1 = race;
@@ -88,7 +71,7 @@ final class BattleStateGenerator {
 			a2 = (int) art;
 			r2 = race;
 		}
-		return res;
+		return side;
 	}
 	
 	private static Race getRace(LIST<WDivGeneration> divs) {
@@ -109,29 +92,7 @@ final class BattleStateGenerator {
 		return RACES.all().get(best);
 	}
 	
-	private void genMap(Conflict conflict) {
-		
-		SGenerationConfig config = new SGenerationConfig();
-		config.animals = false;
-		config.minables = false;
-		
-		int cx;
-		int cy;
-		
-		if (conflict.sideB.size() > 0) {
-			cx = conflict.sideB.get(0).ctx();
-			cy = conflict.sideB.get(0).cty();
-		}else {
-			cx = conflict.sideB.garrison().cx();
-			cy = conflict.sideB.garrison().cy();
-		}
-		
-		
-		
-		if (okWorldTile(cx, cy)) {
-			GAME.s().CreateFromWorldMap(cx-CapitolPlacablity.TILE_DIM/2, cy-CapitolPlacablity.TILE_DIM/2, config);
-			return;
-		}
+	private void genMap(int cx, int cy, DIR eDir) {
 		
 		RES.flooder().init(this);
 		RES.flooder().pushSloppy(cx, cy, 0);
@@ -139,14 +100,14 @@ final class BattleStateGenerator {
 		while (RES.flooder().hasMore()) {
 			PathTile c = RES.flooder().pollSmallest();
 			ts ++;
-			if (okWorldTile(c.x(), c.y())) {
+			if (okWorldTile(c.x(), c.y()) && okWorldTile(c.x()+eDir.x(), c.y()+eDir.y())) {
 				RES.flooder().done();
-				GAME.s().CreateFromWorldMap(c.x()-CapitolPlacablity.TILE_DIM/2, c.y()-CapitolPlacablity.TILE_DIM/2, config);
+				GAME.s().CreateFromWorldMap(c.x()-WCentre.TILE_DIM/2, c.y()-WCentre.TILE_DIM/2, true);
 				return;
 			}
 			for (int di = 0; di < DIR.ALL.size(); di++) {
 				DIR d = DIR.ALL.get(di);
-				if (World.IN_BOUNDS(c, d)) {
+				if (WORLD.IN_BOUNDS(c, d)) {
 					RES.flooder().pushSmaller(c, d, c.getValue()+d.tileDistance());
 				}
 			}
@@ -159,47 +120,10 @@ final class BattleStateGenerator {
 		
 	}
 	
-	private void clearMid(Conflict conflict) {
+	private void genArmies(BattleState s, SpecSide a, SpecSide b, Rec tiles, DIR d) {
 		
-		RES.flooder().init(this);
-		RES.flooder().pushSloppy(SETT.TILE_BOUNDS.cX(), SETT.TILE_BOUNDS.cY(), 0);
 		
-
-		while (RES.flooder().hasMore()) {
-			PathTile c = RES.flooder().pollSmallest();
-			if (c.getValue() > 250) {
-				continue;
-			}
-			if (SETT.PATH().availability.get(c).player <= 0 && !SETT.TERRAIN().WATER.is(c)) {
-				SETT.TERRAIN().NADA.placeFixed(c.x(), c.y());
-				//GROUND().STEPPE.placeFixed(c.x(), c.y());
-			}
-			for (int di = 0; di < DIR.ALL.size(); di++) {
-				DIR d = DIR.ALL.get(di);
-				if (SETT.IN_BOUNDS(c, d)) {
-					RES.flooder().pushSmaller(c, d, c.getValue() + d.tileDistance());
-				}
-			}
-		}
 		
-		RES.flooder().done();
-		GAME.update(0, 0);
-		
-	}
-	
-	private void genArmies(BattleState s, Conflict conflict, Rec tiles) {
-		
-		DIR d = DIR.N;
-		if (conflict.sideA.size() == 0) {
-			d = DIR.get(conflict.sideA.garrison().cx(), conflict.sideA.garrison().cy(), conflict.sideB.get(0).body().cX(), conflict.sideB.get(0).body().cY());
-		}else if (conflict.sideB.size() == 0) {
-			d = DIR.get(conflict.sideA.get(0).body().cX(), conflict.sideA.get(0).body().cY(), conflict.sideB.garrison().cx(), conflict.sideB.garrison().cy());
-		}else {
-			d = DIR.get(conflict.sideA.get(0).body().cX(), conflict.sideA.get(0).body().cY(), conflict.sideB.get(0).body().cX(), conflict.sideB.get(0).body().cY());
-		}
-		
-		if (!d.isOrtho())
-			d = d.next(1);
 		
 		tiles.set(
 				SETT.TILE_BOUNDS.cX()+d.next(-2).x()*SETT.TWIDTH/2, SETT.TILE_BOUNDS.cX()+d.next(3).x()*SETT.TWIDTH/2, 
@@ -208,8 +132,8 @@ final class BattleStateGenerator {
 		
 		
 		
-		BattleStateGenArmy.genArmy(side1, true, d.perpendicular(), a1, r1);
-		BattleStateGenArmy.genArmy(side2, false, d, a2, r2);
+		BattleStateGenArmy.genArmy(side1.divs, true, d.perpendicular(), a1, r1, side1.moraleBase);
+		BattleStateGenArmy.genArmy(side2.divs, false, d, a2, r2, side2.moraleBase);
 		
 		new EntityIterator.Humans() {
 			
@@ -218,7 +142,7 @@ final class BattleStateGenerator {
 				a.teleportAndInitInDiv();
 				return false;
 			}
-		};
+		}.iterate();
 		
 	}
 
@@ -226,10 +150,14 @@ final class BattleStateGenerator {
 	private boolean okWorldTile(int tx, int ty) {
 		
 		
-		if (tx-CapitolPlacablity.TILE_DIM/2 < 0 || ty-CapitolPlacablity.TILE_DIM/2 < 2 || tx + CapitolPlacablity.TILE_DIM/2 >= TWIDTH() || ty+CapitolPlacablity.TILE_DIM/2 >= THEIGHT())
+		if (tx-WCentre.TILE_DIM/2 < 0 || ty-WCentre.TILE_DIM/2 < 2 || tx + WCentre.TILE_DIM/2 >= TWIDTH() || ty+WCentre.TILE_DIM/2 >= THEIGHT())
 			return false;
-		return !CapitolPlacablity.b(tx, ty);
-		
+		for (int di = 0; di < DIR.ALLC.size(); di++) {
+			DIR d = DIR.ALLC.get(di);
+			if (!WTRAV.isGoodLandTile(tx+d.x(), ty+d.y()))
+				return false;
+		}
+		return true;
 	}
 	
 }

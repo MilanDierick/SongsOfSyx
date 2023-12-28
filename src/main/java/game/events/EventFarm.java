@@ -7,13 +7,14 @@ import game.time.TIME;
 import init.D;
 import settlement.main.SETT;
 import settlement.room.food.farm.ROOM_FARM;
+import settlement.stats.STATS;
 import snake2d.util.file.FileGetter;
 import snake2d.util.file.FilePutter;
 import snake2d.util.misc.ACTION;
 import snake2d.util.rnd.RND;
 import snake2d.util.sprite.text.Str;
-import view.main.MessageText;
 import view.sett.IDebugPanelSett;
+import view.ui.message.MessageText;
 
 public class EventFarm extends EventResource{
 
@@ -117,12 +118,19 @@ public class EventFarm extends EventResource{
 	private void event(ROOM_FARM farm) {
 		if (farm.instancesSize() == 0)
 			return;
+
+		if (STATS.POP().POP.data().get(null)-100 < RND.rInt(1000))
+			return;
+		
+		
 		if (RND.oneIn(4)) {
 			double event = 0.8-0.7*RND.rExpo();
 			farm.setEvent(event);
 			new MessageText(¤¤mBlight).paragraph(Str.TMP.clear().add(¤¤mBlightBody).insert(0, farm.info.names).insert(1, 10*(int)(10*(1-event)))).send();
 			 
 		}else {
+			if (SETT.WEATHER().moisture.growthValue() < 1)
+				return;
 			farm.setEvent(1.25 + 0.75*RND.rExpo());
 			new MessageText(¤¤mBoutiful).paragraph(Str.TMP.clear().add(¤¤mBoutifulBody).insert(0, farm.info.names)).send();
 		}

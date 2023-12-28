@@ -2,26 +2,28 @@ package settlement.path.finder;
 
 import static settlement.main.SETT.*;
 
+import init.resources.RBIT.RBITImp;
 import init.resources.RESOURCE;
 import settlement.job.Job;
 import settlement.main.SETT;
 import settlement.path.components.*;
 import settlement.path.components.SCompFinder.SCompPatherExister;
-import snake2d.util.bit.Bits;
+import settlement.stats.STATS;
 import snake2d.util.datatypes.COORDINATE;
 import snake2d.util.sets.Bitmap1D;
-import util.updating.IUpdater;
+import snake2d.util.sets.Bitsmap1D;
 
 public final class SFinderJob{
 
-	private final Updater updater = new Updater();
-
+	public static int DIST_SMALL = 128;
+	private final SFinderUpdater updater = new SFinderUpdater();
+	
 	SFinderJob() {
-		
+
 		new TestPath("job", null) {
 			@Override
 			protected void place(int sx, int sy, SPath p) {
-				Job j = find(sx, sy, Integer.MAX_VALUE, p);
+				Job j = find(sx, sy, p, true);
 				if (j != null && j.resourceCurrentlyNeeded() != null) {
 					p.request(sx,  sy, j.jobCoo());
 				}
@@ -30,21 +32,16 @@ public final class SFinderJob{
 		
 	}
 	
-	void update(float ds) {
-		updater.update(ds);
-		
-		
-	}
 	
 	private FindableDatas d() {
 		return SETT.PATH().comps.data;
 	}
 	
-	long resMask = 0;
-	long jobMask = 0;
+	final RBITImp resMask = new RBITImp();
+	final RBITImp jobMask = new RBITImp();
 	private Job result;
 	
-	private final SCompPatherExister wierd = new SCompPatherExister() {
+	private final SCompPatherExister exister = new SCompPatherExister() {
 		
 		
 		
@@ -54,17 +51,17 @@ public final class SFinderJob{
 				return true;
 			if (SETT.WEATHER().growthRipe.cropsAreRipe() && d().jobHarvest.get(c) > 0)
 				return true;
-			jobMask |= d().jobs.bits(c);
-			resMask |= d().resScattered.bits(c);
-			resMask |= d().resCrate.bits(c);
-			resMask |= d().resCrateGet.bits(c);
-			return (jobMask & resMask) != 0;
+			jobMask.or(d().jobs.bits(c));
+			resMask.or(d().resScattered.bits(c));
+			resMask.or(d().resCrate.bits(c));
+			resMask.or(d().resCrateGet.bits(c));
+			return jobMask.has(resMask);
 		}
 		
 		@Override
 		public void init(SComponentLevel l) {
-			resMask = 0;
-			jobMask = 0;
+			resMask.clear();
+			jobMask.clear();
 		}
 	};
 	
@@ -74,7 +71,7 @@ public final class SFinderJob{
 		public boolean isInComponent(SComponent c, double distance) {
 			if (d().job.get(c) > 0)
 				return true;
-			if ((resMask & d().jobs.bits(c)) != 0)
+			if (resMask.has(d().jobs.bits(c)))
 				return true;
 			if (SETT.WEATHER().growthRipe.cropsAreRipe() && d().jobHarvest.get(c) > 0)
 				return true;
@@ -91,37 +88,101 @@ public final class SFinderJob{
 				return false;
 			if (result.resourceCurrentlyNeeded() == null)
 				return true;
-			if ((result.resourceCurrentlyNeeded().bit & resMask) != 0)
+			if (result.resourceCurrentlyNeeded().bit.has(resMask))
 				return true;
+			if (result.needsRipe() && !SETT.WEATHER().growthRipe.cropsAreRipe())
+				return false;
 			return false;
 		}
 	};
 	
-	public Job findWeird(int sx, int sy, int maxDistance) {
+	void update(double ds) {
+		updater.update(ds);
+	}
+	
+	public boolean hasJobs(int tx, int ty, boolean full) {
 		
-		if (maxDistance == Integer.MAX_VALUE) {
-			resMask = d().resScattered.bits(sx, sy) | d().resCrate.bits(sx, sy) | d().resCrateGet.bits(sx, sy);
-			COORDINATE c = SETT.PATH().finders.finder().findDest(sx, sy, fin, maxDistance);
+		if (full) {
+			if (!updater.tryDistance(tx, ty))
+				return false;
+		}else {
+			if (!updater.tryShort(tx, ty))
+				return false;
+		}
+		
+		return hasAnyJobs(tx, ty);
+		
+	}
+	
+	public boolean hasAnyJobs(int tx, int ty) {
+		
+		SComponent c = SETT.PATH().comps.superComp.get(tx, ty);
+		if (c == null)
+			return false;
+		
+		if (d().job.has(c))
+			return true;
+		if ((d().jobHarvest.has(c) && SETT.WEATHER().growthRipe.cropsAreRipe()))
+			return true;
+		resMask.clearSet(d().resScattered.bits(c)).or(d().resCrate.bits(c)).or(d().resCrateGet.bits(c));
+		return d().jobs.has(c, resMask);
+	}
+	
+	
+	public Job findOnlyJobForced(int sx, int sy, int dist) {
+		
+		
+		
+		if (!hasAnyJobs(sx, sy))
+			return null;
+		
+		if (dist == Integer.MAX_VALUE) {
+			resMask.clearSet(d().resScattered.bits(sx, sy)).or(d().resCrate.bits(sx, sy)).or(d().resCrateGet.bits(sx, sy));
+			COORDINATE c = SETT.PATH().finders.finder().findDest(sx, sy, fin, dist);
 			if (c != null) {
 				return result;
 			}
-			return null;
+		}else if (SETT.PATH().comps.pather.exists(sx, sy, exister, dist)) {
+			COORDINATE c = SETT.PATH().finders.finder().findDest(sx, sy, fin, Integer.MAX_VALUE);
+			if (c != null) {
+				return result;
+			}
 		}
 		
-		if (SETT.PATH().comps.pather.exists(sx, sy, wierd, maxDistance)) {
-			if (SETT.PATH().finders.finder().findDest(sx, sy, fin, maxDistance) != null)
-				return result;
-		}
 		return null;
 		
 	}
 	
-	public boolean hasAny(int tx, int ty) {
-//		return d().job.has(tx, ty) || d().jobs.has(tx, ty, -1l);
-		SComponent c = SETT.PATH().comps.superComp.get(tx, ty);
-		if (c != null)
-			return d().job.has(c) || (d().jobHarvest.has(c) && SETT.WEATHER().growthRipe.cropsAreRipe()) || d().jobs.has(c, d().resScattered.bits(c) | d().resCrate.bits(c) | d().resCrateGet.bits(c));
-		return false;
+	public Job findOnlyJob(int sx, int sy, boolean full) {
+		
+		if (!hasJobs(sx, sy, full))
+			return null;
+		
+		int dist = DIST_SMALL;
+		if (full)
+			dist = updater.distance(sx, sy);
+		
+		if (dist == Integer.MAX_VALUE) {
+			resMask.clearSet(d().resScattered.bits(sx, sy)).or(d().resCrate.bits(sx, sy)).or(d().resCrateGet.bits(sx, sy));
+			COORDINATE c = SETT.PATH().finders.finder().findDest(sx, sy, fin, dist);
+			if (c != null) {
+				return result;
+			}
+		}else if (SETT.PATH().comps.pather.exists(sx, sy, exister, dist)) {
+			COORDINATE c = SETT.PATH().finders.finder().findDest(sx, sy, fin, Integer.MAX_VALUE);
+			if (c != null) {
+				return result;
+			}
+		}
+		
+		if (full) {
+			updater.distanceFail(sx, sy);
+		}else {
+			updater.failShort(sx, sy);
+		}
+		
+		return null;
+		
 	}
 	
 	/**
@@ -132,13 +193,9 @@ public final class SFinderJob{
 	 * @param path
 	 * @return null if nothing was found. Else a job. If job resource == null, then the path is not set. Otherwise it is set.
 	 */
-	public Job find(int sx, int sy, int maxDistance, SPath path) {
-		
-		if (SETT.PATH().comps.zero.get(sx, sy) == null || !updater.shouldSearch(SETT.PATH().comps.levels.get(1).get(sx, sy) , maxDistance)) {
-			return null;
-		}
-		
-		Job j = findWeird(sx, sy, maxDistance);
+	public Job find(int sx, int sy, SPath path, boolean full) {
+
+		Job j = findOnlyJob(sx, sy, full);
 
 		if (j != null) {
 			if (j.resourceCurrentlyNeeded() == null && path != null) {
@@ -146,112 +203,136 @@ public final class SFinderJob{
 				int jy = j.jobCoo().y();
 				if (path.request(sx, sy, jx, jy, false))
 					return JOBS().getter.get(jx, jy);
-				updater.reportFailure(SETT.PATH().comps.zero.get(sx, sy), maxDistance);
-				
 				return null;
 			}
 			return j;
 		}
-		updater.reportFailure(SETT.PATH().comps.zero.get(sx, sy), maxDistance);
 		return null;
 	}
 	
 	public final void report(Job job, int delta) {
 
-		try {
-			RESOURCE r = job.resourceCurrentlyNeeded();
-			
-			
-			if (r != null) {
-				if (delta == 1) {
-					d().jobs.reportPresence(job.jobCoo().x(), job.jobCoo().y(), r);
-					
-				}else if(delta == -1) {
-					d().jobs.reportAbsence(job.jobCoo().x(), job.jobCoo().y(), r);
-				}
-				return;
-			}
-			
-			FindableDataSingle s = d().job;
-			if (job.needsRipe())
-				s = d().jobHarvest;
-			
+		RESOURCE r = job.resourceCurrentlyNeeded();
+		
+		
+		if (r != null) {
 			if (delta == 1) {
-				s.reportPresence(job.jobCoo().x(), job.jobCoo().y());
+				d().jobs.reportPresence(job.jobCoo().x(), job.jobCoo().y(), r);
+				
 			}else if(delta == -1) {
-				s.reportAbsence(job.jobCoo().x(), job.jobCoo().y());
+				d().jobs.reportAbsence(job.jobCoo().x(), job.jobCoo().y(), r);
 			}
-		}catch(RuntimeException e) {
-			System.err.print(job.jobName() + " " + job.getClass().getSimpleName() + " " + job.jobCoo().x() + " " + job.jobCoo().y());
-			throw e;
+			return;
+		}
+		
+		FindableDataSingle s = d().job;
+		if (job.needsRipe())
+			s = d().jobHarvest;
+		
+		if (delta == 1) {
+			s.reportPresence(job.jobCoo().x(), job.jobCoo().y());
+		}else if(delta == -1) {
+			s.reportAbsence(job.jobCoo().x(), job.jobCoo().y());
 		}
 	
 	}
 	
-	private static class Updater extends IUpdater{
+	final static class SFinderUpdater {
 
-		private byte[] failData = new byte[Short.MAX_VALUE];
-		private final Bitmap1D tryMore = new Bitmap1D(Short.MAX_VALUE, false);
-		private final Bits failDistance = new Bits(0b11110000);
-		private final Bits maxDistance = new Bits(0b00001111);
+		private final Bitmap1D tryShort = new Bitmap1D(Short.MAX_VALUE, false);
+		private final Bitmap1D distanceFailed = new Bitmap1D(Short.MAX_VALUE, false);
+		private final Bitsmap1D distance = new Bitsmap1D(0, 2, Short.MAX_VALUE);
+		private final Bitsmap1D distanceTimeout = new Bitsmap1D(0, 2, Short.MAX_VALUE);
 		
-		public Updater() {
-			super(Short.MAX_VALUE, 10);
+		private final double speed = 1.0/32.0;
+		double ci = 0;
+		int roundabout = 0;
+		
+		private final int[] dists = new int[] {
+			150,
+			400,
+			1000,
+			Integer.MAX_VALUE,
+		};
+		
+		public SFinderUpdater() {
+
+		}
+		
+		public void update(double ds) {
+			int old = (int) ci;
+			ci += ds*SETT.PATH().comps.levels.get(0).componentsMax()*speed;
+			int now = (int) ci;
+			int delt = old-now;
+			
+			if (ci >= SETT.PATH().comps.levels.get(0).componentsMax()) {
+				roundabout ++;
+				ci -= SETT.PATH().comps.levels.get(0).componentsMax();
+			}
+			
+			for (int k = 0; k <= delt; k++) {
+				int i = k+old;
+				i %= SETT.PATH().comps.levels.get(0).componentsMax();
+				tryShort.set(i, false);
+				
+				if (distanceFailed.get(i)) {
+					
+					distanceFailed.set(i, false);
+					distance.inc(i, 1);
+					distanceTimeout.set(i, (roundabout-1) & 3);
+				}else if ((roundabout & 3) == distanceTimeout.get(i)){
+					distance.set(i, 0);
+					distanceTimeout.set(i, 0);
+				}
+			}
 			
 		}
-
-		@Override
-		protected void update(int i, double timeSinceLast) {
-			
-			int d = failData[i];
-			d = failDistance.set(d, 0);
-			if (tryMore.get(i)) {
-				
-				tryMore.setFalse(i);
-				d = maxDistance.inc(d, 1);
-				
-			}
-			failData[i] = (byte) d;
+		
+		public boolean tryShort(int tx, int ty) {
+			SComponent c = SETT.PATH().comps.levels.get(0).get(tx, ty);
+			if (c == null)
+				return false;
+			if (tryShort.get(c.index()))
+				return false;
+			return true;
 		}
 		
-		private boolean shouldSearch(SComponent s, int distance) {
-			if (s == null || s.index() >= failData.length)
-				return true;
-			int d = failData[s.index()];
-			int fd = (64 << failDistance.get(d));
-			if (distance >= fd) {
-				return true;
-			}
-			return false;
-		}
-		
-//		int getDistance(Component s, int distance) {
-//			int d = (64<< maxDistance.get(failData[s.index]));
-//			if (distance >= d) {
-//				return d;
-//			}
-//			return distance;
-//		}
-		
-		void reportFailure(SComponent s, int distance) {
-			if (s.index() >= failData.length)
+		public void failShort(int tx, int ty) {
+			SComponent c = SETT.PATH().comps.levels.get(0).get(tx, ty);
+			if (c == null)
 				return;
+			tryShort.set(c.index(), true);
+		}
+		
+		public boolean tryDistance(int tx, int ty) {
 			
-			int d = failData[s.index()];
-			int di = (64 << maxDistance.get(d));
-			if (distance >= di) {
-				tryMore.set(s.index(), true);
-			}
+			if (STATS.WORK().workforce() - STATS.WORK().EMPLOYED.stat().data().get(null) < 80)
+				return true;
 			
-			int fd = (64 << failDistance.get(d));
-			if (distance > fd) {
-				d = failDistance.inc(d, 1);
-				failData[s.index()] = (byte) d;
-			}
-			
+			SComponent c = SETT.PATH().comps.levels.get(0).get(tx, ty);
+			if (c == null)
+				return false;
+			return !distanceFailed.get(c.index()) || distance.get(c.index()) != distance.maxValue();
 			
 		}
 		
+		public int distance(int tx, int ty) {
+			
+			if (STATS.WORK().workforce() - STATS.WORK().EMPLOYED.stat().data().get(null) < 80)
+				return Integer.MAX_VALUE;
+			
+			SComponent c = SETT.PATH().comps.levels.get(0).get(tx, ty);
+			return dists[distance.get(c.index())];
+		}
+		
+		public void distanceFail(int tx, int ty) {
+			SComponent c = SETT.PATH().comps.levels.get(0).get(tx, ty);
+			distanceFailed.set(c.index(), true);
+			failShort(tx, ty);
+		}
+		
+
+
 		
 	}
 

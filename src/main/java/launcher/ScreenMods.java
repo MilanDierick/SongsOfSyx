@@ -1,162 +1,136 @@
 package launcher;
 
-import static launcher.Resources.*;
-
 import game.VERSION;
-import init.error.ErrorHandler;
+import init.D;
 import init.paths.ModInfo;
 import init.paths.ModInfo.ModInfoException;
 import init.paths.PATHS;
-import launcher.Resources.GUI;
+import launcher.GUI.*;
 import snake2d.CORE;
-import snake2d.Errors.GameError;
 import snake2d.SPRITE_RENDERER;
 import snake2d.util.color.COLOR;
+import snake2d.util.color.OPACITY;
 import snake2d.util.datatypes.COORDINATE;
-import snake2d.util.datatypes.DIR;
 import snake2d.util.file.FileManager;
 import snake2d.util.gui.GuiSection;
 import snake2d.util.gui.clickable.CLICKABLE;
+import snake2d.util.gui.renderable.RENDEROBJ;
 import snake2d.util.misc.ACTION;
 import snake2d.util.sprite.SPRITE;
-import snake2d.util.sprite.text.Str;
-import snake2d.util.sprite.text.Text;
+import snake2d.util.sprite.text.*;
 
 class ScreenMods extends GuiSection{
 
+	{
+		D.gInit(ScreenMods.this);
+	}
+	
 	private ModInfo hoveredMod = null;
 	private String errorMod = null;
 	private String errorMessage = null;
-	private Text hs = new Text(Sprites.font, 200).setScale(1);
+	private Text hs;
 	private final GuiSection mods = new GuiSection();
-	private boolean fetching = false;
-	private SteamAchieve steam = null;
 	private final Launcher l;
 	
+	
+	private final CharSequence sOutdated = "(" + D.g("Outdated") + ")";
+	private final CharSequence sBy = D.g("Author") + ": ";
+	private final CharSequence sBroken = D.g("mborked", "Unsupported Mod");
+	
 	ScreenMods(Launcher l) {
-		
+		hs = new Text(l.res.font, 200).setScale(1);
 		this.l = l;
-		SPRITE[] panel = Sprites.smallPanel;
-		add(panel[0], 0, 0);
-		for (int i = 0; i <= 6; i++)
-			addDown(0, panel[1]);
-		addDown(0, panel[2]);
 		
-		GUI.RText rs = new GUI.RText.Header("PICK MODS");
-		rs.body().moveX1Y1(100, 60);
-		add(rs);
+		{
+			GuiSection butts = new GuiSection();
+			
+			
+			CLICKABLE b = new BText(l.res, D.g("Play"), 200){
+				
+				@Override
+				protected void clickA() {
+					
+					if (PATHS.SCRIPT().hasExternal(l.s.mods.get())) {
+						l.setModWarning();
+						return;
+					}
+					
+					l.s.save();
+					Launcher.startGame = true;
+					CORE.annihilate();
+				}
+
+			};
+			
+			butts.addRightC(64, b);
+			
+			b = new BText(l.res, D.g("Back"), 200).clickActionSet(new ACTION() {
+				@Override
+				public void exe() {
+					l.setMain();
+				}
+			});
+			butts.addRightC(4, b);
+			
+			butts.body().moveX2(Sett.WIDTH-16);
+			butts.body().moveY1(0);
+			
+			RENDEROBJ rs = new GUI.Header(l.res, D.g("Mods"));
+			rs.body().moveX1(64);
+			rs.body().moveCY(butts.body().cY());
+			butts.add(rs);
+			
+			
+			add(butts);
+		}
 		
-		mods.body().setHeight(body().height()-200);
-		mods.body().incr(50, 110);
-		add(mods);
+		
+		
+		
+		
+		mods.body().setHeight(Sett.HEIGHT-body().height()-24);
+		add(mods, 10, body().y2()+16);
 		
 		update(0);
 		
-		CLICKABLE b;
 		
 		
 		
 		
-		
-		b = new GUI.Button.Text("PLAY"){
-			
-			@Override
-			protected void clickA() {
-				
-				l.s.save();
-				Launcher.startGame = true;
-				CORE.annihilate();
-			}
-			
-			@Override
-			protected void renAction() {
-				activeSet(!fetching);
-			}
 
-		};
-		b.body().moveX1(100);
-		b.body().moveY1(315);
-		add(b);
-		
-		rs = new GUI.RText.Normal("or");
-		rs.body().moveX1Y1(getLastX2() + 15, 315);
-		add(rs);
-		
-		b = new GUI.Button.Text("CANCEL").clickActionSet(new ACTION() {
-			@Override
-			public void exe() {
-				l.setMain();
-			}
-		});
-		b.body().moveX1Y1(getLastX2() + 15, 315);
-		add(b);
-		
-		if (PATHS.isSteam() || PATHS.isDevelop()) {
-			steam = new SteamAchieve();
-			
-			b = new GUI.Button.Text("sync steam") {
-				boolean sentError = false;
-				@Override
-				protected void clickA() {
-					fetching = true;
-					steam.work();
-				}
-				
-				@Override
-				protected void renAction() {
-					
-					activeSet(steam.isDone() && !steam.isError());
-					if (steam.exception() != null && ! sentError) {
-						sentError = true;
-						steam.exception().printStackTrace(System.err);
-						new ErrorHandler().handle(new GameError(steam.exception().getMessage()), "error syncing steam");
-					}
-				}
-				
-				
-			};
-			
-			b.body().moveX1Y1(getLastX2() + 100, 315);
-			add(b);
-			addRightC(8, Resources.Sprites.social[3]);
-		}
-		
-		body().centerIn(0, Sett.WIDTH, 0, Sett.HEIGHT);
-		
 		int am = 0;
-		for (String s : l.s.mods()) {
+		for (String s : l.s.mods.get()) {
 			if (PATHS.local().MODS.exists(s))
 				am++;
 		}
 		String[] mods = new String[am];
 		am = 0;
-		for (String s : l.s.mods()) {
+		for (String s : l.s.mods.get()) {
 			if (PATHS.local().MODS.exists(s))
 				mods[am++] = s;
 		}
-		l.s.setMods(mods);
+		l.s.mods.set(mods);
+		
+		body().moveX1Y1(10, 10);
 		
 		update(0);
 	}
 	
-	private final String sOutdated = " (outdated!)";
-	private final String sBy = "  by: ";
+
 	
 	@Override
 	public void render(SPRITE_RENDERER r, float ds) {
 		
-			
-		if (fetching && steam != null && (steam.isDone() || steam.isError())) {
-			//update(ds);
-			fetching = false;
-		}
+		OPACITY.O75.bind();
+		COLOR.BLACK.render(r, 0, Sett.WIDTH, 0, Sett.HEIGHT);
+		OPACITY.unbind();
 		
 		super.render(r, ds);
-		int sx = body().x1()+550;
+		int sx = body().x1()+470;
 		int y1 = body().y1()+70;
 		if (hoveredMod != null) {
 			
-			hs.setMaxWidth(300);
+			hs.setMaxWidth(400);
 			
 			hs.clear().add(hoveredMod.name).add(' ').add(hoveredMod.version);
 			COLOR.GREEN100.bind();
@@ -215,17 +189,17 @@ class ScreenMods extends GuiSection{
 		
 		String[] paths = PATHS.local().MODS.folders();
 		
-		ScrollBox labels = new ScrollBox(body().height()-200);
+		ScrollBox labels = new ScrollBox(this.mods.body().height());
 		
 		for (String s : paths){
 			ModInfo i;
 			try {
 				i = new ModInfo(s);
-				labels.add(new ModButt(i));
+				labels.add(new ModButt(i, l));
 			} catch (ModInfoException e) {
 //				if (error)
 //					e.printStackTrace(System.out);
-				labels.add(new Borked(""+PATHS.local().MODS.getFolder(s).get().toAbsolutePath(), e.getMessage()));
+				labels.add(new Borked(""+PATHS.local().MODS.getFolder(s).get().toAbsolutePath(), e.getMessage(), l));
 			}
 			
 		}
@@ -234,7 +208,7 @@ class ScreenMods extends GuiSection{
 		
 		labels.body().incr(120, 110);
 		
-		CLICKABLE up = new GUI.Button.Sprite(Sprites.arrowUpDown[0]).clickActionSet(new ACTION() {
+		CLICKABLE up = new BSprite(l.res.arrowUpDown[0]).clickActionSet(new ACTION() {
 			
 			@Override
 			public void exe() {
@@ -242,7 +216,7 @@ class ScreenMods extends GuiSection{
 			}
 		}); 
 
-		CLICKABLE down = new GUI.Button.Sprite(Sprites.arrowUpDown[1]).clickActionSet(new ACTION() {
+		CLICKABLE down = new BSprite(l.res.arrowUpDown[1]).clickActionSet(new ACTION() {
 			
 			@Override
 			public void exe() {
@@ -253,11 +227,12 @@ class ScreenMods extends GuiSection{
 		
 		int x = this.mods.body().x1();
 		int y = this.mods.body().y1();
+		int h = this.mods.body().height();
 		this.mods.clear();
 		this.mods.add(up);
-		this.mods.add(down, 0, 140);
+		this.mods.add(down, 0, h-down.body().height()-16);
 		
-		this.mods.addRelBody(48, DIR.E, labels);
+		this.mods.add(labels, 48, 0);
 		this.mods.body().moveX1(x).moveY1(y);
 		
 	}
@@ -268,13 +243,14 @@ class ScreenMods extends GuiSection{
 	
 	private final Str str = new Str(5);
 	
-	private class ModButt extends GUI.Button.Text{
+	private class ModButt extends Butt{
 
 		final ModInfo i;
-		
-		ModButt(ModInfo info) {
-			super(info.name);
+		private final Font font;
+		ModButt(ModInfo info, Launcher l) {
+			super(info.majorVersion != VERSION.VERSION_MAJOR ? COLOR.ORANGE100 : COLOR.WHITE100, l.res, info.name);
 			i = info;
+			font = l.res.font;
 		}
 		
 		@Override
@@ -287,12 +263,9 @@ class ScreenMods extends GuiSection{
 				
 			super.render(r, ds, isActive, isSelected, isHovered);
 			if (isSelected) {
-				Gui.c_hover_selected.bind();
 				str.clear();
 				str.add(selectedIndex);
-				
-				COLOR.unbind();	
-				Resources.Sprites.font.render(r, str, body().x1()-32, body().y1(), 2);
+				font.render(r, str, body().x1()+8, body().y1()+4, 1);
 			}
 		}
 		
@@ -301,22 +274,22 @@ class ScreenMods extends GuiSection{
 			
 			int selectedIndex = getS();
 			if (selectedIndex == -1) {
-				String[] mods = new String[l.s.mods().length + 1];
-				for (int i = 0; i < l.s.mods().length; i++)
-					mods[i] = l.s.mods()[i];
+				String[] mods = new String[l.s.mods.get().length + 1];
+				for (int i = 0; i < l.s.mods.get().length; i++)
+					mods[i] = l.s.mods.get()[i];
 				mods[mods.length-1] = i.path;
-				l.s.setMods(mods);
+				l.s.mods.set(mods);
 			}else {
 				
-				String[] mods = new String[l.s.mods().length - 1];
+				String[] mods = new String[l.s.mods.get().length - 1];
 				int k = 0;
-				for (String s : l.s.mods()) {
+				for (String s : l.s.mods.get()) {
 					if (!s.equals(i.path)) {
 						mods[k] = s;
 						k++;
 					}
 				}
-				l.s.setMods(mods);
+				l.s.mods.set(mods);
 			}
 			
 			
@@ -325,10 +298,10 @@ class ScreenMods extends GuiSection{
 		}
 		
 		private int getS() {
-			if (l.s.mods() == null)
+			if (l.s.mods.get() == null)
 				return -1;
 			int k = 0;
-			for (String s : l.s.mods()) {
+			for (String s : l.s.mods.get()) {
 				if (i.path.equals(s))
 					return k;
 				k++;
@@ -347,17 +320,18 @@ class ScreenMods extends GuiSection{
 		
 	}
 	
-	private final String sBroken = "Unsupported Mod";
+
 	
-	private class Borked extends GUI.Button.Text{
+	private class Borked extends Butt{
 
 		final String path;
 		final String message;
 		
-		Borked(String path, String message) {
-			super(sBroken);
+		Borked(String path, String message, Launcher l) {
+			super(COLOR.REDISH, l.res, sBroken);
 			this.path = path;
 			this.message = message;
+			
 		}
 		
 		
@@ -378,13 +352,24 @@ class ScreenMods extends GuiSection{
 		}
 		
 	}
-	
-	
-//	static GUI_OBJE getModButt(String string){
-//		
-//		Text t = new Text(font).setScale(2).setText(string);
-//		return Butt.getGreen(t);
-//		
-//	}
-	
+
+	public static abstract class Butt extends GUI.Button {
+
+		Butt(COLOR col, RES res, CharSequence text) {
+			super(sp(res, text, col));
+		}
+
+		private static SPRITE sp(RES res, CharSequence text, COLOR color) {
+			return new SPRITE.Imp(380, res.font.height()+8) {
+				
+				@Override
+				public void render(SPRITE_RENDERER r, int X1, int X2, int Y1, int Y2) {
+					color.bind();
+					res.font.renderCropped(r, text, X1+48, Y1+4, width()-48);
+					COLOR.unbind();
+				}
+			};
+		}
+		
+	}
 }

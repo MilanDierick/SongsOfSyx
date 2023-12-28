@@ -68,6 +68,8 @@ public abstract class PATH {
 	}
 
 	public abstract boolean exists(CharSequence file);
+	
+	public abstract boolean existsFolder(CharSequence folder);
 
 	public abstract String[] getFiles();
 	

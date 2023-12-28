@@ -1,63 +1,65 @@
 
 package launcher;
 
-import static launcher.Resources.*;
-
 import java.io.IOException;
-import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.util.List;
 
-import launcher.Resources.GUI;
+import init.D;
+import init.paths.PATHS;
+import launcher.GUI.BText;
 import snake2d.MButt;
 import snake2d.SPRITE_RENDERER;
 import snake2d.util.color.*;
 import snake2d.util.gui.GuiSection;
 import snake2d.util.gui.clickable.CLICKABLE;
 import snake2d.util.misc.ACTION;
+import snake2d.util.sprite.text.Font;
 
 class ScreenLog extends GuiSection{
 
-	private final Lines lines = new Lines();
+	private final Lines lines;
 	
 	ScreenLog(Launcher l){
 	
+		D.gInit(this);
+		add(new GUI.Header(l.res, D.g("Change-Log")), 20, 16);
 		
-		body().setDim(Sett.WIDTH, Sett.HEIGHT);
-		add(new GUI.RText.Header("Changelog"), 20, 16);
-		
-		
-		lines.body().moveX1Y1(10, 60);
-		add(lines);
-		
-		
-		CLICKABLE up = new GUI.Button.Sprite(Sprites.arrowUpDown[0]).clickActionSet(new ACTION() {
-			@Override
-			public void exe() {
-				lines.top -=5;
-			}
-		});
-		up.body().moveY1(60+25).moveX2(Sett.WIDTH-20);
-		add(up);
-		
-		CLICKABLE down = new GUI.Button.Sprite(Sprites.arrowUpDown[1]).clickActionSet(new ACTION() {
-			@Override
-			public void exe() {
-				lines.top +=5;
-			}
-		});
-		down.body().moveY2(Sett.HEIGHT-125).moveX2(Sett.WIDTH-20);
-		add(down);
-		
-		
-		
-		CLICKABLE b = new GUI.Button.Text("BACK").clickActionSet(new ACTION() {
+		CLICKABLE b = new BText(l.res, "BACK").clickActionSet(new ACTION() {
 			@Override
 			public void exe() {
 				l.setMain();
 			}
 		});
-		b.body().moveX2(Sett.WIDTH-20).moveY2(Sett.HEIGHT-25);
+		b.body().moveX2(Sett.WIDTH-20).moveCY(getLast().cY());
 		add(b);
+		
+		lines = new Lines(l.res, Sett.HEIGHT-body().y2()-16);
+		lines.body().moveX1Y1(10, body().y2()+8);
+		add(lines);
+		
+		
+		CLICKABLE up = new GUI.BSprite(l.res.arrowUpDown[0]).clickActionSet(new ACTION() {
+			@Override
+			public void exe() {
+				lines.top -=5;
+			}
+		});
+		up.body().moveY1(60+25).moveX2(Sett.WIDTH-10);
+		add(up);
+		
+		CLICKABLE down = new GUI.BSprite(l.res.arrowUpDown[1]).clickActionSet(new ACTION() {
+			@Override
+			public void exe() {
+				lines.top +=5;
+			}
+		});
+		down.body().moveY2(Sett.HEIGHT-60).moveX2(Sett.WIDTH-10);
+		add(down);
+		
+		
+		
+		
 		
 		//body().centerIn(0, Sett.WIDTH, 0, Sett.HEIGHT);
 		
@@ -71,7 +73,7 @@ class ScreenLog extends GuiSection{
 		OPACITY.O75.bind();
 		COLOR.BLACK.render(r, 0, Sett.WIDTH, 0, Sett.HEIGHT);
 		OPACITY.unbind();
-		COLOR.unbind();
+
 		
 		super.render(r, ds);
 		
@@ -88,8 +90,11 @@ class ScreenLog extends GuiSection{
 			new ColorImp(127, 110, 100),
 		};
 
-		Lines(){
-			body().setWidth(Sett.WIDTH-150).setHeight(Sett.HEIGHT-80);
+		private final Font font;
+		
+		Lines(RES res, int height){
+			font = res.font;
+			body().setWidth(Sett.WIDTH-100).setHeight(height);
 		}
 		
 		@Override
@@ -116,19 +121,19 @@ class ScreenLog extends GuiSection{
 			int start = 0;
 			color.bind();
 			while(true) {
-				int end = Sprites.font.getEndIndex(s, start, body().width());
-				int y2 = y1 + Sprites.font.height();
+				int end = font.getEndIndex(s, start, body().width());
+				int y2 = y1 + font.height();
 				if (y2 < body().y2()) {
 					if (start == 0) {
 						if (s.length() > 0 && s.charAt(0) == '!') {
 							start = 1;
 							COLOR.BLUEISH.bind();
 						}else if (s.length() > 0){
-							Sprites.font.render(r, sep, body().x1(), y1);
+							font.render(r, sep, body().x1(), y1);
 						}
 					}
 					
-					Sprites.font.render(r, s, body().x1()+20, y1, start, end, 1);
+					font.render(r, s, body().x1()+20, y1, start, end, 1);
 					
 				}
 				y1 = y2;
@@ -141,29 +146,20 @@ class ScreenLog extends GuiSection{
 		}
 		
 		private CharSequence[] lines() {
-			String[] lines = new String[0];
 			try {
-				InputStream fis = getClass().getResourceAsStream("Patchnotes.txt");
-				byte[] bs = new byte[100000];
-				int size = 0;
-				while(true) {
-					int r = fis.read();
-					if (r == -1)
-						break;
-					bs[size] = (byte) r;
-					size++;
-				}
-				byte[] res = new byte[size];
-				for (int i = 0; i < res.length; i++)
-					res[i] = bs[i];
-				
-				
-				lines = new String(res,StandardCharsets.UTF_8).split("\\R");
+				List<String> ss = Files.readAllLines(PATHS.BASE().TXT.get("Patchnotes"));
+				CharSequence[] res = new CharSequence[ss.size()];
+				for (int i = 0; i < ss.size(); i++)
+					res[i] = ss.get(i);
+				return res;
 			} catch (IOException e) {
+				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-			return lines;
 			
+			return new CharSequence[] {
+				"error"
+			};
 		}
 		
 	}

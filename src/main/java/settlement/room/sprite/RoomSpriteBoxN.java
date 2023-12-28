@@ -4,7 +4,6 @@ import java.io.IOException;
 
 import init.sprite.game.SheetPair;
 import init.sprite.game.SheetType;
-import settlement.main.RenderData.RenderIterator;
 import settlement.room.main.furnisher.FurnisherItem;
 import settlement.room.main.furnisher.FurnisherItemTile;
 import snake2d.SPRITE_RENDERER;
@@ -12,9 +11,10 @@ import snake2d.util.color.COLOR;
 import snake2d.util.datatypes.DIR;
 import snake2d.util.file.Json;
 import snake2d.util.rnd.RND;
+import util.rendering.RenderData.RenderIterator;
 import util.rendering.ShadowBatch;
 
-public class RoomSpriteBoxN extends RoomSpriteNew{
+public class RoomSpriteBoxN extends RoomSpriteImp{
 
 	public RoomSpriteBoxN(Json json, String key) throws IOException{
 		super(SheetType.sBox, json, key);

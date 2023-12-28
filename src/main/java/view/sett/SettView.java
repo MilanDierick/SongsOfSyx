@@ -7,7 +7,6 @@ import java.io.IOException;
 
 import game.GAME;
 import init.C;
-import settlement.main.RenderData;
 import settlement.main.SETT;
 import settlement.room.main.throne.THRONE;
 import snake2d.MButt;
@@ -16,6 +15,7 @@ import snake2d.util.datatypes.COORDINATE;
 import snake2d.util.file.FileGetter;
 import snake2d.util.file.FilePutter;
 import util.gui.misc.GBox;
+import util.rendering.RenderData;
 import util.rendering.ShadowBatch;
 import view.interrupter.ISidePanels;
 import view.interrupter.InterGuisection;
@@ -26,7 +26,7 @@ import view.sett.ui.SettUI;
 import view.sett.ui.minimap.UIMinimap;
 import view.subview.GameWindow;
 import view.tool.ToolManager;
-import view.ui.UIPanelTop;
+import view.ui.top.UIPanelTop;
 
 public class SettView extends VIEW.ViewSub{
 	
@@ -69,14 +69,15 @@ public class SettView extends VIEW.ViewSub{
 	public SettView(){
 		
 		UIPanelTop pan = new UIPanelTop(uiManager);
-		pan.addNoti();
-		ui = new UISettManagePanel(pan);
+		//pan.addNoti();
+		panels = new ISidePanels(uiManager, 0);
+		ui = new UISettManagePanel(this, pan);
 		
 		window.setzoomoutMax(3);
 		tools.setDefault(new ToolDefault(tools));
 		debug = new IDebugPanelSett(uiManager);
 		mini = new UIMinimap(pan, uiManager, UIPanelTop.HEIGHT, true, true, true, true, true, window);
-		panels = new ISidePanels(uiManager, 0);
+		
 		battle = new SBattleView();
 	}
 	
@@ -118,7 +119,7 @@ public class SettView extends VIEW.ViewSub{
 	@Override
 	protected void render(Renderer r, float ds, boolean hide) {
 		window.crop(uiManager.viewPort());
-		s().render(r, ds*GAME.SPEED.speed(), window);
+		s().render(r, (float) (ds*GAME.SPEED.speed()), window);
 		
 		if (window.consumeHover()) {
 			SETT.LIGHTS().renderMouse(window.pixel().x(), window.pixel().y(), -window.pixels().relX(), -window.pixels().relY(), 5);

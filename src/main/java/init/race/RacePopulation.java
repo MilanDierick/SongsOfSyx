@@ -16,9 +16,8 @@ public final class RacePopulation {
 	static {
 		D.ts(RacePopulation.class);
 	}
-	public final double reproductionRate;
-	public final double rarity;
-	public final double maxCity;
+	public final double growth;
+	public final double max;
 	public final double immigrantsPerDay;
 	private final double[] climates;
 	private final double maxClimate;
@@ -27,20 +26,16 @@ public final class RacePopulation {
 	
 	RacePopulation(Json json) {
 		if (!json.has("POPULATION")) {
-			reproductionRate = 0;
-			rarity = 0;
-			maxCity = 1;
+			max = 1;
 			immigrantsPerDay = 0;
 			climates = new double[CLIMATES.ALL().size()];
 			terrains = new double[TERRAINS.ALL().size()];
 			maxClimate = 0;
 			maxTerrain = 0;
+			growth = 0.0001;
 		}else {
 			json = json.json("POPULATION");
-			
-			reproductionRate = json.d("REPRODUCTION_REGION_PER_DAY", 0, 10000);
-			rarity = json.d("MAX_REGION", 0, 1);
-			maxCity = json.d("MAX_CITY", 0, 1);
+			max = json.d("MAX", 0, 1);
 			climates = KEY_COLLECTION.fill(CLIMATES.MAP(), json, 1);
 			double m = 0;
 			for (double c : climates)
@@ -51,7 +46,8 @@ public final class RacePopulation {
 			for (double c : terrains)
 				m = Math.max(c, m);
 			maxTerrain = m;
-			immigrantsPerDay = json.d("IMMIGRANTS_PER_DAY", 0, 100000);
+			immigrantsPerDay = json.d("IMMIGRATION_RATE", 0, 100000);
+			growth = json.d("GROWTH", 0.0001, 1);
 		}
 	
 	}

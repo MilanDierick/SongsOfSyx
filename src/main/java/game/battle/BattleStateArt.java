@@ -8,7 +8,7 @@ import settlement.main.SETT;
 import settlement.path.AVAILABILITY;
 import settlement.room.military.artillery.ArtilleryInstance;
 import settlement.room.military.artillery.ROOM_ARTILLERY;
-import settlement.stats.CAUSE_ARRIVE;
+import settlement.stats.util.CAUSE_ARRIVE;
 import snake2d.util.datatypes.COORDINATE;
 import snake2d.util.datatypes.DIR;
 import snake2d.util.rnd.RND;

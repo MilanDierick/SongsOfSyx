@@ -3,13 +3,10 @@ package view.main;
 
 import java.io.IOException;
 
-import game.GAME;
-import game.GameLoader;
+import game.*;
 import game.time.TIME;
 import init.C;
 import init.RES;
-import settlement.main.RenderData;
-import settlement.main.SETT;
 import snake2d.*;
 import snake2d.KeyBoard.KeyEvent;
 import snake2d.util.datatypes.COORDINATE;
@@ -18,6 +15,7 @@ import snake2d.util.sets.ArrayList;
 import snake2d.util.sets.LIST;
 import util.dic.DicMisc;
 import util.gui.misc.GBox;
+import util.rendering.RenderData;
 import util.rendering.ShadowBatch;
 import view.battle.BattleView;
 import view.interrupter.InterManager;
@@ -25,8 +23,10 @@ import view.keyboard.KEYS;
 import view.keyboard.KeyPoller;
 import view.sett.SettView;
 import view.ui.UIView;
+import view.ui.message.Messages;
 import view.world.WorldView;
 import view.world.generator.WorldViewGenerator;
+import world.WORLD;
 
 public class VIEW extends CORE_STATE{
 	
@@ -40,8 +40,6 @@ public class VIEW extends CORE_STATE{
 	private final WorldView world;
 	private final SettView sett;
 	private final BattleView battle;
-
-
 	private ViewSubSimple current;
 	private ViewSub previous;
 	
@@ -50,7 +48,7 @@ public class VIEW extends CORE_STATE{
 	private final Interrupters inters;
 	private boolean hideUI = false;
 	private static double renderSecond;
-	private final SyxInterer rpc = new SyxInterer();
+	public int renI;
 	
 	public VIEW(){
 		
@@ -65,6 +63,8 @@ public class VIEW extends CORE_STATE{
 		world.activate();
 		KEYS.get().readSettings();
 		setFirstView(world);
+		
+
 	}
 	
 	public final SAVABLE saver = new SAVABLE() {
@@ -72,7 +72,7 @@ public class VIEW extends CORE_STATE{
 		@Override
 		public void save(FilePutter saveFile) {
 			saveFile.mark(this);
-			inters.messages.save(saveFile);
+			inters.messages.saver.save(saveFile);
 			
 			if (current instanceof ViewSub)
 				saveFile.i(((ViewSub)current).index);
@@ -89,7 +89,7 @@ public class VIEW extends CORE_STATE{
 		@Override
 		public void load(FileGetter saveFile) throws IOException {
 			saveFile.check(this);
-			inters.messages.load(saveFile);
+			inters.messages.saver.load(saveFile);
 			
 			int si = saveFile.i();
 			ViewSub v = null;
@@ -116,10 +116,10 @@ public class VIEW extends CORE_STATE{
 	};
 
 	private void setFirstView(ViewSubSimple prefered) {
-		if (prefered == null || !SETT.exists()) {
+		if (prefered == null || !WORLD.GEN().isDone) {
 			prefered = new WorldViewGenerator();
 		}
-		current = prefered;
+		prefered.activate();
 		previous = null;
 		
 	}
@@ -158,7 +158,6 @@ public class VIEW extends CORE_STATE{
 		int dy = mCoo.y()-mouse.y();
 		int d = dx*dx+dy*dy;
 		boolean mouseHasMoved = d > 5;
-		
 		mouse.getCoo().set(mCoo);
 		
 		GAME.script().hover(mCoo, mouseHasMoved);
@@ -174,7 +173,7 @@ public class VIEW extends CORE_STATE{
 			if (current.uiManager.hover(mCoo, mouseHasMoved))
 				current.hover(mCoo, mouseHasMoved);
 		
-		if (hoverTimer >= 0.2) {
+		if (hoverTimer >= 0.4) {
 			if (inters.manager.hoverTimer(hoverTimer, inters.mouseMessage.get())) 
 				if (current.uiManager.hoverTimer(hoverTimer, inters.mouseMessage.get()))
 					current.hoverTimer(hoverTimer, inters.mouseMessage.get());
@@ -184,10 +183,15 @@ public class VIEW extends CORE_STATE{
 	@Override
 	protected void update(float ds, double slowDown) {
 		
+
+		
 		GAME.afterTick();
+
 		inters.manager.afterTick();
 		current.uiManager.afterTick();
 		current.afterTick();
+
+		
 		
 		hover();
 		
@@ -202,10 +206,8 @@ public class VIEW extends CORE_STATE{
 				inters.mouseMessage.get().clear();
 			}
 		}
-		
-		
 			
-		
+
 		inters.mouseMessage.update(mouse);
 		if (inters.manager.update(ds) & current.uiManager.update(ds)) {
 			current.update(ds, true);
@@ -214,12 +216,12 @@ public class VIEW extends CORE_STATE{
 			ds = 0;
 			slowDown = 1.0;
 		}
-		
+
 		if (KEYS.MAIN().ESCAPE.consumeClick()) {
 			inters.menu.show(); 
 		}
 		
-		if (KEYS.MAIN().QUICKSAVE.consumeClick()) {
+		if (KEYS.MAIN().QUICKSAVE.consumeClick() && canSave()) {
 			RES.loader().minify(true, DicMisc.¤¤SAVING);
 			RES.saver().quicksave();
 			RES.loader().minify(false, DicMisc.¤¤SAVING);
@@ -231,12 +233,13 @@ public class VIEW extends CORE_STATE{
 		}
 		
 		GAME.update(ds, slowDown);
-		rpc.update();
+
 	}
 	
 	@Override
 	protected void render(Renderer r, float ds) {
 		
+		renI++;
 		renderSecond += ds;
 		if (renderSecond > 10000)
 			renderSecond -= 10000;
@@ -272,7 +275,6 @@ public class VIEW extends CORE_STATE{
 			return;
 		
 		current.render(r, ds, false);
-		
 
 	}
 	
@@ -365,22 +367,32 @@ public class VIEW extends CORE_STATE{
 		return i.ui;
 	}
 	
+	
+	public static int RI() {
+		return i.renI;
+	}
+	
 	public static void setKeyPoller(KeyPoller poller) {
 		i.keyPoller = poller;
 	}
 	
 	public static boolean canSave() {
-		return GAME.battle().canSave() && i.inters.manager.canSave() && VIEW.current().uiManager.canSave();
+		return i.inters.manager.canSave() && VIEW.current().uiManager.canSave() && VIEW.current().canSave();
 	}
 	
 	@Override
 	protected void exit() {
-		GAME.stats().flush();
+		GAME.count().flush();
 	}
 	
 	public static abstract class ViewSubSimple{
 		
 		protected abstract void hoverTimer(double mouseTimer, GBox text);
+		
+		protected boolean canSave() {
+			return true;
+		}
+
 		protected abstract boolean update(float ds, boolean shouldUpdate);
 		protected abstract void render(Renderer r, float ds, boolean hide);
 		
@@ -426,9 +438,9 @@ public class VIEW extends CORE_STATE{
 		protected abstract void save(FilePutter file);
 		protected abstract void load(FileGetter file) throws IOException;
 		
+		
+		
 	}
-
-
 
 	
 }

@@ -57,6 +57,8 @@ final class Gore_BloodDrops extends Gore{
 	@Override
 	protected void init(int cx, int cy, double sx, double sy, COLOR col){
 		this.col.set(col);
+		
+		
 		init(cx, cy, 1.0);
 		
 	}
@@ -70,7 +72,7 @@ final class Gore_BloodDrops extends Gore{
 			lim = 16;
 		lim*= 3;
 		
-		timerLife = 120;
+		timerLife = 250;
 		body.moveC(x, y);
 	}
 	

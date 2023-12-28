@@ -3,6 +3,7 @@ package settlement.entity.humanoid.ai.types.prisoner;
 import static settlement.main.SETT.*;
 
 import game.time.TIME;
+import init.need.NEEDS;
 import settlement.entity.humanoid.HEvent;
 import settlement.entity.humanoid.Humanoid;
 import settlement.entity.humanoid.ai.main.*;
@@ -27,6 +28,7 @@ class Prison extends AIPLAN.PLANRES{
 				
 			}
 			STATS.NEEDS().EXPOSURE.count.set(a.indu(), 0);
+			d.planByte1 = 8;
 			return init.set(a, d);
 			
 		}
@@ -60,7 +62,7 @@ class Prison extends AIPLAN.PLANRES{
 		
 		@Override
 		protected AISubActivation setAction(Humanoid a, AIManager d) {
-			d.planByte1 = 8;
+			
 			return AI.SUBS().STAND.activateRndDir(a, d);
 		}
 		
@@ -87,13 +89,9 @@ class Prison extends AIPLAN.PLANRES{
 			
 			
 			
-			if (STATS.NEEDS().CONSTIPATION.getPrio(a.indu()) > 0) {
-				AISubActivation s = unfuck(poop, a, d);
-				if (s != null)
-					return s;
-			}
+
 			
-			if (STATS.NEEDS().HUNGER.getPrio(a.indu()) > 0) {
+			if (NEEDS.TYPES().HUNGER.stat().getPrio(a.indu()) > 0) {
 				AISubActivation s = unfuck(eat, a, d);
 				if (s != null)
 					return s;
@@ -108,10 +106,20 @@ class Prison extends AIPLAN.PLANRES{
 			
 			//hunger, popo
 			if (RND.oneIn(5)) {
-				AISubActivation s = changeSpot.set(a, d);
-				if (s != null)
-					return s;
+				
+				if (RND.oneIn(8)) {
+					AISubActivation s = unfuck(poop, a, d);
+					if (s != null)
+						return s;
+				}else {
+					AISubActivation s = changeSpot.set(a, d);
+					if (s != null)
+						return s;
+				}
 			}
+			
+			
+			
 			return AI.SUBS().STAND.activateRndDir(a, d);
 		}
 		
@@ -246,7 +254,6 @@ class Prison extends AIPLAN.PLANRES{
 				return null;
 			c.findableReserve();
 			c.consume();
-			STATS.NEEDS().CONSTIPATION.fix(a.indu());
 			return init.set(a, d);
 		}
 		

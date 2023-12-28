@@ -1,6 +1,6 @@
 package settlement.room.main.copy;
 
-import game.GAME;
+import game.faction.FACTIONS;
 import settlement.main.SETT;
 import settlement.room.main.*;
 import settlement.room.main.construction.ConstructionInit;
@@ -63,7 +63,7 @@ public final class CopierMass {
 			return false;
 		if (r.constructor() == null)
 			return false;
-		if (GAME.player().locks.unlockText(r.blueprint()) != null)
+		if (!r.constructor().blue().reqs.passes(FACTIONS.player()))
 			return false;
 		return (r.constructor().canBeCopied());
 	}

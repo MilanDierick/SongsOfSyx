@@ -1,6 +1,9 @@
 package settlement.room.infra.janitor;
 
 import game.faction.FACTIONS;
+import game.faction.FResources.RTYPE;
+import init.resources.RBIT;
+import init.resources.RBIT.RBITImp;
 import init.resources.RESOURCE;
 import init.sound.SoundSettlement.Sound;
 import settlement.entity.humanoid.Humanoid;
@@ -35,31 +38,29 @@ final class JM implements JOB_MANAGER{
 	}
 
 	@Override
-	public SETT_JOB reportResourceMissing(long resourceMask, int jx, int jy) {
+	public SETT_JOB reportResourceMissing(RBIT resourceMask, int jx, int jy) {
 		ins = b.get(jx, jy);
 		if (ins != null) {
-			ins.resourcesMissing |= resourceMask;
-			ins.resourcesFindable &= ~resourceMask;
+			ins.resourcesMissing.or(resourceMask);
+			ins.resourcesFindable.clear(resourceMask);
 			return get(ins.mX(), ins.mY(), ins.radius());
 		}
 		return null;
 	}
 	
 	@Override
-	public void reportResourceFound(long res) {
+	public void reportResourceFound(RESOURCE res) {
 
 	}
 
 	@Override
 	public boolean resourceReachable(RESOURCE res) {
-		
-		long m = (ins.resourcesMissing & ins.resourcesNeeded);
-		return (m & res.bit) == 0;
+		return !ins.resourcesMissing.has(res) && !ins.resourcesNeeded.has(res);
 	}
 	
 	@Override
 	public boolean resourceShouldSearch(RESOURCE res) {
-		return (ins.resourcesFindable & res.bit) == 0;
+		return (ins.resourcesFindable.has(res));
 	}
 	
 	@Override
@@ -78,7 +79,7 @@ final class JM implements JOB_MANAGER{
 		}
 		
 		if (coo.isSameAs(ins.rx, ins.ry)) {
-			if ((ins.resourcesFindable & ins.resourcesNeeded & ~ins.resourcesReserved) != 0) {
+			if (needsResources()) {
 				return res;
 			}
 		}
@@ -89,6 +90,12 @@ final class JM implements JOB_MANAGER{
 		return j;
 	}
 
+	private static final RBITImp tmp = new RBITImp();
+	
+	private boolean needsResources() {
+		return !tmp.clearSet(ins.resourcesFindable.and(ins.resourcesNeeded).clear(ins.resourcesReserved)).isClear();
+	}
+	
 	@Override
 	public SETT_JOB getJob(COORDINATE c) {
 
@@ -107,7 +114,7 @@ final class JM implements JOB_MANAGER{
 	
 	private SETT_JOB get(int sx, int sy, int distance) {
 		
-		if ((ins.resourcesFindable & ins.resourcesNeeded & ~ins.resourcesReserved) != 0 && !SETT.MAINTENANCE().isser.is(ins.rx, ins.ry)) {
+		if (needsResources() && !SETT.MAINTENANCE().isser.is(ins.rx, ins.ry)) {
 			coo.set(ins.rx, ins.ry);
 			return res;
 		}
@@ -115,7 +122,7 @@ final class JM implements JOB_MANAGER{
 		if (!ins.searching)
 			return null;
 		
-		COORDINATE c = SETT.MAINTENANCE().finder().reserve(sx, sy, distance);
+		COORDINATE c = SETT.MAINTENANCE().finder().reserve(sx, sy, distance+32);
 		
 		if (c == null) {
 			return null;
@@ -124,11 +131,11 @@ final class JM implements JOB_MANAGER{
 		work.jobReserveCancel(null);
 		RESOURCE rr = SETT.MAINTENANCE().resourceNeeded(coo.x(), coo.y());
 
-		if (rr != null && (ins.resourcesFindable & rr.bit) != 0) {
+		if (rr != null && (ins.resourcesFindable.has(rr))) {
 			
-			if (b.res.resources.get(rr.index()).get(ins) == 0) {
-				ins.resourcesNeeded |= rr.bit;				
-				if ((ins.resourcesFindable & ins.resourcesNeeded & ~ins.resourcesReserved) != 0 && !SETT.MAINTENANCE().isser.is(ins.rx, ins.ry)) {
+			if (ins.resbits.get(rr.index()) == 0) {
+				ins.resourcesNeeded.or(rr);				
+				if (needsResources() && !SETT.MAINTENANCE().isser.is(ins.rx, ins.ry)) {
 					coo.set(ins.rx, ins.ry);
 					return res;
 				}
@@ -140,7 +147,7 @@ final class JM implements JOB_MANAGER{
 	
 	void update(JanitorInstance ins) {
 		ins.searching = true;
-		ins.resourcesFindable = -1;
+		ins.resourcesFindable.setAll();
 	}
 
 	private final SETT_JOB work = new Job();
@@ -163,8 +170,8 @@ final class JM implements JOB_MANAGER{
 		}
 		
 		@Override
-		public long jobResourceBitToFetch() {
-			return 0;
+		public RBIT jobResourceBitToFetch() {
+			return null;
 		}
 		
 		@Override
@@ -199,7 +206,7 @@ final class JM implements JOB_MANAGER{
 			RESOURCE r = SETT.MAINTENANCE().resourceNeeded(coo.x(), coo.y());
 			double t = 32;
 			t *= 2-b.constructor.efficiency.get(ins);
-			if (r == null || (r.bit & ins.resourcesMissing) == 0)
+			if (r == null || !ins.resourcesMissing.has(r))
 				return t;
 			return t*6;
 		}
@@ -210,9 +217,9 @@ final class JM implements JOB_MANAGER{
 			r = SETT.MAINTENANCE().resourceNeeded(coo.x(), coo.y());
 			
 			if (r != null) {
-				b.res.resources.get(r.index()).inc(ins, -1);
-				if (b.res.resources.get(r.index()).get(ins) == 0) {
-					ins.resourcesNeeded |= r.bit;
+				ins.resbits.inc(r.index(), -1);
+				if (ins.resbits.get(r.index()) == 0) {
+					ins.resourcesNeeded.or(r);
 				}
 			}
 			SETT.MAINTENANCE().maintain(coo.x(), coo.y());
@@ -249,7 +256,7 @@ final class JM implements JOB_MANAGER{
 		}
 		
 		@Override
-		public long jobResourceBitToFetch() {
+		public RBIT jobResourceBitToFetch() {
 			return ins.resourcesNeeded;
 		}
 		
@@ -265,7 +272,7 @@ final class JM implements JOB_MANAGER{
 		
 		@Override
 		public void jobReserveCancel(RESOURCE r) {
-			ins.resourcesReserved &= ~r.bit;
+			ins.resourcesReserved.clear(r);
 		}
 		
 		@Override
@@ -275,7 +282,7 @@ final class JM implements JOB_MANAGER{
 		
 		@Override
 		public void jobReserve(RESOURCE r) {
-			ins.resourcesReserved |= r.bit;
+			ins.resourcesReserved.or(r);
 		}
 		
 		@Override
@@ -289,8 +296,8 @@ final class JM implements JOB_MANAGER{
 			if (r == null)
 				return null;
 			jobReserveCancel(r);
-			ins.resourcesNeeded &= ~r.bit;
-			ins.resourcesMissing &= ~r.bit;
+			ins.resourcesNeeded.clear(r);
+			ins.resourcesMissing.clear(r);
 			
 			boolean view = false;
 			
@@ -307,8 +314,8 @@ final class JM implements JOB_MANAGER{
 			}
 			
 			
-			b.res.resources.get(r.index()).inc(ins, ram);
-			FACTIONS.player().res().outMaintenance.inc(r, ram);
+			ins.resbits.inc(r.index(), ram);
+			FACTIONS.player().res().inc(r, RTYPE.MAINTENANCE, -ram);
 			
 			return null;
 		}
@@ -327,8 +334,8 @@ final class JM implements JOB_MANAGER{
 
 	@Override
 	public void resetResourceSearch() {
-		ins.resourcesMissing = 0;
-		ins.resourcesFindable = ~0;
+		ins.resourcesMissing.clear();
+		ins.resourcesFindable.setAll();
 	}
 
 }

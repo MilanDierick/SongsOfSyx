@@ -2,8 +2,9 @@ package settlement.room.service.hygine.bath;
 
 import java.io.IOException;
 
-import game.GAME;
-import settlement.main.RenderData.RenderIterator;
+import game.time.TIME;
+import init.C;
+import init.sprite.SPRITES;
 import settlement.main.SETT;
 import settlement.path.AVAILABILITY;
 import settlement.room.main.*;
@@ -11,15 +12,17 @@ import settlement.room.main.furnisher.*;
 import settlement.room.main.util.RoomInit;
 import settlement.room.main.util.RoomInitData;
 import settlement.room.sprite.*;
+import snake2d.CORE;
 import snake2d.SPRITE_RENDERER;
+import snake2d.util.color.*;
 import snake2d.util.datatypes.AREA;
 import snake2d.util.datatypes.DIR;
 import snake2d.util.file.Json;
-import snake2d.util.sprite.TILE_SHEET;
+import snake2d.util.sprite.TextureCoords;
 import util.gui.misc.GText;
 import util.info.GFORMAT;
+import util.rendering.RenderData.RenderIterator;
 import util.rendering.ShadowBatch;
-import util.spritecomposer.*;
 
 final class Constructor extends Furnisher {
 
@@ -42,30 +45,47 @@ final class Constructor extends Furnisher {
 	final FurnisherStat relaxation = new FurnisherStat.FurnisherStatRelative(this, baths, 1.5);
 	
 	protected Constructor(ROOM_BATH blue, RoomInitData init) throws IOException {
-		super(init, 2, 2, 280, 220);
+		super(init, 2, 2);
 		this.blue = blue;
 		
 		Json sp = init.data().json("SPRITES");
 		
-		RoomSprite spriteNormal = new RoomSpriteComboN(sp, "FRAME_COMBO") {
-			final int off = 0;
+		RoomSprite spriteNormal = new RoomSpriteCombo(sp, "FRAME_COMBO") {
+			
+			RoomSprite spriteFloor = new RoomSpriteTex(sp, "POOL_FLOOR_TEXTURE");
+			COLOR wColor = new ColorImp(init.data(), "WATER_COLOR");
+			double wOp = init.data().d("WATER_OPACITY", 0, 1);
+			OpacityImp opacity = new OpacityImp((int) (255*wOp*0.5));
 			@Override
 			public boolean render(SPRITE_RENDERER r, ShadowBatch s, int data, RenderIterator it, double degrade,
 					boolean isCandle) {
+				spriteFloor.render(r, ShadowBatch.DUMMY, 0, it, degrade, isCandle);
 				if (blue.is(it.tile())) {
 					int i = SETT.ROOMS().data.get(it.tile()) & 0b01;
-					int t = off + i*3*16;
-					if (i == 1)
-						t += (it.ran()+GAME.intervals().get04()) & 0x0F;
-					else
-						t+= it.ran() & 0x0F;
-					sheet.render(r, t, it.x(), it.y());
-				}else {
-					int t = off;
-					t+= it.ran() & 0x0F;
-					sheet.render(r, t, it.x(), it.y());
+					if (i > 0) {
+						renderB(r, s, it);
+					}
 				}
 				return super.render(r, s, data, it, degrade, isCandle);
+			}
+			
+			public void renderB(SPRITE_RENDERER r, ShadowBatch s, RenderIterator it) {
+				
+				int x2 = it.x()+C.TILE_SIZE;
+				int y2 = it.y()+C.TILE_SIZE;
+				
+
+				wColor.bind();
+				opacity.bind();
+				TextureCoords oo = SPRITES.textures().dis_small.get(it.tx()*C.T_PIXELS+SETT.WEATHER().wind.time.getD()*16, it.ty()*C.T_PIXELS+SETT.WEATHER().wind.time.getD()*16);
+				CORE.renderer().renderSprite(it.x(), x2, it.y(), y2, oo);
+				oo = SPRITES.textures().dis_small.get((it.tx()+1)*C.T_PIXELS-8*TIME.currentSecond(), (it.ty()+1)*C.T_PIXELS-8*TIME.currentSecond());
+				CORE.renderer().renderSprite(it.x(), x2, it.y(), y2, oo);
+				COLOR.unbind();
+				OPACITY.unbind();
+				
+		
+				
 			}
 		};
 		
@@ -235,15 +255,6 @@ final class Constructor extends Furnisher {
 		}, 4);
 		
 		flush(3);
-	}
-
-	@Override
-	protected TILE_SHEET sheet(ComposerUtil c, ComposerSources s, ComposerDests d, int y1) {
-		s.full.init(0, y1, 1, 4, 8, 2, d.s16);
-		for (int i = 0; i < 4; i++) {
-			s.full.setVar(i).paste(true);
-		}
-		return d.s16.saveGame();
 	}
 
 	@Override

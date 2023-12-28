@@ -1,15 +1,18 @@
 package menu;
 
+import game.GAME;
 import game.GameConRandom;
+import game.boosting.BOOSTABLES;
+import game.boosting.Boostable;
 import init.D;
-import init.paths.PATHS;
 import init.sprite.UI.UI;
 import menu.GUI.COLORS;
-import menu.screens.Screener;
+import snake2d.CORE_STATE;
+import snake2d.CORE_STATE.Constructor;
 import snake2d.SPRITE_RENDERER;
 import snake2d.util.color.COLOR;
 import snake2d.util.datatypes.COORDINATE;
-import snake2d.util.file.Json;
+import snake2d.util.datatypes.DIR;
 import snake2d.util.gui.GuiSection;
 import snake2d.util.gui.Hoverable.HOVERABLE;
 import snake2d.util.gui.clickable.CLICKABLE;
@@ -18,8 +21,9 @@ import util.data.GETTER.GETTER_IMP;
 import util.data.INT.IntImp;
 import util.gui.misc.GText;
 import util.info.INFO;
+import view.main.VIEW;
 
-class ScRandom extends GuiSection implements SCREEN{
+class ScRandom extends GuiSection implements SC{
 
 	private final GameConRandom spec;
 	
@@ -49,7 +53,15 @@ class ScRandom extends GuiSection implements SCREEN{
 		CLICKABLE b = new Screener.ScreenButton(D.g("go!")) {
 			@Override
 			protected void clickA() {
-				menu.start(spec);
+				menu.start(new Constructor() {
+					
+					@Override
+					public CORE_STATE getState() {
+						new GAME(spec);
+						CORE_STATE s = new VIEW();
+						return s;
+					}
+				});
 			}
 		};
 		
@@ -75,37 +87,31 @@ class ScRandom extends GuiSection implements SCREEN{
 	private GuiSection advantage() {
 		GETTER_IMP<CharSequence> hText = new GETTER_IMP<>();
 		GuiSection s = new GuiSection();
-		s.add(new HOVERABLE.Sprite(UI.FONT().H2.getText(D.g("Difficulty")), COLORS.label), 0, 0);
 		
-		String[] boos;
+		
+		Boostable[] boos;
 		double[] values;
 		
-		boos = new String[] {
-			"FURNITURE",
-			"RAIDING",
-			"MAINTENANCE",
-			"SPOILAGE",
+		
+		
+		boos = new Boostable[] {
+			BOOSTABLES.CIVICS().FURNITURE,
+			BOOSTABLES.CIVICS().RAIDING,
+			BOOSTABLES.CIVICS().MAINTENANCE,
+			BOOSTABLES.CIVICS().SPOILAGE,
 		};
 		values = new double[] {
 			-0.5, -0.25, 0, 0.25, 0.5, 1, 2
 		};
-		addLine(s, boos, values, "CIVIC", hText);
+		addLine(s, boos, values, hText);
 		
-		boos = new String[] {
-			"HUNGER",
-		};
-		values = new double[] {
-			0.5, 0.25, 0, -0.1, -0.25,
-		};
-		addLine(s, boos, values, "RATES", hText);
-		
-		boos = new String[] {
-			"HAPPINESS",
+		boos = new Boostable[] {
+			BOOSTABLES.BEHAVIOUR().HAPPI,
 		};
 		values = new double[] {
 			-0.2, -0.1, 0, 0.05, 0.1, 0.2,
 		};
-		addLine(s, boos, values, "BEHAVIOUR", hText);
+		addLine(s, boos, values, hText);
 		
 		s.add(new RENDEROBJ.RenderImp(300, UI.FONT().M.height()) {
 			
@@ -138,11 +144,14 @@ class ScRandom extends GuiSection implements SCREEN{
 				
 			}
 		}, s.getLastX1(), s.getLastY2()+32);
+		
+		s.addRelBody(4, DIR.N, new HOVERABLE.Sprite(UI.FONT().H2.getText(D.g("Difficulty")), COLORS.label));
+		
 		return s;
 	}
 	
-	private void addLine(GuiSection s, String[] boos, double[] values, String coll, GETTER_IMP<CharSequence> hText) {
-		Json jText = new Json(PATHS.TEXT_CONFIG().get("BOOSTABLE")).json(coll);
+	private void addLine(GuiSection s, Boostable[] boos, double[] values, GETTER_IMP<CharSequence> hText) {
+		
 		int z = 0;
 		for (int i = 0; i < values.length; i++) {
 			if (values[i] == 0)
@@ -150,16 +159,16 @@ class ScRandom extends GuiSection implements SCREEN{
 		}
 		
 		final int zero = z;
-		for (String bo : boos) {
+		for (Boostable bo : boos) {
 			IntImp intt = new IntImp(0, values.length-1) {
 				@Override
 				public void set(int t) {
 					super.set(t);
-					spec.BOOSTS.put(coll+"_"+bo, values[t]);
+					spec.BOOSTS.put(bo.key, values[t]);
 				}
 			};
 			intt.set(zero);
-			INFO info = new INFO(jText.json(bo));
+			INFO info = bo;
 			CLICKABLE c = new GUI.OptionLine(intt, info.name) {
 				private CharSequence desc = info.desc;
 				@Override

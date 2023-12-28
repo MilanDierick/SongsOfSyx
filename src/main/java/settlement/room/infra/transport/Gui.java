@@ -18,7 +18,7 @@ import snake2d.util.gui.clickable.CLICKABLE;
 import snake2d.util.gui.renderable.RENDEROBJ;
 import snake2d.util.misc.CLAMP;
 import util.data.GETTER;
-import util.gui.common.GResSelector;
+import util.gui.common.UIPickerRes;
 import util.gui.misc.*;
 import util.info.GFORMAT;
 import view.main.VIEW;
@@ -113,7 +113,7 @@ class Gui extends UIRoomModuleImp<TransportInstance, ROOM_TRANSPORT> {
 		
 		section.addRelBody(8, DIR.S, s);
 		
-		section.addRelBody(8, DIR.S, new GButt.CheckboxTitle( D.g("fetch")) {
+		section.addRelBody(8, DIR.S, new GButt.Checkbox( D.g("fetch")) {
 			
 			@Override
 			protected void clickA() {
@@ -132,7 +132,7 @@ class Gui extends UIRoomModuleImp<TransportInstance, ROOM_TRANSPORT> {
 		
 		
 		
-		section.addRelBody(2, DIR.S, new GResSelector() {
+		section.addRelBody(2, DIR.S, new UIPickerRes() {
 			
 			@Override
 			protected void select(RESOURCE r, int li) {

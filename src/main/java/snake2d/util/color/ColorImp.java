@@ -9,8 +9,7 @@ import snake2d.util.datatypes.RECTANGLE;
 import snake2d.util.file.*;
 import snake2d.util.misc.CLAMP;
 import snake2d.util.rnd.RND;
-import snake2d.util.sets.ArrayList;
-import snake2d.util.sets.LIST;
+import snake2d.util.sets.*;
 import snake2d.util.sprite.TextureCoords;
 
 
@@ -19,7 +18,7 @@ public class ColorImp implements COLOR, Serializable, SAVABLE{
 	public static final ColorImp TMP = new ColorImp(); 
 	
 	private static final long serialVersionUID = 1L;
-	private final static TextureCoords.Imp texture = new TextureCoords.Imp();
+	private final static TextureCoords texture = new TextureCoords();
 	private static short width;
 	private static short height;
 	
@@ -60,7 +59,7 @@ public class ColorImp implements COLOR, Serializable, SAVABLE{
 	public static LIST<ColorImp> cols(Json json){
 		return cols(json, "COLOR");
 	}
-	
+
 	public static LIST<ColorImp> cols(Json json, String key){
 		if (!json.has(key))
 			throw new RuntimeException();
@@ -73,16 +72,25 @@ public class ColorImp implements COLOR, Serializable, SAVABLE{
 				COLOR to = new ColorImp(json, "TO");
 				return new ArrayList<ColorImp>(COLOR.interpolate(from, to, json.i("GENERATE", 0, 1024)));
 			}
-		}else if(json.jsonsIs(key)) {
-			Json[] js = json.jsons(key);
-			ArrayList<ColorImp> res = new ArrayList<ColorImp>(js.length);
-			for (int i = 0; i < js.length; i++)
-				res.add(new ColorImp(js[i]));
-			return res;
+		}else if (json.jsonsIs(key)) {
+			LinkedList<ColorImp> cols = new LinkedList<>();
+			for (Json j : json.jsons(key))
+				cols.add(new ColorImp(j));
+			return new ArrayList<ColorImp>(cols);
+			
 		}else if (json.arrayIs(key)) {
-			return new ArrayList<>(new ColorImp(json, key));
-		}else
-			throw new RuntimeException();
+			String[] ss = json.values(key);
+			ArrayList<ColorImp> res = new ArrayList<ColorImp>(ss.length);
+			for (int i = 0; i < ss.length; i++) {
+				ColorImp col = new ColorImp();
+				col.set(ss[i], json);
+				res.add(col);
+			}
+			return res;
+		}else {
+			String s = json.value(key);
+			return new ArrayList<>(new ColorImp().set(s, json));
+		}
 		
 		
 	}
@@ -95,12 +103,32 @@ public class ColorImp implements COLOR, Serializable, SAVABLE{
 		if (json.has("R") && json.has("G") && json.has("B")) {
 			set(json.i("R", 0, 511)/2, json.i("G", 0, 511)/2, json.i("B", 0, 511)/2);
 		}else {
-			int[] cols = json.is(key);
-			if (cols.length != 3)
-				json.error("Wrong dimension of color. Should be 3 components", "COLOR");
-			set(cols[0]/2, cols[1]/2, cols[2]/2);
+			String v = json.value(key);
+			set(v, json);
 		}
 		
+	}
+	
+	private ColorImp set(String v, Json error) {
+
+			
+		
+		if (v.indexOf("_") < 0)
+			error.error("Wrong format of color. Should be RED_GREEN_BLUE", v);
+		String[] vv = v.split("_");
+		if (vv.length != 3)
+			error.error("Wrong format of color. Should be RED_GREEN_BLUE, where RED, GREEN and BLUE is an integer 0-255. eg 129_12_0", v);
+		int[] cols = new int[3];
+		for (int i = 0; i < cols.length; i++) {
+			try {
+				cols[i] = Integer.parseInt(vv[i]);
+			}catch(Exception e) {
+				error.error("Wrong format of color. Should be RED_GREEN_BLUE, where RED, GREEN and BLUE is an integer 0-255. eg 129_12_0", v);
+			}
+		}
+		
+		set(cols[0]/2, cols[1]/2, cols[2]/2);
+		return this;
 	}
 	
 	public ColorImp(COLOR c){
@@ -257,7 +285,8 @@ public class ColorImp implements COLOR, Serializable, SAVABLE{
 	
 	public void multiply(COLOR other) {
 		
-		double i = (double)127;
+		double m = 127;
+		double i = (double)1.0/m;
 		
 		double r = (red()& 0x0FF)*i;
 		double g = (green()& 0x0FF)*i;
@@ -267,14 +296,73 @@ public class ColorImp implements COLOR, Serializable, SAVABLE{
 		double g1 = (other.green()& 0x0FF)*i;
 		double b1 = (other.blue()& 0x0FF)*i;
 		
-		setRed(CLAMP.i((int) ((r*r1)*255), 0, 255));
-		setGreen(CLAMP.i((int) ((g*g1)*255), 0, 255));
-		setBlue(CLAMP.i((int) ((b*b1)*255), 0, 255));
+		setRed(CLAMP.i((int) ((r*r1)*m), 0, 255));
+		setGreen(CLAMP.i((int) ((g*g1)*m), 0, 255));
+		setBlue(CLAMP.i((int) ((b*b1)*m), 0, 255));
 		
 	}
 	
 	public ColorImp  shadeSelf(double shade) {
 		set((int)((red()&0x0FF)*shade), (int)((green()&0x0FF)*shade), (int)((blue()&0x0FF)*shade));
+		return this;
+	}
+	
+	public ColorImp setBrightnessSelf(double shade) {
+		int hi = red()&0x0FF;
+		hi = Math.max(hi, green()&0x0FF);
+		hi = Math.max(hi, blue()&0x0FF);
+		
+		int sh = (int) (shade*127);
+		sh = CLAMP.i(sh, 0, 255);
+		
+		double d = 1.0 + (sh-hi)/255.0;
+		
+		setRed(CLAMP.i((int)((red()&0x0FF)*d), 0, 255));
+		setGreen(CLAMP.i((int)((green()&0x0FF)*d), 0, 255));
+		setBlue(CLAMP.i((int)((blue()&0x0FF)*d), 0, 255));
+		return this;
+	}
+	
+	public ColorImp setMinBrightnessSelf(double shade) {
+		
+		setBrightnessSelf(shade);
+		
+		int r = red%0x0FF;
+		int g = green&0x0FF;
+		int b = blue&0x0FF;
+		
+		double tot = r+g+b;
+		tot /= 127*3;
+		
+		if (tot >= shade)
+			return this;
+		
+		shade -=tot;
+		shade*=127*3;
+		
+		if (r < 127) {
+			int am = (int) (shade/3);
+			am = (int) CLAMP.d(am, 0, 127-r);
+			r += am;
+			shade -= am;
+		}
+		
+		if (g < 127) {
+			int am = (int) (shade/2);
+			am = (int) CLAMP.d(am, 0, 127-g);
+			g += am;
+			shade -= am;
+		}
+		
+		int am = (int) (shade);
+		am = (int) CLAMP.d(am, 0, 127-b);
+		b += am;
+		
+		set(r, g, b);
+		
+		setRed(CLAMP.i(r, 0, 255));
+		setGreen(CLAMP.i(g, 0, 255));
+		setBlue(CLAMP.i(b, 0, 255));
 		return this;
 	}
 	
@@ -337,6 +425,11 @@ public class ColorImp implements COLOR, Serializable, SAVABLE{
 		blue = (byte) ((i>>16) & 0x0FF);
 	}
 
+	@Override
+	public TextureCoords texture() {
+		return texture;
+	}
+	
 	@Override
 	public void clear() {
 		

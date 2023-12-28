@@ -5,15 +5,25 @@ import static settlement.main.SETT.*;
 import java.io.IOException;
 import java.util.Arrays;
 
+import game.GAME;
+import game.boosting.*;
+import game.faction.Faction;
+import game.values.GVALUES;
+import init.D;
 import init.biomes.CLIMATE;
+import init.biomes.CLIMATES;
 import settlement.room.main.category.RoomCategorySub;
+import settlement.room.main.employment.RoomEmployment;
+import settlement.room.main.employment.RoomEmploymentSimple;
 import settlement.room.main.util.RoomInitData;
-import snake2d.util.file.FileGetter;
-import snake2d.util.file.FilePutter;
+import snake2d.util.file.*;
 import snake2d.util.map.MAP_OBJECT;
 import snake2d.util.misc.ACTION;
 import snake2d.util.sets.ArrayListResize;
 import snake2d.util.sets.LIST;
+import snake2d.util.sprite.text.Str;
+import util.data.DOUBLE_O;
+import util.dic.DicMisc;
 
 public abstract class RoomBlueprintIns<T extends RoomInstance> extends RoomBlueprintImp{
 
@@ -24,9 +34,13 @@ public abstract class RoomBlueprintIns<T extends RoomInstance> extends RoomBluep
 	int roomNameI = 1;
 	private long[] stats = new long[16];
 	private static long statL = 1000;
+	private static CharSequence ¤¤Desc = "¤Production speed of: {0}";
 	
+	static {
+		D.ts(RoomBlueprintIns.class);
+	}
 
-	protected RoomBlueprintIns(int typeIndex, RoomInitData data, String key, RoomCategorySub cat, ACTION wiki) {
+	protected RoomBlueprintIns(int typeIndex, RoomInitData data, String key, RoomCategorySub cat, ACTION wiki) throws IOException{
 		super(data, typeIndex, key, cat, wiki);
 		if (data.data().has("WORK"))
 			employment = new RoomEmployment(this, data);
@@ -35,19 +49,65 @@ public abstract class RoomBlueprintIns<T extends RoomInstance> extends RoomBluep
 		}else {
 			employment = null;
 		}
+		
+		String vKey = ("ROOM_" + key).replace("__", "_");
+		
+		GVALUES.FACTION.push(vKey + "_AMOUNT", DicMisc.¤¤Amount + ": " + info.names, new DOUBLE_O<Faction>() {
+
+			@Override
+			public double getD(Faction t) {
+				return instancesSize();
+			}
+			
+		}, false);
+		
+		GVALUES.FACTION.push(vKey + "_AREA", DicMisc.¤¤Area + ": " + info.names, new DOUBLE_O<Faction>() {
+
+			int ii = -400;
+			int cache = 0;
+			
+			@Override
+			public double getD(Faction t) {
+				if (Math.abs(GAME.updateI()-ii) > 300) {
+					ii = GAME.updateI();
+					cache = 0;
+					for (int i = 0; i < instancesSize(); i++) {
+						cache += getInstance(i).area();
+					}
+				}
+				return cache;
+			}
+			
+		}, false);
 	}
 	
-	protected RoomBlueprintIns(int typeIndex, RoomInitData data, String key, RoomCategorySub cat) {
-		super(data, typeIndex, key, cat);
-		if (data.data().has("WORK"))
-			employment = new RoomEmployment(this, data);
-		else if (data.data().has("EMPLOYMENT")){
-			employment = new RoomEmploymentSimple("EMPLOYMENT", this, data);
-		}else {
-			employment = null;
-		}
+	protected RoomBlueprintIns(int typeIndex, RoomInitData data, String key, RoomCategorySub cat) throws IOException{
+		this(typeIndex, data, key, cat, null);
 	}
 
+	protected Boostable pushBo(Json json, CharSequence name, CharSequence desc, String type, boolean upgrades) {
+		if (bonus != null)
+			throw new RuntimeException();
+		bonus = BOOSTING.push(key, 1.0, name, desc, icon, BOOSTABLES.ROOMS());
+		if (type != null)
+			BOOSTING.addToMaster(type, bonus);
+		BOOSTING.addToMaster(bonus);
+
+		if (json.has("BONUS")) {
+			json = json.json("BONUS");
+			CLIMATES.pushBonuses(json, bonus);
+		}
+		if (upgrades)
+			this.upgrades().pushBonus(this, bonus);
+		
+		return bonus;
+	}
+	
+	protected Boostable pushBo(Json json, String type, boolean upgrades) {
+		String desc = "" + new Str(¤¤Desc).insert(0, info.names);
+		return pushBo(json, info.names, desc, type, upgrades);
+	}
+	
 	@SuppressWarnings("unchecked")
 	protected void removeInstance(RoomInstance rem) {
 		totalArea -= rem.area();
@@ -74,8 +134,7 @@ public abstract class RoomBlueprintIns<T extends RoomInstance> extends RoomBluep
 
 	@Override
 	protected final void save(FilePutter saveFile) {
-		if (employment != null)
-			employment.save(saveFile);
+		
 		saveFile.object(all);
 		saveFile.i(roomNameI);
 		saveFile.i(totalArea);
@@ -88,8 +147,6 @@ public abstract class RoomBlueprintIns<T extends RoomInstance> extends RoomBluep
 	@Override
 	protected final void load(FileGetter saveFile) throws IOException{
 		all.clear();
-		if (employment != null)
-			employment.load(saveFile);
 		all.add((ArrayListResize<T>)saveFile.object());	
 		roomNameI = saveFile.i();
 		totalArea = saveFile.i();
@@ -101,8 +158,6 @@ public abstract class RoomBlueprintIns<T extends RoomInstance> extends RoomBluep
 	
 	@Override
 	protected void clear() {
-		if (employment != null)
-			employment.clear();
 		roomNameI = 1;
 		totalArea = 0;
 		averageDegrade = 0;

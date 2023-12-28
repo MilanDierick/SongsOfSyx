@@ -1,13 +1,13 @@
 package settlement.room.food.orchard;
 
-import game.GAME;
 import game.faction.FACTIONS;
+import game.faction.FResources.RTYPE;
 import init.C;
+import init.resources.RBIT;
 import init.resources.RESOURCE;
 import init.sound.SOUND;
 import init.sound.SoundSettlement.Sound;
 import settlement.entity.humanoid.Humanoid;
-import settlement.main.RenderData.RenderIterator;
 import settlement.main.SETT;
 import settlement.misc.job.SETT_JOB;
 import settlement.room.main.util.RoomBits;
@@ -16,6 +16,7 @@ import snake2d.util.bit.Bits;
 import snake2d.util.color.COLOR;
 import snake2d.util.datatypes.*;
 import snake2d.util.rnd.RND;
+import util.rendering.RenderData.RenderIterator;
 import view.sett.SettDebugClick;
 
 final class OTile {
@@ -87,7 +88,7 @@ final class OTile {
 			
 			@Override
 			public void work(Humanoid a, int skill) {
-				if (bProgress.get() == sdays) {
+				if (bProgress.get() >= sdays) {
 					setState(ISMALL);
 				}else {
 					bProgress.inc(ins, skill);
@@ -105,7 +106,7 @@ final class OTile {
 			
 			@Override
 			public void work(Humanoid a, int skill) {
-				if (bProgress.get() == smalldays) {
+				if (bProgress.get() >= smalldays) {
 					setState(IBIG);
 				}else
 					bProgress.inc(ins, skill);
@@ -179,7 +180,7 @@ final class OTile {
 			public void work(Humanoid a, int skill) {
 				setState(ISAPLING);
 				SETT.THINGS().resources.create(a.tc(), b.auxRes.resource(), b.auxRes.amount());
-				FACTIONS.player().res().inProduced.inc(b.auxRes.resource(), b.auxRes.amount());
+				FACTIONS.player().res().inc(b.auxRes.resource(), RTYPE.PRODUCED, b.auxRes.amount());
 			}
 			
 			@Override
@@ -204,11 +205,11 @@ final class OTile {
 		if (state() == ISMALL) {
 			setState(ISAPLING);
 			SETT.THINGS().resources.create(coo, b.auxRes.resource(), b.auxRes.amount()/2);
-			FACTIONS.player().res().inProduced.inc(b.auxRes.resource(), b.auxRes.amount()/2);
+			FACTIONS.player().res().inc(b.auxRes.resource(), RTYPE.PRODUCED, b.auxRes.amount()/2);
 		}else if (state() == IBIG || state() == IDEAD) {
 			setState(ISAPLING);
 			SETT.THINGS().resources.create(coo, b.auxRes.resource(), b.auxRes.amount());
-			FACTIONS.player().res().inProduced.inc(b.auxRes.resource(), b.auxRes.amount());
+			FACTIONS.player().res().inc(b.auxRes.resource(), RTYPE.PRODUCED, b.auxRes.amount());
 		}
 		
 	}
@@ -329,7 +330,6 @@ final class OTile {
 	public void updateDay() {
 		if (Bits.getDistance(bWorkedDay.get(), b.time.dayI(), bWorkedDay.max()) > 2) {
 			state().fail();
-			GAME.Notify(coo);
 			bWorkedDay.set(ins, (b.time.dayI()-1)&bWorkedDay.max());
 			bReserved.set(ins, 0);
 		}
@@ -359,8 +359,8 @@ final class OTile {
 		}
 		
 		@Override
-		public long jobResourceBitToFetch() {
-			return 0;
+		public RBIT jobResourceBitToFetch() {
+			return null;
 		}
 		
 		@Override
@@ -402,7 +402,7 @@ final class OTile {
 		public RESOURCE jobPerform(Humanoid skill, RESOURCE r, int rAm) {
 			bWorkedDay.set(ins, (b.time.dayI())&bWorkedDay.max());
 			bReserved.set(ins, 0);
-			double s = b.bonus2.get(skill);
+			double s = b.bonus().get(skill.indu());
 			ins.incSkill(s);
 			int am = (int) s;
 			if (s-am > RND.rFloat())

@@ -15,7 +15,7 @@ final class PlacableSimpleTool extends placeFunc {
 	private boolean clicked = false;
 	int cx, cy;
 	@Override
-	void update(float ds, GameWindow window, boolean pressed) {
+	void updateHovered(float ds, GameWindow window, boolean pressed) {
 		clicked = MButt.LEFT.isDown();
 		if (clicked && !window.pixel().isSameAs(cx, cy)) {
 			cx = window.pixel().x();
@@ -30,6 +30,11 @@ final class PlacableSimpleTool extends placeFunc {
 		
 	}
 	
+	@Override
+	void update(float ds, GameWindow window, boolean pressed) {
+		// TODO Auto-generated method stub
+		super.update(ds, window, pressed);
+	}
 
 	@Override
 	void render(SPRITE_RENDERER r, float ds, GameWindow window) {
@@ -46,7 +51,7 @@ final class PlacableSimpleTool extends placeFunc {
 			placable.renderPlaceHolder(r, window.pixel().rel().x(), window.pixel().rel().y(), true);
 			VIEW.hoverBox().error(problem);
 		}
-		placable.renderAction(cx, cy);
+		placable.renderAction(tx, ty);
 		COLOR.unbind();
 	}
 

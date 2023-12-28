@@ -35,8 +35,10 @@ public class PATHS {
 
 	private final PATHS_BASE BASE;
 	private final PATH INIT;
+	private final ResFolder SETTLEMENT;
 	private final PATH INIT_SETTLEMENT;
 	private final PATH INIT_WORLD;
+	private final ResFolder WORLD;
 	private final PATH CONFIG;
 	private final PATHS_SOUND SOUND;
 	private final PATH TEXT;
@@ -45,7 +47,6 @@ public class PATHS {
 	private final PATH TEXT_SETTLEMENT;
 	private final ResFolder RACE;
 	private final PATH TEXT_WORLD;
-	private final PATH TEXT_CONFIG;
 	private final PATH DICTIONARY;
 	private final PATH SPRITE;
 	private final PATH SPRITE_SETTLEMENT;
@@ -54,6 +55,7 @@ public class PATHS {
 	private final PATH SPRITE_WORLD_MAP;
 	private final PATH SPRITE_GAME;
 	private final PATH SPRITE_UI;
+	private final ResFolder STATS;
 	private final Script SCRIPT;
 
 
@@ -94,7 +96,7 @@ public class PATHS {
 				LOG.ln(i.name + " " + i.majorVersion + " " + m);
 				paths.add(i.getModFolder());
 			} catch (ModInfoException e) {
-				LOG.err("Shitty mod: " + mm);
+				LOG.err("Shitty mod: " + m);
 			}
 			
 		}
@@ -151,6 +153,8 @@ public class PATHS {
 		
 		PATH A = new SemiMod("assets", s);
 		
+		
+		
 		INIT = A.getFolder("init", ".txt");
 		CONFIG = INIT.getFolder("config");
 		INIT_SETTLEMENT = INIT.getFolder("settlement");
@@ -159,13 +163,13 @@ public class PATHS {
 		
 		TEXT = A.getFolder("text", ".txt");
 		TEXT_MISC = TEXT.getFolder("misc");
-		TEXT_CONFIG = TEXT.getFolder("config");
 		DICTIONARY = TEXT.getFolder("dictionary");
 		TEXT_NAMES = TEXT.getFolder("names");
 		TEXT_SETTLEMENT = TEXT.getFolder("settlement");
 		
 		TEXT_WORLD = TEXT.getFolder("world");
 		SPRITE = A.getFolder("sprite", ".png");
+		SETTLEMENT = new ResFolder("settlement", true);
 		SPRITE_SETTLEMENT = SPRITE.getFolder("settlement");
 		SPRITE_SETTLEMENT_MAP = SPRITE_SETTLEMENT.getFolder("map");
 		SPRITE_WORLD = SPRITE.getFolder("world");
@@ -173,9 +177,11 @@ public class PATHS {
 		SPRITE_UI = SPRITE.getFolder("ui");
 		SPRITE_GAME = SPRITE.getFolder("game");
 		
-		SCRIPT = new Script();
-
+		SCRIPT = new Script(base);
+		
+		WORLD = new ResFolder("world", true);
 		RACE = new ResFolder("race", true);
+		STATS = new ResFolder("stats", false);
 		
 	}
 	
@@ -183,7 +189,11 @@ public class PATHS {
 		return i != null;
 	}
 	
+	private static KeyMap<Path> zips = new KeyMap<>();
+	
 	private static Path getFromZip(String file) {
+		if (zips.containsKey(file))
+			return zips.get(file);
 		Path root = FileSystems.getDefault().getPath("");
 		Path base = Util.checkHard(root, "base");
 		
@@ -192,9 +202,12 @@ public class PATHS {
 		env.put("read", "true");
 		URI uri = zip.toUri();
 		String path = "jar:" + uri;
+		
+		
 		try {
 			Path res = FileSystems.newFileSystem(URI.create(path), env).getRootDirectories().iterator().next();
 			Util.checkHard(res, "");
+			zips.put(file, res);
 			return res;
 		} catch (Exception e) {
 			System.err.println("Game resources are corrupted. Reinstall the game.");
@@ -245,6 +258,13 @@ public class PATHS {
 		return i.INIT_SETTLEMENT;
 	}
 	
+	public static ResFolder SETT() {
+		return i.SETTLEMENT;
+	}
+	
+	public static ResFolder WORLD() {
+		return i.WORLD;
+	}
 	
 	public static PATH INIT_WORLD() {
 		return i.INIT_WORLD;
@@ -267,10 +287,7 @@ public class PATHS {
 		return i.CONFIG;
 	}
 	
-	
-	public static PATH TEXT_CONFIG() {
-		return i.TEXT_CONFIG;
-	}
+
 	
 	public static PATHS_SOUND SOUND() {
 		return i.SOUND;
@@ -292,6 +309,9 @@ public class PATHS {
 		return i.RACE;
 	}
 
+	public static ResFolder STATS() {
+		return i.STATS;
+	}
 	
 	public static PATH SPRITE() {
 		return i.SPRITE;
@@ -330,11 +350,7 @@ public class PATHS {
 	public static PATH CACHE_DATA() {
 		return PATHS.local.CACHE_DATA;
 	}
-	
-	public static PATH CACHE_SCRIPT() {
-		return PATHS.local.CACHE_SCRIPT;
-	}
-	
+
 	public static PATH CACHE_TEXTURE() {
 		return PATHS.local.CACHE_TEXTURE;
 	}
@@ -364,16 +380,15 @@ public class PATHS {
 		//public final PATH TEXTURE;
 		//public final PATH SOUND;
 		public final PATH DATA;
+		public final PATH TXT;
 		public final PATH LAUNCHER;
 //		public final PATH LANG_TEXT;
 //		public final PATH LANG_FONT;
 		public final PATH MODS;
-
 		
 		public static final String FOLDER = new File("").getAbsolutePath() + File.separator + "base" + File.separator;
 		public static final String ICON_FOLDER = FOLDER + "icons" + File.separator;
 		public static final String PRELOADER = FOLDER + "PreLoader.png";
-		
 		
 		
 		PATHS_BASE(Path root, Path base, Path res) {
@@ -382,7 +397,7 @@ public class PATHS {
 			DATA = ROOT.getFolder("data", ".txt", false);
 			LAUNCHER = ROOT.getFolder("launcher", ".png", false);
 			MODS = new Normal(res.resolve("mods"), s, false);
-
+			TXT = ROOT.getFolder("txt", ".txt", false);
 		}
 		
 		public static PATH langs() {
@@ -399,12 +414,12 @@ public class PATHS {
 		public final PATH ROOT;
 		public final PATH SETTINGS;
 		public final PATH SCREENSHOT;
+		public final PATH SCREENSHOT_S;
 		public final PATH LOGS;
 		public final PATH SAVE;
 		public final PATH MODS;
 		public final PATH PROFILE;
 		final PATH CACHE_DATA;
-		final PATH CACHE_SCRIPT;
 		final PATH CACHE_TEXTURE;
 		
 		/**
@@ -421,6 +436,7 @@ public class PATHS {
 			
 			SETTINGS = ROOT.getFolder("settings", ".txt", true);
 			SCREENSHOT = ROOT.getFolder("screenshots", ".png", true);
+			SCREENSHOT_S = SCREENSHOT.getFolder("super", ".jpg", true);
 			LOGS = ROOT.getFolder("logs", ".txt", true);
 			PATH SAVES = ROOT.getFolder("saves", true);
 			MODS = getMods(ROOT);
@@ -432,7 +448,6 @@ public class PATHS {
 			
 			CACHE_DATA = cache.getFolder("data", ".cachedata", true);
 			CACHE_TEXTURE = cache.getFolder("texture", ".png", true);
-			CACHE_SCRIPT = cache.getFolder("script", ".jar", true);
 		}
 		
 		private static PATH getMods(PATH ROOT) {
@@ -459,7 +474,7 @@ public class PATHS {
 			}
 			while(steam.getParent() != null) {
 				steam = steam.getParent();
-				if ((""+steam.getFileName()).equalsIgnoreCase("steamapps")) {
+				if ((""+steam.getFileName()).contains("steamapps")) {
 					
 					Path t = steam.resolve("workshop").resolve("content").resolve(""+C.STEAM_ID);
 					
@@ -502,10 +517,81 @@ public class PATHS {
 	
 	public static final class Script {
 		
-		private final PATH base = new SemiMod("script", s);
-		public final PATH jar = base.getFolder("jar", ".jar");
+		public final PATH jar;
 		public final PATH text = PATHS.TEXT_MISC().getFolder("script", ".txt");
+		public final String bb;
 		
+		Script(Path base) {
+			ArrayListGrower<Path> paths = new ArrayListGrower<>();
+			paths.add(PATHS.i.paths);
+			paths.add(base);
+
+			bb = base.toAbsolutePath().toString();
+			
+			VirtualFolder f = new VirtualFolder(paths, "script" + PATHS.s);
+			f = f.folder("jar");
+			
+			jar = new SemiMod(f, ".jar");
+		
+		}
+		
+		public LIST<String> modClasspaths(){
+			LinkedList<String> mm = new LinkedList<>();
+			for (String m : jar.getFiles()) {
+				mm.add(jar.get(m).toAbsolutePath().toString());
+			}
+			return mm;
+		}
+		
+		public boolean hasExternal(String[] paths){
+		
+			return external(paths).size() > 0;
+		}
+		
+		public LIST<String> external(String[] paths){
+			LinkedList<String> mm = new LinkedList<>();
+			for (String ss : paths) {
+				try {
+					ModInfo info = new ModInfo(ss);
+					
+					if (info.absolutePath.indexOf(bb) < 0) {
+						File f = new File(info.absolutePath + s + "V" + info.majorVersion + s + "script" + s + "jar");
+						
+						LOG.ln(info.absolutePath + " " + f.getAbsolutePath() + " " + f.exists());
+						if (f.exists() && Util.listFiles(f.toPath()).size() > 0) {
+							mm.add(f.getAbsolutePath());
+						}
+					}
+				} catch (ModInfoException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				
+			}
+			
+			return mm;
+		}
+		
+	}
+	
+	public static LIST<String> modClasspaths(String[] mods){
+		LinkedList<String> mm = new LinkedList<>();
+		for (String m : mods) {
+			ModInfo info;
+			try {
+				info = new ModInfo(m);
+				File f = new File(info.getModFolder() + s + "script" + s + "jar");
+				if (f.exists()) {
+					for (Path jar : Util.listFiles(f.toPath())) {
+						if ((""+jar).endsWith(".jar"))
+							mm.add(jar.toAbsolutePath().toString());
+					}
+				}
+			} catch (ModInfoException e) {
+			
+			}
+		}
+		return mm;
 	}
 	
 	public static LIST<ModInfo> currentMods(){
@@ -518,13 +604,27 @@ public class PATHS {
 		public final PATH text;
 		public final PATH sprite;
 		
-		ResFolder(String key, boolean spirte){
+		public ResFolder(String key, boolean spirte){
 			this.init = INIT().getFolder(key);
 			this.text = TEXT().getFolder(key);
 			this.sprite = spirte ? SPRITE().getFolder(key) : null;
 		}
 		
+		private ResFolder(PATH init, PATH text, PATH sprite){
+			this.init = init;
+			this.text = text;
+			this.sprite = sprite;
+		}
+		
+		public ResFolder folder(String name) {
+			PATH init = this.init != null && this.init.existsFolder(name) ? this.init.getFolder(name) : null;
+			PATH text =  this.text != null && this.text.existsFolder(name) ? this.text.getFolder(name) : null;
+			PATH sprite =  this.sprite != null && this.sprite.existsFolder(name) ? this.sprite.getFolder(name) : null;
+			return new ResFolder(init, text, sprite);
+			
+		}
+		
 	}
-
+	
 
 }

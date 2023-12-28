@@ -1,7 +1,8 @@
 package settlement.room.food.fish;
 
 import game.GAME;
-import settlement.main.RenderData;
+import init.C;
+import init.RES;
 import settlement.main.SETT;
 import settlement.misc.job.*;
 import settlement.misc.util.RESOURCE_TILE;
@@ -13,7 +14,9 @@ import settlement.room.main.job.JobPositions;
 import settlement.room.main.util.RoomInit;
 import snake2d.Renderer;
 import snake2d.util.datatypes.COORDINATE;
+import snake2d.util.datatypes.DIR;
 import snake2d.util.rnd.RND;
+import util.rendering.RenderData;
 import util.rendering.ShadowBatch;
 
 final class FishInstance extends RoomInstance implements JOBMANAGER_HASER, ROOM_PRODUCER {
@@ -28,6 +31,8 @@ final class FishInstance extends RoomInstance implements JOBMANAGER_HASER, ROOM_
 	FishInstance(ROOM_FISHERY b, TmpArea area, RoomInit init) {
 		super(b, area, init);
 
+		BoatMaker.make(this);
+		
 		int x = -1;
 		int y = -1;
 		int w = 0;
@@ -41,16 +46,20 @@ final class FishInstance extends RoomInstance implements JOBMANAGER_HASER, ROOM_
 						x = c.x();
 						y = c.y();
 					}
-				}else if(SETT.TERRAIN().WATER.is(c)) {
+				}else if(SETT.TERRAIN().WATER.SHALLOW.is(c)) {
+					if (Job.isWork.is(SETT.ROOMS().data.get(c)))
+						continue;
 					if (w == 0) {
 						SETT.ROOMS().data.set(this, c, Job.isWork.set(0));
-						w+= RND.rInt(4);
+						w+= RND.rInt(2);
 					}else {
 						w --;
 					}
 				}
 			}
 		}
+		
+		
 		
 		if (x == -1 || y == -1)
 			GAME.Error(x + " " + y);
@@ -62,6 +71,7 @@ final class FishInstance extends RoomInstance implements JOBMANAGER_HASER, ROOM_
 		jobs = new Jobs(this);
 		
 		jobs.randomize();
+		jobs.setAlwaysNew();
 		
 		employees().maxSet((int)blueprintI().constructor.workers.get(this));
 		employees().neededSet((int)blueprintI().constructor.workers.get(this));
@@ -72,12 +82,24 @@ final class FishInstance extends RoomInstance implements JOBMANAGER_HASER, ROOM_
 	@Override
 	protected boolean render(Renderer r, ShadowBatch shadowBatch, RenderData.RenderIterator it) {
 		if (!SETT.ROOMS().fData.item.is(it.tile())) {
-			int d = SETT.ROOMS().fData.spriteData.get(it.tile());
 			
-			
-			if (d != 0x0F) {
-				blueprintI().constructor.sEdge.render(r, shadowBatch, d, it, 0, false);
+			if (Job.isWork.is(SETT.ROOMS().data.get(it.tile())) && Job.isShip.is(SETT.ROOMS().data.get(it.tile()))) {
+				
+				if (!Job.working(SETT.ROOMS().data.get(it.tile())))
+					SETT.HALFENTS().dingy.renderBoat(r, shadowBatch, it.x()+C.TILE_SIZEH, it.y()+C.TILE_SIZEH, DIR.ALL.getC(it.ran()), RES.ran2().get(it.tile()), upgrade());
+				
+			}else {
+				int d = SETT.ROOMS().fData.spriteData.get(it.tile());
+				
+				
+				if (d != 0x0F) {
+					blueprintI().constructor.sEdge.render(r, shadowBatch, d, it, 0, false);
+				}else if (!SETT.TERRAIN().WATER.is.is(it.tile()) && (RES.ran2().get(it.tile()) & 0x0F) == 0) {
+					blueprintI().constructor.sMisc.render(r, shadowBatch, 0, it, 0, false);
+				}
 			}
+			
+			
 		}
 		
 		return super.render(r, shadowBatch, it);

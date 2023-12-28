@@ -1,8 +1,8 @@
 package util.gui.misc;
 
 import init.C;
-import init.sprite.ICON;
 import init.sprite.SPRITES;
+import init.sprite.UI.Icon;
 import init.sprite.UI.UI;
 import snake2d.*;
 import snake2d.util.color.COLOR;
@@ -13,7 +13,7 @@ import snake2d.util.gui.renderable.RENDEROBJ;
 import snake2d.util.sets.ArrayListResize;
 import snake2d.util.sprite.SPRITE;
 import util.data.GETTER;
-import util.gui.panel.GPanelS;
+import util.gui.panel.GPanel;
 import util.gui.table.GTableBuilder;
 import util.gui.table.GTableBuilder.GRowBuilder;
 import view.interrupter.Interrupter;
@@ -44,7 +44,22 @@ public class GDropDown<E extends CLICKABLE> extends CLICKABLE.ClickableAbs imple
 	}
 	
 	public GDropDown(CharSequence title) {
-		this((SPRITE) new GText(UI.FONT().S, title).lablify());
+		this((SPRITE)new GText(UI.FONT().S, title).lablify());
+	}
+	
+	public GDropDown(CharSequence title, int width) {
+		this(sp(title, width));
+	}
+	
+	private static SPRITE sp(CharSequence title, int width) {
+		GText t = new GText(UI.FONT().S, title).lablify();
+		return new SPRITE.Imp(width, t.height()+4) {
+			
+			@Override
+			public void render(SPRITE_RENDERER r, int X1, int X2, int Y1, int Y2) {
+				t.render(r, X1+2, Y1+2);
+			}
+		};
 	}
 	
 	@Override
@@ -65,7 +80,7 @@ public class GDropDown<E extends CLICKABLE> extends CLICKABLE.ClickableAbs imple
 		if (!isActive) {
 			COLOR.WHITE50.bind();
 		}else if(isHovered) {
-			SPRITES.icons().s.arrowDown.render(r, body.x2()-ICON.SMALL.SIZE-mX, body.y1()+(body.height()-ICON.SMALL.SIZE)/2);
+			SPRITES.icons().s.arrowDown.render(r, body.x2()-Icon.S-mX, body.y1()+(body.height()-Icon.S)/2);
 			COLOR.WHITE150.bind();
 		}
 		
@@ -126,8 +141,6 @@ public class GDropDown<E extends CLICKABLE> extends CLICKABLE.ClickableAbs imple
 			if (e.body().height() > h)
 				h = e.body().height();
 		}
-		final int width = w;
-		final int height = h;
 		body.setWidth(title.width() + 4*mX + w);
 		dummy.body.setWidth(w).setHeight(h);
 		es.trim();
@@ -142,9 +155,9 @@ public class GDropDown<E extends CLICKABLE> extends CLICKABLE.ClickableAbs imple
 		builder.column(null, w+2*mX, new GRowBuilder() {
 			@Override
 			public RENDEROBJ build(GETTER<Integer> ier) {
-				CLICKABLE.Wrapper wr = new CLICKABLE.Wrapper() {
+				CLICKABLE.ClickWrap wr = new CLICKABLE.ClickWrap(dummy) {
 					@Override
-					protected CLICKABLE get() {
+					protected CLICKABLE pget() {
 						if (ier.get() == null)
 							return dummy;
 						int i = ier.get();
@@ -168,7 +181,6 @@ public class GDropDown<E extends CLICKABLE> extends CLICKABLE.ClickableAbs imple
 						return false;
 					}
 				};
-				wr.body.setDim(width, height);
 				return wr;
 						
 			}
@@ -176,7 +188,7 @@ public class GDropDown<E extends CLICKABLE> extends CLICKABLE.ClickableAbs imple
 		
 		int rows = Math.min(10, es.size());
 		expansion = builder.create(rows, true);
-		GPanelS p = new GPanelS();
+		GPanel p = new GPanel();
 		p.inner().set(expansion);
 		expansion.add(p);
 		expansion.moveLastToBack();

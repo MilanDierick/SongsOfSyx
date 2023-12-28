@@ -10,8 +10,8 @@ import settlement.entity.humanoid.HPoll.HPollData;
 import settlement.entity.humanoid.ai.main.*;
 import settlement.entity.humanoid.ai.main.AISUB.AISubActivation;
 import settlement.main.SETT;
-import settlement.stats.CAUSE_LEAVE;
 import settlement.stats.STATS;
+import settlement.stats.util.CAUSE_LEAVE;
 import snake2d.util.datatypes.DIR;
 import snake2d.util.rnd.RND;
 
@@ -129,13 +129,8 @@ class PlanRout extends AIPLAN.PLANRES{
 		
 		@Override
 		public double poll(Humanoid a, AIManager d, HPollData e) {
-			if (e.type == HPoll.COLLIDING)
-				return 0;
-			if (e.type == HPoll.DEFENCE)
-				return 0;
-			if (e.type == HPoll.CAN_COLLIDE)
-				return 0;
-			return super.poll(a, d, e);
+	
+			return 0;
 		}
 		
 		@Override

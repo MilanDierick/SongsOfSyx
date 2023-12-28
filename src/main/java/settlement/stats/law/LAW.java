@@ -3,19 +3,18 @@ package settlement.stats.law;
 import java.io.IOException;
 
 import game.GAME;
-import init.boostable.BOOSTABLES;
+import game.boosting.BOOSTABLES;
 import settlement.entity.humanoid.Humanoid;
-import settlement.main.CapitolArea;
-import settlement.main.SETT.SettResource;
 import settlement.stats.STATS;
+import settlement.stats.StatsInit;
+import settlement.stats.StatsInit.StatUpdatable;
 import snake2d.LOG;
-import snake2d.util.file.FileGetter;
-import snake2d.util.file.FilePutter;
+import snake2d.util.file.*;
 import snake2d.util.misc.ACTION;
 import snake2d.util.misc.CLAMP;
 import view.sett.IDebugPanelSett;
 
-public final class LAW extends SettResource{
+public final class LAW {
 
 	private static LAW self;
 	
@@ -30,7 +29,7 @@ public final class LAW extends SettResource{
 	private int upI = -1;
 	private boolean debug = false;
 
-	public LAW(){
+	LAW(StatsInit init){
 		self = this;
 		IDebugPanelSett.add("DEBUG CRIMES", new ACTION() {
 			
@@ -39,41 +38,49 @@ public final class LAW extends SettResource{
 				debug = true;
 			}
 		});
+		init.savables.add(saver);
+		init.upers.add(uper);
 	}
 	
-	@Override
-	protected void save(FilePutter file) {
-		crimes.saver.save(file);
-		processing.saver.save(file);
-		law.saver.save(file);
-		curfew.saver.save(file);
-	}
+	final SAVABLE saver = new SAVABLE() {
+		
+		@Override
+		public void save(FilePutter file) {
+			crimes.saver.save(file);
+			processing.saver.save(file);
+			law.saver.save(file);
+			curfew.saver.save(file);
+		}
+		
+		@Override
+		public void load(FileGetter file) throws IOException {
+			crimes.saver.load(file);
+			processing.saver.load(file);
+			law.saver.load(file);
+			upI = -1;
+			curfew.saver.load(file);
+		}
+
+		@Override
+		public void clear() {
+			crimes.saver.clear();
+			processing.saver.clear();
+			law.saver.clear();
+			upI = -1;
+			curfew.saver.clear();
+		}
+	};
 	
-	@Override
-	protected void load(FileGetter file) throws IOException {
-		crimes.saver.load(file);
-		processing.saver.load(file);
-		law.saver.load(file);
-		upI = -1;
-		curfew.saver.load(file);
-	}
-	
-	@Override
-	protected void clearBeforeGeneration(CapitolArea area) {
-		crimes.saver.clear();
-		processing.saver.clear();
-		law.saver.clear();
-		upI = -1;
-		curfew.saver.clear();
-	}
-	
-	@Override
-	protected void update(float ds) {
-		processing.update(ds);
-		crimes.update(ds);
-		law.update(ds);
-		curfew.update(ds);
-	}
+	final StatUpdatable uper = new StatUpdatable() {
+		
+		@Override
+		public void update(double ds) {
+			processing.update(ds);
+			crimes.update(ds);
+			law.update(ds);
+			curfew.update(ds);
+		}
+	};
 	
 	public static Prisoners prisoners() {
 		return self.prisoners;
@@ -101,7 +108,7 @@ public final class LAW extends SettResource{
 	public static double getCrimeRate(Humanoid a) {
 		
 		if (self.upI != GAME.updateI()) {
-			double pop = ((STATS.POP().POP.data().get(null)-150)*POPI);
+			double pop = ((STATS.POP().POP.data().get(null)-300)*POPI);
 			pop = CLAMP.d(pop, 0, 1);
 			double rate = HI_RATE*Math.pow(pop, 0.5);
 			double law = Math.pow(law().rate().getD(), 0.75);
@@ -112,16 +119,16 @@ public final class LAW extends SettResource{
 			self.upI = GAME.updateI();
 		}
 		
-		double b = BOOSTABLES.BEHAVIOUR().LAWFULNESS.get(a);
+		double b = BOOSTABLES.BEHAVIOUR().LAWFULNESS.get(a.indu());
 		if (b == 0)
 			return HI_RATE;
 		
 		double rate = self.rate / b;
-		double boo = 0.1 + 1.8*(a.indu().randomness2()&0x0FFFFFF)*RANI;
+		double boo = 0.1 + 1.8*(STATS.RAN().get(a.indu(), 0)&0x0FFFFFF)*RANI;
 		rate *= boo;
 		
 		if (self.debug) {
-			LOG.ln(a.race() + " " + 10000*rate + " " + 10000*self.rate + " " + BOOSTABLES.BEHAVIOUR().LAWFULNESS.get(a));
+			LOG.ln(a.race() + " " + 10000*rate + " " + 10000*self.rate + " " + BOOSTABLES.BEHAVIOUR().LAWFULNESS.get(a.indu()));
 			return 1;
 		}
 		return CLAMP.d(rate, 0, HI_RATE);

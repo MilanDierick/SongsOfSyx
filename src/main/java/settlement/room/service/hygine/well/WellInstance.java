@@ -1,6 +1,5 @@
 package settlement.room.service.hygine.well;
 
-import settlement.main.RenderData;
 import settlement.room.main.RoomInstance;
 import settlement.room.main.TmpArea;
 import settlement.room.main.util.RoomInit;
@@ -8,6 +7,7 @@ import settlement.room.service.module.ROOM_SERVICER;
 import settlement.room.service.module.RoomServiceInstance;
 import snake2d.Renderer;
 import snake2d.util.datatypes.COORDINATE;
+import util.rendering.RenderData;
 import util.rendering.ShadowBatch;
 
 final class WellInstance extends RoomInstance implements ROOM_SERVICER {

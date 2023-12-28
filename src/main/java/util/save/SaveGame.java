@@ -54,7 +54,7 @@ public class SaveGame implements Serializable{
 	public final int playSeconds = (int) TIME.playedGame();
 	public final int population = STATS.POP().POP.data().get(null);
 	public final String race = ""+ FACTIONS.player().race().info.name;
-	public final String city = ""+FACTIONS.player().appearence().name();
+	public final String city = ""+FACTIONS.player().name;
 	public final String[] scripts;
 	public final int check = RND.rInt();
 	public final String races = getResources("race");

@@ -13,7 +13,7 @@ import snake2d.util.sets.*;
 import snake2d.util.sprite.SPRITE;
 import util.info.INFO;
 import util.keymap.RCollection;
-import world.World;
+import world.WORLD;
 
 public final class TERRAINS {
 
@@ -45,14 +45,14 @@ public final class TERRAINS {
 
 				@Override
 				public SPRITE icon() {
-					return World.WATER().iconSalt;
+					return WORLD.WATER().OCEAN.icon;
 				}
 
 				@Override
 				public double value(int wx, int wy) {
 					double res = 0;
 					for (int di = 0; di < DIR.ORTHO.size(); di++) {
-						if (World.WATER().OCEAN.is.is(wx, wy, DIR.ORTHO.get(di)))
+						if (WORLD.WATER().OCEAN.is.is(wx, wy, DIR.ORTHO.get(di)))
 							res += 0.25;
 					}
 					return CLAMP.d(res, 0, 1);
@@ -67,14 +67,14 @@ public final class TERRAINS {
 			
 			@Override
 			public SPRITE icon() {
-				return World.WATER().iconSweet;
+				return WORLD.WATER().LAKE.icon;
 			}
 			
 			@Override
 			public double value(int wx, int wy) {
 				double res = 0;
 				for (int di = 0; di < DIR.ORTHO.size(); di++) {
-					if (World.WATER().LAKE.is.is(wx, wy, DIR.ORTHO.get(di)) || World.WATER().isRivery.is(wx, wy, DIR.ORTHO.get(di)))
+					if (WORLD.WATER().LAKE.is.is(wx, wy, DIR.ORTHO.get(di)) || WORLD.WATER().isRivery.is(wx, wy, DIR.ORTHO.get(di)))
 						res += 0.25;
 				}
 				return CLAMP.d(res, 0, 1);
@@ -94,7 +94,7 @@ public final class TERRAINS {
 					public double value(int wx, int wy) {
 						double res = 0;
 						for (int di = 0; di < DIR.ORTHO.size(); di++) {
-							if (World.MOUNTAIN().haser.is(wx, wy, DIR.ORTHO.get(di)))
+							if (WORLD.MOUNTAIN().haser.is(wx, wy, DIR.ORTHO.get(di)))
 								res += 0.25;
 						}
 						return CLAMP.d(res, 0, 1);
@@ -107,15 +107,15 @@ public final class TERRAINS {
 
 					@Override
 					public SPRITE icon() {
-						return World.FOREST().icon;
+						return WORLD.FOREST().icon;
 					}
 
 					@Override
 					public double value(int wx, int wy) {
 						double res = 0;
 						for (int di = 0; di < DIR.ORTHO.size(); di++) {
-							if (World.MOUNTAIN().haser.is(wx, wy, DIR.ORTHO.get(di)))
-								res += 0.25*World.FOREST().amount.get(wx, wy);
+							if (WORLD.MOUNTAIN().haser.is(wx, wy, DIR.ORTHO.get(di)))
+								res += 0.25*WORLD.FOREST().amount.get(wx, wy);
 						}
 						return res;
 					}
@@ -127,7 +127,7 @@ public final class TERRAINS {
 			
 			@Override
 			public SPRITE icon() {
-				return World.GROUND().icon;
+				return WORLD.GROUND().icon;
 			}
 
 			@Override
@@ -176,9 +176,9 @@ public final class TERRAINS {
 				return FOREST();
 			if (TERRAIN().MOUNTAIN.isMountain(tx, ty))
 				return MOUNTAIN();
-			if (TERRAIN().WATER.is(tx, ty) && GROUND().getter.get(tx, ty).fertility() == 0)
+			if (TERRAIN().WATER.SHALLOW.is(tx, ty) && GROUND().getter.get(tx, ty).fertility() == 0)
 				return OCEAN();
-			if (TERRAIN().WATER.is(tx, ty))
+			if (TERRAIN().WATER.SHALLOW.is(tx, ty))
 				return WET();
 			return NONE();
 		}
@@ -194,16 +194,16 @@ public final class TERRAINS {
 
 		@Override
 		public TERRAIN get(int tx, int ty) {
-			if (!World.IN_BOUNDS(tx, ty))
+			if (!WORLD.IN_BOUNDS(tx, ty))
 				return NONE();
-			if (World.FOREST().is.is(tx, ty))
-				return FOREST();
-			if (World.MOUNTAIN().is(tx, ty))
+			if (WORLD.MOUNTAIN().is(tx, ty))
 				return MOUNTAIN();
-			if (World.WATER().OCEAN.is.is(tx, ty))
+			if (WORLD.WATER().OCEAN.is.is(tx, ty))
 				return OCEAN();
-			if (World.WATER().fertile.is(tx, ty))
+			if (WORLD.WATER().fertile.is(tx, ty))
 				return WET();
+			if (WORLD.FOREST().is.is(tx, ty))
+				return FOREST();
 			return NONE();
 		}
 	

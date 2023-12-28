@@ -2,12 +2,11 @@ package settlement.room.industry.workshop;
 
 import java.io.IOException;
 
-import init.boostable.BOOSTABLE;
-import init.boostable.BOOSTABLES;
 import settlement.path.finder.SFinderRoomService;
 import settlement.room.industry.module.INDUSTRY_HASER;
 import settlement.room.industry.module.Industry;
 import settlement.room.industry.module.Industry.RoomBoost;
+import settlement.room.main.BonusExp.RoomExperienceBonus;
 import settlement.room.main.Room;
 import settlement.room.main.RoomBlueprintIns;
 import settlement.room.main.category.RoomCategorySub;
@@ -31,11 +30,12 @@ public class ROOM_WORKSHOP extends RoomBlueprintIns<WorkshopInstance> implements
 		super(index, init, key, cat);
 		
 		constructor = new Constructor(this, init);
-		BOOSTABLE bonusType = BOOSTABLES.ROOMS().pushRoom(this, init.data(), type);
+		pushBo(init.data(), type, true);
 
 		job = new Job(this);
 
-		indus = INDUSTRY_HASER.createIndustries(this, init, new RoomBoost[] {constructor.efficiency}, bonusType);
+		indus = INDUSTRY_HASER.createIndustries(this, init, new RoomBoost[] {constructor.efficiency}, bonus());
+		new RoomExperienceBonus(this, init.data(), bonus());
 	}
 	
 	@Override

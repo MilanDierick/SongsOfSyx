@@ -9,14 +9,16 @@ import init.resources.RESOURCE;
 import init.resources.RESOURCES;
 import snake2d.util.file.*;
 import snake2d.util.sets.ArrayListShort;
-import snake2d.util.sets.LIST;
-import world.entity.WPathing;
-import world.entity.WPathing.FactionDistance;
+import world.WORLD;
+import world.map.pathing.WRegSel;
+import world.map.pathing.WRegs.RDist;
+import world.map.pathing.WTREATY;
 
 final class TradeShipper implements SAVABLE {
 
 	private final Partner[] partners = new Partner[FACTIONS.MAX];
 	private final ArrayListShort neighFactions = new ArrayListShort(FACTIONS.MAX);
+
 	
 	public TradeShipper() {
 		for (int i = 0; i < partners.length; i++)
@@ -27,7 +29,7 @@ final class TradeShipper implements SAVABLE {
 	public void save(FilePutter file) {
 		neighFactions.save(file);
 		for (int i = 0; i < partners(); i++) {
-			file.d(partner(i).toll);
+			file.d(partner(i).distance);
 		}
 		for (int i = 0; i < partners(); i++) {
 			file.is(partner(i).traded);
@@ -39,7 +41,7 @@ final class TradeShipper implements SAVABLE {
 		
 		neighFactions.load(file);
 		for (int i = 0; i < partners(); i++) {
-			partner(i).toll = file.d();
+			partner(i).distance = file.d();
 		}
 		for (int i = 0; i < partners(); i++) {
 			file.is(partner(i).traded);
@@ -52,19 +54,16 @@ final class TradeShipper implements SAVABLE {
 	}
 	
 	void init(Faction buyer) {
-		LIST<FactionDistance> n = WPathing.getFactions(buyer);
-		
 		neighFactions.clear();
-		for (FactionDistance d : n) {
-			if (d.f == buyer)
-				continue;
-			if (FACTIONS.rel().tradePartner.get(d.f, buyer) == 0)
+		for (RDist d : WORLD.PATH().tmpRegs.all(buyer.capitolRegion(), WTREATY.TRADEPARTNERS(buyer), WRegSel.CAPITOLS(buyer))) {
+			if (d.reg.faction() == buyer)
 				continue;
 			
-			Partner p = partners[d.f.index()];
+			
+			Partner p = partners[d.reg.faction().index()];
 			Arrays.fill(p.traded, 0);
-			p.toll = TradeManager.priceToll(d.distance, 1);
-			neighFactions.add(d.f.index());
+			p.distance = d.distance;
+			neighFactions.add(d.reg.faction().index());
 		}
 	}
 	
@@ -88,7 +87,7 @@ final class TradeShipper implements SAVABLE {
 	final static class Partner {
 		
 		private final short faction;
-		private double toll;
+		private double distance;
 		private final int[] traded = new int[RESOURCES.ALL().size()];
 		
 		Partner(Faction faction){
@@ -99,8 +98,8 @@ final class TradeShipper implements SAVABLE {
 			return FACTIONS.getByIndex(faction);
 		}
 		
-		public double toll() {
-			return toll;
+		public double distance() {
+			return distance;
 		}
 		
 		public int traded(RESOURCE res) {
@@ -113,7 +112,7 @@ final class TradeShipper implements SAVABLE {
 		}
 		
 	}
-
+	
 
 	
 	

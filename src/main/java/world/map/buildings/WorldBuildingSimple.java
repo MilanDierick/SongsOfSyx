@@ -1,6 +1,6 @@
 package world.map.buildings;
 
-import static world.World.*;
+import static world.WORLD.*;
 
 import java.io.IOException;
 
@@ -10,8 +10,8 @@ import snake2d.util.file.FileGetter;
 import snake2d.util.file.FilePutter;
 import snake2d.util.sets.LISTE;
 import view.tool.*;
-import view.world.IDebugPanelWorld;
-import world.World;
+import view.world.panel.IDebugPanelWorld;
+import world.WORLD;
 
 public abstract class WorldBuildingSimple extends WorldBuilding{
 
@@ -48,7 +48,7 @@ public abstract class WorldBuildingSimple extends WorldBuilding{
 			public CharSequence isPlacable(int tx, int ty, AREA area, PLACER_TYPE type) {
 				if (!IN_BOUNDS(tx, ty))
 					return PlacableMessages.¤¤IN_MAP;
-				if (World.REGIONS().isCentre.is(tx, ty))
+				if (WORLD.REGIONS().map.isCentre.is(tx, ty))
 					return PlacableMessages.¤¤BLOCKED;
 				return null;
 			}

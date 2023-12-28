@@ -187,7 +187,7 @@ public final class ToolPlacer extends Tool{
 		}
 		update(ds, window);
 		
-		current.update(ds, window, pressed);
+		current.updateHovered(ds, window, pressed);
 	}
 
 	@Override
@@ -218,7 +218,7 @@ public final class ToolPlacer extends Tool{
 		if (placer == origional.getUndo())
 			VIEW.mouse().setReplacement(SPRITES.icons().m.cancel);
 		
-		
+		current.update(ds, window, pressed);
 		pressed = pressed & MButt.LEFT.isDown();
 		
 	}
@@ -275,7 +275,10 @@ public final class ToolPlacer extends Tool{
 		placeFunc(){
 		}
 		
-		abstract void update(float ds, GameWindow window, boolean pressed);
+		abstract void updateHovered(float ds, GameWindow window, boolean pressed);
+		void update(float ds, GameWindow window, boolean pressed) {
+			
+		}
 		abstract void render(SPRITE_RENDERER r, float ds, GameWindow window);
 		abstract void click(GameWindow window);
 		abstract void clickRelease(GameWindow window);

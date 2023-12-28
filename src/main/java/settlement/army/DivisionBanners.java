@@ -4,7 +4,6 @@ import java.io.IOException;
 
 import init.paths.PATHS;
 import init.sprite.BitmapSprite;
-import init.sprite.ICON;
 import snake2d.SPRITE_RENDERER;
 import snake2d.util.color.COLOR;
 import snake2d.util.color.ColorImp;
@@ -21,7 +20,7 @@ public class DivisionBanners implements SAVABLE{
 		
 		short[][] data = BitmapSprite.read(PATHS.SPRITE_UI().get("DivisionSymbols"));
 		all = new DivisionBanner[data.length];
-		COLOR[] cols = COLOR.generateUnique(data.length);
+		COLOR[] cols = COLOR.generateUnique(40, data.length, true);
 		for (int i = 0; i < data.length; i++) {
 			DivisionBanner d = new DivisionBanner(new BitmapSprite());
 			d.sprite.paint(data[i]);
@@ -72,19 +71,19 @@ public class DivisionBanners implements SAVABLE{
 		public final BitmapSprite sprite;
 		public final ColorImp col = new ColorImp();
 		public final ColorImp bg = new ColorImp(20, 20, 20);
-		
+		private final int m = 2;
 		public DivisionBanner(BitmapSprite sprite) {
 			this.sprite = sprite;
 		}
 
 		@Override
 		public int width() {
-			return ICON.MEDIUM.SIZE+4;
+			return BitmapSprite.WIDTH*2+m*2;
 		}
 		
 		@Override
 		public int height() {
-			return ICON.MEDIUM.SIZE+4;
+			return BitmapSprite.HEIGHT*2+m*2;
 		}
 		
 		@Override
@@ -96,8 +95,13 @@ public class DivisionBanners implements SAVABLE{
 		public void render(SPRITE_RENDERER r, int X1, int nopeX, int Y1, int nopeY) {
 			
 			bg.render(r, X1, X1+width(), Y1, Y1+width());
+			ColorImp.TMP.set(bg).shadeSelf(0.75);
+			ColorImp.TMP.renderFrame(r, X1, X1+width(), Y1, Y1+height(), 1, 1);
+			ColorImp.TMP.shadeSelf(0.75);
+			ColorImp.TMP.renderFrame(r, X1, X1+width(), Y1, Y1+height(), 0, 1);
 			
-			renderSymbol(r, X1, Y1);
+			
+			renderSymbol(r, X1+m, Y1+m);
 			
 			
 		}
@@ -106,16 +110,16 @@ public class DivisionBanners implements SAVABLE{
 			
 			
 			
-			for (int y = 0; y < height(); y++) {
-				for (int x = 0; x < width(); x++) {
-					int dx = (x-2)/2;
-					int dy = (y-2)/2;
+			for (int y = 0; y < BitmapSprite.WIDTH*2; y++) {
+				for (int x = 0; x < BitmapSprite.HEIGHT*2; x++) {
+					int dx = (x-1)/2;
+					int dy = (y-1)/2;
 					
 					if (sprite.is(dx, dy)) {
 						COLOR c = col;
 						for (DIR d: DIR.ALL) {
-							int ddx = (x-2+d.x())/2;
-							int ddy = (y-2+d.y())/2;
+							int ddx = (x-1+d.x())/2;
+							int ddy = (y-1+d.y())/2;
 							if (!sprite.is(ddx, ddy)) {
 								c = ColorImp.TMP.set(c).shadeSelf(0.6);
 								break;
@@ -124,8 +128,8 @@ public class DivisionBanners implements SAVABLE{
 						c.render(r, X1+x, X1+x + 1, Y1+y, Y1+y+1);
 					}else {
 						for (DIR d: DIR.ALL) {
-							int ddx = (x-2+d.x())/2;
-							int ddy = (y-2+d.y())/2;
+							int ddx = (x-1+d.x())/2;
+							int ddy = (y-1+d.y())/2;
 							if (sprite.is(ddx, ddy)) {
 								COLOR.WHITE100.render(r, X1+x, X1+x + 1, Y1+y, Y1+y+1);
 								break;

@@ -1,7 +1,6 @@
 package view.sett.ui.room.construction;
 
-import game.GAME;
-import init.sprite.ICON;
+import game.faction.FACTIONS;
 import settlement.room.main.RoomBlueprintImp;
 import snake2d.SPRITE_RENDERER;
 import snake2d.util.gui.GUI_BOX;
@@ -40,15 +39,12 @@ final class SCollection {
 		private final State state;
 		private final int k;
 		IButt(State state, int k){
-			super(new SPRITE.Imp(ICON.BIG.SIZE){
+			super(new SPRITE.Imp(init.sprite.UI.Icon.L){
 
 				@Override
 				public void render(SPRITE_RENDERER r, int X1, int X2, int Y1, int Y2) {
 					RoomBlueprintImp b = state.collection.rooms().get(k);
 					b.iconBig().render(r, X1, X2, Y1, Y2);
-					if (GAME.player().locks.unlockText(b) != null) {
-						
-					}
 				}
 				
 			});
@@ -59,7 +55,7 @@ final class SCollection {
 		@Override
 		protected void renAction() {
 			RoomBlueprintImp b = state.collection.rooms().get(k);
-			activeSet(b != null && GAME.player().locks.unlockText(b) == null);
+			activeSet(b != null && b.reqs.passes(FACTIONS.player()));
 			selectedSet(state.b == state.collection.rooms().get(k));
 		}
 		

@@ -2,47 +2,50 @@ package init.race.appearence;
 
 import java.io.IOException;
 
+import init.paths.PATHS;
 import init.race.ExpandInit;
 import init.race.Race;
-import init.sprite.ICON;
+import init.sprite.SPRITES;
+import init.sprite.UI.Icon;
 import settlement.entity.humanoid.HTYPE;
 import settlement.stats.Induvidual;
 import settlement.stats.STATS;
 import snake2d.util.file.Json;
 import snake2d.util.sets.ArrayList;
 import snake2d.util.sets.LIST;
-import snake2d.util.sets.Tuple.TupleImp;
 import snake2d.util.sprite.TILE_SHEET;
 import util.spritecomposer.*;
-import util.spritecomposer.ComposerThings.*;
+import util.spritecomposer.ComposerThings.ITileSheet;
+import world.regions.centre.WorldRaceSheet;
 
 public final class RAppearence {
 
 	public final RColors colors;
-	public final ICON.MEDIUM icon;
-	public final ICON.BIG iconBig;
-//	private final RaceSheet sheet;
-//	private final RaceSheet sheet_child;
-//	private final TILE_SHEET sheet_skelleton;
-//	private final TILE_SHEET sheet_child_skelleton;
+	public final Icon icon;
+	public final Icon iconBig;
 	public final TILE_SHEET sleep;
 	public final RExtras extra;
 	public final int off;
 	public final LIST<String> lastNamesNoble;
 
 	
-	
+	public final RCrown crown;
 	public final RType child;
 	public final LIST<RType> types;
 	public double tMax;
-	
+	public final WorldRaceSheet world;
 	
 	public RAppearence(Race race, Json data, ExpandInit init, int hitboxSize) throws IOException{
 		
-		data = data.json("APPEARANCE");
+		icon = SPRITES.icons().get(data, "ICON_SMALL");
+		iconBig = SPRITES.icons().get(data, "ICON_BIG");
+		
+		data =  new Json(PATHS.RACE().init.getFolder("sprite").get(data.value("SPRITE_FILE")));
 		colors = new RColors(data);
 		
 		lastNamesNoble = RNames.names("NAMESET_FILE_NOBLE", data, init.names);
+		
+		world = new WorldRaceSheet(data.json("WORLD"));
 		
 		String s = data.value("SPRITE_EXTRA_FILE");
 		if (init.extras.containsKey(s)) {
@@ -75,40 +78,9 @@ public final class RAppearence {
 			init.sleep.put(ssleep, sleep);
 		}
 		
-		String sicon = data.value("ICON_FILE");
-		if (init.icons.containsKey(sicon)) {
-			icon = init.icons.get(sicon).a();
-			iconBig = init.icons.get(sicon).b();
-		}else {
-			
-			icon = IIcon.MEDIUM.get(new ISpriteData(init.sg.getFolder("icon").get(sicon), 160, 44) {
 
-				@Override
-				protected SpriteData init(ComposerUtil c, ComposerSources s, ComposerDests d) {
-					
-					s.singles.init(0, 0, 1, 1, 1, 1, d.s24);
-					s.singles.paste(true);
-					return d.s24.saveSprite();
-				}
-				
-			}.get());
-			
-			
-			
-			iconBig = IIcon.LARGE.get(new ISpriteData() {
-
-				@Override
-				protected SpriteData init(ComposerUtil c, ComposerSources s, ComposerDests d) {
-					
-					s.singles.init(s.singles.body().x2(), 0, 1, 1, 1, 1, d.s32);
-					s.singles.paste(true);
-					return d.s32.saveSprite();
-				}
-				
-			}.get());
-			
-			init.icons.put(sicon, new TupleImp<ICON.MEDIUM, ICON.BIG>(icon, iconBig));
-		}
+		
+		crown = new RCrown(init, data);
 		
 		{
 			this.child = new RType(colors, data.json("CHILD"), extra, init);

@@ -1,16 +1,22 @@
 package view.sett.ui.standing;
 
+import game.boosting.BoostSpec;
 import game.time.TIME;
 import init.D;
-import init.boostable.*;
 import init.race.RACES;
 import init.race.Race;
+import init.religion.Religion;
+import init.religion.Religions;
 import init.sprite.UI.UI;
 import settlement.entity.humanoid.HCLASS;
 import settlement.room.spirit.grave.GraveData;
-import settlement.stats.*;
-import settlement.stats.StatsBurial.StatGrave;
-import settlement.stats.StatsReligion.Religion;
+import settlement.stats.STATS;
+import settlement.stats.colls.StatsBurial;
+import settlement.stats.colls.StatsBurial.StatGrave;
+import settlement.stats.colls.StatsReligion;
+import settlement.stats.colls.StatsReligion.StatReligion;
+import settlement.stats.stat.STAT;
+import settlement.stats.stat.StatCollection;
 import snake2d.SPRITE_RENDERER;
 import snake2d.util.color.COLOR;
 import snake2d.util.color.ColorImp;
@@ -19,6 +25,7 @@ import snake2d.util.gui.GuiSection;
 import snake2d.util.gui.renderable.RENDEROBJ;
 import snake2d.util.sets.LinkedList;
 import util.colors.GCOLOR;
+import util.dic.DicMisc;
 import util.gui.misc.*;
 import util.gui.table.GScrollRows;
 import util.gui.table.GStaples;
@@ -42,62 +49,44 @@ final class CatReligion extends Cat{
 		section.add(dvision(cl));
 		
 		GGrid grid = new GGrid(section, 2, section.body().y2()+4);
-		for (Religion r : STATS.RELIGION().ALL){
+		for (StatReligion r : STATS.RELIGION().ALL){
 			grid.add(temple(r, cl));
 		}
 		
 		{
-			boolean[] bools = new boolean[BOOSTABLES.all().size()];
-			LinkedList<BOOSTABLE> boosts = new LinkedList<>();
-			for (Religion r : STATS.RELIGION().ALL){
-				for (BBooster b : r.bonuses) {
-					if (!bools[b.boost.boostable.index]) {
-						boosts.add(b.boost.boostable);
-						bools[b.boost.boostable.index] = true;
-					}
-				}
-			}
 			
 			grid = new GGrid(section, 6, section.body().y2()+4);
-			for (BOOSTABLE b : boosts) {
+			for (BoostSpec ss : STATS.RELIGION().TEMPLE_TOTAL.boosters.all()) {
 				grid.add(new GStat() {
 					
 					@Override
 					public void update(GText text) {
-						double d = 0;
-						for (Religion rr : STATS.RELIGION().ALL) {
-							for (BBooster sb : rr.bonuses) {
-								if (sb.boost.boostable == b) {
-									d += sb.value(cl, CitizenMain.current);
-								}
-							};
-						}
-						GFORMAT.f0(text, d);
+						GFORMAT.f0(text, ss.inc(RACES.clP(CitizenMain.current, cl)));
 					}
 					
 					@Override
 					public void hoverInfoGet(GBox bb) {
-						bb.title(b.name);
+						
+						
+						
+						bb.title(ss.tName);
 						double d = 0;
-						for (Religion rr : STATS.RELIGION().ALL) {
-							for (BBooster sb : rr.bonuses) {
-								if (sb.boost.boostable == b) {
-									d += sb.boost.value()*sb.value(cl, CitizenMain.current);
-									bb.textL(rr.info.name);
-									bb.tab(7);
-									bb.add(GFORMAT.fofkInv(bb.text(), sb.boost.value()*sb.value(cl, CitizenMain.current), sb.boost.value()));
+						for (Religion rr : Religions.ALL()) {
+							for (BoostSpec sb : rr.bsett.all()) {
+								if (sb.boostable == ss.boostable) {
+									sb.booster.hoverDetailed(bb, sb.booster.get(sb.boostable, RACES.clP(CitizenMain.current, cl)));
 									bb.NL();
 								}
 							};
 						}
 						bb.NL(8);
 						
-						bb.textLL(BOOSTABLES.INFO().name);
+						bb.textLL(DicMisc.¤¤Boosts);
 						bb.tab(7);
 						bb.add(GFORMAT.f0(bb.text(), d));
 						
 					};
-				}.hh(b.icon()));
+				}.hh(ss.boostable.icon));
 			}
 		}
 		
@@ -116,13 +105,13 @@ final class CatReligion extends Cat{
 							text.NL(4);
 							for (int x = 0; x < c.ALL.size(); x++) {
 								b.tab(1+x*2);
-								b.add(c.ALL.get(x).temple.iconBig().small);
+								b.add(c.ALL.get(x).religion.icon.small);
 								
 							}
 							b.NL(4);
 							for (int y = 0; y < c.ALL.size(); y++) {
-								Religion r = c.ALL.get(y);
-								b.add(r.temple.iconBig().small);
+								StatReligion r = c.ALL.get(y);
+								b.add(r.religion.icon.small);
 								for (int x = 0; x < c.ALL.size(); x++) {
 									b.tab(1+x*2);
 									if (r.opposition(c.ALL.get(x)) > 0)
@@ -166,8 +155,8 @@ final class CatReligion extends Cat{
 				box.add(box.text().add(-i).s().add(TIME.days().cycleName()));
 				box.NL(8);
 				
-				for (Religion s : STATS.RELIGION().ALL) {
-					box.add(s.temple.iconBig());
+				for (StatReligion s : STATS.RELIGION().ALL) {
+					box.add(s.religion.icon);
 					box.add(GFORMAT.i(box.text(), s.followers.data(cl).get(CitizenMain.current, i)));
 					box.tab(7);
 					if (i < STATS.DAYS_SAVED-1)
@@ -193,14 +182,14 @@ final class CatReligion extends Cat{
 				if (h <= 0)
 					h = 1;
 				
-				for (Religion s : STATS.RELIGION().ALL) {
+				for (StatReligion s : STATS.RELIGION().ALL) {
 					int hh = (int) Math.ceil(h*s.followers.data(cl).getD(CitizenMain.current, i));
 					if (hh > 0) {
 						ColorImp c = ColorImp.TMP;
-						c.set(s.color);
+						c.set(s.religion.color);
 						c.shadeSelf(hovered ? 0.75 : 0.55);
 						c.render(r, x1, x2, y2-hh, y2);
-						c.set(s.color);
+						c.set(s.religion.color);
 						c.shadeSelf(hovered ? 1 : 0.80);
 						c.render(r, x1+1, x2-1, y2-hh+1, y2-1);
 						y2-= hh;
@@ -214,15 +203,15 @@ final class CatReligion extends Cat{
 		return s;
 	}
 	
-	private static RENDEROBJ temple(Religion ss, HCLASS cl) {
+	private static RENDEROBJ temple(StatReligion ss, HCLASS cl) {
 		GuiSection s = new GuiSection() {
 			@Override
 			public void hoverInfoGet(GUI_BOX text) {
 				if (!isHoveringAHoverElement()) {
 					
 					GBox b = (GBox) text;
-					b.title(ss.temple.info.name);
-					b.text(ss.temple.info.desc);
+					b.title(ss.info.name);
+					b.text(ss.info.desc);
 					b.NL(8);
 					
 					b.textL(ss.followers.info().name);
@@ -237,20 +226,19 @@ final class CatReligion extends Cat{
 					b.add(VIEW.s().ui.standing.hi.init(cl, ss.temple_access, false));
 					b.NL(4);
 					
-					b.textL(ss.temple_value.info().name);
+					b.textL(ss.temple_quality.info().name);
 					b.tab(8);
-					b.add(GFORMAT.perc(b.text(), ss.temple_value.data(cl).getD(CitizenMain.current)));
+					b.add(GFORMAT.perc(b.text(), ss.temple_quality.data(cl).getD(CitizenMain.current)));
 					b.NL();
-					b.add(VIEW.s().ui.standing.hi.init(cl, ss.temple_value, false));
+					b.add(VIEW.s().ui.standing.hi.init(cl, ss.temple_quality, false));
 					b.NL(4);
 					
 					b.NL(8);
-					b.textLL(BOOSTABLES.INFO().name);
+					b.textLL(DicMisc.¤¤Boosts);
 					b.NL();
-					for (BBooster bo : ss.bonuses) {
-						bo.boost.hover(text);
-						b.NL();
-					}
+					
+					ss.religion.bsett.hover(text, RACES.clP(CitizenMain.current, cl));
+					
 				
 				}
 				super.hoverInfoGet(text);
@@ -288,7 +276,7 @@ final class CatReligion extends Cat{
 			}
 		});
 		
-		s.addRightC(16, ss.temple.iconBig());
+		s.addRightC(16, ss.religion.icon);
 		
 		s.add(new GStat() {
 			
@@ -302,7 +290,7 @@ final class CatReligion extends Cat{
 			
 			@Override
 			public void render(SPRITE_RENDERER r, float ds) {
-				double v = ss.temple_value.data(cl).getD(CitizenMain.current)*ss.temple_access.data(cl).getD(CitizenMain.current);
+				double v = ss.temple_quality.data(cl).getD(CitizenMain.current)*ss.temple_access.data(cl).getD(CitizenMain.current);
 				GMeter.render(r, GMeter.C_BLUE, v, body());
 			}
 		});

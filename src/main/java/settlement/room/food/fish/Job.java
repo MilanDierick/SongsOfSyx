@@ -2,6 +2,7 @@ package settlement.room.food.fish;
 
 import static settlement.main.SETT.*;
 
+import init.resources.RBIT;
 import init.resources.RESOURCE;
 import init.sound.SoundSettlement.Sound;
 import settlement.entity.humanoid.Humanoid;
@@ -9,14 +10,18 @@ import settlement.main.SETT;
 import settlement.misc.job.SETT_JOB;
 import settlement.room.main.job.RoomResStorage;
 import snake2d.util.bit.Bit;
+import snake2d.util.bit.Bits;
 import snake2d.util.datatypes.COORDINATE;
 import snake2d.util.datatypes.Coo;
 
 class Job{
 
-	static final Bit isWork = new Bit(0b01);
-	private static final Bit reserved = new Bit(0b010);
-	private static final Bit used = new Bit(0b0100);
+	static final Bit isWork = new Bit(0b0001);
+	static final Bit isShip = new Bit(0b0010);
+	static final Bit reserved = new Bit(0b0100);
+	static final Bit used = new Bit(0b1000);
+	static final Bits shipDir = new Bits(0b1111_0000);
+	
 
 	private final ROOM_FISHERY print;
 	private final Work WorkHands = new Work(false);
@@ -120,8 +125,8 @@ class Job{
 		}
 
 		@Override
-		public long jobResourceBitToFetch() {
-			return 0;
+		public RBIT jobResourceBitToFetch() {
+			return null;
 		}
 
 		@Override
@@ -165,42 +170,44 @@ class Job{
 		
 		@Override
 		public RESOURCE jobPerform(Humanoid s, RESOURCE res, int ram) {
-			
-			jobReserveCancel(null);
-			
-			int am = print.productionData.outs().get(0).work(s, ins, wv);
-			
-			if (am == 0)
-				return null;
-			
-			if (!ins.hasStorage)
-				return null;
-			
-			int x1 = ins.sx;
-			int y1 = ins.sy;
-			RoomResStorage ss = storage.get(x1, y1, ins);
-			
-			while(ss != null) {
-				if (am == 0 && ss.hasRoom())
-					return null;
-				if (ss.hasRoom()) {
-					ss.deposit();
-					am--;
-					continue;
-				}
-				
-				RoomResStorage sss = storage.get(ss.x()+1, ss.y(), ins);
-				if (sss == null)
-					sss = storage.get(x1, ss.y()+1, ins);
-				ss = sss;
-			}
-			print.productionData.outs().get(0).inc(ins, -am);
-			ins.hasStorage = false;
-			
-			
+			secretPerform(s, wv);
 			return null;
 		}
 		
+	}
+	
+	public void secretPerform(Humanoid s, double time) {
+		
+		WorkHands.jobReserveCancel(null);
+		
+		int am = print.productionData.outs().get(0).work(s, WorkHands.ins, time);
+		
+		if (am == 0)
+			return;
+		
+		if (!WorkHands.ins.hasStorage)
+			return;
+		
+		int x1 = WorkHands.ins.sx;
+		int y1 = WorkHands.ins.sy;
+		RoomResStorage ss = storage.get(x1, y1, WorkHands.ins);
+		
+		while(ss != null) {
+			if (am == 0 && ss.hasRoom())
+				return;
+			if (ss.hasRoom()) {
+				ss.deposit();
+				am--;
+				continue;
+			}
+			
+			RoomResStorage sss = storage.get(ss.x()+1, ss.y(), WorkHands.ins);
+			if (sss == null)
+				sss = storage.get(x1, ss.y()+1, WorkHands.ins);
+			ss = sss;
+		}
+		print.productionData.outs().get(0).inc(WorkHands.ins, -am);
+		WorkHands.ins.hasStorage = false;
 	}
 	
 }

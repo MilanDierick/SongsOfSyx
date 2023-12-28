@@ -1,9 +1,9 @@
 package game.tourism;
 
-import init.boostable.BOOSTABLERoom;
-import init.boostable.BOOSTABLES;
 import init.paths.PATHS;
 import init.race.Race;
+import settlement.main.SETT;
+import settlement.room.main.RoomBlueprintImp;
 import settlement.room.main.RoomBlueprintIns;
 import snake2d.util.file.Json;
 import snake2d.util.sets.*;
@@ -38,27 +38,27 @@ public class TourismRace {
 		}
 		
 		double high = -1;
-		for (BOOSTABLERoom b : BOOSTABLES.ROOMS().rooms()) {
-			if (b.room.employment() != null && race.pref().getWork(b.room.employment()) > high) {
-				high = Math.max(high, race.pref().getWork(b.room.employment()));
+		for (RoomBlueprintImp b : SETT.ROOMS().bonus.all) {
+			if (b.employment() != null && race.pref().getWork(b.employment()) > high) {
+				high = Math.max(high, race.pref().getWork(b.employment()));
 			}
 		}
 		
 		int am = 0;
-		for (BOOSTABLERoom b : BOOSTABLES.ROOMS().rooms()) {
-			if (b.room.employment() != null) {
-				double m = Math.abs(race.pref().getWork(b.room.employment())-high);
+		for (RoomBlueprintImp b : SETT.ROOMS().bonus.all) {
+			if (b.employment() != null) {
+				double m = Math.abs(race.pref().getWork(b.employment())-high);
 				if (m < 0.1)
 					am++;
 			}
 		}
 		
 		ArrayList<RoomBlueprintIns<?>> res = new ArrayList<>(am);
-		for (BOOSTABLERoom b : BOOSTABLES.ROOMS().rooms()) {
-			if (b.room.employment() != null && b.room instanceof RoomBlueprintIns) {
-				double m = Math.abs(race.pref().getWork(b.room.employment())-high);
+		for (RoomBlueprintImp b : SETT.ROOMS().bonus.all) {
+			if (b.employment() != null && b instanceof RoomBlueprintIns) {
+				double m = Math.abs(race.pref().getWork(b.employment())-high);
 				if (m < 0.1)
-					res.add((RoomBlueprintIns<?>) b.room);
+					res.add((RoomBlueprintIns<?>) b);
 			}
 		}
 		

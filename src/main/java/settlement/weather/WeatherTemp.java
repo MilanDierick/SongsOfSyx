@@ -152,7 +152,7 @@ public final class WeatherTemp extends WeatherThing{
 		if (d < 0.625) {
 			return -(0.625-d)*eMin;
 		}else {
-			return (d-0.625)/eMax;
+			return (d-0.625)*eMax;
 		}
 	}
 

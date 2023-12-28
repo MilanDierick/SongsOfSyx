@@ -1,6 +1,5 @@
 package settlement.room.service.food.tavern;
 
-import settlement.main.RenderData;
 import settlement.misc.job.*;
 import settlement.room.main.RoomInstance;
 import settlement.room.main.TmpArea;
@@ -10,6 +9,7 @@ import settlement.room.service.module.ROOM_SERVICER;
 import settlement.room.service.module.RoomServiceInstance;
 import snake2d.Renderer;
 import snake2d.util.datatypes.COORDINATE;
+import util.rendering.RenderData;
 import util.rendering.ShadowBatch;
 
 final class TavernInstance extends RoomInstance implements JOBMANAGER_HASER, ROOM_SERVICER{

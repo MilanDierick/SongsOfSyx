@@ -2,13 +2,14 @@ package settlement.entity.humanoid.ai.types.slave;
 
 import game.GAME;
 import init.D;
+import init.resources.RBIT.RBITImp;
 import settlement.entity.humanoid.HPoll;
 import settlement.entity.humanoid.HPoll.HPollData;
 import settlement.entity.humanoid.Humanoid;
 import settlement.entity.humanoid.ai.main.*;
 import settlement.entity.humanoid.ai.main.AISUB.AISubActivation;
 import settlement.stats.STATS;
-import settlement.stats.StatsEquippables.EQUIPPABLE;
+import settlement.stats.equip.Equip;
 import snake2d.util.datatypes.COORDINATE;
 
 final class PlanUprise extends AIPLAN.PLANRES{
@@ -40,10 +41,12 @@ final class PlanUprise extends AIPLAN.PLANRES{
 			
 		}
 		
+		final RBITImp bits = new RBITImp();
+		
 		@Override
 		protected AISubActivation res(Humanoid a, AIManager d) {
 			if (d.resourceCarried() != null) {
-				for (EQUIPPABLE e : STATS.EQUIP().allE()) {
+				for (Equip e : STATS.EQUIP().allE()) {
 					if (e.resource() == d.resourceCarried()) {
 						e.stat().indu().inc(a.indu(), 1);
 					}
@@ -51,14 +54,14 @@ final class PlanUprise extends AIPLAN.PLANRES{
 				d.resourceCarriedSet(null);
 			}
 
-			long res = 0;
-			for (EQUIPPABLE e : STATS.EQUIP().military_all()) {
+			bits.clear();
+			for (Equip e : STATS.EQUIP().BATTLE_ALL()) {
 				if (e.stat().indu().getD(a.indu()) < 0.3)
-					res |= e.resource().bit;
+					bits.or(e.resource());
 			}
 			
-			if (res != 0) {
-				AISubActivation s = AI.SUBS().walkTo.resource(a, d, res);
+			if (!bits.isClear()) {
+				AISubActivation s = AI.SUBS().walkTo.resource(a, d, bits);
 				if (s != null) {
 					return s;
 				}

@@ -4,7 +4,6 @@ import static settlement.main.SETT.*;
 
 import java.io.Serializable;
 
-import settlement.main.RenderData;
 import settlement.main.SETT;
 import settlement.maintenance.ROOM_DEGRADER;
 import settlement.misc.util.RESOURCE_TILE;
@@ -15,6 +14,7 @@ import settlement.room.main.util.RoomState;
 import snake2d.Renderer;
 import snake2d.util.sets.INDEXED;
 import snake2d.util.sprite.SPRITE;
+import util.rendering.RenderData;
 import util.rendering.ShadowBatch;
 
 public abstract class Room implements Serializable, INDEXED{

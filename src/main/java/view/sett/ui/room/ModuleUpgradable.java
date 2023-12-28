@@ -3,11 +3,11 @@ package view.sett.ui.room;
 import java.util.Arrays;
 
 import game.faction.FACTIONS;
+import game.faction.FResources.RTYPE;
 import init.D;
-import init.boostable.BOOSTABLES;
 import init.settings.S;
-import init.sprite.ICON;
 import init.sprite.SPRITES;
+import init.sprite.UI.Icon;
 import init.sprite.UI.UI;
 import settlement.main.SETT;
 import settlement.room.main.*;
@@ -78,32 +78,22 @@ final class ModuleUpgradable implements ModuleMaker {
 				private final int[] res = new int[16];
 				
 				@Override
-				protected void apply(RoomInstance t) {
-					Arrays.fill(res, 0);
+				protected void apply(RoomInstance ii) {
 					
-					for (int i = 0; i < blueprint.instancesSize(); i++) {
-						RoomInstance ii = blueprint.getInstance(i);
-						if (ii.upgrade() >= blueprint.upgrades().max() || ii.upgrade() >= FACTIONS.player().locks.maxUpgrade(blueprint))
-							continue;
-						boolean okk = true;
+					if (ii.upgrade() >= blueprint.upgrades().max() || !ii.blueprintI().upgrades().requires(ii.upgrade()+1).passes(FACTIONS.player()))
+						return;
+					boolean okk = true;
+					for (int ri = 0; ri < blueprint.constructor().resources(); ri++) {
+						int am = ii.resAmount(ri, ii.upgrade()+1) - ii.resAmount(ri, ii.upgrade());
+						okk &= SETT.ROOMS().STOCKPILE.tally().amountReservable(blueprint.constructor().resource(ri)) >= am;
+						
+					}
+					if (okk) {
 						for (int ri = 0; ri < blueprint.constructor().resources(); ri++) {
-							res[ri] += ii.resAmount(ri, ii.upgrade()+1) - ii.resAmount(ri, ii.upgrade());
-							okk &= SETT.ROOMS().STOCKPILE.tally().amountReservable(blueprint.constructor().resource(ri)) > res[ri];
-							
+							int am = ii.resAmount(ri, ii.upgrade()+1) - ii.resAmount(ri, ii.upgrade());
+							SETT.ROOMS().STOCKPILE.remove(blueprint.constructor().resource(ri), am, RTYPE.CONSTRUCTION);
 						}
-						if (!okk) {
-							for (int ri = 0; ri < blueprint.constructor().resources(); ri++) {
-								res[ri] -= ii.resAmount(ri, ii.upgrade()+1) - ii.resAmount(ri, ii.upgrade());
-							}
-							break;
-						}else {
-							for (int ri = 0; ri < blueprint.constructor().resources(); ri++) {
-								SETT.ROOMS().STOCKPILE.remove(blueprint.constructor().resource(ri), res[ri], FACTIONS.player().res().outConstruction);
-							}
-							ii.upgradeSet(ii.upgrade()+1);
-						}
-						
-						
+						ii.upgradeSet(ii.upgrade()+1);
 					}
 				}
 				
@@ -119,14 +109,24 @@ final class ModuleUpgradable implements ModuleMaker {
 					for (int i = 0; i < blueprint.instancesSize(); i++) {
 						RoomInstance ii = blueprint.getInstance(i);
 						
-						if (ii.upgrade() < blueprint.upgrades().max() && ii.upgrade() < FACTIONS.player().locks.maxUpgrade(blueprint)) {
+						if (ii.upgrade() < blueprint.upgrades().max() && ii.blueprintI().upgrades().requires(ii.upgrade()+1).passes(FACTIONS.player())) {
 							boolean okk = true;
 							for (int ri = 0; ri < blueprint.constructor().resources(); ri++) {
-								res[ri] += ii.resAmount(ri, ii.upgrade()+1) - ii.resAmount(ri, ii.upgrade());
-								okk &= SETT.ROOMS().STOCKPILE.tally().amountReservable(blueprint.constructor().resource(ri)) > res[ri];
+								int am = ii.resAmount(ri, ii.upgrade()+1) - ii.resAmount(ri, ii.upgrade());
+								if (SETT.ROOMS().STOCKPILE.tally().amountReservable(blueprint.constructor().resource(ri)) >= res[ri] + am) {
+									
+								}else {
+									okk = false;
+								}
+								
 							}
-							if (okk)
+							if (okk) {
 								ok++;
+								for (int ri = 0; ri < blueprint.constructor().resources(); ri++) {
+									int am = ii.resAmount(ri, ii.upgrade()+1) - ii.resAmount(ri, ii.upgrade());
+									res[ri] += am;
+								}
+							}
 						}
 						
 					}
@@ -155,7 +155,7 @@ final class ModuleUpgradable implements ModuleMaker {
 		public void appendButt(GuiSection s, GETTER<RoomInstance> get) {
 
 			if (blueprint.upgrades().max() > 0) {
-				SPRITE sp = new SPRITE.Imp(ICON.SMALL.SIZE+ICON.SMALL.SIZE, ICON.SMALL.SIZE) {
+				SPRITE sp = new SPRITE.Imp(Icon.S+Icon.S, Icon.S) {
 					
 					@Override
 					public void render(SPRITE_RENDERER r, int X1, int X2, int Y1, int Y2) {
@@ -166,7 +166,7 @@ final class ModuleUpgradable implements ModuleMaker {
 						for (int i = 0; i <= up; i++) {
 							int x = i / 2;
 							int y = i % 2;
-							SPRITES.icons().s.plus.render(r, X1+x*ICON.SMALL.SIZE/2, Y1+y*ICON.SMALL.SIZE/2);
+							SPRITES.icons().s.plus.render(r, X1+x*Icon.S/2, Y1+y*Icon.S/2);
 						}
 						COLOR.unbind();
 					}
@@ -213,19 +213,16 @@ final class ModuleUpgradable implements ModuleMaker {
 						double d = 1.0/(i.blueprintI().upgrades().max()+1.0);
 						b.add(GFORMAT.percInc(b.text(), d));
 					}else {
-						b.textLL(BOOSTABLES.INFO().name);
-						b.add(GFORMAT.percInc(b.text(), blueprint.upgrades().boost(g(get).upgrade()+1)-blueprint.upgrades().boost(g(get).upgrade())));
+						b.textLL(DicMisc.¤¤Boosts);
+						b.add(GFORMAT.f0(b.text(), blueprint.upgrades().boost(g(get).upgrade()+1)-blueprint.upgrades().boost(g(get).upgrade())));
 					}
 					
 					b.NL(8);
 					
-					if (FACTIONS.player().locks.maxUpgrade(blueprint) <= g(get).upgrade()) {
-						GText t = b.text();
-						t.add(FACTIONS.player().locks.unlockTextUpgrade(blueprint));
-						t.errorify();
-						b.add(t);
-						b.NL(8);
-					}
+					g(get).blueprintI().upgrades().requires(g(get).upgrade()+1).hover(text, FACTIONS.player());
+					
+					b.NL(8);
+					
 					for (int ri = 0; ri < blueprint.constructor().resources(); ri++) {
 						int am =  g(get).resAmount(ri, g(get).upgrade()+1)-g(get).resAmount(ri, g(get).upgrade());
 						if (am > 0) {
@@ -248,7 +245,7 @@ final class ModuleUpgradable implements ModuleMaker {
 					for (int ri = 0; ri < blueprint.constructor().resources(); ri++) {
 						int am =  g(get).resAmount(ri, g(get).upgrade()+1)-g(get).resAmount(ri, g(get).upgrade());
 						if (am > 0) {
-							SETT.ROOMS().STOCKPILE.remove(blueprint.constructor().resource(ri), am, FACTIONS.player().res().outConstruction);
+							SETT.ROOMS().STOCKPILE.remove(blueprint.constructor().resource(ri), am, RTYPE.CONSTRUCTION);
 						}
 						
 					}
@@ -259,12 +256,16 @@ final class ModuleUpgradable implements ModuleMaker {
 				@Override
 				protected void renAction() {
 					activeSet(true);
-					if (g(get).upgrade() == blueprint.upgrades().max())
+					
+					if (g(get).upgrade() >= blueprint.upgrades().max()) {
 						activeSet(false);
-					if (FACTIONS.player().locks.maxUpgrade(blueprint) <= g(get).upgrade())
-						activeSet(false);
+						return;
+					}
 					if (S.get().developer)
 						return;
+					else if (!g(get).blueprintI().upgrades().requires(g(get).upgrade()+1).passes(FACTIONS.player()))
+						activeSet(false);
+					
 					
 					for (int ri = 0; ri < blueprint.constructor().resources(); ri++) {
 						int am =  g(get).resAmount(ri, g(get).upgrade()+1)-g(get).resAmount(ri, g(get).upgrade());

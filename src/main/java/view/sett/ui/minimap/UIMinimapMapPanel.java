@@ -5,6 +5,7 @@ import static settlement.main.SETT.*;
 import game.time.TIME;
 import init.C;
 import settlement.entity.ENTITY;
+import settlement.entity.humanoid.Humanoid;
 import settlement.main.SETT;
 import snake2d.CORE;
 import snake2d.SPRITE_RENDERER;
@@ -15,9 +16,9 @@ import snake2d.util.datatypes.Rec;
 import snake2d.util.gui.clickable.CLICKABLE.ClickableAbs;
 import snake2d.util.light.AmbientLight;
 import snake2d.util.misc.CLAMP;
+import util.colors.GCOLOR;
 import util.gui.panel.GFrame;
 import view.main.VIEW;
-import view.sett.ui.minimap.ViewMiniMapUI.EntFunkMini;
 import view.subview.GameWindow;
 
 final class UIMinimapMapPanel extends ClickableAbs{
@@ -25,10 +26,9 @@ final class UIMinimapMapPanel extends ClickableAbs{
 	private final int M = GFrame.MARGIN;
 	private final int HEIGHT = 128;
 	final static int WIDTH = 256;
-	private final Rec tiles = new Rec(WIDTH, HEIGHT);
+	private final Rec tiles = new Rec(WIDTH-6, HEIGHT-6);
 
-	private final Rec ents = new Rec(WIDTH, HEIGHT);
-	private final EntFunkMini funk = new EntFunkMini();
+	private final Rec ents = new Rec(WIDTH-6, HEIGHT-6);
 	private final GameWindow w;
 	private final Coo lastClick = new Coo();
 	
@@ -43,7 +43,7 @@ final class UIMinimapMapPanel extends ClickableAbs{
 	@Override
 	protected void render(SPRITE_RENDERER r, float ds, boolean isActive, boolean isSelected, boolean isHovered) {
 
-		GFrame.render(r, ds, body);
+		
 		
 //		if (isHovered && MButt.LEFT.isDown() && lastClick.set(VIEW.mouse())) {
 //			clickA();
@@ -80,7 +80,12 @@ final class UIMinimapMapPanel extends ClickableAbs{
 				
 				ENTITY e = ENTITIES().getAtTileSingle(tx, ty);
 				if (e != null) {
-					funk.get(e).bind();
+					COLOR c = COLOR.WHITE85;
+					if (e instanceof Humanoid) {
+						Humanoid h = (Humanoid) e;
+						c = h.indu().hType().hostile ? ViewMiniMapUI.enemy : ViewMiniMapUI.good;
+					}
+					c.bind();
 					int x = tx -ents.x1() + body().x1() + M;
 					int y = ty -ents.y1() + body().y1() + M;
 					CORE.renderer().renderParticle(x, y);
@@ -124,7 +129,7 @@ final class UIMinimapMapPanel extends ClickableAbs{
 		
 
 		TIME.light().applyGuiLight(ds, C.DIM());
-
+		GCOLOR.UI().borderH(r, body(), 0);
 	}
 
 	@Override

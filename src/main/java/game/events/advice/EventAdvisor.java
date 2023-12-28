@@ -18,9 +18,9 @@ import snake2d.util.gui.GuiSection;
 import snake2d.util.gui.renderable.RENDEROBJ;
 import snake2d.util.sets.LinkedList;
 import util.info.INFO;
-import view.main.MessageSection;
 import view.main.VIEW;
 import view.sett.UISettMap;
+import view.ui.message.MessageSection;
 
 public final class EventAdvisor extends EventResource{
 
@@ -78,7 +78,7 @@ public final class EventAdvisor extends EventResource{
 			
 			@Override
 			public boolean shouldsend() {
-				if (STANDINGS.CITIZEN().main.getD(null) < EventCitizen.breakPoint)
+				if (STANDINGS.CITIZEN().loyalty.getD(null) < EventCitizen.breakPoint && STATS.POP().POP.data().get(null) > 15)
 					return true;
 				return false;
 			}
@@ -197,6 +197,8 @@ public final class EventAdvisor extends EventResource{
 				@Override
 				public void render(SPRITE_RENDERER r, float ds) {
 					highlight(section, r, o);
+					if (!VIEW.s().isActive())
+						VIEW.s().activate();
 				}
 			});
 		}

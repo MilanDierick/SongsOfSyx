@@ -2,7 +2,8 @@ package settlement.entity.humanoid.ai.work;
 
 import static settlement.main.SETT.*;
 
-import init.boostable.BOOSTABLE;
+import game.boosting.Boostable;
+import init.resources.RBIT.RBITImp;
 import init.resources.RESOURCE;
 import init.resources.RESOURCES;
 import settlement.entity.humanoid.Humanoid;
@@ -25,6 +26,8 @@ final class WorkExporter extends PlanBlueprint {
 		super(module, ROOMS().EXPORT, map);
 	}
 
+	private final RBITImp bit = new RBITImp();
+	
 	@Override
 	public AISubActivation init(Humanoid a, AIManager d) {
 		
@@ -38,11 +41,11 @@ final class WorkExporter extends PlanBlueprint {
 		
 		ExportWork inter = i.work();
 		
-		long bit = 0;
+		bit.clear();
 		if (inter.reservable(i.resource()) > 0)
-			bit |= i.resource().bit;
+			bit.or(i.resource());
 		
-		if (bit == 0) {
+		if (bit.isClear()) {
 			i.workFail();
 			return null;
 		}
@@ -63,7 +66,7 @@ final class WorkExporter extends PlanBlueprint {
 	}
 	
 	static int carryCap(RoomInstance i, Humanoid a, AIManager d) {
-		BOOSTABLE b = SETT.ROOMS().STOCKPILE.bonus;
+		Boostable b = SETT.ROOMS().STOCKPILE.bonus();
 		double am = carryInit*(1+b.get(a.indu()));
 		return CLAMP.i((int)(Math.ceil(am)), 1, 48);
 	}
@@ -122,6 +125,7 @@ final class WorkExporter extends PlanBlueprint {
 				return null;
 			}
 			
+			
 			return s;
 		}
 		
@@ -133,10 +137,11 @@ final class WorkExporter extends PlanBlueprint {
 			RESOURCE r = ress(d);
 			COORDINATE c = d.planTile;
 			
-			int am = CLAMP.i(d.resourceA(), 0, inter.reserved(r, c));
+			int am = CLAMP.i(d.planByte2, 0, inter.reserved(r, c));
 			inter.finish(r, c, am);
 			d.resourceAInc(-am);
 			d.planByte2 -= am;
+			
 			inter.reserve(ress(d), d.planTile, -CLAMP.i(d.planByte2, 0, inter.reserved(ress(d), d.planTile)));
 			if (d.resourceA() > 0) {
 				return set(a, d);

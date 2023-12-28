@@ -5,19 +5,19 @@ import init.D;
 import init.sprite.SPRITES;
 import init.sprite.UI.UI;
 import settlement.main.SETT;
-import snake2d.util.datatypes.DIR;
+import snake2d.SPRITE_RENDERER;
 import snake2d.util.gui.GuiSection;
 import snake2d.util.misc.ACTION;
 import snake2d.util.sprite.text.Str;
 import util.gui.misc.GButt;
-import util.gui.panel.GPanelS;
+import util.gui.panel.GPanel;
 import view.main.VIEW;
 
 final class SFrame {
 
 	private int width = C.SG*470;
 	private final State state;
-	private final GPanelS panel = new GPanelS();
+	private final GPanel panel = new GPanel();
 	private GuiSection section = new GuiSection();
 	private final Str title = new Str(50);
 	private final GuiSection bottomButtons = new GuiSection();
@@ -33,13 +33,21 @@ final class SFrame {
 	}
 	
 	{
-		bottomButtons.add(UI.PANEL().panelL.get(DIR.E), 0, 0);
-		bottomButtons.addRight(0, UI.PANEL().panelL.get(DIR.E, DIR.W));
-		bottomButtons.addRight(0, UI.PANEL().panelL.get(DIR.E, DIR.W));
-		bottomButtons.addRight(0, UI.PANEL().panelL.get(DIR.E, DIR.W));
-		bottomButtons.addRight(0, UI.PANEL().panelL.get(DIR.W));
+
 		
-		GuiSection s = new GuiSection();
+//		bottomButtons.add(UI.PANEL().panelL.get(DIR.E), 0, 0);
+//		bottomButtons.addRight(0, UI.PANEL().panelL.get(DIR.E, DIR.W));
+//		bottomButtons.addRight(0, UI.PANEL().panelL.get(DIR.E, DIR.W));
+//		bottomButtons.addRight(0, UI.PANEL().panelL.get(DIR.E, DIR.W));
+//		bottomButtons.addRight(0, UI.PANEL().panelL.get(DIR.W));
+		
+		GuiSection s = new GuiSection() {
+			@Override
+			public void render(SPRITE_RENDERER r, float ds) {
+				UI.PANEL().butt.render(r, body(), 0);
+				super.render(r, ds);
+			};
+		};
 		
 		s.addRightC(0, new GButt.Panel(SPRITES.icons().m.trash, D.g("removeRoom", "remove room")) {
 			
@@ -106,9 +114,7 @@ final class SFrame {
 			};
 			
 		});
-		
-		s.body().centerIn(bottomButtons);
-		
+
 		bottomButtons.add(s);
 	}
 	
@@ -125,7 +131,6 @@ final class SFrame {
 			s.pad((width-s.body().width())/2, 0);
 		panel.inner().set(s);
 		panel.setTitle(title);
-		panel.titleCenter();
 		section.add(panel);
 		s.body().centerIn(panel.inner());
 		section.add(s);

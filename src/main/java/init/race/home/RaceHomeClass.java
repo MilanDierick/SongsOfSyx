@@ -7,7 +7,7 @@ import init.resources.*;
 import init.sprite.game.SheetType;
 import settlement.main.SETT;
 import settlement.room.home.HOME;
-import settlement.tilemap.Floors.Floor;
+import settlement.tilemap.floor.Floors.Floor;
 import snake2d.util.file.Json;
 import snake2d.util.sets.ArrayList;
 import snake2d.util.sets.LIST;
@@ -118,7 +118,7 @@ public final class RaceHomeClass {
 			for (int i = 0; i < jsons.length; i++) {
 				Json j = jsons[i];
 				RaceHomeSheet.addResource(ams, j, i, fneeded);
-				floors[i] = SETT.FLOOR().get(j);
+				floors[i] = SETT.FLOOR().map.get(j);
 			}
 		}else {
 			floors = new Floor[0];

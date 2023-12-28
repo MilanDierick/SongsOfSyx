@@ -137,12 +137,17 @@ public class SaveFile implements Comparable<SaveFile>{
 	
 	@Override
 	public int compareTo(SaveFile arg0) {
-		if (problem() == null && arg0.problem() != null)
-			return -1;
-		if (problem() != null && arg0.problem() == null)
+//		if (VERSION.versionMajor(version) < VERSION.versionMajor(arg0.version)) {
+//			return 1;
+//		}
+//		if (VERSION.versionMajor(version) > VERSION.versionMajor(arg0.version)) {
+//			return -1;
+//		}
+		if (t < 0 && arg0.t >= 0)
 			return 1;
-		if (problem() != null && arg0.problem() != null)
-			return name.compareTo(arg0.name);
+		if (t >= 0 && arg0.t < 0)
+			return -1;
+		
 		long ti = arg0.t - t;
 		if (ti < 0)
 			return -1;

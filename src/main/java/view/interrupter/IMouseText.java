@@ -8,7 +8,7 @@ import snake2d.util.datatypes.COORDINATE;
 import snake2d.util.gui.renderable.RENDEROBJ;
 import util.gui.misc.GBox;
 import util.gui.misc.GTextR;
-import util.gui.panel.GPanelS;
+import util.gui.panel.GPanel;
 import view.keyboard.KEYS;
 import view.main.VIEW;
 
@@ -23,7 +23,7 @@ public class IMouseText extends Interrupter {
 
 	private final GTextR text = new GTextR(UI.FONT().M, 200);
 	private RENDEROBJ ren = text;
-	private final GPanelS box = new GPanelS();
+	private final GPanel box = new GPanel();
 	private final InterManager manager;
 
 	public IMouseText(InterManager manager) {

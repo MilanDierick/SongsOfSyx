@@ -86,7 +86,7 @@ public interface HOVERABLE extends RENDEROBJ{
 		}
 
 		@Override
-		public Rec body() {
+		public RecFacade body() {
 			return body;
 		}
 

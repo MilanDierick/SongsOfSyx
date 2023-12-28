@@ -2,15 +2,15 @@ package world.map.buildings;
 
 import java.io.IOException;
 
-import settlement.main.RenderData;
 import snake2d.SPRITE_RENDERER;
 import snake2d.util.file.FileGetter;
 import snake2d.util.file.FilePutter;
 import snake2d.util.map.MAP_INTE;
 import snake2d.util.map.MAP_OBJECTE;
 import snake2d.util.sets.LISTE;
+import util.rendering.RenderData;
 import util.rendering.ShadowBatch;
-import world.World;
+import world.WORLD;
 
 public abstract class WorldBuilding {
 
@@ -64,11 +64,11 @@ public abstract class WorldBuilding {
 	}
 	
 	protected final MAP_INTE data() {
-		return World.BUILDINGS().dataM;
+		return WORLD.BUILDINGS().dataM;
 	}
 	
 	protected final MAP_OBJECTE<WorldBuilding> map() {
-		return World.BUILDINGS().map;
+		return WORLD.BUILDINGS().map;
 	}
 	
 	protected abstract void unplace(int tx, int ty);
@@ -124,5 +124,9 @@ public abstract class WorldBuilding {
 	protected abstract void load(FileGetter file) throws IOException ;
 	
 	protected abstract void clear();
+
+	protected void initBeforePlay() {
+		
+	}
 	
 }

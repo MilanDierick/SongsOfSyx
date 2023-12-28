@@ -1,5 +1,6 @@
 package settlement.room.health.physician;
 
+import init.resources.RBIT;
 import init.resources.RESOURCE;
 import init.sound.SoundSettlement.Sound;
 import settlement.entity.humanoid.Humanoid;
@@ -20,33 +21,33 @@ final class Service {
 	private final Bit s_reservable = new Bit(coo, 				0b0000_0000_0010);
 	private final Bit s_reserved = new Bit(coo, 				0b0000_0000_0100);
 	
-	
+	private final ROOM_PHYSICIAN b;
 	private Instance ins;
-	private static final Service self = new Service();
 	
-	private static ROOM_PHYSICIAN b() {
-		return SETT.ROOMS().PHYSICIAN;
+	Service(ROOM_PHYSICIAN b){
+		this.b = b;
 	}
 	
-	static FSERVICE getS(int tx, int ty) {
-		self.ins = b().get(tx, ty);
-		if (self.ins != null && SETT.ROOMS().fData.tileData.get(tx, ty) == Constructor.BIT_SERVICE) {
-			self.coo.set(tx, ty);
-			return self.service;
+	
+	FSERVICE getS(int tx, int ty) {
+		ins = b.get(tx, ty);
+		if (ins != null && SETT.ROOMS().fData.tileData.get(tx, ty) == Constructor.BIT_SERVICE) {
+			coo.set(tx, ty);
+			return service;
 		}
 		return null;
 	}
 	
-	static void dispose(Instance ins, int tx, int ty) {
+	void dispose(Instance ins, int tx, int ty) {
 		if (getS(tx, ty) != null)
-			self.s_worked.set(ins, 0);
+			s_worked.set(ins, 0);
 	}
 	
-	static SETT_JOB getJ(int tx, int ty) {
-		self.ins = b().get(tx, ty);
-		if (self.ins != null && SETT.ROOMS().fData.tileData.get(tx, ty) != 0) {
-			self.coo.set(tx, ty);
-			return self.jo;
+	SETT_JOB getJ(int tx, int ty) {
+		ins = b.get(tx, ty);
+		if (ins != null && SETT.ROOMS().fData.tileData.get(tx, ty) != 0) {
+			coo.set(tx, ty);
+			return jo;
 		}
 		return null;
 	}
@@ -119,8 +120,8 @@ final class Service {
 		}
 		
 		@Override
-		public long jobResourceBitToFetch() {
-			return 0;
+		public RBIT jobResourceBitToFetch() {
+			return null;
 		}
 		
 		@Override
@@ -158,7 +159,7 @@ final class Service {
 		
 		@Override
 		public CharSequence jobName() {
-			return b().employment().verb;
+			return b.employment().verb;
 		}
 		
 		@Override

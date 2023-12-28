@@ -159,8 +159,12 @@ public final class Errors {
 		
 		@Override
 		public synchronized void write(int b) throws IOException {
-			data.append((char) b);
+			
 			out.write(b);
+			if (data.length() > 25000)
+				data.setLength(0);
+			data.append((char) b);
+			
 		}
 		
 	}

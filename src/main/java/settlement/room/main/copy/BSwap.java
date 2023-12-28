@@ -2,8 +2,8 @@ package settlement.room.main.copy;
 
 import game.faction.FACTIONS;
 import init.D;
-import init.sprite.ICON;
 import init.sprite.SPRITES;
+import init.sprite.UI.Icon;
 import settlement.room.main.*;
 import snake2d.SPRITE_RENDERER;
 import snake2d.util.gui.GUI_BOX;
@@ -11,7 +11,6 @@ import snake2d.util.gui.GuiSection;
 import snake2d.util.gui.clickable.CLICKABLE;
 import snake2d.util.sets.*;
 import snake2d.util.sprite.SPRITE;
-import util.gui.misc.GBox;
 import util.gui.misc.GButt;
 import view.main.VIEW;
 
@@ -28,7 +27,7 @@ final class BSwap {
 	}
 	
 	BSwap(ROOMS m){
-		SPRITE sp = new SPRITE.Imp(ICON.MEDIUM.SIZE) {
+		SPRITE sp = new SPRITE.Imp(Icon.M) {
 			
 			@Override
 			public void render(SPRITE_RENDERER r, int X1, int X2, int Y1, int Y2) {
@@ -105,7 +104,7 @@ final class BSwap {
 				@Override
 				protected void renAction() {
 					selectedSet(current == p);
-					activeSet(FACTIONS.player().locks.unlockText(p) == null);
+					activeSet(p.reqs.passes(FACTIONS.player()));
 				}
 				
 				@Override
@@ -114,15 +113,14 @@ final class BSwap {
 					text.text(p.info.desc);
 					text.NL();
 					
-					if (FACTIONS.player().locks.unlockText(p) != null) {
-						GBox b = (GBox) text;
-						b.error(FACTIONS.player().locks.unlockText(p));
+					if (!p.reqs.passes(FACTIONS.player())) {
+						p.reqs.hover(text, FACTIONS.player());
 					}
 				}
 				
 				@Override
 				protected void clickA() {
-					if (FACTIONS.player().locks.unlockText(p) == null)
+					if (p.reqs.passes(FACTIONS.player()))
 						current = p;
 					VIEW.inters().popup.close();
 				}

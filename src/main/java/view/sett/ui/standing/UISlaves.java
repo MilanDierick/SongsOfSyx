@@ -2,8 +2,8 @@ package view.sett.ui.standing;
 
 import game.time.TIME;
 import init.race.Race;
-import init.sprite.ICON;
 import init.sprite.SPRITES;
+import init.sprite.UI.Icon;
 import settlement.entity.humanoid.HCLASS;
 import settlement.stats.STATS;
 import settlement.stats.standing.STANDINGS;
@@ -104,7 +104,7 @@ public final class UISlaves extends ISidePanel {
 					GFORMAT.perc(text, h.submission.getD());
 				}
 			});
-			ss.addRightC(32, new RENDEROBJ.RenderImp(ICON.MEDIUM.SIZE) {
+			ss.addRightC(32, new RENDEROBJ.RenderImp(Icon.M) {
 
 				@Override
 				public void render(SPRITE_RENDERER r, float ds) {
@@ -118,7 +118,7 @@ public final class UISlaves extends ISidePanel {
 						a = SPRITES.icons().m.arrow_left;
 					}
 					for (int i = 0; i < am; i++) {
-						a.render(r, body().x1() + i * ICON.MEDIUM.SIZE, body().y1());
+						a.render(r, body().x1() + i * Icon.M, body().y1());
 					}
 				}
 			});

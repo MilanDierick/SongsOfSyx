@@ -4,16 +4,15 @@ import static settlement.main.SETT.*;
 
 import game.time.TIME;
 import init.D;
+import init.need.NEEDS;
 import settlement.entity.humanoid.*;
 import settlement.entity.humanoid.ai.main.*;
 import settlement.entity.humanoid.ai.main.AIPLAN.AiPlanActivation;
 import settlement.entity.humanoid.ai.main.AISUB.AISubActivation;
-import settlement.entity.humanoid.ai.needs.AIModule_Hunger;
 import settlement.main.SETT;
 import settlement.room.health.asylum.ROOM_ASYLUM;
 import settlement.room.main.ROOMA;
-import settlement.stats.CAUSE_ARRIVE;
-import settlement.stats.STATS;
+import settlement.stats.util.CAUSE_ARRIVE;
 import snake2d.util.datatypes.COORDINATE;
 import snake2d.util.datatypes.DIR;
 import snake2d.util.rnd.RND;
@@ -30,26 +29,12 @@ public final class AIModule_Insane extends AIModule{
 	}
 	
 	@Override
-	protected AiPlanActivation getPlan(Humanoid a, AIManager d) {
+	public AiPlanActivation getPlan(Humanoid a, AIManager d) {
 
 		AiPlanActivation p = asylum.activate(a, d);
 		
 		if (p != null) {
 			return p;
-		}
-		
-		if (STATS.NEEDS().HUNGER.getPrio(a.indu()) > 0) {
-			p = AIModule_Hunger.getFood(a, d);
-			if (p != null) {
-				return p;
-			}
-		}
-		
-		if (AI.modules().exposure.getPriority(a, d) > 0) {
-			p = AI.modules().exposure.get(a, d);
-			if (p != null) {
-				return p;
-			}
 		}
 		
 		return crazy.activate(a, d);
@@ -87,7 +72,7 @@ public final class AIModule_Insane extends AIModule{
 
 	@Override
 	public int getPriority(Humanoid a, AIManager d) {
-		return 10;
+		return 8;
 	}
 	
 	private final AIPLAN asylum = new AIPLAN.PLANRES() {
@@ -133,9 +118,9 @@ public final class AIModule_Insane extends AIModule{
 					return walkToDoor.set(a, d);
 				}
 				
-				if (STATS.NEEDS().HUNGER.getPrio(a.indu()) > 0) {
+				if (NEEDS.TYPES().HUNGER.stat().getPrio(a.indu()) > 0) {
 					if (A.eatFood(AI.modules().coo(d))) {
-						STATS.NEEDS().HUNGER.fix(a.indu());
+						NEEDS.TYPES().HUNGER.stat().fix(a.indu());
 					}
 				}
 				

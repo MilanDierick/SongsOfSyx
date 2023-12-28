@@ -159,23 +159,18 @@ final class UIRoomTable extends ISidePanel {
 				m.appendTableFilters(filters, sorts, apps);
 			}
 
-			GuiSection filter = new GuiSection();
-			filter.add(UI.PANEL().panelM.get(DIR.E, DIR.S), 0, 0);
-			for (int i = 0; i <= 7; i++)
-				filter.addRightC(0, UI.PANEL().panelM.get(DIR.E, DIR.W, DIR.S));
-			filter.addRightC(0, UI.PANEL().panelM.get(DIR.W, DIR.S));
+			GuiSection filter = new GuiSection() {
+				
+				@Override
+				public void render(SPRITE_RENDERER r, float ds) {
+					UI.PANEL().butt.render(r, body(), 0);
+					super.render(r, ds);
+				}
+				
+			};
 			
-			filter.add(UI.PANEL().panelM.get(DIR.E, DIR.N, DIR.S), 0, filter.getLastY2());
-			for (int i = 0; i <= 7; i++)
-				filter.addRightC(0, UI.PANEL().panelM.get(DIR.S, DIR.E, DIR.W, DIR.N));
-			filter.addRightC(0, UI.PANEL().panelM.get(DIR.W, DIR.N, DIR.S));
-			
-			filter.add(UI.PANEL().panelM.get(DIR.E, DIR.N), 0, filter.getLastY2());
-			for (int i = 0; i <= 7; i++)
-				filter.addRightC(0, UI.PANEL().panelM.get(DIR.E, DIR.W, DIR.N));
-			filter.addRightC(0, UI.PANEL().panelM.get(DIR.W, DIR.N));
 
-			GDropDown<CLICKABLE> d = new GDropDown<CLICKABLE>(DicMisc.¤¤Sort);
+			GDropDown<CLICKABLE> d = new GDropDown<CLICKABLE>(DicMisc.¤¤Sort, 100);
 			for (GTSort<RoomInstance> s : sorts) {
 				SPRITE sp = (SPRITE)new Text(UI.FONT().S, s.name).setMaxWidth(120).setMultipleLines(false);
 				CLICKABLE c = new GButt.Glow(sp) {
@@ -199,7 +194,7 @@ final class UIRoomTable extends ISidePanel {
 			d.body.moveX1(filter.body().x1() + 26);
 			filter.add(d);
 
-			d = new GDropDown<CLICKABLE>(DicMisc.¤¤Filter);
+			d = new GDropDown<CLICKABLE>(DicMisc.¤¤Filter, 100);
 			for (GTFilter<RoomInstance> f : filters) {
 				SPRITE sp = (SPRITE)new Text(UI.FONT().S, f.name).setMaxWidth(120).setMultipleLines(false);
 				CLICKABLE c = new GButt.Glow(sp) {
@@ -221,7 +216,7 @@ final class UIRoomTable extends ISidePanel {
 			filter.addDown(2, d);
 
 			if (apps.size() > 0) {
-				final GDropDown<CLICKABLE> bulk = new GDropDown<CLICKABLE>(¤¤Bulk);
+				final GDropDown<CLICKABLE> bulk = new GDropDown<CLICKABLE>(¤¤Bulk, 100);
 				for (UIRoomBulkApplier a : apps) {
 					SPRITE sp = (SPRITE)new Text(UI.FONT().S, a.name).setMaxWidth(120).setMultipleLines(false);
 					CLICKABLE c = new GButt.Glow(sp) {
@@ -268,7 +263,7 @@ final class UIRoomTable extends ISidePanel {
 			filter.addRelBody(6, DIR.S, r);
 
 			filter.body().centerX(section);
-			filter.body().moveY1(y1 + C.SG * 4);
+			filter.body().moveY1(y1 + C.SG * 8);
 			section.add(filter);
 			y1 = filter.body().y2();
 		}
@@ -314,7 +309,7 @@ final class UIRoomTable extends ISidePanel {
 
 		RENDEROBJ o = makeRow(gui, new GETTER_IMP<Integer>(), appliers);
 		
-		builder.column(null, o.body().width(), new GRowBuilder() {
+		builder.column(o.body().width(), new GRowBuilder() {
 			@Override
 			public RENDEROBJ build(GETTER<Integer> ier) {
 				return makeRow(gui, ier, appliers);

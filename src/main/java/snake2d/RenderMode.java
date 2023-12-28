@@ -8,7 +8,7 @@ import snake2d.util.sprite.TextureCoords;
 
 abstract class RenderMode extends CORE_RESOURCE{
 
-	public abstract void newLayer(boolean keepLights, int pointSize);
+	public abstract int newLayer(boolean keepLights, int pointSize);
 	public abstract int newFinalLightLayer(int pointSize);
 	public abstract void clear(int pointSize);
 	
@@ -60,4 +60,7 @@ abstract class RenderMode extends CORE_RESOURCE{
 	public abstract void setPointLight(LIGHT_POINT l, byte depth);
 	
 	public abstract void renderDisplace(float tx1, float ty1, float dx1, float dy1, int w, int h, double scale, int x1, int x2, int y1, int y2, COLOR color, OPACITY opacity);
+	
+	public abstract void setMaxDepth(int x1, int x2, int y1, int y2, TextureCoords stencil, int depth);
+	
 }

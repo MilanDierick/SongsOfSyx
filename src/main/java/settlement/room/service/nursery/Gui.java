@@ -8,20 +8,22 @@ import settlement.room.industry.module.IndustryUtil;
 import snake2d.util.datatypes.COORDINATE;
 import snake2d.util.datatypes.DIR;
 import snake2d.util.gui.GuiSection;
-import snake2d.util.gui.clickable.CLICKABLE;
-import util.data.DOUBLE;
+import snake2d.util.misc.CLAMP;
 import util.data.GETTER;
 import util.data.INT.INTE;
 import util.dic.DicMisc;
 import util.dic.DicRes;
 import util.gui.misc.*;
-import util.gui.slider.GGaugeMutable;
+import util.gui.slider.GSliderInt;
 import util.info.GFORMAT;
 import view.sett.ui.room.UIRoomModule.UIRoomModuleImp;
 
 class Gui extends UIRoomModuleImp<NurseryInstance, ROOM_NURSERY> {
 
 	private static CharSequence ¤¤next = "Days until next child: ";
+	private static CharSequence ¤¤capabilitity = "Reproduction Capability";
+	private static CharSequence ¤¤capabilitityD = "Reproduction Capability is determined of your current adult population.";
+
 	
 	static {
 		D.ts(Gui.class);
@@ -40,21 +42,31 @@ class Gui extends UIRoomModuleImp<NurseryInstance, ROOM_NURSERY> {
 	protected void appendPanel(GuiSection section, GGrid grid, GETTER<NurseryInstance> getter, int x1, int y1) {
 		
 	
-		grid.add(new GStat() {
+		GuiSection s = new GuiSection();
+		int M = 280;
+		
+		s.addDown(4, new GStat() {
+			@Override
+			public void update(GText text) {
+				GFORMAT.i(text, blueprint.rmax());
+			}
+		}.hh(¤¤capabilitity, ¤¤capabilitityD, M));
+		
+		s.addDown(4, new GStat() {
 			@Override
 			public void update(GText text) {
 				GFORMAT.i(text, getter.get().getWork().size());
 			}
-		}.hh(DicRes.¤¤Capacity));
+		}.hh(DicRes.¤¤Capacity, M));
 		
-		grid.add(new GStat() {
+		s.addDown(4, new GStat() {
 			@Override
 			public void update(GText text) {
 				GFORMAT.i(text, getter.get().kidspotsUsed);
 			}
-		}.hh(HTYPE.CHILD.names));
+		}.hh(HTYPE.CHILD.names, M));
 		
-		grid.add(new GStat() {
+		s.addDown(4, new GStat() {
 			@Override
 			public void update(GText text) {
 				int am = 0;
@@ -65,10 +77,10 @@ class Gui extends UIRoomModuleImp<NurseryInstance, ROOM_NURSERY> {
 				}
 				GFORMAT.i(text,am);
 			}
-		}.hh(DicMisc.¤¤Babies));
+		}.hh(DicMisc.¤¤Babies, M));
 		grid.NL();
 		
-		grid.add(new GStat() {
+		s.addDown(4, new GStat() {
 			
 			@Override
 			public void update(GText text) {
@@ -82,46 +94,52 @@ class Gui extends UIRoomModuleImp<NurseryInstance, ROOM_NURSERY> {
 				}
 				GFORMAT.i(text, (int)Math.ceil((blueprint.BABY_DAYS-min)/IndustryUtil.roomBonus(getter.get(), blueprint.productionData)));
 			}
-		}.hh(¤¤next));
+		}.hh(¤¤next, M));
+		
+		section.addRelBody(8, DIR.S, s);
 		
 	}
 	
 	@Override
 	protected void appendMain(GGrid icons, GGrid r, GuiSection sExtra) {
-		r.add(new GStat() {
+		
+		GuiSection s = new GuiSection();
+		int M = 280;
+		
+		s.addDown(4, new GStat() {
+			@Override
+			public void update(GText text) {
+				GFORMAT.i(text, blueprint.rmax());
+			}
+		}.hh(¤¤capabilitity, ¤¤capabilitityD, M));
+		
+		s.addDown(4, new GStat() {
 			@Override
 			public void update(GText text) {
 				GFORMAT.i(text, blueprint.kidSpotsTotal);
 			}
-		}.hh(DicRes.¤¤Capacity));
+		}.hh(DicRes.¤¤Capacity, M));
 		
-		r.add(new GStat() {
+		s.addDown(4, new GStat() {
 			@Override
 			public void update(GText text) {
 				GFORMAT.i(text, blueprint.kidSpotsUsed);
 			}
-		}.hh(HTYPE.CHILD.names));
+		}.hh(HTYPE.CHILD.names, M));
 		
-		r.add(new GStat() {
+		s.addDown(4, new GStat() {
 			@Override
 			public void update(GText text) {
 				GFORMAT.i(text, blueprint.babies);
 			}
-		}.hh(DicMisc.¤¤Babies));
-		
-		r.add(new GStat() {
+		}.hh(DicMisc.¤¤Babies, M));
+
+		s.addDown(4, new GStat() {
 			@Override
 			public void update(GText text) {
-				GFORMAT.i(text, blueprint.BABY_DAYS);
+				GFORMAT.f(text, (blueprint.BABY_DAYS + blueprint.race.physics.adultAt)/TIME.years().bitConversion(TIME.years()));
 			}
-		}.hh(DicMisc.¤¤IncubationDays));
-		
-		r.add(new GStat() {
-			@Override
-			public void update(GText text) {
-				GFORMAT.f(text, blueprint.race.physics.adultAt/TIME.years().bitConversion(TIME.years()));
-			}
-		}.hh(DicMisc.¤¤AdultAge));
+		}.hh(DicMisc.¤¤AdultAge, M));
 		
 		INTE in = new INTE() {
 			
@@ -132,29 +150,28 @@ class Gui extends UIRoomModuleImp<NurseryInstance, ROOM_NURSERY> {
 			
 			@Override
 			public int max() {
-				return ENTETIES.MAX/25;
+				return ENTETIES.MAX;
 			}
 			
 			@Override
 			public int get() {
-				return blueprint.limit/25;
+				return CLAMP.i(blueprint.limit, min(), max());
 			}
 			
 			@Override
 			public void set(int t) {
-				blueprint.limit = t*25;
+				CLAMP.i(t, min(), max());
+				blueprint.limit = t;
 			}
 		};
 		
 		r.NL();
 		
-		r.add(new CLICKABLE.Pair(new GHeader(DicMisc.¤¤limit), new GGaugeMutable(in, 200) {
-			@Override
-			protected int setInfo(DOUBLE d, GText text) {
-				GFORMAT.iBig(text, blueprint.limit);
-				return 64;
-			}
-		}, DIR.S, 4));
+		r.section.addRelBody(0, DIR.S, s);
+		
+		r.section.addRelBody(8, DIR.S, new GHeader(DicMisc.¤¤limit));
+		
+		r.section.addRelBody(2, DIR.S, new GSliderInt(in, 200, true));
 		
 	}
 	

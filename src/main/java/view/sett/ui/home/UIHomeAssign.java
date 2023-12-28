@@ -5,19 +5,26 @@ import init.D;
 import init.race.RACES;
 import init.race.Race;
 import init.sprite.SPRITES;
+import init.sprite.UI.UI;
 import settlement.entity.humanoid.HCLASS;
-import settlement.main.*;
-import settlement.main.RenderData.RenderIterator;
-import settlement.room.home.HOME_TYPE;
+import settlement.main.ON_TOP_RENDERABLE;
+import settlement.main.SETT;
+import settlement.room.home.HOMET;
+import settlement.room.home.HomeSettings.HomeSetting;
+import settlement.room.home.HomeSettings.HomeSettingTmp;
 import settlement.room.home.house.HomeHouse;
 import snake2d.Renderer;
 import snake2d.util.datatypes.AREA;
-import snake2d.util.gui.GUI_BOX;
+import snake2d.util.datatypes.DIR;
 import snake2d.util.gui.GuiSection;
 import snake2d.util.gui.clickable.CLICKABLE;
+import snake2d.util.misc.CLAMP;
 import snake2d.util.sets.ArrayList;
 import snake2d.util.sets.LIST;
+import snake2d.util.sprite.SPRITE;
 import util.gui.misc.GButt;
+import util.rendering.RenderData;
+import util.rendering.RenderData.RenderIterator;
 import util.rendering.ShadowBatch;
 import view.tool.PLACER_TYPE;
 import view.tool.PlacableMulti;
@@ -27,43 +34,95 @@ final class UIHomeAssign extends PlacableMulti{
 	private static CharSequence ¤¤name = "assign";
 	private static CharSequence ¤¤desc = "lets you assign homes to specific criteria.";
 	private static CharSequence ¤¤prob = "Must be placed on a house.";
+	
+	private static CharSequence ¤¤everyone = "Set permission for everyone";
+	private static CharSequence ¤¤none = "Set permission for none";
+	private static CharSequence ¤¤permission = "Set permission for:";
+	private static CharSequence ¤¤permissionAll = "Set permission for All:";
+	
+	
 	static {
 		D.ts(UIHomeAssign.class);
 	}
 	
-	private Race race;
-	private HCLASS clas;
-	private LIST<CLICKABLE> sec;
+	private final HomeSettingTmp tmp = new HomeSettingTmp();
+
+	private final LIST<CLICKABLE> butts;
 	
 	public UIHomeAssign() {
 		super(¤¤name, ¤¤desc, SPRITES.icons().m.citizen);
 		
+		GuiSection sec = new GuiSection();
+		sec.addRightC(0, new GButt.ButtPanel(SPRITES.icons().m.questionmark) {
+			
+			@Override
+			protected void clickA() {
+				tmp.setEveryone();
+			}
+			
+		}.hoverInfoSet(¤¤everyone));
+		sec.addRightC(0, new GButt.ButtPanel(HCLASS.CITIZEN.icon()) {
+			
+			@Override
+			protected void clickA() {
+				tmp.clear();
+				for (Race r : RACES.all())
+					tmp.set(HOMET.get(HCLASS.CITIZEN, r));
+			}
+			
+		}.hoverInfoSet(¤¤permissionAll + " " + HCLASS.CITIZEN.names));
+		sec.addRightC(0, new GButt.ButtPanel(HCLASS.SLAVE.icon()) {
+			
+			@Override
+			protected void clickA() {
+				tmp.clear();
+				for (Race r : RACES.all())
+					tmp.set(HOMET.get(HCLASS.SLAVE, r));
+			}
+			
+		}.hoverInfoSet(¤¤permissionAll + " " + HCLASS.SLAVE.names));
+		sec.addRightC(0, new GButt.ButtPanel(SPRITES.icons().m.cancel) {
+			
+			@Override
+			protected void clickA() {
+				tmp.clear();
+			}
+			
+		}.hoverInfoSet(¤¤none));
 		
-		
-	}
-	
-	private class Butt extends GButt.ButtPanel{
-		
-		final Race tt;
-		
-		Butt(Race race){
-			super(race.appearance().icon);
-			tt = race;
-			hoverTitleSet(race.info.name);
-			hoverInfoSet(race.info.desc);
+		GuiSection s = new GuiSection();
+		for (HOMET t : HOMET.ALL()) {
+			if (t.race == null)
+				continue;
+			CLICKABLE bb = new GButt.ButtPanel(t.icon) {
+				
+				@Override
+				protected void clickA() {
+					if (selectedIs())
+						tmp.clear(t);
+					else
+						tmp.set(t);
+				}
+				
+				@Override
+				protected void renAction() {
+					selectedSet(tmp.is(t));
+				}
+			}.hoverInfoSet(¤¤permission + " " + t.name);
+			
+			if (s.getLastX2() > 500) {
+				bb.body().moveX1(0).moveY1(s.body().y2());
+				s.add(bb);
+			}else
+				s.addRightC(0, bb);
+			
 		}
 		
-		@Override
-		protected void clickA() {
-			if (activeIs())
-				race = tt;
-		}
+		sec.addRelBody(8, DIR.S, s);
 		
-		@Override
-		protected void renAction() {
-			activeSet(clas != null);
-			selectedSet(clas != null && race == tt);
-		}
+		butts = new ArrayList<CLICKABLE>(sec);
+		
+		tmp.setEveryone();
 	}
 
 	@Override
@@ -75,14 +134,8 @@ final class UIHomeAssign extends PlacableMulti{
 
 	@Override
 	public void place(int tx, int ty, AREA area, PLACER_TYPE type) {
-		if (SETT.ROOMS().HOMES.HOME.is(tx, ty)) {
-			HOME_TYPE t = HOME_TYPE.EVERYONE();
-			if (clas == HCLASS.CITIZEN) {
-				t = HOME_TYPE.CITIZEN(race);
-			}else if (clas == HCLASS.SLAVE){
-				t = HOME_TYPE.SLAVE(race);
-			}
-			SETT.ROOMS().HOMES.HOME.house(tx, ty, this).settingSet(t).done();
+		if (SETT.ROOMS().HOMES.HOME.isService(tx + ty*SETT.TWIDTH)) {
+			SETT.ROOMS().HOMES.settings.set(tx, ty, tmp);
 		}
 	}
 	
@@ -94,93 +147,8 @@ final class UIHomeAssign extends PlacableMulti{
 	@Override
 	public LIST<CLICKABLE> getAdditionalButt() {
 		
-		ren.add();
-		if (sec != null)
-			return sec;
-		GuiSection sec = new GuiSection();
-		
-		sec.addRightC(0, new GButt.ButtPanel(HOME_TYPE.EVERYONE().icon()) {
-			
-			@Override
-			protected void clickA() {
-				clas = null;
-				race = null;
-			}
-			
-			@Override
-			protected void renAction() {
-				selectedSet(clas == null);
-			}
-			
-		}.hoverSet(HOME_TYPE.EVERYONE()));
-		
-		sec.addRightC(8, new GButt.ButtPanel(HCLASS.CITIZEN.icon()) {
-			
-			@Override
-			protected void clickA() {
-				clas = HCLASS.CITIZEN;
-			}
-			
-			@Override
-			protected void renAction() {
-				selectedSet(clas == HCLASS.CITIZEN);
-			}
-			
-		}.hoverSet(HCLASS.CITIZEN));
-		
-		sec.addRightC(0, new GButt.ButtPanel(HCLASS.SLAVE.icon()) {
-			
-			@Override
-			protected void clickA() {
-				clas = HCLASS.SLAVE;
-			}
-			
-			@Override
-			protected void renAction() {
-				selectedSet(clas == HCLASS.SLAVE);
-			}
-			
-		}.hoverSet(HCLASS.SLAVE));
-		
-		int y1 = sec.body().y2();
-		int i = 0;
-		
-		sec.add(new GButt.ButtPanel(SPRITES.icons().m.questionmark) {
-			
-			@Override
-			protected void clickA() {
-				race = null;
-			}
-			
-			@Override
-			protected void renAction() {
-				activeSet(clas != null);
-				selectedSet(clas != null && race == null);
-			}
-			
-			@Override
-			public void hoverInfoGet(GUI_BOX text) {
-				if (clas == HCLASS.CITIZEN) {
-					text.title(HOME_TYPE.CITIZEN(null).name);
-					text.text(HOME_TYPE.CITIZEN(null).desc);
-				}else if (clas == HCLASS.SLAVE) {
-					text.title(HOME_TYPE.SLAVE(null).name);
-					text.text(HOME_TYPE.SLAVE(null).desc);
-				}
-			}
-			
-		}, (i%8)*32, y1+(i/8)*32);
-		i++;
-		
-
-		for (Race r : RACES.all()) {
-			sec.add(new Butt(r), (i%8)*32, y1+(i/8)*32);
-			i++;
-		}
-		this.sec = new ArrayList<CLICKABLE>(
-			sec
-		);
-		return this.sec;
+		ren.add();		
+		return butts;
 	}
 	
 	
@@ -188,27 +156,92 @@ final class UIHomeAssign extends PlacableMulti{
 		
 		@Override
 		public void render(Renderer r, ShadowBatch shadowBatch, RenderData data) {
+			
 			RenderIterator it = data.onScreenTiles();
 			while(it.has()) {
-				if ((it.tx() % 3) == 0 && (it.ty() % 3) == 0) {
+				if (SETT.ROOMS().HOMES.HOME.isService(it.tile())) {
 					HomeHouse h = SETT.ROOMS().HOMES.HOME.house(it.tx(), it.ty(), this);
-					if (h != null) {
-						int dx = (h.body().cX()-it.tx())*C.TILE_SIZE;
-						int dy = (h.body().cY()-it.ty())*C.TILE_SIZE;
-						
-						HOME_TYPE t = h.setting();
-						int w = t.icon().width()*C.SCALE;
-						int hi = t.icon().height()*C.SCALE;
-						int x1 = it.x()+dx-(w-C.TILE_SIZE)/2;
-						int y1 = it.y()+dy-(hi-C.TILE_SIZE)/2;
-						
-						t.icon().render(r, x1, x1+w, y1, y1+hi);
-						h.done();
-					}
+					render(r, h, it);
+					h.done();
 				}
 				it.next();
 			}
 			remove();
+		}
+		
+		private final ArrayList<HOMET> rens = new ArrayList<>(HOMET.ALL().size());
+		
+		private void render(Renderer r, HomeHouse h, RenderIterator it) {
+			
+			double dx = h.body().x1()+h.body().width()*0.5;
+			dx = dx -h.service().x();
+			int cx = (int) (it.x() + dx*C.TILE_SIZE);
+			
+			double dy = h.body().y1()+h.body().height()*0.5;
+			dy = dy -h.service().y();
+			int cy = (int) (it.y() + dy*C.TILE_SIZE);
+			
+			HomeSetting t = h.setting();
+			int am = 0;
+			HOMET single = null;
+			for (HOMET hh : HOMET.ALL()) {
+				if (t.is(hh)) {
+					single = hh;
+					am++;
+				}
+			}
+			
+			if (am == HOMET.ALL().size()-1) {
+				renderSingle(r, cx, cy, UI.icons().m.questionmark);
+			}else if (am == 0) {
+				renderSingle(r, cx, cy, UI.icons().m.cancel);
+			}else if (am == 1) {
+				renderSingle(r, cx, cy, single.icon);
+			}else if (am < HOMET.ALL().size()/2) {
+				rens.clearSloppy();
+				for (HOMET hh : HOMET.ALL()) {
+					if (t.is(hh)) {
+						rens.add(hh);
+					}
+				}
+				renderMany(r, cx, cy, h, false);
+			}else {
+				rens.clearSloppy();
+				for (HOMET hh : HOMET.ALL()) {
+					if (!t.is(hh)) {
+						rens.add(hh);
+					}
+				}
+				renderMany(r, cx, cy, h, true);
+			}
+		}
+		
+		private void renderSingle(Renderer r, int cx, int cy, SPRITE icon) {
+			int w = icon.width()*C.SCALE;
+			int h = icon.height()*C.SCALE;
+			int x1 = cx-w/2;
+			int y1 = cy-h/2;
+			icon.render(r, x1, x1+w, y1, y1+h);
+		}
+		
+		private void renderMany(Renderer r, int cx, int cy, HomeHouse house, boolean anti) {
+			
+			int width = house.body().width()*C.TILE_SIZE;
+			int w = 24*C.SCALE/2;
+			int h = rens.get(0).icon.height()*C.SCALE/2;
+			
+			int dx = (width/rens.size());
+			dx = CLAMP.i(dx, 1, w);
+			
+			int x1 = cx - dx*rens.size()/2;
+			int y1 = cy - h;
+			
+			for (HOMET t : rens) {
+				t.icon.render(r, x1, x1+w, y1, y1+h);
+				if (anti)
+					UI.icons().m.anti.render(r, x1, x1+w, y1, y1+h);
+				x1 += dx;
+			}
 		}
 	};
 	

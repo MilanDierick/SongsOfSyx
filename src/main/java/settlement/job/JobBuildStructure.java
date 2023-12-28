@@ -3,13 +3,14 @@ package settlement.job;
 import static settlement.main.SETT.*;
 
 import game.GAME;
+import game.faction.FResources.RTYPE;
 import init.D;
 import init.sound.SoundSettlement.Sound;
 import init.sprite.SPRITES;
 import settlement.entity.humanoid.Humanoid;
 import settlement.main.SETT;
-import settlement.tilemap.TBuilding;
-import settlement.tilemap.Terrain.TerrainTile;
+import settlement.tilemap.terrain.TBuilding;
+import settlement.tilemap.terrain.Terrain.TerrainTile;
 import snake2d.SPRITE_RENDERER;
 import snake2d.util.datatypes.AREA;
 import snake2d.util.datatypes.DIR;
@@ -17,6 +18,8 @@ import snake2d.util.sets.ArrayList;
 import snake2d.util.sets.LIST;
 import snake2d.util.sprite.SPRITE;
 import snake2d.util.sprite.text.Str;
+import util.gui.misc.GBox;
+import util.info.GFORMAT;
 import view.tool.*;
 
 public class JobBuildStructure {
@@ -38,6 +41,8 @@ public class JobBuildStructure {
 	private static CharSequence ¤¤SameProblem = "Must be placed on a structure of a different type.";
 	private static CharSequence ¤¤Blocked = "Area is blocked and can't be worked.";
 	private static CharSequence ¤¤Rooms = "The ceiling of rooms must be changed by refurnishing the room.";
+	
+	private static CharSequence ¤¤constructions = "Construction Seconds";
 	
 	static {
 		D.ts(JobBuildStructure.class);
@@ -105,13 +110,13 @@ public class JobBuildStructure {
 		@Override
 		boolean resNeeds(int tx, int ty) {
 			if (building.roof.is(tx, ty))
-				return JOBS().progress.get(tx + ty * TWIDTH) == 0;
+				return res != null && JOBS().progress.get(tx + ty * TWIDTH) == 0;
 			return super.resNeeds(tx, ty);
 		}
 
 		@Override
 		protected double constructionTime(Humanoid skill) {
-			return 14;
+			return 1 + building.constructTime*140;
 		}
 
 		@Override
@@ -122,7 +127,7 @@ public class JobBuildStructure {
 		@Override
 		protected boolean construct(int tx, int ty) {
 			if (building.resource != null)
-				GAME.player().res().outConstruction.inc(building.resource,  building.resAmount+1);
+				GAME.player().res().inc(building.resource,  RTYPE.CONSTRUCTION, -(building.resAmount+1));
 			building.wall.placeFixed(tx, ty);
 			return false;
 		}
@@ -140,6 +145,12 @@ public class JobBuildStructure {
 		@Override
 		public TerrainTile becomes(int tx, int ty) {
 			return building.wall;
+		}
+		
+		@Override
+		protected void extraHovInfo(GBox box) {
+			box.textLL(¤¤constructions);
+			box.add(GFORMAT.i(box.text(), (int)constructionTime(null)));
 		}
 
 	}
@@ -171,7 +182,7 @@ public class JobBuildStructure {
 
 		@Override
 		protected double constructionTime(Humanoid skill) {
-			return 14;
+			return 1 + building.constructTime*140;
 		}
 
 		@Override
@@ -196,7 +207,7 @@ public class JobBuildStructure {
 		@Override
 		protected boolean construct(int tx, int ty) {
 			if (building.resource != null)
-				GAME.player().res().outConstruction.inc(building.resource,  building.resAmount);
+				GAME.player().res().inc(building.resource, RTYPE.CONSTRUCTION, -building.resAmount);
 			building.roof.placeFixed(tx, ty);
 			return false;
 		}
@@ -209,6 +220,12 @@ public class JobBuildStructure {
 		@Override
 		public TerrainTile becomes(int tx, int ty) {
 			return building.roof;
+		}
+		
+		@Override
+		protected void extraHovInfo(GBox box) {
+			box.textLL(¤¤constructions);
+			box.add(GFORMAT.i(box.text(), (int)constructionTime(null)));
 		}
 
 	}

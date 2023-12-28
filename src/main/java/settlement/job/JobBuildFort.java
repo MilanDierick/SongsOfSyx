@@ -3,14 +3,15 @@ package settlement.job;
 import static settlement.main.SETT.*;
 
 import game.GAME;
+import game.faction.FResources.RTYPE;
 import init.D;
 import init.resources.RESOURCES;
 import init.sound.SoundSettlement.Sound;
 import init.sprite.SPRITES;
 import settlement.entity.humanoid.Humanoid;
 import settlement.main.SETT;
-import settlement.tilemap.TFortification;
-import settlement.tilemap.Terrain.TerrainTile;
+import settlement.tilemap.terrain.TFortification;
+import settlement.tilemap.terrain.Terrain.TerrainTile;
 import snake2d.SPRITE_RENDERER;
 import snake2d.util.datatypes.DIR;
 import snake2d.util.sets.ArrayList;
@@ -68,7 +69,7 @@ final class JobBuildFort extends JobBuild{
 	@Override
 	protected boolean construct(int tx, int ty) {
 		if (fort.resource != null)
-			GAME.player().res().outConstruction.inc(fort.resource,  fort.resAmount);
+			GAME.player().res().inc(fort.resource,  RTYPE.CONSTRUCTION, -fort.resAmount);
 		fort.placeFixed(tx, ty);
 		return false;
 	}
@@ -96,7 +97,7 @@ final class JobBuildFort extends JobBuild{
 
 		@Override
 		protected boolean construct(int tx, int ty) {
-			GAME.player().res().outConstruction.inc(res, resAmount);
+			GAME.player().res().inc(res, RTYPE.CONSTRUCTION, -resAmount);
 			SETT.TERRAIN().FSTAIRS.placeFixed(tx, ty);
 			return false;
 		}

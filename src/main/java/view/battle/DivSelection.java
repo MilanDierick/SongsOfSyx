@@ -30,8 +30,15 @@ public final class DivSelection {
 		return selected[f.index()];
 	}
 	
+	public void sToggle(Div f) {
+		if (!selected[f.index()])
+			select(f);
+		else
+			deSelect(f);
+	}
+	
 	public void clear() {
-		selection.clear();
+		selection.clearSloppy();
 		for (int i = 0; i < selected.length; i++) {
 			selected[i] = false;
 		}

@@ -18,7 +18,6 @@ public enum HPoll {
 	IS_SLAVE_READY_FOR_UPRISING,
 	CAN_COLLIDE,
 	CAN_INTERRACT,
-	
 	;
 	
 	public static final LIST<HPoll> all = new ArrayList<HPoll>(values());
@@ -28,7 +27,8 @@ public enum HPoll {
 		public HPoll type;
 		public double facingDot;
 		public ENTITY other;
-		public ECollision coll;
+		public ECollision colli;
+		public ECollision damage;
 		public boolean isEnemy;
 		
 		private HPollData() {
@@ -47,13 +47,15 @@ public enum HPoll {
 			return a.ai.poll(a, poll) == 0;
 		}
 		
-		public static void collideDamage(Humanoid a, AIManager ai, ECollision coll) {
+		public static void collideDamage(Humanoid a, AIManager ai, ECollision coll, ECollision damage) {
 			boolean isEnemy = isEnemy(a, coll.other);
 			poll.type = IMPACT_DAMAGE;
-			poll.coll = coll;
+			poll.colli = coll;
+			poll.damage = damage;
 			poll.isEnemy = isEnemy;
 			a.ai.poll(a, poll);
 		}
+
 		
 		static boolean willCollideWith(Humanoid a, AIManager ai, ENTITY other) {
 			poll.type = COLLIDING;

@@ -3,7 +3,6 @@ package settlement.room.food.fish;
 import java.io.IOException;
 
 import init.D;
-import settlement.main.RenderData.RenderIterator;
 import settlement.main.SETT;
 import settlement.path.AVAILABILITY;
 import settlement.room.main.*;
@@ -15,8 +14,10 @@ import snake2d.SPRITE_RENDERER;
 import snake2d.util.datatypes.*;
 import snake2d.util.file.Json;
 import snake2d.util.map.MAP_BOOLEAN;
+import snake2d.util.misc.CLAMP;
 import util.gui.misc.GText;
 import util.info.GFORMAT;
+import util.rendering.RenderData.RenderIterator;
 import util.rendering.ShadowBatch;
 import view.tool.PlacableMessages;
 
@@ -35,42 +36,24 @@ final class Constructor extends Furnisher{
 		
 		@Override
 		public double get(AREA area, double fromItems) {
-			double am = 0;
+			double shallow = 0;
+			double deep = 0;
 			for (COORDINATE c : area.body()) {
-				if (area.is(c) && SETT.ENV().fish.get(c) > 0)
-					am++;
+				if (area.is(c) && SETT.TERRAIN().WATER.SHALLOW.is(c)) {
+					shallow ++;
+					if (SETT.TERRAIN().WATER.deepSeaFishSpot.is(c))
+						deep++;
+					
+				}
+				
+				
 			}
-			return Math.ceil(am/16); 
+			return deep*2 + shallow/64.0; 
 		}
 		
 		@Override
 		public GText format(GText t, double value) {
 			return GFORMAT.i(t, (int)value);
-		}
-	};
-	final FurnisherStat fish = new FurnisherStat(this, 0.01) {
-		
-		@Override
-		public double get(AREA area, double fromItems) {
-			double v = 0;
-			double am = 0;
-			for (COORDINATE c : area.body()) {
-				if (area.is(c)) {
-					double d = SETT.ENV().fish.get(c);
-					if (d > 0) {
-						v += d;
-						am++;
-					}
-				}
-			}
-			if (am == 0)
-				return 0;
-			return v/am;
-		}
-		
-		@Override
-		public GText format(GText t, double value) {
-			return GFORMAT.perc(t, value);
 		}
 	};
 	final FurnisherStat storage = new FurnisherStat(this) {
@@ -89,30 +72,57 @@ final class Constructor extends Furnisher{
 	final FurnisherStat production;
 	
 	
-	final FurnisherStat efficiency = new FurnisherStat.FurnisherStatEfficiency(this, workers);
-	private final ROOM_FISHERY blue;
-	final RoomSpriteComboN sEdge;
+	final FurnisherStat efficiency = new FurnisherStat.FurnisherStatEfficiency(this, workers) {
+		@Override
+		public double get(AREA area, double[] fromItems) {
 
+			double shallow = 0;
+			for (COORDINATE c : area.body()) {
+				if (area.is(c) && SETT.TERRAIN().WATER.SHALLOW.is(c)) {
+					shallow ++;
+				}
+				
+				
+			}
+			
+			double i = fromItems[index];
+			double o = shallow/64.0;
+			
+			if (o == 0) {
+				if (i == 0)
+					return 0.5;
+				return 1;
+			}
+			
+			
+			
+			return CLAMP.d(0.5 + mul*0.5*i/o, 0, 1);
+		}
+	};
+	private final ROOM_FISHERY blue;
+	final RoomSpriteCombo sEdge;
+	final RoomSprite1x1 sMisc;
+	
 	
 	protected Constructor(RoomInitData init, ROOM_FISHERY blue)
 			throws IOException {
-		super(init, 2, 5, 88, 44);
+		super(init, 2, 4);
 		this.blue = blue;
 		
 		production = new FurnisherStat.FurnisherStatProduction2(this, blue) {
 			
 			@Override
 			protected double getBase(AREA area, double[] acc) {
-				return fish.get(area, acc)*efficiency.get(area, acc)*(int)workers.get(area, acc);
+				return efficiency.get(area, acc)*(int)workers.get(area, acc);
 			}
 		};
 		
 		
 		Json sp = init.data().json("SPRITES");
 		
-		final RoomSpriteNew sStorageBottom = new RoomSprite1x1(sp, "STORAGE_BOTTOM_1X1") {
+		final RoomSpriteImp sStorageBottom = new RoomSprite1x1(sp, "STORAGE_BOTTOM_1X1") {
 			
-			final RoomSpriteNew sStorageTop =  new RoomSprite1x1(sp, "STORAGE_TOP_1X1");
+			final RoomSpriteImp sStorageTop =  new RoomSprite1x1(sp, "STORAGE_TOP_1X1");
 			
 			@Override
 			public boolean render(SPRITE_RENDERER r, ShadowBatch s, int data, RenderIterator it, double degrade,
@@ -136,12 +146,27 @@ final class Constructor extends Furnisher{
 			}
 		};
 		
-		final RoomSprite1x1 sCandle = new RoomSprite1x1(sp, "CANDLE_1X1");
+		final RoomSprite1x1 miscTop = new RoomSprite1x1(sp, "MISC_TOP_1X1");
+		
+		final RoomSprite1x1 sCandle = new RoomSprite1x1(sp, "CANDLE_1X1") {
+			
+			@Override
+			public void renderAbove(SPRITE_RENDERER r, ShadowBatch s, int data, RenderIterator it, double degrade) {
+				if (!SETT.ROOMS().fData.candle.is(it.tile())) {
+					miscTop.render(r, s, getData2(it), it, degrade, false);
+				}
+			}
+			
+			@Override
+			public byte getData2(int tx, int ty, int rx, int ry, FurnisherItem item, int itemRan) {
+				return miscTop.getData(tx, ty, rx, ry, item, itemRan);
+			}
+		};
 		
 		
 		
-		final RoomSpriteNew auxEdge = new RoomSprite1xN(sp, "AUX_EDGE_1X1", false);
-		final RoomSpriteNew auxMid = new RoomSprite1xN(sp, "AUX_MID_1X1", true);
+		final RoomSpriteImp auxEdge = new RoomSprite1xN(sp, "AUX_EDGE_1X1", false);
+		final RoomSpriteImp auxMid = new RoomSprite1xN(sp, "AUX_MID_1X1", true);
 		
 		final RoomSpriteXxX auxBig = new RoomSpriteXxX(sp, "AUX_BIG_2X2", 2);
 		
@@ -181,8 +206,8 @@ final class Constructor extends Furnisher{
 			}
 		};
 		
-		sEdge = new RoomSpriteComboN(sp, "EDGE_COMBO");
-		
+		sEdge = new RoomSpriteCombo(sp, "EDGE_COMBO");
+		sMisc = new RoomSprite1x1(sp, "MISC_GROUND_1X1");
 		//final RoomSpriteRot.Random misc = new RoomSpriteRot.Random(SINGLETYPE.BARREL, SINGLETYPE.BUCKET, SINGLETYPE.CRATE);
 		
 		
@@ -311,7 +336,7 @@ final class Constructor extends Furnisher{
 		
 		@Override
 		public CharSequence isPlacable(int tx, int ty, MAP_BOOLEAN roomIs, FurnisherItem it, int rx, int ry) {
-			if (SETT.TERRAIN().WATER.is(tx, ty)) {
+			if (SETT.TERRAIN().WATER.SHALLOW.is(tx, ty)) {
 				return ¤¤problem;
 			}
 			return null;
@@ -375,7 +400,7 @@ final class Constructor extends Furnisher{
 		if (SETT.ROOMS().fData.item.get(tx, ty) == null) {
 			int m = 0;
 			for (DIR d : DIR.ORTHO) {
-				if (area.is(tx, ty, d)) {
+				if (area.is(tx, ty, d) || SETT.TERRAIN().WATER.DEEP.is(tx, ty, d) || SETT.TERRAIN().WATER.BRIDGE.is(tx, ty, d)) {
 					m |= d.mask();
 				}
 			}
@@ -390,7 +415,7 @@ final class Constructor extends Furnisher{
 	
 	@Override
 	public CharSequence constructionProblem(AREA area) {
-		if (fish.get(area, 0) < fish.min)
+		if (workers.get(area, 0) < 1.0)
 			return ¤¤problem2;
 		return super.constructionProblem(area);
 	}
@@ -404,7 +429,7 @@ final class Constructor extends Furnisher{
 	
 	@Override
 	public boolean removeTerrain(int tx, int ty) {
-		return !SETT.TERRAIN().WATER.is(tx, ty) && !SETT.TERRAIN().NADA.is(tx, ty);
+		return  !SETT.TERRAIN().WATER.SHALLOW.is(tx, ty) && !SETT.TERRAIN().NADA.is(tx, ty);
 	}
 	
 	@Override

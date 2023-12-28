@@ -19,8 +19,8 @@ import settlement.entity.humanoid.ai.main.AIPLAN.AiPlanActivation;
 import settlement.entity.humanoid.ai.main.AISUB.AISubActivation;
 import settlement.entity.humanoid.spirte.HSprite;
 import settlement.path.finder.SPath;
-import settlement.stats.CAUSE_ARRIVE;
-import settlement.stats.CAUSE_LEAVE;
+import settlement.stats.util.CAUSE_ARRIVE;
+import settlement.stats.util.CAUSE_LEAVE;
 import snake2d.LOG;
 import snake2d.util.datatypes.*;
 import snake2d.util.file.FileGetter;
@@ -73,8 +73,8 @@ public final class AIManager extends HumanoidResource implements HAI {
 	private byte resourceA = 0;
 	public final SPath path = new SPath();
 
-	public AIManager(Humanoid a) {
-		setPlan(AI.first().activate(a, this), a);
+	public AIManager(Humanoid h) {
+		setPlan(AI.first().activate(h, this), h);
 	}
 	
 	public AIManager(FileGetter file) throws IOException {
@@ -176,19 +176,7 @@ public final class AIManager extends HumanoidResource implements HAI {
 		return true;
 	}
 
-	public void init(Humanoid a) {
-		AI.modules().init(a, this);
-//		if (!a.stats.isEnemy() && !a.stats.isZombie()) {
-//			plan = AI.plans.GoToThrone.activate(a, this);
-//			state = sub.resume(a, this);
-//			if (state == null) {
-//				debug(a, "no good");
-//				throw new RuntimeException();
-//			}
-//			return;
-//		}
-		setPlan(AI.first().activate(a, this), a);
-	}
+
 
 	
 	public void interrupt(Humanoid a, HEvent.HEventData event) {
@@ -268,8 +256,10 @@ public final class AIManager extends HumanoidResource implements HAI {
 		this.subInterIndex = -1;
 		this.interType = -1;
 		AiPlanActivation p = plan.activate(a, this);
-		if (p == null)
-			throw new RuntimeException();
+		if (p == null) {
+			p = AI.plans().NOP.activate(a, this);
+			plan = AI.plans().NOP;
+		}
 		AISubActivation sub = p.sub();
 		this.plan = plan;
 		return sub;
@@ -404,8 +394,7 @@ public final class AIManager extends HumanoidResource implements HAI {
 				if (!plan.shouldContinue(a, this)) {
 //					st.clear();
 //					plan.name(a, this, st);
-//					plan.cancel(a, this);
-//					sub.cancel(a, this);
+
 					
 //					if ((subPathByte & 0x0FF) < SFinderRoomService.all().size() && 
 //							SFinderRoomService.get(subPathByte) != null 
@@ -414,6 +403,8 @@ public final class AIManager extends HumanoidResource implements HAI {
 //						debug(a, SFinderRoomService.get(subPathByte) + " " + path.toDebugString());
 //						LOG.ln("1: " + plan + " " + st + " " + a.id() + path.toDebugString());
 //					}
+					plan.cancel(a, this);
+					sub.cancel(a, this);
 					resourceDrop(a);
 					newPlan(a);
 				}
@@ -430,7 +421,7 @@ public final class AIManager extends HumanoidResource implements HAI {
 //			}
 			
 			if (!sub.isSuccessful(a, this) || !plan.shouldContinue(a, this)) {
-				if (S.get().developer)
+				if (S.get().developer && (plan.notifyIfSubFails() || !plan.shouldContinue(a, this)))
 					debug(a, "hello " + " s:" + sub.isSuccessful(a, this) + " p:" + plan.shouldContinue(a, this));
 				plan.cancel(a, this);
 				sub.cancel(a, this);
@@ -449,6 +440,7 @@ public final class AIManager extends HumanoidResource implements HAI {
 		return true;
 	}
 
+	
 	private boolean handleIterruption(Humanoid a) {
 		state = sub.resume(a, this);
 		if (state != null)
@@ -562,7 +554,9 @@ public final class AIManager extends HumanoidResource implements HAI {
 			subInterIndex = -1;
 		}
 
+		
 		plan.cancel(a, this);
+		plan.remove(a, this);
 		
 		AI.modules().cancel(a, this);
 		resourceDrop(a);
@@ -607,7 +601,7 @@ public final class AIManager extends HumanoidResource implements HAI {
 			if (sub == null)
 				res += "null" + n;
 			else
-				res += sub + " " + subByte + n;
+				res += sub + " " + subByte + n + " " + sub.name(a, this);
 			res += "inter: ";
 			if (interType == -1)
 				res += "null" + n;
@@ -673,7 +667,6 @@ public final class AIManager extends HumanoidResource implements HAI {
 			if (sub.name(a, this)!= null)
 				text.text(sub.name(a, this));
 			text.text(state().name());
-			text.add(text.text().add(AI.modules().work.suspender.get(this)));
 		}
 		
 	}
@@ -690,6 +683,13 @@ public final class AIManager extends HumanoidResource implements HAI {
 			return sub.poll(h, this, e);
 		}
 		return plan.poll(h, this, e);
+	}
+
+	@Override
+	protected void add(Humanoid h, CAUSE_ARRIVE a) {
+		AI.modules().init(h, this);
+		setPlan(AI.first().activate(h, this), h);
+		
 	}
 
 

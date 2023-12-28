@@ -1,13 +1,13 @@
 package settlement.room.home.house;
 
-import settlement.main.RenderData.RenderIterator;
 import settlement.main.SETT;
 import settlement.maintenance.ROOM_DEGRADER;
 import settlement.path.AVAILABILITY;
-import settlement.room.home.HOME_TYPE;
+import settlement.room.home.HomeSettings.HomeSetting;
 import settlement.room.main.*;
 import settlement.room.main.util.RoomState;
 import snake2d.Renderer;
+import util.rendering.RenderData.RenderIterator;
 import util.rendering.ShadowBatch;
 
 final class InstanceHome extends RoomSingleton {
@@ -100,7 +100,7 @@ final class InstanceHome extends RoomSingleton {
 	
 	@Override
 	public void isolationSet(int tx, int ty, double isolation) {
-		blueprintI().houses.get(tx, ty, this).isolationSet(isolation).done();;
+		blueprintI().houses.get(tx, ty, this).isolationSet(isolation).done();
 	}
 	
 	@Override
@@ -138,21 +138,21 @@ final class InstanceHome extends RoomSingleton {
 		 * 
 		 */
 		private static final long serialVersionUID = 1L;
-		final int i;
 		final int rx,ry;
 		
 		State(InstanceHome h, int rx, int ry){
 			this.rx = rx;
 			this.ry = ry;
-			HomeHouse hh = SETT.ROOMS().HOMES.HOME.houses.get(rx, ry, this);
-			i = hh.setting().index();
-			hh.done();
-			
 		}
 		
 		@Override
-		public void apply(Room r) {
-			SETT.ROOMS().HOMES.HOME.houses.get(rx, ry, this).settingSet(HOME_TYPE.ALL().get(i)).done();
+		public void apply(Room r, int tx, int ty) {
+			HomeHouse hh = SETT.ROOMS().HOMES.HOME.houses.get(rx, ry, this);
+			if (hh == null)
+				return;
+			HomeSetting ss = hh.setting();
+			hh.done();
+			SETT.ROOMS().HOMES.settings.set(tx, ty, ss);
 		}
 		
 	}

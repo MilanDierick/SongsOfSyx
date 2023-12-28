@@ -102,7 +102,7 @@ final class UpdaterTraj {
 			int ty = (int) (fy+vec.nY()*l);
 			
 			if (isEnemy(div, tx, ty)) {
-				if (SProjectiles.problem(div.army(), trajLow, fx, fy, tx, ty, info.projVel) == null) {
+				if (SProjectiles.problem(div.army(), trajLow, fx, fy, tx, ty, info.projAngle, info.projVel) == null) {
 					traj.set(i, trajLow);
 				}
 			}else {
@@ -120,13 +120,13 @@ final class UpdaterTraj {
 						
 						int dx = (int) (tx + (vec1.nX()*v1+vec2.nX()*v2)*C.TILE_SIZE);
 						int dy = (int) (ty + (vec1.nY()*v1+vec2.nY()*v2)*C.TILE_SIZE);
-						if (isEnemy(div, dx, dy) && SProjectiles.problem(div.army(), trajLow, fx, fy, dx, dy, info.projVel) == null) {
+						if (isEnemy(div, dx, dy) && SProjectiles.problem(div.army(), trajLow, fx, fy, dx, dy, info.projAngle, info.projVel) == null) {
 							traj.set(i, trajLow);
 							break outer;
 						}
 						dx = (int) (tx + (vec1.nX()*v1-vec2.nX()*v2)*C.TILE_SIZE);
 						dy = (int) (ty + (vec1.nY()*v1-vec2.nY()*v2)*C.TILE_SIZE);
-						if (isEnemy(div, dx, dy) && SProjectiles.problem(div.army(), trajLow, fx, fy, dx, dy, info.projVel) == null) {
+						if (isEnemy(div, dx, dy) && SProjectiles.problem(div.army(), trajLow, fx, fy, dx, dy, info.projAngle, info.projVel) == null) {
 							traj.set(i, trajLow);
 							break outer;
 						}

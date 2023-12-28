@@ -1,8 +1,8 @@
 package util.gui.slider;
 
 import init.D;
-import init.sprite.ICON;
 import init.sprite.SPRITES;
+import init.sprite.UI.Icon;
 import snake2d.MButt;
 import snake2d.SPRITE_RENDERER;
 import snake2d.util.color.COLOR;
@@ -18,6 +18,7 @@ import util.data.INT.INTE;
 import util.gui.misc.GBox;
 import util.gui.misc.GButt;
 import util.info.GFORMAT;
+import view.keyboard.KEYS;
 import view.main.VIEW;
 
 public class GSliderInt extends GuiSection{
@@ -37,19 +38,26 @@ public class GSliderInt extends GuiSection{
 		
 	}
 	
-	public GSliderInt(INTE in, int width, int height, boolean input){
+	public GSliderInt(INTE in, int width, boolean buttons, boolean input){
+		this(in, width, 24, buttons, input);
+		
+		
+	}
+	
+	public GSliderInt(INTE in, int width, int height, boolean buttons, boolean input){
 		this.in = in;
 		
 		if (input) {
-			width -= (ICON.SMALL.SIZE+2)*3;
+			width -= (Icon.S+2)*3;
 		}
 		
 		width -= 4;
+		height -= 4;
 		
 		if (width < 0)
 			width = 0;
 		
-		if (input) {
+		if (buttons) {
 			addRightC(0, new GButt.ButtPanel(SPRITES.icons().s.minifier) {
 				private double clickSpeed;
 				
@@ -77,8 +85,9 @@ public class GSliderInt extends GuiSection{
 		}
 		
 		addRightC(4, new Mid(width, height));
+		pad(2, 2);
 		
-		if (input) {
+		if (buttons) {
 			addRightC(4, new GButt.ButtPanel(SPRITES.icons().s.magnifier) {
 				private double clickSpeed;
 				
@@ -103,7 +112,12 @@ public class GSliderInt extends GuiSection{
 				}
 			});
 			
-			addRightC(0, new GButt.ButtPanel(SPRITES.icons().s.pluses) {
+			
+			
+		}
+		
+		if (input) {
+			addRightC(2, new GButt.ButtPanel(SPRITES.icons().s.pluses) {
 				
 				@Override
 				protected void clickA() {
@@ -113,8 +127,12 @@ public class GSliderInt extends GuiSection{
 				
 				
 			}.hoverInfoSet(¤¤setAmount));
-			
 		}
+		
+	}
+	
+	public GSliderInt(INTE in, int width, int height, boolean input){
+		this(in, width, height, input, input);
 		
 		
 	}
@@ -181,19 +199,24 @@ public class GSliderInt extends GuiSection{
 			
 			
 			int x2 = body().x1() + (int) (in.getD()*body().width());
-			renderMidColor(r, body().x1(), x2-body().x1(), body().width(), body().y1(), body().y2());
-			
-			int cx = (int) (body.x1()+body().width()*in.getD());
-			
-			if (!isHovered) {
-				COLOR.WHITE85.render(r, cx-1, cx+1, body().y1()+1, body().y2()-1);
-			}else {
-				GCOLOR.UI().border().render(r, cx-midWidth/2, cx+midWidth/2, body().y1(), body().y2());
-				COLOR c = isHovered || clicked ? GCOLOR.T().H1 : GCOLOR.T().H2;
-				c.render(r, cx-midWidth/2+1, cx+midWidth/2-1, body().y1()+1, body().y2()-1);
-				COLOR.BLACK.render(r, cx-1, cx+2, body().y1()+2, body().y2()-2);
+			{
+				int my = isHovered || clicked ? 0 : 2;
+				renderMidColor(r, body().x1(), x2-body().x1(), body().width(), body().y1()+my, body().y2()-my);
 			}
 			
+			
+			
+			int cx = (int) (body.x1()+midWidth/2+(body().width()-midWidth)*in.getD());
+			
+//			if (!isHovered) {
+//				COLOR.WHITE85.render(r, cx-1, cx+1, body().y1()+1, body().y2()-1);
+//			}else {
+//				
+//			}
+			GCOLOR.UI().border().render(r, cx-midWidth/2, cx+midWidth/2, body().y1(), body().y2());
+			COLOR c = isHovered || clicked ? GCOLOR.T().H1 : GCOLOR.T().H2;
+			c.render(r, cx-midWidth/2+1, cx+midWidth/2-1, body().y1()+1, body().y2()-1);
+			COLOR.BLACK.render(r, cx-1, cx+2, body().y1()+2, body().y2()-2);
 			
 			
 		}
@@ -201,11 +224,14 @@ public class GSliderInt extends GuiSection{
 		@Override
 		public boolean hover(COORDINATE mCoo) {
 			if (super.hover(mCoo)) {
-				double d = MButt.clearWheelSpin();
-				if (d < 0)
-					in.inc(-1);
-				else if (d > 0)
-					in.inc(1);
+				if (KEYS.MAIN().MOD.isPressed() || KEYS.MAIN().UNDO.isPressed()) {
+					double d = MButt.clearWheelSpin();
+					if (d < 0)
+						in.inc(-1);
+					else if (d > 0)
+						in.inc(1);
+				}
+				
 				return true;
 			}
 			return false;

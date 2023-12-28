@@ -16,7 +16,7 @@ public abstract class RoomState implements Serializable{
 	 */
 	private static final long serialVersionUID = 1L;
 
-	public abstract void apply(Room r);
+	public abstract void apply(Room r, int tx, int ty);
 	
 	public static class RoomStateInstance extends RoomState {
 
@@ -24,11 +24,9 @@ public abstract class RoomState implements Serializable{
 		private final int workersTarget;
 		private final int industry;
 		private boolean auto; 
-		private final CharSequence name;
 		
 		
 		public RoomStateInstance(RoomInstance ins) {
-			name = "";
 			this.workersTarget = ins.employees().hardTarget();
 			if (ins.blueprintI() instanceof ROOM_EMPLOY_AUTO) {
 				ROOM_EMPLOY_AUTO a = (ROOM_EMPLOY_AUTO) ins.blueprintI();
@@ -42,7 +40,7 @@ public abstract class RoomState implements Serializable{
 		}
 		
 		@Override
-		public void apply(Room room) {
+		public void apply(Room room, int tx, int ty) {
 			if (!(room instanceof RoomInstance))
 				return;
 			
@@ -57,9 +55,8 @@ public abstract class RoomState implements Serializable{
 			}
 			if (ins instanceof ROOM_PRODUCER && ins.blueprint() instanceof INDUSTRY_HASER) {
 				INDUSTRY_HASER h = (INDUSTRY_HASER) ins.blueprint();
-				if (FACTIONS.player().locks.unlockText(h.industries().getC(industry)) == null)
-					if (industry >= 0 && industry < h.industries().size())
-						((ROOM_PRODUCER) ins).setIndustry(industry);
+				if (industry >= 0 && industry < h.industries().size() && h.industries().getC(industry).lockable().passes(FACTIONS.player()))
+					((ROOM_PRODUCER) ins).setIndustry(industry);
 			}
 			applyIns(ins);
 		}
@@ -78,7 +75,7 @@ public abstract class RoomState implements Serializable{
 		private static final long serialVersionUID = 1L;
 
 		@Override
-		public void apply(Room r) {
+		public void apply(Room r, int tx, int ty) {
 			
 		}
 	};

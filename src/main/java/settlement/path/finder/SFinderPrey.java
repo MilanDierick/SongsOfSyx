@@ -28,7 +28,7 @@ public final class SFinderPrey {
 			for (ENTITY e : SETT.ENTITIES().getAtTile(tx, ty)) {
 				if (e instanceof Animal) {
 					a = (Animal) e;
-					if (a.reservable()) {
+					if (a.huntReservable()) {
 						return true;
 					}
 				}
@@ -37,10 +37,23 @@ public final class SFinderPrey {
 		}
 	};
 	
+	public boolean has(COORDINATE start) {
+		SComponent c = PATH().comps.superComp.get(start);
+		if (c == null)
+			return false;
+		
+		if (PATH().comps.data.reservableAnimals.get(c) <= 0)
+			return false;
+		return true;
+	}
+	
 	public Animal findAndReserve(COORDINATE start, SPath p, int radius) {
 		
+		if (!has(start))
+			return null;
+		
 		if (p.request(start.x(), start.y(), fin, radius)) {
-			a.reserve();
+			a.huntReserve();
 			return a;
 		}
 		

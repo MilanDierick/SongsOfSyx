@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.Serializable;
 
 import game.GAME;
+import init.C;
 import init.D;
 import init.resources.RESOURCE;
 import init.settings.S;
@@ -12,6 +13,7 @@ import settlement.main.SETT;
 import settlement.thing.DRAGGABLE.DRAGGABLE_HOLDER;
 import settlement.thing.THINGS.Thing;
 import settlement.thing.THINGS.ThingFactory;
+import snake2d.LOG;
 import snake2d.Renderer;
 import snake2d.util.color.ColorImp;
 import snake2d.util.datatypes.*;
@@ -353,6 +355,10 @@ public class ThingsCadavers extends ThingFactory<ThingsCadavers.Cadaver> impleme
 				body.moveCY(0);
 			if (body.cY() >= SETT.PIXEL_BOUNDS.y2())
 				body.moveCY( SETT.PIXEL_BOUNDS.y2()-1);
+			
+			if (COORDINATE.tileDistance(cx, cy, body().cX(), body().cY()) > 3*C.TILE_SIZE)
+				LOG.ln(cx + " " + cy + " " + fromDist);
+			
 			super.move();
 		}
 

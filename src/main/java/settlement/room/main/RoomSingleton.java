@@ -5,8 +5,7 @@ import static settlement.main.SETT.*;
 import java.io.Serializable;
 
 import init.resources.RESOURCE;
-import init.sprite.ICON.BIG;
-import settlement.main.RenderData.RenderIterator;
+import init.sprite.UI.Icon;
 import settlement.main.SETT;
 import settlement.maintenance.ROOM_DEGRADER;
 import settlement.path.AVAILABILITY;
@@ -18,6 +17,7 @@ import settlement.room.main.util.RoomAreaWrapper;
 import settlement.room.sprite.RoomSprite;
 import snake2d.Renderer;
 import snake2d.util.datatypes.*;
+import util.rendering.RenderData.RenderIterator;
 import util.rendering.ShadowBatch;
 
 public abstract class RoomSingleton extends Room {
@@ -282,7 +282,7 @@ public abstract class RoomSingleton extends Room {
 	}
 	
 	@Override
-	public BIG icon() {
+	public Icon icon() {
 		return blueprintI().iconBig();
 	}
 	

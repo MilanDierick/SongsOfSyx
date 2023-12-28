@@ -5,22 +5,21 @@ import static settlement.main.SETT.*;
 import game.GAME;
 import init.C;
 import init.D;
-import init.sprite.ICON;
-import init.sprite.ICON.MEDIUM;
 import init.sprite.SPRITES;
 import init.sprite.UI.UICons;
 import settlement.job.Job;
-import settlement.main.RenderData;
 import settlement.main.SETT;
 import settlement.room.main.Room;
 import settlement.room.main.RoomBlueprint;
 import settlement.room.main.construction.ConstructionData;
 import settlement.room.main.furnisher.FurnisherItem;
 import settlement.room.main.furnisher.FurnisherItemTile;
-import settlement.tilemap.TBuilding;
+import settlement.tilemap.terrain.TBuilding;
 import snake2d.SPRITE_RENDERER;
 import snake2d.util.datatypes.*;
 import snake2d.util.map.MAP_BOOLEAN;
+import snake2d.util.sprite.SPRITE;
+import util.rendering.RenderData;
 import view.tool.*;
 
 final class PlacerDoor {
@@ -41,7 +40,7 @@ final class PlacerDoor {
 
 	final PlacableMulti undo = new PlacableMulti(¤¤shrink) {
 
-		private ICON.MEDIUM icon = new ICON.MEDIUM.Twin(SPRITES.icons().m.building, SPRITES.icons().m.anti);
+		private SPRITE icon = new SPRITE.Twin(SPRITES.icons().m.building, SPRITES.icons().m.anti);
 
 		@Override
 		public void place(int tx, int ty, AREA a, PLACER_TYPE t) {
@@ -64,7 +63,7 @@ final class PlacerDoor {
 		}
 
 		@Override
-		public MEDIUM getIcon() {
+		public SPRITE getIcon() {
 			return icon;
 		}
 
@@ -102,7 +101,7 @@ final class PlacerDoor {
 		}
 
 		@Override
-		public MEDIUM getIcon() {
+		public SPRITE getIcon() {
 			return SPRITES.icons().m.building;
 		}
 	};

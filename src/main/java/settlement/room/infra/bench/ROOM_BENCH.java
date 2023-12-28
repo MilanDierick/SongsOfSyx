@@ -6,7 +6,6 @@ import java.io.IOException;
 
 import game.GAME;
 import init.sprite.game.SheetType;
-import settlement.main.RenderData.RenderIterator;
 import settlement.main.SETT;
 import settlement.misc.util.FSERVICE;
 import settlement.path.AVAILABILITY;
@@ -18,10 +17,10 @@ import settlement.room.main.util.RoomInit;
 import settlement.room.main.util.RoomInitData;
 import settlement.room.sprite.RoomSprite;
 import settlement.room.sprite.RoomSprite1x1;
-import settlement.tilemap.Floors.Floor;
 import snake2d.SPRITE_RENDERER;
 import snake2d.util.datatypes.*;
 import snake2d.util.file.*;
+import util.rendering.RenderData.RenderIterator;
 import util.rendering.ShadowBatch;
 
 public final class ROOM_BENCH extends RoomBlueprintImp{
@@ -203,7 +202,7 @@ public final class ROOM_BENCH extends RoomBlueprintImp{
 				public boolean render(SPRITE_RENDERER r, ShadowBatch s, int data, RenderIterator it, double degrade,
 						boolean isCandle) {
 					if (((GAME.updateI() + it.tx()) & 0x0FF) == 0) {
-						floor(it.tx(), it.ty());
+						SETT.FLOOR().setFloorMatch(it.tx(), it.ty(), floor.get(0));
 					}
 					super.render(r, s, data, it, degrade, isCandle);
 					return false;
@@ -292,41 +291,10 @@ public final class ROOM_BENCH extends RoomBlueprintImp{
 		public void putFloor(int tx, int ty, int upgrade, AREA area) {
 
 			super.putFloor(tx, ty, upgrade, area);
-			floor(tx, ty);
-		}
-		
-		private void floor(int tx, int ty) {
-			Floor res = floor.get(0);
-			int am = 1;
-			for (DIR d : DIR.ORTHO) {
-				if (SETT.ROOMS().map.is(tx, ty, d))
-					continue;
-				Floor f = SETT.FLOOR().getter.get(tx, ty, d);
-				if (f != null && f != res) {
-					int a = testFloor(tx, ty, f);
-					if (a > am) {
-						am = a;
-						res = f;
-					}
-				}
-			}
+			SETT.FLOOR().setFloorMatch(tx, ty, floor.get(0));
 			
-			if (SETT.FLOOR().getter.get(tx, ty) != res)
-				res.placeFixed(tx, ty);
 		}
 		
-		private int testFloor(int tx, int ty, Floor f) {
-			int am = 0;
-			for (DIR d : DIR.ALL) {
-				if (SETT.ROOMS().map.is(tx, ty, d))
-					continue;
-				Floor f2 = SETT.FLOOR().getter.get(tx, ty, d);
-				if (f2 == f) {
-					am++;
-				}
-			}
-			return am;
-		}
 		
 	}
 

@@ -14,6 +14,7 @@ import snake2d.util.datatypes.COORDINATE;
 import snake2d.util.file.FileGetter;
 import snake2d.util.file.FilePutter;
 import snake2d.util.map.MAP_BOOLEAN;
+import snake2d.util.map.MAP_BOOLEANE;
 import view.sett.IDebugPanelSett;
 import view.tool.PLACER_TYPE;
 import view.tool.PlacableMulti;
@@ -24,9 +25,11 @@ public class MAINTENANCE extends SettResource{
 	final MRoom room = new MRoom(data);
 	final MFloor floor = new MFloor(data);
 	public final MAP_BOOLEAN isser = data.setter;
-	
+	public final MAP_BOOLEANE disabled = data.disabled;
+	public final PlacableMulti enablePlacer;
 
 	public MAINTENANCE() {
+		
 		new AvailabilityListener() {
 			
 			@Override
@@ -60,7 +63,7 @@ public class MAINTENANCE extends SettResource{
 				return null;
 			}
 		});
-		
+		enablePlacer = new PlacerDormant();
 	}
 	
 	public SFinderFindable finder() {

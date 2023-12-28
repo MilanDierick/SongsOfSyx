@@ -4,8 +4,11 @@ import java.io.IOException;
 
 import game.events.EVENTS.EventResource;
 import game.faction.FACTIONS;
+import game.faction.FCredits.CTYPE;
+import game.faction.FResources.RTYPE;
 import game.time.TIME;
 import init.D;
+import init.resources.RBIT;
 import settlement.entity.ENTITY;
 import settlement.entity.humanoid.HTYPE;
 import settlement.entity.humanoid.Humanoid;
@@ -20,8 +23,8 @@ import snake2d.util.misc.ACTION;
 import snake2d.util.misc.CLAMP;
 import snake2d.util.rnd.RND;
 import snake2d.util.sprite.text.Str;
-import view.main.MessageText;
 import view.sett.IDebugPanelSett;
+import view.ui.message.MessageText;
 
 public final class EventUprising extends EventResource{
 
@@ -197,10 +200,10 @@ public final class EventUprising extends EventResource{
 		acc = 0;
 		double am = 0.25 + 0.05*RND.rInt(6);
 		
-		SETT.ROOMS().STOCKPILE.removeFromEverywhere(am, -1l, FACTIONS.player().res().outTribute);
+		SETT.ROOMS().STOCKPILE.removeFromEverywhere(am, RBIT.ALL, RTYPE.SPOILS);
 		
 		int creds = FACTIONS.player().credits().credits() > 0 ? (int) (FACTIONS.player().credits().credits()*0.75) : 0;
-		FACTIONS.player().credits().tribute.OUT.inc(creds);
+		FACTIONS.player().credits().inc(-creds, CTYPE.MISC);
 		state = 0;
 		
 		for (ENTITY e : SETT.ENTITIES().getAllEnts()) {
@@ -219,10 +222,9 @@ public final class EventUprising extends EventResource{
 		if (state != 0)
 			return;
 		
-		SETT.ARMIES().enemy().initMorale();
 		
-		int am = (int) (STATS.POP().pop(HTYPE.SLAVE)*(0.2 + RND.rFloat()*0.8));
-		am = spots.riot(am);
+		double amd = 0.2 + RND.rFloat()*0.8;
+		int am = spots.riot(amd);
 
 		if (am == 0)
 			return;

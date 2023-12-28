@@ -5,23 +5,22 @@ import java.nio.file.Path;
 import init.paths.PATH;
 import init.paths.PATHS;
 import settlement.room.main.ROOMS;
-import settlement.room.service.module.RoomServiceDataAccess;
+import settlement.room.service.module.RoomServices;
 import snake2d.util.file.Json;
-import snake2d.util.sets.ArrayList;
 
 public class RoomInitData{
 	
 	private PATH gData = PATHS.INIT().getFolder("room");
 	private PATH gText = PATHS.TEXT().getFolder("room");
-	private PATH gSprite = PATHS.SPRITE().getFolder("room");
+	public final PATH gSprite = PATHS.SPRITE().getFolder("room");
 	private Json data;
 	private Json text;
 	private String key;
 	private String type;
 	public final ROOMS m;
 	
-	public final ArrayList<RoomServiceDataAccess> services = new ArrayList<>(256);
-	
+	public final RoomServices service = new RoomServices();
+
 	public RoomInitData(ROOMS m){
 		this.m = m;
 	}
@@ -61,10 +60,6 @@ public class RoomInitData{
 	
 	public PATH getter() {
 		return gData;
-	}
-	
-	public int addService(RoomServiceDataAccess service) {
-		return services.add(service);
 	}
 	
 	public RoomInitData setType(String type) {

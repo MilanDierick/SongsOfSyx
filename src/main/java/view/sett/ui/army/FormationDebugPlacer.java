@@ -5,9 +5,8 @@ import static settlement.main.SETT.*;
 import init.C;
 import init.config.Config;
 import init.race.RACES;
-import init.sprite.ICON;
-import init.sprite.ICON.MEDIUM;
 import init.sprite.SPRITES;
+import init.sprite.UI.Icon;
 import init.sprite.UI.UI;
 import settlement.army.Army;
 import settlement.army.Div;
@@ -15,15 +14,16 @@ import settlement.entity.ENTITY;
 import settlement.entity.humanoid.HTYPE;
 import settlement.entity.humanoid.Humanoid;
 import settlement.main.SETT;
-import settlement.stats.STAT;
 import settlement.stats.STATS;
-import settlement.stats.StatsEquippables.EQUIPPABLE_MILITARY;
+import settlement.stats.equip.EquipBattle;
+import settlement.stats.stat.STAT;
 import snake2d.SPRITE_RENDERER;
 import snake2d.util.color.COLOR;
 import snake2d.util.gui.GuiSection;
 import snake2d.util.gui.clickable.CLICKABLE;
 import snake2d.util.gui.renderable.RENDEROBJ;
 import snake2d.util.sets.*;
+import snake2d.util.sprite.SPRITE;
 import util.data.INT;
 import util.data.INT.INTE;
 import util.gui.misc.GText;
@@ -70,14 +70,14 @@ final class FormationDebugPlacer extends PlacableFixedImp{
 			si++;
 		}
 		
-		for (EQUIPPABLE_MILITARY bb : STATS.EQUIP().military_all()) {
+		for (EquipBattle bb : STATS.EQUIP().BATTLE_ALL()) {
 			Butt b = new Butt(bb.stat());
 			stats.add(b);
 			ss.add(b, (si%5)*150, (si/5)*25);
 			si++;
 		}
 		this.stats = stats;
-		CLICKABLE rr = new GTarget(64, false, true, new RENDEROBJ.RenderImp(ICON.MEDIUM.SIZE) {
+		CLICKABLE rr = new GTarget(64, false, true, new RENDEROBJ.RenderImp(Icon.M) {
 			
 			@Override
 			public void render(SPRITE_RENDERER r, float ds) {
@@ -95,7 +95,7 @@ final class FormationDebugPlacer extends PlacableFixedImp{
 	
 	
 	@Override
-	public MEDIUM getIcon() {
+	public SPRITE getIcon() {
 		return SPRITES.icons().m.for_loose;
 	}
 
@@ -160,8 +160,9 @@ final class FormationDebugPlacer extends PlacableFixedImp{
 		for (ENTITY e : SETT.ENTITIES().getAllEnts()) {
 			if (e instanceof Humanoid) {
 				Humanoid h = (Humanoid) e;
-				if (h.division() == div)
+				if (h.division() == div) {
 					h.teleportAndInitInDiv();
+				}
 			}
 		}
 	}
@@ -171,6 +172,8 @@ final class FormationDebugPlacer extends PlacableFixedImp{
 		if (div.menNrOf() < Config.BATTLE.MEN_PER_DIVISION) {
 			HTYPE t = team != ARMIES().player() ? HTYPE.ENEMY : HTYPE.SUBJECT;
 			Humanoid h = new Humanoid(tx*C.TILE_SIZE+C.TILE_SIZEH, ty*C.TILE_SIZE+C.TILE_SIZEH, RACES.all().get(race.get()), t, null);
+			STATS.BATTLE().basicTraining.setD(h.indu(), 1.0);
+			div.info.men.set(Config.BATTLE.MEN_PER_DIVISION);
 			h.setDivision(div);
 			for (Butt b : stats) {
 				b.stat.indu().set(h.indu(), b.value);
@@ -181,13 +184,9 @@ final class FormationDebugPlacer extends PlacableFixedImp{
 		
 
 	private boolean setDiv() {
-		for (Div d : team.divisions()) {
-			if (d.menNrOf() == 0) {
-				div = d;
-				
-				div.info.men.set(Config.BATTLE.MEN_PER_DIVISION);
-				return true;
-			}
+		div = team.getNextEmptyOrdered();
+		if (div != null) {
+			return true;
 		}
 		return false;
 	}

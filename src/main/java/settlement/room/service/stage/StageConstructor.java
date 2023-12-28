@@ -9,11 +9,8 @@ import settlement.room.main.furnisher.FurnisherStat.FurnisherStatI;
 import settlement.room.main.util.RoomInit;
 import settlement.room.main.util.RoomInitData;
 import settlement.room.sprite.RoomSpriteBoxN;
-import snake2d.util.datatypes.AREA;
 import snake2d.util.datatypes.DIR;
 import snake2d.util.file.Json;
-import util.gui.misc.GText;
-import util.info.GFORMAT;
 
 final class StageConstructor extends Furnisher{
 
@@ -23,28 +20,14 @@ final class StageConstructor extends Furnisher{
 	static final int STATION = 1;
 	final FurnisherStatI workers;
 	final FurnisherStat spectators;
-	final FurnisherStat quality;
 	
 	protected StageConstructor(ROOM_STAGE blue, RoomInitData init)
 			throws IOException {
-		super(init, 3, 3, 88, 44);
+		super(init, 1, 2);
 		this.blue = blue;
 		
 		workers = new FurnisherStatI(this);
 		spectators = new FurnisherStat.FurnisherStatServices(this, blue);
-		quality = new FurnisherStat(this) {
-			
-			@Override
-			public double get(AREA area, double acc) {
-				return acc;
-			}
-			
-			@Override
-			public GText format(GText t, double value) {
-				GFORMAT.perc(t, value);
-				return t;
-			}
-		};
 		
 		Json sp = init.data().json("SPRITES");
 		
@@ -125,8 +108,6 @@ final class StageConstructor extends Furnisher{
 			{ai,aa,aa,ai,}, 
 		}, 1);
 		
-		flush(1, 0);
-		
 		new FurnisherItem(new FurnisherItemTile[][] {
 			{ai,aa,aa,aa,aa,aa,ai},
 			{aa,bb,bb,bb,bb,bb,aa},
@@ -135,10 +116,8 @@ final class StageConstructor extends Furnisher{
 			{aa,bb,BB,BB,BB,bb,aa},
 			{aa,bb,bb,bb,bb,bb,aa},
 			{ai,aa,aa,aa,aa,aa,ai},
-		}, 1);
-		
-		flush(1, 0);
-		
+		}, 2);
+
 		new FurnisherItem(new FurnisherItemTile[][] {
 			{ai,aa,aa,aa,aa,aa,aa,aa,aa,ai},
 			{aa,bb,bb,bb,bb,bb,bb,bb,bb,aa},
@@ -150,7 +129,7 @@ final class StageConstructor extends Furnisher{
 			{aa,bb,cc,cc,cc,cc,cc,cc,bb,aa},
 			{aa,bb,bb,bb,bb,bb,bb,bb,bb,aa},
 			{ai,aa,aa,aa,aa,aa,aa,aa,aa,ai},
-		}, 1);
+		}, 3);
 		
 		flush(1, 0);
 	}

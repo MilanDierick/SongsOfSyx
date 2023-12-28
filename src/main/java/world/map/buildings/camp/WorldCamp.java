@@ -7,8 +7,6 @@ import init.C;
 import init.D;
 import init.race.RACES;
 import init.race.Race;
-import init.sprite.SPRITES;
-import settlement.main.RenderData.RenderIterator;
 import snake2d.SPRITE_RENDERER;
 import snake2d.util.color.COLOR;
 import snake2d.util.file.FileGetter;
@@ -16,20 +14,20 @@ import snake2d.util.file.FilePutter;
 import snake2d.util.map.MAP_OBJECT;
 import snake2d.util.rnd.RND;
 import snake2d.util.sets.*;
-import util.colors.GCOLORS_MAP;
 import util.info.INFO;
+import util.rendering.RenderData.RenderIterator;
 import util.rendering.ShadowBatch;
 import world.map.buildings.WorldBuilding;
 
 public class WorldCamp extends WorldBuilding{
 
-	final LIST<WCampType> types;
+	public final LIST<WCampType> types = WCampType.types();
+	public final WCampType[] tmap = new WCampType[RACES.all().size()];
 	public static final int MAX = 512;
 	private final WCampInstance[] instances = new WCampInstance[MAX];
 	private final IntegerStack stack = new IntegerStack(instances.length).fill();
 	public final FactionCamps factions;
 	public final LIST<Race> available;
-	private final Checker checker = new Checker();
 	private final boolean[] av = new boolean[RACES.all().size()];
 	{
 		D.t(this);
@@ -44,7 +42,6 @@ public class WorldCamp extends WorldBuilding{
 	
 	public WorldCamp(LISTE<WorldBuilding> all) throws IOException {
 		super(all);
-		types = WCampType.types();
 		factions = new FactionCamps(types);
 		new Placer(types);
 		
@@ -56,6 +53,10 @@ public class WorldCamp extends WorldBuilding{
 			}
 		}
 		available = new ArrayList<>(a);
+		
+		
+		
+		
 	}
 
 	@Override
@@ -89,22 +90,12 @@ public class WorldCamp extends WorldBuilding{
 	@Override
 	protected void renderAboveTerrain(SPRITE_RENDERER r, ShadowBatch s, RenderIterator it, int data) {
 		
-		WCampInstance c = instances[data];
-		
-		
-		
-		
-		int off = (c.type().sheet.size()-C.TILE_SIZE)/2 + 2;
-		COLOR col = c.faction() == null ? GCOLORS_MAP.FRebel : c.faction().banner().colorBG();
-		col.bind();
-		SPRITES.cons().BIG.outline_dashed_small.renderBox(r, it.x()-off, it.y()-off, c.type().sheet.size()+4, c.type().sheet.size()+4);
-		COLOR.unbind();
+	
 	}
 	
 	@Override
 	protected void unplace(int tx, int ty) {
 		WCampInstance c = map.get(tx, ty);
-		c.factionSet(null);
 		stack.push(c.index);
 		instances[c.index] = null;
 	}
@@ -116,7 +107,7 @@ public class WorldCamp extends WorldBuilding{
 		for (WCampInstance i : instances)
 			if (i != null)
 				i.save(file);
-		
+		factions.saver.save(file);
 	}
 
 	@Override
@@ -130,6 +121,7 @@ public class WorldCamp extends WorldBuilding{
 			WCampInstance in = WCampInstance.load(file);
 			instances[i] = in;
 		}
+		factions.saver.load(file);
 	}
 
 	@Override
@@ -138,11 +130,11 @@ public class WorldCamp extends WorldBuilding{
 		for (int i = 0; i < instances.length; i++)
 			instances[i] = null;
 		stack.fill();
-		factions.clear();
+		factions.saver.clear();
 	}
 	
 	public void update(float ds) {
-		checker.update(ds);
+		factions.update(ds);
 	}
 	
 	public MAP_OBJECT<WCampInstance> map = new MAP_OBJECT<WCampInstance>() {
@@ -180,17 +172,26 @@ public class WorldCamp extends WorldBuilding{
 	private int tick = GAME.updateI();
 	
 	public LIST<WCampInstance> all(){
-		if (tick != GAME.updateI()) {
-			tick = GAME.updateI();
-			tmp.clear();
-			for (int i = 0; i < instances.length; i++) {
-				if (instances[i] != null)
-					tmp.add(instances[i]);
-			}
+		if (tick == GAME.updateI())
+			return tmp;
+		tick = GAME.updateI();
+		return pall();
+		
+	}
+	
+	private LIST<WCampInstance> pall(){
+		tmp.clear();
+		for (int i = 0; i < instances.length; i++) {
+			if (instances[i] != null)
+				tmp.add(instances[i]);
 		}
 		return tmp;
-		
-		
+	}
+	
+	@Override
+	protected void initBeforePlay() {
+		factions.init(pall());
+		super.initBeforePlay();
 	}
 
 }

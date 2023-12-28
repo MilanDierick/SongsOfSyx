@@ -87,6 +87,17 @@ public class ArrayListShortResize implements SAVABLE{
 		return true;
 	}
 	
+	public void removeShort(short s) {
+		remove(indexOf(s));
+	}
+	
+	public int indexOf(short s) {
+		for (int i = 0; i < last; i++)
+			if (es[i] == s)
+				return i;
+		return -1;
+	}
+	
 	public int remainingSlots() {
 		return maxSize-last;
 	}

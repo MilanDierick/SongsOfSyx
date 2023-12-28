@@ -19,7 +19,7 @@ final class ViewMiniMap extends Interrupter {
 
 	private final Rec absBounds = new Rec(C.DIM());
 
-	private final ViewMiniMapUI section;
+	private final ViewMiniMapUI ss;
 	private final GameWindow window = new GameWindow(C.DIM(), SETT.PIXEL_BOUNDS, 0).setzoomoutMax(6);
 	
 	boolean hovered = false;
@@ -32,27 +32,29 @@ final class ViewMiniMap extends Interrupter {
 	public ViewMiniMap(UIMinimap m, InterManager i, GameWindow c) {
 		this.manager = i;
 		persistantSet();
-		this.c = c;
-		mini = new ViewMinimapMap(m);
 		int zoomout = 4;
 		while ((PIXEL_BOUNDS.width() >> zoomout) > C.WIDTH() || (PIXEL_BOUNDS.height() >> zoomout) > C.HEIGHT())
 			zoomout++;
 		if (zoomout > 6)
 			zoomout = 6;
+		this.c = c;
+		ss = new ViewMiniMapUI(i, window, zoomout, this);
+		mini = new ViewMinimapMap(m, ss);
+		
 		window.setZoomout(4);
 		window.setzoomoutMax(zoomout);
-		section = new ViewMiniMapUI(i, window, zoomout, this);
+		
 	}
 
 	@Override
 	protected void hoverTimer(GBox text) {
-		section.hoverInfoGet(text);
+		ss.hoverInfoGet(text);
 	}
 
 	@Override
 	protected boolean render(Renderer r, float ds) {
-		section.render(r, ds);
-		mini.render(r, ds, window, absBounds, window.pixel(), section.currentE, hovered);
+		ss.render(r, ds);
+		mini.render(r, ds, window, absBounds, window.pixel(), hovered);
 		hovered = false;
 
 		return false;
@@ -101,7 +103,7 @@ final class ViewMiniMap extends Interrupter {
 				c.setFromOther(window);
 				hide();
 			}else {
-				section.click();
+				ss.click();
 			}
 			
 		}else if(button == MButt.RIGHT) {
@@ -112,9 +114,10 @@ final class ViewMiniMap extends Interrupter {
 	@Override
 	protected boolean hover(COORDINATE mCoo, boolean mouseHasMoved) {
 		
-		section.hover(mCoo);
-		hovered = window.pixel().isWithinRec(SETT.PIXEL_BOUNDS) && ! section.hoveredIs();
-		
+		ss.hover(mCoo);
+		hovered = window.pixel().isWithinRec(SETT.PIXEL_BOUNDS) && ! ss.hoveredIs();
+		if (!ss.hoveredIs())
+			window.hover();
 		
 		return true;
 	}
@@ -147,8 +150,7 @@ final class ViewMiniMap extends Interrupter {
 		
 		
 		GAME.SPEED.poll();
-		if (!section.hoveredIs())
-			window.hover();
+		
 		window.update(ds);
 		up();
 

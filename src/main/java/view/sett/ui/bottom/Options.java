@@ -11,13 +11,14 @@ import snake2d.util.gui.GUI_BOX;
 import snake2d.util.gui.GuiSection;
 import snake2d.util.gui.clickable.CLICKABLE;
 import snake2d.util.misc.ACTION;
-import util.gui.misc.*;
+import util.gui.misc.GBox;
+import util.gui.misc.GGrid;
 import view.keyboard.KEYS;
 import view.keyboard.KeyButt;
 import view.main.VIEW;
 import view.tool.PLACABLE;
 
-final class Options extends GuiSection{
+final class Options extends SPanel{
 
 	private static CharSequence ¤¤CopyArea = "Copy Area";
 	
@@ -29,7 +30,7 @@ final class Options extends GuiSection{
 
 		D.gInit(this);
 		
-		body().setWidth(500);
+		body().setWidth(BButt.WIDTH*2);
 		GGrid grid = new GGrid(this, 2);
 		
 		{
@@ -41,7 +42,7 @@ final class Options extends GuiSection{
 					VIEW.s().misc.copier.activate();
 				}
 			};
-			CLICKABLE c = new GButt.ButtPanel(¤¤CopyArea){
+			CLICKABLE c = new BButt(SPRITES.icons().m.copy, ¤¤CopyArea){
 				
 				@Override
 				protected void clickA() {
@@ -49,7 +50,7 @@ final class Options extends GuiSection{
 				};
 				
 				
-			}.icon(SPRITES.icons().m.copy).setDim(Popup.width, Popup.bh);
+			};
 			c = KeyButt.wrap(a, c, KEYS.SETT(), "COPY_SUPER", ¤¤CopyArea, "");
 			SearchToolPanel.add(c, ¤¤CopyArea);
 			
@@ -57,7 +58,7 @@ final class Options extends GuiSection{
 		}
 		make("COPY_ROOM", ROOMS().copy.copy(), grid);
 		
-		CLICKABLE c = new GButt.ButtPanel(D.g("Planning")) {
+		CLICKABLE c = new BButt(UI.icons().m.time, D.g("Planning")) {
 			
 			@Override
 			protected void clickA() {
@@ -70,7 +71,7 @@ final class Options extends GuiSection{
 			};
 			
 			
-		}.icon(UI.PANEL().checkSprite(SETT.JOBS().planMode)).setDim(Popup.width, Popup.bh);
+		};
 		c.hoverInfoSet(D.g("PlanningD", "When enabled, placed jobs will not be performed until manually activated by your grace."));
 		grid.add(c);
 		
@@ -80,12 +81,15 @@ final class Options extends GuiSection{
 		make("ACTIVATE", JOBS().tool_activate, grid);
 		make("DORMANT", JOBS().tool_dormant, grid);
 		
+		make("MAINTENANCE_ON", SETT.MAINTENANCE().enablePlacer, grid);
+		make("MAINTENANCE_OFF", SETT.MAINTENANCE().enablePlacer.getUndo(), grid);
+		
 		make("DIAGONALIZE", TERRAIN().diagonal.placer, grid);
 		make("SQUAREIFY", TERRAIN().diagonal.undo, grid);
 		
 		addRelBody(8, DIR.S, new UISavedRooms());
 
-		
+		pad(8, 8);
 	}
 	
 	private void make(String code, PLACABLE p, GGrid grid) {
@@ -97,7 +101,7 @@ final class Options extends GuiSection{
 				VIEW.s().tools.place(p);
 			}
 		};
-		CLICKABLE c = new GButt.ButtPanel(p.name()){
+		CLICKABLE c = new BButt(p.getIcon(), p.name()){
 			
 			@Override
 			protected void clickA() {
@@ -110,13 +114,13 @@ final class Options extends GuiSection{
 			}
 			
 			
-		}.icon(p.getIcon()).setDim(Popup.width, Popup.bh);
+		};
 		c = KeyButt.wrap(a, c, KEYS.SETT(), code, p.name(), "");
 		SearchToolPanel.add(c, p.name());
 		grid.add(c);
 	}
 	
-	public GuiSection get() {
+	public GuiSection ge2t() {
 		return this;
 	}
 	

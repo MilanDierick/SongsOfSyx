@@ -2,7 +2,7 @@ package view.interrupter;
 
 import init.C;
 import snake2d.util.gui.GuiSection;
-import view.ui.UIPanelTop;
+import view.ui.top.UIPanelTop;
 
 public class ISidePanel{
 
@@ -10,7 +10,7 @@ public class ISidePanel{
 	protected CharSequence title;
 	public static final int M = 8*C.SG;	
 	static final int Y1 = UIPanelTop.HEIGHT;
-	static final int Y2 = Y1+C.SG*32+M*2;
+	static final int Y2 = Y1+C.SG*32+M;
 	public static final int HEIGHT = C.HEIGHT()-Y2-M;
 	ISidePanels last;
 	

@@ -12,8 +12,8 @@ import settlement.room.main.category.RoomCategorySub;
 import settlement.room.main.furnisher.Furnisher;
 import settlement.room.main.job.ROOM_EMPLOY_AUTO;
 import settlement.room.main.util.RoomInitData;
-import settlement.room.service.module.RoomServiceDataSimple;
-import settlement.room.service.module.RoomServiceDataSimple.ROOM_SERVICE_HASER;
+import settlement.room.service.module.RoomService;
+import settlement.room.service.module.RoomService.ROOM_SERVICE_HASER;
 import snake2d.util.datatypes.DIR;
 import snake2d.util.file.FileGetter;
 import snake2d.util.file.FilePutter;
@@ -24,13 +24,13 @@ public final class ROOM_INN extends RoomBlueprintIns<InnInstance> implements ROO
 
 	final Constructor constructor;
 	final ABed bed;
-	final RoomServiceDataSimple service;
+	final RoomService service;
 	
 	public ROOM_INN(RoomInitData init, RoomCategorySub block) throws IOException {
 		super(0, init, "_INN", block);
 		bed = new ABed(this);
 		constructor = new Constructor(this, init);
-		service = new RoomServiceDataSimple(this, init) {
+		service = new RoomService(this, init) {
 			
 			@Override
 			public double totalMultiplier() {
@@ -113,7 +113,7 @@ public final class ROOM_INN extends RoomBlueprintIns<InnInstance> implements ROO
 	}
 
 	@Override
-	public RoomServiceDataSimple service() {
+	public RoomService service() {
 		return service;
 	}
 

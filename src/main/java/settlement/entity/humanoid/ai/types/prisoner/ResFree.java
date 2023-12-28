@@ -6,7 +6,8 @@ import settlement.entity.humanoid.ai.main.*;
 import settlement.entity.humanoid.ai.main.AIPLAN.PLANRES.Resumer;
 import settlement.entity.humanoid.ai.main.AISUB.AISubActivation;
 import settlement.main.SETT;
-import settlement.stats.CAUSE_ARRIVE;
+import settlement.stats.STATS;
+import settlement.stats.util.CAUSE_ARRIVE;
 import util.dic.DicMisc;
 
 class ResFree {
@@ -26,6 +27,7 @@ class ResFree {
 			@Override
 			protected AISubActivation res(Humanoid a, AIManager d) {
 				a.HTypeSet(HTYPE.SUBJECT, null, CAUSE_ARRIVE.PAROLE);
+				STATS.POP().TYPE.EX_CON.set(a.indu());
 				return null;
 			}
 			

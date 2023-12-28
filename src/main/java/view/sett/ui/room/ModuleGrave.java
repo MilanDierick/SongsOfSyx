@@ -1,7 +1,7 @@
 package view.sett.ui.room;
 
-import init.sprite.ICON;
 import init.sprite.SPRITES;
+import init.sprite.UI.Icon;
 import init.sprite.UI.UI;
 import settlement.room.main.*;
 import settlement.room.spirit.grave.GraveData;
@@ -125,7 +125,7 @@ final class ModuleGrave implements ModuleMaker {
 				
 				@Override
 				public RENDEROBJ build(GETTER<Integer> ier) {
-					return new HOVERABLE.HoverableAbs(350, ICON.MEDIUM.SIZE) {
+					return new HOVERABLE.HoverableAbs(350, Icon.M) {
 
 						private final GText text = new GText(UI.FONT().M, 32);
 
@@ -135,7 +135,7 @@ final class ModuleGrave implements ModuleMaker {
 							if (info != null) {
 								int x1 = body().x1();
 								info.race().appearance().icon.render(r, body().x1(), body().y1());
-								x1 += ICON.MEDIUM.SIZE + 4;
+								x1 += Icon.M + 4;
 								text.lablifySub().clear().set(info.name());
 								text.renderCY(r, x1, body().cY());
 								x1 += text.width()+6;

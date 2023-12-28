@@ -2,10 +2,10 @@ package settlement.room.service.food.canteen;
 
 import init.C;
 import init.resources.RESOURCE;
-import settlement.main.RenderData.RenderIterator;
 import settlement.main.SETT;
 import snake2d.SPRITE_RENDERER;
 import snake2d.util.datatypes.*;
+import util.rendering.RenderData.RenderIterator;
 import util.rendering.ShadowBatch;
 
 class SChair {
@@ -28,14 +28,21 @@ class SChair {
 		
 		int tx = ins.tableX;
 		int ty = ins.tableY;
+
 		if (tx == -1)
 			return null;
 		
-		for (int i = 0; i < ins.area(); i++) {
+		int a = ins.body().width()*ins.body().height();
+		
+		for (int i = 0; i < a; i++) {
 			
 			if (ins.is(tx, ty)) {
+				
+				
 				if (SETT.ROOMS().fData.tileData.get(tx, ty) == I) {
 					if (SETT.ROOMS().data.get(tx, ty) == 0) {
+						ins.tableX = (short) tx;
+						ins.tableY = (short) ty;
 						return ret(ins, tx, ty);
 					}
 				}

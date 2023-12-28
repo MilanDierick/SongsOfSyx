@@ -4,11 +4,10 @@ import static menu.GUI.*;
 
 import init.D;
 import init.paths.PATHS;
-import menu.screens.Screener;
 import snake2d.util.gui.GuiSection;
 import snake2d.util.gui.clickable.CLICKABLE;
 
-class ScCampaign extends GuiSection implements SCREEN{
+class ScCampaign extends GuiSection implements SC{
 
 	private final int margin;
 	final CharSequence ¤¤name = "¤campaigns";

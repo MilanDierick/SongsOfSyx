@@ -1,13 +1,13 @@
 package view.world.generator.tools;
 
 import init.D;
-import init.sprite.SPRITES;
 import init.sprite.UI.UI;
 import snake2d.SPRITE_RENDERER;
 import snake2d.util.datatypes.DIR;
 import snake2d.util.gui.GUI_BOX;
 import snake2d.util.gui.GuiSection;
 import snake2d.util.gui.clickable.CLICKABLE;
+import snake2d.util.gui.renderable.RENDEROBJ;
 import snake2d.util.rnd.RND;
 import snake2d.util.sprite.text.StringInputSprite;
 import util.colors.GCOLOR;
@@ -15,12 +15,13 @@ import util.data.INT.INTE;
 import util.gui.misc.*;
 import util.gui.slider.GSliderInt;
 import util.info.GFORMAT;
+import world.WORLD;
 import world.WorldGen;
 import world.WorldGen.WorldGenMapType;
 
 public class UIWorldGenerateTerrain extends GuiSection{
 
-	private static CharSequence ¤¤MapType = "choose map type";
+	public static CharSequence ¤¤MapType = "choose map type";
 	private static CharSequence ¤¤Random = "Random";
 	
 	private static CharSequence ¤¤latitude = "¤latitude";
@@ -28,31 +29,54 @@ public class UIWorldGenerateTerrain extends GuiSection{
 	private static CharSequence ¤¤south = "¤southern";
 	
 	private static CharSequence ¤¤seed = "¤Random Seed";
-	private static CharSequence ¤¤seedgenerate = "¤Generate based on seed.";
 
 	static {
 		D.ts(UIWorldGenerateTerrain.class);
 	}
 
-	private final WorldGen spec;
+	private int ttt;
 
 	
 	public UIWorldGenerateTerrain(WorldGen spec){
 
-		this.spec = spec;
-		
 		{
+			
 			GuiSection s = new GuiSection();
-			int gi = 0;
-			final int xs = 6;
-			final int mx = 2;
-			final int my = 2;
-			s.addGrid(new RMapTypeNone(), gi++, xs, mx, my);
+			RMapType tt = new RMapType();
+			s.add(tt);
 			
-			for (WorldGenMapType t : WorldGenMapType.getAll())
-				s.addGrid(new RMapType(t), gi++, xs, mx, my);
+			WorldGenMapType[] types = WorldGenMapType.getAll(WORLD.TWIDTH());
 			
-			s.addRelBody(8, DIR.N, new GHeader(¤¤MapType));
+			ttt = types.length;
+			
+			s.addRelBody(8, DIR.W, new GButt.ButtPanel(UI.icons().m.arrow_left) {
+				
+				@Override
+				protected void clickA() {
+					ttt--;
+					if (ttt < 0)
+						ttt = types.length;
+					tt.type = ttt < types.length ? types[ttt] : null;
+					spec.map = ttt < types.length ? types[ttt].name : null;
+					super.clickA();
+				}
+				
+			});
+			
+			s.addRelBody(8, DIR.E, new GButt.ButtPanel(UI.icons().m.arrow_right) {
+				
+				@Override
+				protected void clickA() {
+					ttt++;
+					if (ttt > types.length)
+						ttt = 0;
+					tt.type = ttt < types.length ? types[ttt] : null;
+					spec.map = ttt < types.length ? types[ttt].name : null;
+					super.clickA();
+				}
+				
+			});
+			
 			
 			addRelBody(16, DIR.S, s);
 			
@@ -111,8 +135,21 @@ public class UIWorldGenerateTerrain extends GuiSection{
 			GInput seed = new GInput(new StringInputSprite(10, UI.FONT().M) {
 				@Override
 				protected void acceptChar(char c) {
-					if (c >= '0' && c <= '9')
+					if (c >= '0' && c <= '9') {
 						super.acceptChar(c);
+						int se = RND.seed();
+						CharSequence s = text();
+						if ((s.length() > 9))
+							s = (""+s).substring(0, 9);
+						try {
+							se = Integer.parseInt("" + s);
+							spec.seed = se;
+							RND.setSeed(se);
+							//GAME.world().regenerate();
+						}catch(Exception e) {
+							text().clear().add('1');
+						}
+					}
 				}
 			}) {
 				@Override
@@ -125,25 +162,6 @@ public class UIWorldGenerateTerrain extends GuiSection{
 			addRelBody(16, DIR.S, seed);
 			
 			
-			addRightC(4, new GButt.Standalone(SPRITES.icons().m.arrow_right){
-				@Override
-				protected void clickA() {
-					int se = RND.seed();
-					CharSequence s = seed.text();
-					if ((s.length() > 9))
-						s = (""+s).substring(0, 9);
-					try {
-						se = Integer.parseInt("" + s);
-						spec.seed = se;
-						RND.setSeed(se);
-						//GAME.world().regenerate();
-					}catch(Exception e) {
-						seed.text().clear().add('1');
-					}
-					
-				};
-
-			}.hoverInfoSet(¤¤seedgenerate));
 			
 		}
 		
@@ -154,52 +172,29 @@ public class UIWorldGenerateTerrain extends GuiSection{
 		
 	}
 	
-	private class RMapType extends ClickableAbs{
-
-		private final WorldGenMapType type;
-		
-		public RMapType(WorldGenMapType type) {
-			body.setDim(WorldGenMapType.DIM+10, WorldGenMapType.DIM+10);
-			this.type = type;
-		}
-		
-		@Override
-		protected void render(SPRITE_RENDERER r, float ds, boolean isActive, boolean isSelected, boolean isHovered) {
-			isSelected |= type.name.equals(spec.map);
-			GCOLOR.UI().border().render(r, body);
-			GCOLOR.UI().bg(isActive, isSelected, isHovered).render(r, body, -1);
-			type.render(r, body().x1()+5, body().y1()+5, 1);
-		}
-		
-		@Override
-		protected void clickA() {
-			spec.map = type.name;
-		}
-	}
-	
-	private class RMapTypeNone extends ClickableAbs{
+	private class RMapType extends RENDEROBJ.RenderImp{
 
 		private final GText text;
 		
-		public RMapTypeNone() {
-			body.setDim(WorldGenMapType.DIM+10, WorldGenMapType.DIM+10);
+		private WorldGenMapType type;
+		
+		public RMapType() {
+			body.setDim(200+10, 200+10);
 			text = new GText(UI.FONT().M, ¤¤Random);
 			text.setMultipleLines(true);
-			text.setMaxWidth(WorldGenMapType.DIM);
+			text.setMaxWidth(200);
 			text.adjustWidth();
 		}
-		
+
 		@Override
-		protected void render(SPRITE_RENDERER r, float ds, boolean isActive, boolean isSelected, boolean isHovered) {
-			isSelected |= spec.map == null;
+		public void render(SPRITE_RENDERER r, float ds) {
 			GCOLOR.UI().border().render(r, body);
-			GCOLOR.UI().bg(isActive, isSelected, isHovered).render(r, body, -1);
-			text.renderC(r, body);
-		}
-		
-		@Override
-		protected void clickA() {
-			spec.map = null;
+			GCOLOR.UI().bg(true, false, false).render(r, body, -1);
+			if (type == null) {
+				text.renderC(r, body);
+			}else {
+				type.render(r, body().x1()+5, body().y1()+5, 2);
+			}
 		}
 	}
 	

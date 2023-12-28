@@ -24,7 +24,7 @@ final class VirtualFolder {
 	}
 	
 	private Path validate(Path path) {
-		if (!Files.exists(path)) {
+		if (!check(path)) {
 			throw new Errors.DataError("This file/directory does not exist: " + path,
 					path);
 		}
@@ -64,6 +64,15 @@ final class VirtualFolder {
 		return p;
 	}
 	
+	public boolean exists(CharSequence file, String filetype) {
+		String f = file+filetype;
+		for (Path m : bases) {
+			if (check(resolve(m, f)))
+				return true;
+		}
+		return false;
+	}
+	
 	Path getPossibleFile(CharSequence name) {
 		if (name == null)
 			name = "";
@@ -86,7 +95,12 @@ final class VirtualFolder {
 			base = base.resolve(appendix);
 		if (resource == null || resource.length() == 0)
 			return base;
-		return base.resolve(resource);
+		try {
+			return base.resolve(resource);
+		}catch(Exception e) {
+			e.printStackTrace();
+			return null;
+		}
 	}
 
 	
@@ -199,13 +213,6 @@ final class VirtualFolder {
 
 	}
 	
-	public boolean exists(CharSequence file, String filetype) {
-		String f = file+filetype;
-		for (Path m : bases) {
-			if (check(resolve(m, f)))
-				return true;
-		}
-		return false;
-	}
+
 	
 }

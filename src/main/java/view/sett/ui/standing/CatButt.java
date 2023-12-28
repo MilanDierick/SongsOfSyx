@@ -2,8 +2,11 @@ package view.sett.ui.standing;
 
 import game.GAME;
 import game.time.TIME;
+import init.race.Race;
 import settlement.entity.humanoid.HCLASS;
-import settlement.stats.*;
+import settlement.stats.STATS;
+import settlement.stats.stat.STAT;
+import settlement.stats.stat.StatCollection;
 import snake2d.SPRITE_RENDERER;
 import snake2d.util.color.*;
 import snake2d.util.datatypes.COORDINATE;
@@ -130,6 +133,7 @@ class CatButt extends GuiSection {
 		private final INTE hov;
 		private final StatCollection[] cs;
 		private static final double div = 100;
+		private Race old;
 		
 		private double vmin,vmax,max;
 		private int vI = -1;
@@ -201,10 +205,11 @@ class CatButt extends GuiSection {
 		
 		@Override
 		protected double getValue(int stapleI) {
-			if (Math.abs(vI-GAME.updateI()) > 60) {
+			if (old != CitizenMain.current || Math.abs(vI-GAME.updateI()) > 60) {
 				vI = GAME.updateI();
 				vmin = Double.MAX_VALUE;
 				vmax = Double.MIN_VALUE;
+				old = CitizenMain.current;
 				max = 0;
 //				for (StatCollection c : cs)
 //					for (STAT s : c.all()) {

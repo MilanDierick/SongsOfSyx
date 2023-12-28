@@ -1,6 +1,6 @@
 package world.map.terrain;
 
-import static world.World.*;
+import static world.WORLD.*;
 
 import java.util.Collections;
 import java.util.LinkedList;
@@ -8,7 +8,7 @@ import java.util.LinkedList;
 import snake2d.util.datatypes.Coo;
 import snake2d.util.datatypes.DIR;
 import snake2d.util.rnd.RND;
-import world.World;
+import world.WORLD;
 
 class GeneratorRiver {
 
@@ -38,9 +38,9 @@ class GeneratorRiver {
 
 		Collections.shuffle(coo);
 		
-		double am = 200*World.TAREA()/(224.0*224.0);
+		double am = 200*WORLD.TAREA()/(224.0*224.0);
 		
-		while (am-- > 0) {
+		while (am-- > 0 && !coo.isEmpty()) {
 			Coo c = coo.removeFirst();
 			
 			if (smallRiver(c.x(), c.y()))
@@ -51,7 +51,7 @@ class GeneratorRiver {
 	}
 	
 	private DIR smallStart(int tx, int ty) {
-		if (!World.WATER().is(tx, ty))
+		if (!WORLD.WATER().is(tx, ty))
 			return null;
 		
 		int ri = RND.rInt(DIR.ORTHO.size());
@@ -98,7 +98,7 @@ class GeneratorRiver {
 	private boolean smallRiver(int tx, int ty, DIR dir, int straights, int length){
 		if (length-- < 0)
 			return false;
-		if (!World.IN_BOUNDS(tx, ty))
+		if (!WORLD.IN_BOUNDS(tx, ty))
 			return smallSuccess(tx, ty);
 		if (MOUNTAIN().is(tx, ty))
 			return false;
@@ -132,7 +132,7 @@ class GeneratorRiver {
 	static int largeRivers() {
 
 		
-		double am = 10*World.TAREA()/(224.0*224.0);
+		double am = 10*WORLD.TAREA()/(224.0*224.0);
 		
 		
 		
@@ -267,7 +267,7 @@ class GeneratorRiver {
 			return true;
 		}
 
-		if (World.MOUNTAIN().is(x, y) && length > 3 && RND.rInt(8) == 0)
+		if (WORLD.MOUNTAIN().is(x, y) && length > 3 && RND.rInt(8) == 0)
 			return true;
 
 		if (WATER().borders(x, y, WATER().RIVER)) {
@@ -373,7 +373,7 @@ class GeneratorRiver {
 			return true;
 		}
 
-		if (World.MOUNTAIN().is(x, y) && length > 3 && RND.rInt(8) == 0)
+		if (WORLD.MOUNTAIN().is(x, y) && length > 3 && RND.rInt(8) == 0)
 			return true;
 
 		if (WATER().borders(x, y, WATER().RIVER)) {

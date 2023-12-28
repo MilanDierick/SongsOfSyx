@@ -6,8 +6,8 @@ import settlement.entity.humanoid.ai.main.*;
 import settlement.entity.humanoid.ai.main.AISUB.AISubActivation;
 import settlement.main.SETT;
 import settlement.room.spirit.temple.ROOM_TEMPLE;
-import settlement.stats.CAUSE_LEAVE;
 import settlement.stats.STATS;
+import settlement.stats.util.CAUSE_LEAVE;
 import snake2d.util.datatypes.COORDINATE;
 import snake2d.util.datatypes.DIR;
 import snake2d.util.sets.ArrayList;
@@ -16,10 +16,10 @@ class Temple extends AIPLAN.PLANRES{
 
 	private final CharSequence ¤¤name = "¤Being Sacrificed";
 	
-	private final ArrayList<ROOM_TEMPLE> temples = new ArrayList<>(SETT.ROOMS().TEMPLES.size());
+	private final ArrayList<ROOM_TEMPLE> temples = new ArrayList<>(SETT.ROOMS().TEMPLES.ALL.size());
 	
 	{
-		for (ROOM_TEMPLE t : SETT.ROOMS().TEMPLES)
+		for (ROOM_TEMPLE t : SETT.ROOMS().TEMPLES.ALL)
 			if (t.sacrifices())
 				temples.add(t);
 		D.t(this);

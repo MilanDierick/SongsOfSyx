@@ -9,8 +9,8 @@ class Sett implements SETTINGS{
 
 	Sett(){}
 	
-	public static final int WIDTH = 900;
-	public static final int HEIGHT = 420;
+	public static final int WIDTH = 896;
+	public static final int HEIGHT = 448;
 	public static final int SCALE = 4;
 	private final DisplayMode display = new DisplayMode(WIDTH, HEIGHT, 60, false);
 

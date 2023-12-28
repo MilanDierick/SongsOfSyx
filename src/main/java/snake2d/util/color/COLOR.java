@@ -49,6 +49,8 @@ public interface COLOR extends SPRITE{
 	public final static COLOR BLUEDARK = new ColorImp(10,10,24);
 	public final static COLOR BLUE100 = new ColorImp(0,0,127);
 	public final static COLOR BLUEISH = new ColorImp(48,48,100);
+	public final static COLOR PURPLE = new ColorImp(127, 0, 127);
+	public final static COLOR PURPLISH = new ColorImp(127, 70, 127);
 	
 	public static final COLOR GREEN2RED = new ColorShifting(ColorImp.RED100, ColorImp.RED100);
 	public static final COLOR GREEN2GREEN = new ColorShifting(ColorImp.GREEN40, ColorImp.GREEN100);
@@ -128,9 +130,9 @@ public interface COLOR extends SPRITE{
 		double g = Byte.toUnsignedInt(c.green());
 		double b = Byte.toUnsignedInt(c.blue());
 
-		double dr = (Byte.toUnsignedInt(c2.red())-r)/(amount-1);
-		double dg = (Byte.toUnsignedInt(c2.green())-g)/(amount-1);
-		double db = (Byte.toUnsignedInt(c2.blue())-b)/(amount-1);
+		double dr = (double)(Byte.toUnsignedInt(c2.red())-r)/(amount-1);
+		double dg = (double)(Byte.toUnsignedInt(c2.green())-g)/(amount-1);
+		double db = (double)(Byte.toUnsignedInt(c2.blue())-b)/(amount-1);
 		
 		ColorImp[] res = new ColorImp[amount];
 		
@@ -198,15 +200,18 @@ public interface COLOR extends SPRITE{
 		};
 	}
 	
-	public static COLOR[] generateUnique(int amount) {
+	public static COLOR[] generateUnique(int min, int amount, boolean ran) {
 		
 		COLOR[] cols = new COLOR[amount];
 		final int rM = (int) Math.pow(amount, 1.0/3.0);
 		final int gM = rM;
 		final int bM = (int) Math.ceil((double)amount/(rM*gM));
-		final double rD = 87.0/rM;
-		final double gD = 87.0/gM;
-		final double bD = 87.0/bM;
+		
+		double delta = 127-min;
+		
+		final double rD = delta/rM;
+		final double gD = delta/gM;
+		final double bD = delta/bM;
 		
 		int in = 0;
 		outer:
@@ -216,9 +221,9 @@ public interface COLOR extends SPRITE{
 					if (in >= cols.length)
 						break outer;
 					ColorImp i = new ColorImp();
-					i.setRed(40 + (int) (rD/2 + r*rD));
-					i.setGreen(40 + (int) (gD/2 + g*gD));
-					i.setBlue(40 + (int) (bD/2 + b*bD));
+					i.setRed(min + (int) (rD/2 + r*rD));
+					i.setGreen(min + (int) (gD/2 + g*gD));
+					i.setBlue(min + (int) (bD/2 + b*bD));
 					cols[in++] = i;
 				}
 			}
@@ -240,5 +245,331 @@ public interface COLOR extends SPRITE{
 			return false;
 		return c.red() == a.red() && c.green() == a.green() && c.blue() == a.blue();
 	}
+	
+	public static void main(String[] args) {
+		
+		String s = "gainsboro\r\n"
+				+ "\r\n"
+				+ "#dcdcdc\r\n"
+				+ "\r\n"
+				+ "darkslategray\r\n"
+				+ "\r\n"
+				+ "#2f4f4f\r\n"
+				+ "\r\n"
+				+ "darkolivegreen\r\n"
+				+ "\r\n"
+				+ "#556b2f\r\n"
+				+ "\r\n"
+				+ "saddlebrown\r\n"
+				+ "\r\n"
+				+ "#8b4513\r\n"
+				+ "\r\n"
+				+ "olivedrab\r\n"
+				+ "\r\n"
+				+ "#6b8e23\r\n"
+				+ "\r\n"
+				+ "seagreen\r\n"
+				+ "\r\n"
+				+ "#2e8b57\r\n"
+				+ "\r\n"
+				+ "midnightblue\r\n"
+				+ "\r\n"
+				+ "#191970\r\n"
+				+ "\r\n"
+				+ "slategray\r\n"
+				+ "\r\n"
+				+ "#708090\r\n"
+				+ "\r\n"
+				+ "darkred\r\n"
+				+ "\r\n"
+				+ "#8b0000\r\n"
+				+ "\r\n"
+				+ "darkslateblue\r\n"
+				+ "\r\n"
+				+ "#483d8b\r\n"
+				+ "\r\n"
+				+ "green\r\n"
+				+ "\r\n"
+				+ "#008000\r\n"
+				+ "\r\n"
+				+ "rosybrown\r\n"
+				+ "\r\n"
+				+ "#bc8f8f\r\n"
+				+ "\r\n"
+				+ "rebeccapurple\r\n"
+				+ "\r\n"
+				+ "#663399\r\n"
+				+ "\r\n"
+				+ "teal\r\n"
+				+ "\r\n"
+				+ "#008080\r\n"
+				+ "\r\n"
+				+ "darkgoldenrod\r\n"
+				+ "\r\n"
+				+ "#b8860b\r\n"
+				+ "\r\n"
+				+ "darkkhaki\r\n"
+				+ "\r\n"
+				+ "#bdb76b\r\n"
+				+ "\r\n"
+				+ "peru\r\n"
+				+ "\r\n"
+				+ "#cd853f\r\n"
+				+ "\r\n"
+				+ "steelblue\r\n"
+				+ "\r\n"
+				+ "#4682b4\r\n"
+				+ "\r\n"
+				+ "chocolate\r\n"
+				+ "\r\n"
+				+ "#d2691e\r\n"
+				+ "\r\n"
+				+ "yellowgreen\r\n"
+				+ "\r\n"
+				+ "#9acd32\r\n"
+				+ "\r\n"
+				+ "indianred\r\n"
+				+ "\r\n"
+				+ "#cd5c5c\r\n"
+				+ "\r\n"
+				+ "darkblue\r\n"
+				+ "\r\n"
+				+ "#00008b\r\n"
+				+ "\r\n"
+				+ "limegreen\r\n"
+				+ "\r\n"
+				+ "#32cd32\r\n"
+				+ "\r\n"
+				+ "purple2\r\n"
+				+ "\r\n"
+				+ "#7f007f\r\n"
+				+ "\r\n"
+				+ "darkseagreen\r\n"
+				+ "\r\n"
+				+ "#8fbc8f\r\n"
+				+ "\r\n"
+				+ "maroon3\r\n"
+				+ "\r\n"
+				+ "#b03060\r\n"
+				+ "\r\n"
+				+ "mediumaquamarine\r\n"
+				+ "\r\n"
+				+ "#66cdaa\r\n"
+				+ "\r\n"
+				+ "darkorchid\r\n"
+				+ "\r\n"
+				+ "#9932cc\r\n"
+				+ "\r\n"
+				+ "red\r\n"
+				+ "\r\n"
+				+ "#ff0000\r\n"
+				+ "\r\n"
+				+ "darkturquoise\r\n"
+				+ "\r\n"
+				+ "#00ced1\r\n"
+				+ "\r\n"
+				+ "orange\r\n"
+				+ "\r\n"
+				+ "#ffa500\r\n"
+				+ "\r\n"
+				+ "gold\r\n"
+				+ "\r\n"
+				+ "#ffd700\r\n"
+				+ "\r\n"
+				+ "mediumvioletred\r\n"
+				+ "\r\n"
+				+ "#c71585\r\n"
+				+ "\r\n"
+				+ "mediumblue\r\n"
+				+ "\r\n"
+				+ "#0000cd\r\n"
+				+ "\r\n"
+				+ "lawngreen\r\n"
+				+ "\r\n"
+				+ "#7cfc00\r\n"
+				+ "\r\n"
+				+ "burlywood\r\n"
+				+ "\r\n"
+				+ "#deb887\r\n"
+				+ "\r\n"
+				+ "lime\r\n"
+				+ "\r\n"
+				+ "#00ff00\r\n"
+				+ "\r\n"
+				+ "springgreen\r\n"
+				+ "\r\n"
+				+ "#00ff7f\r\n"
+				+ "\r\n"
+				+ "royalblue\r\n"
+				+ "\r\n"
+				+ "#4169e1\r\n"
+				+ "\r\n"
+				+ "darksalmon\r\n"
+				+ "\r\n"
+				+ "#e9967a\r\n"
+				+ "\r\n"
+				+ "crimson\r\n"
+				+ "\r\n"
+				+ "#dc143c\r\n"
+				+ "\r\n"
+				+ "aqua\r\n"
+				+ "\r\n"
+				+ "#00ffff\r\n"
+				+ "\r\n"
+				+ "deepskyblue\r\n"
+				+ "\r\n"
+				+ "#00bfff\r\n"
+				+ "\r\n"
+				+ "mediumpurple\r\n"
+				+ "\r\n"
+				+ "#9370db\r\n"
+				+ "\r\n"
+				+ "blue\r\n"
+				+ "\r\n"
+				+ "#0000ff\r\n"
+				+ "\r\n"
+				+ "purple3\r\n"
+				+ "\r\n"
+				+ "#a020f0\r\n"
+				+ "\r\n"
+				+ "tomato\r\n"
+				+ "\r\n"
+				+ "#ff6347\r\n"
+				+ "\r\n"
+				+ "orchid\r\n"
+				+ "\r\n"
+				+ "#da70d6\r\n"
+				+ "\r\n"
+				+ "thistle\r\n"
+				+ "\r\n"
+				+ "#d8bfd8\r\n"
+				+ "\r\n"
+				+ "fuchsia\r\n"
+				+ "\r\n"
+				+ "#ff00ff\r\n"
+				+ "\r\n"
+				+ "palevioletred\r\n"
+				+ "\r\n"
+				+ "#db7093\r\n"
+				+ "\r\n"
+				+ "khaki\r\n"
+				+ "\r\n"
+				+ "#f0e68c\r\n"
+				+ "\r\n"
+				+ "laserlemon\r\n"
+				+ "\r\n"
+				+ "#ffff54\r\n"
+				+ "\r\n"
+				+ "cornflower\r\n"
+				+ "\r\n"
+				+ "#6495ed\r\n"
+				+ "\r\n"
+				+ "plum\r\n"
+				+ "\r\n"
+				+ "#dda0dd\r\n"
+				+ "\r\n"
+				+ "lightgreen\r\n"
+				+ "\r\n"
+				+ "#90ee90\r\n"
+				+ "\r\n"
+				+ "skyblue\r\n"
+				+ "\r\n"
+				+ "#87ceeb\r\n"
+				+ "\r\n"
+				+ "deeppink\r\n"
+				+ "\r\n"
+				+ "#ff1493\r\n"
+				+ "\r\n"
+				+ "paleturquoise\r\n"
+				+ "\r\n"
+				+ "#afeeee\r\n"
+				+ "\r\n"
+				+ "aquamarine\r\n"
+				+ "\r\n"
+				+ "#7fffd4\r\n"
+				+ "\r\n"
+				+ "hotpink\r\n"
+				+ "\r\n"
+				+ "#ff69b4\r\n"
+				+ "\r\n"
+				+ "bisque\r\n"
+				+ "\r\n"
+				+ "#ffe4c4\r\n"
+				+ "\r\n"
+				+ "lightpink\r\n"
+				+ "\r\n"
+				+ "#ffb6c1";
+		
+		int am = 0;
+		for (int i = 0; i < s.length(); i++) {
+			if (s.charAt(i) == '#') {
+				String ss = s.substring(i+1, i+7);
+				int a = Integer.parseInt(ss, 16);
+				int r = ((a >> 16)&0x0FF);
+				int g = ((a >> 8)&0x0FF);
+				int b = ((a >> 0)&0x0FF);
+				am++;
+				
+				System.out.println(r + "_" + g + "_" + b + ",");
+			}
+		}
+		System.out.println(am);
+		
+	}
+	
+	public static COLOR[] generateUnique2(int min, int amount, boolean ran) {
+		
+		
+		
+		
+		final int MAX = amount;
+		
+		final COLOR[] cols = new COLOR[MAX];
+		
+		int am = 0;
+		int div = 2;
+		double delta = 127-min;
+		
+		while(am < MAX) {
+			for (int dr = 0; dr < div; dr++) {
+				for (int dg = 0; dg < div; dg++) {
+					for (int db = 0; db < div; db++) {
+						if (dr == dg && dr == db) {
+							continue;
+						}
+						int r = (int) (min+dr*delta/(div-1));
+						int g = (int) (min+dg*delta/(div-1));
+						int b = (int) (min+db*delta/(div-1));
+						if (am < MAX) {
+							cols[am] = new ColorImp(r, g, b);
+						}
+						am++;
+						
+					}
+					
+					
+				}
+				
+			}
+			div++;
+			
+		}
+		
+		if (ran) {
+			for (int i = 0; i < cols.length; i++) {
+				int k = RND.rInt(cols.length);
+				COLOR n = cols[i];
+				cols[i] = cols[k];
+				cols[k] = n;
+			}
+		}
+		
+
+		
+		
+		return cols;
+	}
+	
+
 	
 }

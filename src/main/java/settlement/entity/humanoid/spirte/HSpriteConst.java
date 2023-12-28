@@ -68,14 +68,14 @@ final class HSpriteConst {
 
 
 	public static void filth(Induvidual indu, int torse, int x, int y) {
-		double am = STATS.NEEDS().DIRTINESS.stat().indu().getD(indu);
-		texture(indu.race().appearance().sheet(indu).sheet.sheet, RACES.sprites().grit, am, indu.randomness(), torse, x, y);
+		double am = STATS.NEEDS().grime(indu); 
+		texture(indu.race().appearance().sheet(indu).sheet.sheet, RACES.sprites().grit, am, STATS.RAN().get(indu, 0), torse, x, y);
 	}
 	
 	public static void blood(Induvidual indu, int torse, int x, int y) {
 		double am = STATS.NEEDS().INJURIES.count.getD(indu);
 		indu.race().appearance().colors.blood.bind();
-		texture(indu.race().appearance().sheet(indu).sheet.sheet, RACES.sprites().blood, am, indu.randomness(), torse, x, y);
+		texture(indu.race().appearance().sheet(indu).sheet.sheet, RACES.sprites().blood, am, STATS.RAN().get(indu, 0), torse, x, y);
 		COLOR.unbind();
 	}
 
@@ -107,8 +107,8 @@ final class HSpriteConst {
 		static final int offC = 32 * C.SCALE / 2;
 		
 		public static void filth(Induvidual indu, int dir, int x, int y) {
-			double am = STATS.NEEDS().DIRTINESS.stat().indu().getD(indu);
-			texture(indu.race().appearance().sheet(indu).sheet.lay, RACES.sprites().Lgrit, am, indu.randomness(), dir, x, y);
+			double am = STATS.NEEDS().grime(indu);
+			texture(indu.race().appearance().sheet(indu).sheet.lay, RACES.sprites().Lgrit, am, STATS.RAN().get(indu, 0), dir, x, y);
 		}
 		
 		public static void filth(Race race, boolean adult, double am, int dir, int ran, int x, int y) {
@@ -118,7 +118,7 @@ final class HSpriteConst {
 		public static void blood(Induvidual indu, int dir, int x, int y) {
 			double am = STATS.NEEDS().INJURIES.count.getD(indu);
 			indu.race().appearance().colors.blood.bind();
-			texture(indu.race().appearance().sheet(indu).sheet.lay, RACES.sprites().Lblood, am, indu.randomness(), dir, x, y);
+			texture(indu.race().appearance().sheet(indu).sheet.lay, RACES.sprites().Lblood, am, STATS.RAN().get(indu, 0), dir, x, y);
 			COLOR.unbind();
 		}
 

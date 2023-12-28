@@ -1,18 +1,22 @@
 package view.sett.ui.standing;
 
+import game.boosting.BOOSTABLES;
 import game.time.TIME;
 import init.D;
-import init.boostable.BOOSTABLES;
 import init.race.RACES;
 import init.race.Race;
-import init.sprite.ICON;
 import init.sprite.SPRITES;
+import init.sprite.UI.Icon;
 import init.sprite.UI.UI;
 import settlement.entity.humanoid.HCLASS;
 import settlement.entity.humanoid.HTYPE;
 import settlement.main.SETT;
-import settlement.stats.*;
-import settlement.stats.StatsPopulation.StatsDeath.PopData;
+import settlement.stats.STATS;
+import settlement.stats.colls.StatsPopulation.StatsDeath.PopData;
+import settlement.stats.stat.STAT;
+import settlement.stats.stat.StatCollection;
+import settlement.stats.util.CAUSE_ARRIVE;
+import settlement.stats.util.CAUSE_LEAVE;
 import snake2d.SPRITE_RENDERER;
 import snake2d.util.color.COLOR;
 import snake2d.util.color.ColorImp;
@@ -69,7 +73,7 @@ final class CatPopulation extends Cat {
 		for (STAT s : c.all()) {
 			if (s.key() == null)
 				continue;
-			if (s == STATS.POP().AGE) {
+			if (s == STATS.POP().age.AGE) {
 				continue;
 			}else
 				rens.add(new StatRow(s, cl));
@@ -100,7 +104,7 @@ final class CatPopulation extends Cat {
 					b.add(VIEW.s().ui.standing.hi.init(HCLASS.SLAVE, STATS.POP().POP, false, r, false));
 					b.NL(8);
 					b.textL(BOOSTABLES.BEHAVIOUR().SUBMISSION.name);
-					b.add(GFORMAT.f0(b.text(), BOOSTABLES.BEHAVIOUR().SUBMISSION.get(HCLASS.SLAVE, r)));
+					b.add(GFORMAT.f0(b.text(), BOOSTABLES.BEHAVIOUR().SUBMISSION.get(HCLASS.SLAVE.get(r))));
 					
 				};
 			}.hv(r.appearance().icon);
@@ -268,13 +272,13 @@ final class CatPopulation extends Cat {
 					Text t = text.text();
 					t.add(¤¤age);
 					
-					int from = (int) (k*BOOSTABLES.PHYSICS().DEATH_AGE.get(cl, CitizenMain.current)/STATS.POP().demography().historyRecords());
+					int from = (int) (k*BOOSTABLES.PHYSICS().DEATH_AGE.get(cl.get(CitizenMain.current))/STATS.POP().demography().historyRecords());
 					t.insert(0, from);
 					
 					if (k == STATS.POP().demography().historyRecords()-1) {
 						t.insert(1, '+');
 					}else {
-						int to = (int) ((k+1)*BOOSTABLES.PHYSICS().DEATH_AGE.get(cl, CitizenMain.current)/STATS.POP().demography().historyRecords());
+						int to = (int) ((k+1)*BOOSTABLES.PHYSICS().DEATH_AGE.get(cl.get(CitizenMain.current))/STATS.POP().demography().historyRecords());
 						t.insert(1, to);
 					}
 					
@@ -307,12 +311,9 @@ final class CatPopulation extends Cat {
 			
 			@Override
 			public void update(GText text) {
-				double pop = STATS.POP().POP.data(cl).get(CitizenMain.current);
-				double d = 0;
-				if (pop > 0) {
-					d = STATS.POP().AGE.data(cl).get(CitizenMain.current);
-					d /= pop*TIME.years().bitConversion(TIME.days());
-				}
+				
+				double d = STATS.POP().age.AGE.data(cl).getD(CitizenMain.current)/TIME.years().bitConversion(TIME.days());
+				
 				GFORMAT.f(text, d);
 			}
 		}.hh(¤¤ageAverage);
@@ -398,7 +399,7 @@ final class CatPopulation extends Cat {
 		final SPRITE[] cols = new SPRITE[STATS.POP().COUNT.leaves().size()];
 		for (int i = 0; i < cols.length; i++) {
 			int k = i;
-			cols[i]= new SPRITE.Imp(ICON.MEDIUM.SIZE, ICON.MEDIUM.SIZE) {
+			cols[i]= new SPRITE.Imp(Icon.M, Icon.M) {
 				
 				@Override
 				public void render(SPRITE_RENDERER r, int X1, int X2, int Y1, int Y2) {

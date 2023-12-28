@@ -3,6 +3,7 @@ package settlement.room.knowledge.university;
 import java.io.IOException;
 import java.util.Arrays;
 
+import game.boosting.BOOSTABLE_O;
 import game.time.TIME;
 import init.D;
 import init.race.RACES;
@@ -11,9 +12,9 @@ import settlement.entity.humanoid.Humanoid;
 import settlement.main.SETT;
 import settlement.path.finder.SFinderRoomService;
 import settlement.room.main.RoomBlueprintIns;
-import settlement.room.main.RoomEmploymentSimple.EmployerSimple;
 import settlement.room.main.RoomInstance;
 import settlement.room.main.category.RoomCategorySub;
+import settlement.room.main.employment.RoomEmploymentSimple.EmployerSimple;
 import settlement.room.main.furnisher.Furnisher;
 import settlement.room.main.util.RoomInitData;
 import snake2d.util.datatypes.COORDINATE;
@@ -29,12 +30,16 @@ import view.sett.ui.room.UIRoomModule;
 
 public final class ROOM_UNIVERSITY extends RoomBlueprintIns<UniversityInstance>{
 
+	
+	
 	final UniversityConstructor constructor;
 	public final double learningSpeed;
 	final Job job = new Job(this);
 	private double[] limits = new double[RACES.all().size()];
 	private static CharSequence ¤¤iName = "Knowledge limit";
 	private static CharSequence ¤¤iDesc = "the maximum knowledge to teach. Subjects that are above this knowledge limit will not attend this service";
+	
+	private static CharSequence ¤¤bonus = "Learning speed of: ";
 	
 	static {
 		D.ts(ROOM_UNIVERSITY.class);
@@ -49,6 +54,7 @@ public final class ROOM_UNIVERSITY extends RoomBlueprintIns<UniversityInstance>{
 		constructor = new UniversityConstructor(this, init);
 		learningSpeed = init.data().d("LEARNING_SPEED", 0, 1);
 		clearP();
+		pushBo(init.data(), info.name, ¤¤bonus + ": " + info.name, "UNIVERSITY", true);
 	}
 	
 	@Override
@@ -96,9 +102,9 @@ public final class ROOM_UNIVERSITY extends RoomBlueprintIns<UniversityInstance>{
 		
 	};
 	
-	public double learningSpeed(RoomInstance i) {
+	public double learningSpeed(RoomInstance i, BOOSTABLE_O h) {
 		UniversityInstance ins = (UniversityInstance)i;
-		return learningSpeed*(1.0-ins.getDegrade())*constructor.quality.get(ins);
+		return learningSpeed*(1.0-ins.getDegrade())*constructor.quality.get(ins)*bonus().get(h);
 	}
 	
 	public final DOUBLE_OE<Race> limit = new DOUBLE_OE<Race>() {

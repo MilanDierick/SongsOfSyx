@@ -6,8 +6,12 @@ import java.io.IOException;
 import java.util.Arrays;
 
 import game.GAME;
+import game.boosting.Boostable;
+import game.faction.FResources.RTYPE;
+import game.faction.Faction;
 import game.time.TIME;
-import init.boostable.BOOSTABLE;
+import game.values.GVALUES;
+import game.values.Lockable;
 import init.resources.RESOURCE;
 import init.resources.RESOURCES;
 import settlement.entity.humanoid.Humanoid;
@@ -22,6 +26,7 @@ import util.data.INT_O.INT_OE;
 import util.info.INFO;
 import util.statistics.HISTORY_INT;
 import util.statistics.HistoryInt;
+import world.regions.Region;
 
 public class Industry implements SAVABLE, IndustryRate {
 
@@ -29,7 +34,7 @@ public class Industry implements SAVABLE, IndustryRate {
 	private final ArrayList<IndustryResource> outs;
 	
 	private final int dataL;
-	private final BOOSTABLE bonus;
+	private final Boostable bonus;
 	private final ArrayList<RoomBoost> stats;
 	
 	public final RoomBlueprintImp blue;
@@ -39,11 +44,13 @@ public class Industry implements SAVABLE, IndustryRate {
 	
 	private final INT_OE<ROOM_PRODUCER> pday;
 	
+	Lockable<Faction> lockable = GVALUES.FACTION.LOCK.empty;
+	
 	public Industry(RoomBlueprintImp blue, 
 			RESOURCE in, double inRate,
 			RESOURCE out, double outRate,
 			RoomBoost[] stats, 
-			BOOSTABLE bonus) {
+			Boostable bonus) {
 		this(
 				blue, new RESOURCE[] {in},
 				new double[] {inRate},
@@ -55,15 +62,18 @@ public class Industry implements SAVABLE, IndustryRate {
 		
 	}
 	
-	public Industry(RoomBlueprintImp blue, Json json, RoomBoost stats, BOOSTABLE bonus) {
+	public Industry(RoomBlueprintImp blue, Json json, RoomBoost stats, Boostable bonus) {
 		this(blue, json, new RoomBoost[] {stats}, bonus);
 		
 	}
 	
-	public Industry(RoomBlueprintImp blue, Json json, RoomBoost[] stats, BOOSTABLE bonus) {
+	public Industry(RoomBlueprintImp blue, Json json, RoomBoost[] stats, Boostable bonus) {
 		this(blue, res(json, "IN"), rates(json, "IN"), res(json, "OUT"), rates(json, "OUT"), stats, bonus);
 	}
 	
+	public Lockable<Faction> lockable(){
+		return lockable;
+	}
 	
 	private static RESOURCE[] res(Json json, String key) {
 		json = json.json("INDUSTRY");
@@ -95,7 +105,7 @@ public class Industry implements SAVABLE, IndustryRate {
 			RESOURCE[] ins, double[] inRates,
 			RESOURCE[] outs, double[] outRates,
 			RoomBoost[] stats, 
-			BOOSTABLE bonus) {
+			Boostable bonus) {
 		if (ins == null || (ins.length > 0 && ins[0] == null)) {
 			ins = new RESOURCE[0];
 			inRates = new double[0];
@@ -185,7 +195,7 @@ public class Industry implements SAVABLE, IndustryRate {
 	}
 	
 	@Override
-	public BOOSTABLE bonus() {
+	public Boostable bonus() {
 		return bonus;
 	}
 	
@@ -224,7 +234,7 @@ public class Industry implements SAVABLE, IndustryRate {
 	
 	public abstract class IndustryResource implements INDEXED{
 		
-		protected final HistoryInt history = new HistoryInt(12, TIME.years(), false);
+		protected final HistoryInt history = new HistoryInt(48, TIME.days(), false);
 		public final RESOURCE resource;
 		public final double rate;
 		public final double rateSeconds;
@@ -237,6 +247,7 @@ public class Industry implements SAVABLE, IndustryRate {
 		private IndustryResource(DataOL<ROOM_PRODUCER> data, int li, RESOURCE res, double rate) {
 			this.resource = res;
 			this.rate = rate;
+			
 			rateSeconds = Humanoid.WORK_PER_DAYI*rate/TIME.secondsPerDay;
 			this.li = li;
 			year = data.new DataInt(); 
@@ -261,7 +272,11 @@ public class Industry implements SAVABLE, IndustryRate {
 			history.clear();
 		}
 		
-		public abstract int inc(ROOM_PRODUCER r, double amount);
+		public int inc(ROOM_PRODUCER r, double amount) {
+			return inc(r, amount, true);
+		}
+		
+		public abstract int inc(ROOM_PRODUCER r, double amount, boolean record);
 		
 		public int work(Humanoid skill, ROOM_PRODUCER r, double workSeconds) {
 			double e = getEffort(skill, r, workSeconds);
@@ -291,12 +306,13 @@ public class Industry implements SAVABLE, IndustryRate {
 		}
 		
 		@Override
-		public int inc(ROOM_PRODUCER r, double amount) {
+		public int inc(ROOM_PRODUCER r, double amount, boolean record) {
 			int old = (int) day.getD(r);
 			day.incD(r, amount);
 			int now = (int) day.getD(r);
 			int d = now-old;
-			GAME.player().res().outConsumed.inc(resource, d);
+			if (record)
+				GAME.player().res().inc(resource, RTYPE.PRODUCED, -d);
 			year.inc(r, d);
 			history.inc(d);
 			return d;
@@ -304,7 +320,7 @@ public class Industry implements SAVABLE, IndustryRate {
 		
 		@Override
 		protected double getEffort(Humanoid skill, ROOM_PRODUCER r, double workSeconds) {
-			return IndustryUtil.calcConsumptionRate(rateSeconds*workSeconds, Industry.this, (RoomInstance)r);
+			return IndustryUtil.calcConsumptionRate(rateSeconds*workSeconds, skill, Industry.this, (RoomInstance)r, resource);
 		}
 
 	}
@@ -317,7 +333,7 @@ public class Industry implements SAVABLE, IndustryRate {
 		}
 		
 		@Override
-		public int inc(ROOM_PRODUCER r, double amount) {
+		public int inc(ROOM_PRODUCER r, double amount, boolean record) {
 			if (!Double.isFinite(amount)) {
 				GAME.Warn(""+amount);
 				return 0;
@@ -331,10 +347,11 @@ public class Industry implements SAVABLE, IndustryRate {
 			int now = (int) day.getD(r);
 			int d = now-old;
 			if (d != 0) {
-				GAME.player().res().inProduced.inc(resource, d);
+				if (record)
+					GAME.player().res().inc(resource, RTYPE.PRODUCED, d);
 				year.inc(r, d);
 				history.inc(d);
-				GAME.stats().CRAFTED.inc(1);
+				GAME.count().CRAFTED.inc(1);
 			}
 			return d;
 		}
@@ -344,6 +361,10 @@ public class Industry implements SAVABLE, IndustryRate {
 			return IndustryUtil.calcProductionRate(rateSeconds*workSeconds, skill, Industry.this, (RoomInstance)r);
 		}
 
+	}
+	
+	public double getRegionBonus(Region reg) {
+		return 1.0;
 	}
 	
 	public interface RoomBoost {

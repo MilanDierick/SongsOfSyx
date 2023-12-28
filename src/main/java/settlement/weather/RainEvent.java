@@ -81,13 +81,6 @@ final class RainEvent {
 				rain(RND.rFloat());
 			}
 		}
-//		
-//		dd += ds;
-//		if (dd > 1) {
-//			System.out.println(timeToNext/TIME.secondsPerDay + " " +  droughtNext/(TIME.secondsPerDay*TIME.years().bitConversion(TIME.days())) + " " + droughtLength/(TIME.secondsPerDay) );
-//			dd -= 1;
-//		}
-//		
 		
 	}
 	

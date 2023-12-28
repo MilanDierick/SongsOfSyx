@@ -3,13 +3,16 @@ package world.overlay;
 import init.C;
 import init.D;
 import init.resources.Minable;
-import settlement.main.RenderData.RenderIterator;
 import snake2d.SPRITE_RENDERER;
 import snake2d.util.color.COLOR;
+import snake2d.util.datatypes.DIR;
+import util.colors.GCOLORS_MAP;
+import util.rendering.RenderData.RenderIterator;
 import util.rendering.ShadowBatch;
-import world.World;
+import world.WORLD;
+import world.regions.Region;
 
-class OverlayMineral extends WorldOverlayer{
+class OverlayMineral extends WorldOverlays.OverlayTileNormal{
 
 	private static CharSequence ¤¤name = "¤Minerals";
 	private static CharSequence ¤¤desc = "¤Shows the location of minerals.";
@@ -19,12 +22,13 @@ class OverlayMineral extends WorldOverlayer{
 	
 	
 	OverlayMineral() {
-		super(¤¤name, ¤¤desc);
+		super(¤¤name, ¤¤desc, true, true);
 	}
 	
-	public void render(SPRITE_RENDERER r, ShadowBatch s, RenderIterator it) {
+	@Override
+	public void renderAbove(SPRITE_RENDERER r, ShadowBatch s, RenderIterator it) {
 		
-		Minable m = World.MINERALS().get(it.tile());
+		Minable m = WORLD.MINERALS().get(it.tile());
 		if (m != null) {
 			
 			render(r, COLOR.WHITE100, it.x(), it.y(), 8);
@@ -33,6 +37,23 @@ class OverlayMineral extends WorldOverlayer{
 			m.resource.icon().render(r, it.x(), it.x()+C.TILE_SIZE, it.y(), it.y()+C.TILE_SIZE);
 		}
 		
+	}
+	
+	@Override
+	protected void renderBelow(SPRITE_RENDERER r, ShadowBatch s, RenderIterator it) {
+		int m = 0;
+		Region reg = WORLD.REGIONS().map.get(it.tile());
+		COLOR c = GCOLORS_MAP.FRebel;
+		for (DIR d : DIR.ORTHO) {
+			if (WORLD.MINERALS().get(it.tx(), it.ty(), d) != null)
+				c =  GCOLORS_MAP.bestOverlay;
+			if (!WORLD.IN_BOUNDS(it.tx(), it.ty(), d) || reg == WORLD.REGIONS().map.get(it.tx(), it.ty(), d)){
+				m |= d.mask();
+			}
+		}
+		
+		c.bind();
+		renderUnder(m, r, it);
 	}
 	
 	private void render(SPRITE_RENDERER r, COLOR c, int x, int y, int m) {

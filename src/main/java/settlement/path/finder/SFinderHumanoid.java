@@ -3,10 +3,10 @@ package settlement.path.finder;
 import static settlement.main.SETT.*;
 
 import settlement.entity.ENTITY;
+import settlement.entity.humanoid.HTYPE;
 import settlement.entity.humanoid.Humanoid;
 import settlement.main.SETT;
-import settlement.path.components.FindableDataSingle;
-import settlement.path.components.SComponent;
+import settlement.path.components.*;
 import settlement.stats.STATS;
 import snake2d.util.datatypes.DIR;
 
@@ -54,6 +54,27 @@ public final class SFinderHumanoid {
 //			}
 //			
 //		};
+	}
+	
+	public boolean enemiesAreNear(Humanoid client) {
+		
+		
+		if (SETT.INVADOR().invading() || STATS.POP().pop(HTYPE.ENEMY) > STATS.POP().POP.data().get(null)*0.1) {
+			SComponent ss = SETT.PATH().comps.levels.get(1).get(client.tc());
+			if (ss == null)
+				return false;
+			if (PATH().comps.data.people(client.indu().hostile()).has(ss))
+				return true;
+			SComponentEdge e = ss.edgefirst();
+			while(e != null) {
+				if (PATH().comps.data.people(client.indu().hostile()).has(e.to()))
+					return true;
+				e = e.next();
+			}
+			
+		}
+
+		return false;
 	}
 	
 	public Humanoid find(Humanoid client, int radius) {

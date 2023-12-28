@@ -14,7 +14,7 @@ import snake2d.util.gui.GUI_BOX;
 import snake2d.util.gui.GuiSection;
 import util.dic.DicMisc;
 import util.gui.misc.*;
-import util.gui.panel.GPanelS;
+import util.gui.panel.GPanel;
 import util.info.GFORMAT;
 import view.interrupter.ISidePanel;
 import view.main.VIEW;
@@ -77,7 +77,7 @@ final class UIPrisoner extends GuiSection implements Panel{
 		
 		pad(8);
 		
-		GPanelS p = new GPanelS();
+		GPanel p = new GPanel();
 		p.inner().set(this);
 		add(p);
 		moveLastToBack();

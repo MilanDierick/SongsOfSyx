@@ -3,6 +3,7 @@ package settlement.room.service.hygine.bath;
 import static settlement.main.SETT.*;
 import static settlement.room.service.hygine.bath.Bits.*;
 
+import init.resources.RBIT;
 import init.resources.RESOURCE;
 import init.sound.SoundSettlement.Sound;
 import settlement.entity.humanoid.Humanoid;
@@ -65,8 +66,8 @@ public class Crank implements SETT_JOB{
 	}
 	
 	@Override
-	public long jobResourceBitToFetch() {
-		return 0;
+	public RBIT jobResourceBitToFetch() {
+		return null;
 	}
 	
 	@Override

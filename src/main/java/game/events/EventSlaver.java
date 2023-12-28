@@ -2,16 +2,16 @@ package game.events;
 
 import java.io.IOException;
 
+import game.boosting.BOOSTABLES;
 import game.events.EVENTS.EventResource;
 import game.faction.FACTIONS;
+import game.faction.FCredits.CTYPE;
 import game.time.TIME;
 import init.D;
-import init.boostable.BOOSTABLES;
 import init.race.RACES;
 import init.race.Race;
 import settlement.entity.ENTITY;
-import settlement.entity.humanoid.HTYPE;
-import settlement.entity.humanoid.Humanoid;
+import settlement.entity.humanoid.*;
 import settlement.main.SETT;
 import settlement.stats.STATS;
 import snake2d.SPRITE_RENDERER;
@@ -30,8 +30,8 @@ import util.gui.misc.*;
 import util.gui.slider.GGaugeMutable;
 import util.info.GFORMAT;
 import view.interrupter.IDebugPanel;
-import view.main.MessageSection;
 import view.main.VIEW;
+import view.ui.message.MessageSection;
 
 public final class EventSlaver extends EventResource{
 	
@@ -55,10 +55,17 @@ public final class EventSlaver extends EventResource{
 	}
 	
 	public void random() {
+		
+
+		
 		SlaverMessage v = new SlaverMessage();
 		for (Race r : RACES.all()) {
-			int am = 1 + (int) (r.population().rarity *BOOSTABLES.BEHAVIOUR().SUBMISSION.race(r)*RND.rFloat(500));
-			int price = (int) (RND.rFloat1(0.4)*1000/(am/2000.0)); 
+			int am = (int) (r.population().max * BOOSTABLES.BEHAVIOUR().SUBMISSION.get(r)*500);
+			if (!r.playable)
+				am *= 0.25;
+			am += 1;
+			int price = (int) (RND.rFloat1(0.1)*1000/(am/2000.0)); 
+			
 			v.load(r, am, price);
 		}
 		
@@ -69,7 +76,8 @@ public final class EventSlaver extends EventResource{
 	protected void update(double ds) {
 		messTime -= ds;
 		if (messTime < 0) {
-			random();
+			if (FACTIONS.player().credits().getD() > 1000 || STATS.POP().POP.data(HCLASS.SLAVE).get(null) > 0)
+				random();
 			messTime = TIME.years().bitSeconds() + RND.rFloat()*3*TIME.years().bitSeconds();
 		}
 	}
@@ -220,7 +228,8 @@ public final class EventSlaver extends EventResource{
 						@Override
 						protected void clickA() {
 							if (active()) {
-								FACTIONS.player().credits().purchases.OUT.inc(price(r, in.get()));
+								
+								FACTIONS.player().credits().inc(-price(r, in.get()), CTYPE.MISC);
 								buy(r, in.get());
 								GBox b = VIEW.timeBox();
 								b.add(GFORMAT.i(b.text(), in.get()));
@@ -296,8 +305,8 @@ public final class EventSlaver extends EventResource{
 							if (active()) {
 								int am = in.get();
 								buy(r, -am);
-								FACTIONS.player().credits().purchases.IN.inc((int) (price(r, -in.get())*0.75));
-
+								FACTIONS.player().credits().inc((int) (price(r, -in.get())*0.75), CTYPE.MISC);
+								
 								for (ENTITY e : SETT.ENTITIES().getAllEnts()) {
 									if (am <= 0)
 										break;

@@ -2,6 +2,7 @@
 package settlement.room.infra.inn;
 
 import game.faction.FACTIONS;
+import game.faction.FCredits.CTYPE;
 import game.tourism.Review;
 import init.D;
 import settlement.room.main.RoomInstance;
@@ -123,23 +124,23 @@ class Gui extends UIRoomModuleImp<InnInstance, ROOM_INN> {
 		
 		GuiSection s = new GuiSection();
 		
-		final int am = FACTIONS.player().credits().tourists.IN.historyRecords();
+		final int am = FACTIONS.player().credits().get(CTYPE.TOURISM).IN.historyRecords();
 		GStaples chart = new GStaples(am) {
 			
 			@Override
 			protected void hover(GBox box, int stapleI) {
 				int ago = am-1-stapleI;
 				GText t = box.text();
-				DicTime.setAgo(t, ago*FACTIONS.player().credits().tourists.IN.time().bitSeconds());
+				DicTime.setAgo(t, ago*FACTIONS.player().credits().get(CTYPE.TOURISM).IN.time().bitSeconds());
 				box.textLL(t);
 				box.NL();
-				box.add(GFORMAT.iIncr(box.text(), FACTIONS.player().credits().tourists.IN.get()));
+				box.add(GFORMAT.iIncr(box.text(), FACTIONS.player().credits().get(CTYPE.TOURISM).IN.get()));
 				
 			}
 			
 			@Override
 			protected double getValue(int stapleI) {
-				return FACTIONS.player().credits().tourists.IN.get(am-1-stapleI);
+				return FACTIONS.player().credits().get(CTYPE.TOURISM).IN.get(am-1-stapleI);
 			}
 		};
 		chart.body().setDim(240, 58);
@@ -151,7 +152,7 @@ class Gui extends UIRoomModuleImp<InnInstance, ROOM_INN> {
 			
 			@Override
 			protected void clickA() {
-				VIEW.s().panels.add(VIEW.UI().trade.tourists(), true);
+				VIEW.UI().tourists.activate();
 			};
 			
 		}.pad(4, 1));

@@ -17,13 +17,15 @@ public final class Renderer extends CORE_RESOURCE implements SPRITE_RENDERER{
 	private byte lightDepth = shadows;
 	private TextureHolder texture;
 	
+	private int layer = 0;
+
 	Renderer (RenderMode mode, int pointSize){
 		renderMode = mode;
 		this.pointSize = pointSize;
 		zoomout = 0;
 	}
 	
-	void setTexture(TextureHolder texture) {
+	final void setTexture(TextureHolder texture) {
 		this.texture = texture;
 	}
 	
@@ -32,7 +34,7 @@ public final class Renderer extends CORE_RESOURCE implements SPRITE_RENDERER{
 		renderMode.dis();
 	}
 	
-	void flush() {
+	final void flush() {
 		renderMode.flush(pointSize >> zoomout);
 		if (texture != null)
 			texture.flush();
@@ -53,51 +55,51 @@ public final class Renderer extends CORE_RESOURCE implements SPRITE_RENDERER{
 	private final OPACITY OpacityDefault = OpacityImp.O100;
 	private OPACITY currentOpacity = OpacityDefault;
 	
-	public int pointsize() {
+	public final int pointsize() {
 		return pointSize >> zoomout;
 	}
 	
-	public int getSpritesSprocessed(){
+	public final int getSpritesSprocessed(){
 		return spritesRenderedO;
 	}
 	
-	public int getParticlesProcessed(){
+	public final int getParticlesProcessed(){
 		return particlesRendererdO;
 	}
 	
-	public int getLightsProcessed(){
+	public final int getLightsProcessed(){
 		return lightsRendererdO;
 	}
 	
-	public int getShadowsRendered() {
+	public final int getShadowsRendered() {
 		return shadowsRenderedO;
 	}
 	
-    public void setColor(COLOR color){
+    public final void setColor(COLOR color){
     	current = color;
     }
     
-    public COLOR colorGet() {
+    public final COLOR colorGet() {
     	return current;
     }
     
-    public COLOR getBoundColor() {
+    public final COLOR getBoundColor() {
     	return current;
     }
     
-    public void setNormalColor(){
+    public final void setNormalColor(){
     	current = white;
     }
     
-	public void setOpacity(OPACITY o){
+	public final void setOpacity(OPACITY o){
 		currentOpacity = o;
 	}
 	
-	public void setNormalOpacity(){
+	public final void setNormalOpacity(){
 		currentOpacity = OpacityDefault;
 	}
 	
-	public boolean isNormalOpacity(){
+	public final boolean isNormalOpacity(){
 		return currentOpacity == OpacityDefault;
 	}
     
@@ -105,7 +107,7 @@ public final class Renderer extends CORE_RESOURCE implements SPRITE_RENDERER{
 	 * 
 	 * @param shade shadows shade all light vs no lights
 	 */
-	public void shadeLight(boolean shade){
+	public final void shadeLight(boolean shade){
 		lightDepth = shade ? shadows : noShadows;
 	}
 	
@@ -113,14 +115,14 @@ public final class Renderer extends CORE_RESOURCE implements SPRITE_RENDERER{
 	 * set depth. Lights with smaller or equal depth will be shaded by the shadows
 	 * @param depth
 	 */
-	public void shadowDepthSet(byte depth) {
+	public final void shadowDepthSet(byte depth) {
 		this.shadowDepth = depth;
 	}
 	
 	/**
 	 * Set shadow depth to shade all lights
 	 */
-	public void shadowDepthDefault() {
+	public final void shadowDepthDefault() {
 		this.shadowDepth = noShadows;
 	}
 	
@@ -128,16 +130,16 @@ public final class Renderer extends CORE_RESOURCE implements SPRITE_RENDERER{
 	 * set a depth. Shadows with higher or equal dephs will shade lights
 	 * @param depth
 	 */
-	public void lightDepthSet(byte depth) {
+	public final void lightDepthSet(byte depth) {
 		lightDepth = depth;
 	}
 	
 	@Override
-	public void renderSprite(int x1, int x2, int y1, int y2, TextureCoords t){
+	public final void renderSprite(int x1, int x2, int y1, int y2, TextureCoords t){
 		renderTextured(x1, x2, y1, y2, t, t);
 	}
 	
-	public void renderTextured(int x1, int x2, int y1, int y2, 
+	public final void renderTextured(int x1, int x2, int y1, int y2, 
 			TextureCoords texture, 
 			TextureCoords stencil){
 		
@@ -157,23 +159,23 @@ public final class Renderer extends CORE_RESOURCE implements SPRITE_RENDERER{
 		spritesRendered ++;
 	}
 	
-	public void renderDisplaced(int x1, int x2, int y1, int y2, 
+	public final void renderDisplaced(int x1, int x2, int y1, int y2, 
 			TextureCoords displacement, 
 			TextureCoords texture){
 		
-		renderDisplace(displacement.x1(), displacement.y1(), texture.x1(), texture.y1(), texture.x2()-texture.x1(), texture.y2()-texture.y1(), 16, x1, x2, y1, y2);
+		renderDisplace(displacement.x1, displacement.y1, texture.x1, texture.y1, texture.x2-texture.x1, texture.y2-texture.y1, 16, x1, x2, y1, y2);
 		
 	}
 	
-	public void renderDisplaced(int x1, int x2, int y1, int y2, double scale,
+	public final void renderDisplaced(int x1, int x2, int y1, int y2, double scale,
 			TextureCoords displacement, 
 			TextureCoords texture){
 		
-		renderDisplace(displacement.x1(), displacement.y1(), texture.x1(), texture.y1(), texture.x2()-texture.x1(), texture.y2()-texture.y1(), scale*16.0, x1, x2, y1, y2);
+		renderDisplace(displacement.x1, displacement.y1, texture.x1, texture.y1, texture.x2-texture.x1, texture.y2-texture.y1, scale*16.0, x1, x2, y1, y2);
 		
 	}
 	
-	public void renderDisplace(float tx1, float ty1, float dx1, float dy1, int w, int h, double scale, int x1, int x2, int y1, int y2) {
+	public final void renderDisplace(float tx1, float ty1, float dx1, float dy1, int w, int h, double scale, int x1, int x2, int y1, int y2) {
 		if (zoomout != 0){
 			x1 = x1 >> zoomout;
 			x2 = x2 >> zoomout;
@@ -185,7 +187,7 @@ public final class Renderer extends CORE_RESOURCE implements SPRITE_RENDERER{
 		spritesRendered ++;
 	}
 
-	private void renderShadow(
+	private final void renderShadow(
     		TextureCoords t, 
     		int x1, int y1, int x2, int y2,
     		int x3, int y3, int x4, int y4, byte d){
@@ -195,7 +197,7 @@ public final class Renderer extends CORE_RESOURCE implements SPRITE_RENDERER{
     	shadowsRendered ++;
 	}
 	
-	public void renderShadow(int x1, int x2, int y1, int y2, TextureCoords stencil, byte d){
+	public final void renderShadow(int x1, int x2, int y1, int y2, TextureCoords stencil, byte d){
 		
 		if (zoomout != 0){
 			x1 = x1 >> zoomout;
@@ -216,15 +218,41 @@ public final class Renderer extends CORE_RESOURCE implements SPRITE_RENDERER{
 				);
 	}
 	
-	public void renderParticle(int x, int y){
+	public final void setMaxDepth(int x1, int x2, int y1, int y2, TextureCoords stencil){
+		
+		setMaxDepth(x1, x2, y1, y2, stencil, layer);
+
+	}
+	
+	public final void setMaxDepth(int x1, int x2, int y1, int y2, TextureCoords stencil, int layer){
+		
+		if (zoomout != 0){
+			x1 = x1 >> zoomout;
+			x2 = x2 >> zoomout;
+			y1 = y1 >> zoomout;
+			y2 = y2 >> zoomout;
+		}
+		
+		if (x2 < 0 || y2 < 0 || x1 > CORE.getGraphics().nativeWidth || y1 > CORE.getGraphics().nativeHeight)
+			return;
+		
+		renderMode.setMaxDepth(x1, x2, y1, y2, stencil, layer);
+
+	}
+	
+	public int getDepth() {
+		return layer;
+	}
+	
+	public final void renderParticle(int x, int y){
 		renderParticle(x, y, (byte) 128, (byte) 128, (byte) 255, (byte)255);
 	}
     
-	public void renderParticleFlat(int x, int y){
+	public final void renderParticleFlat(int x, int y){
 		renderParticle(x, y, (byte) 128, (byte) 128, (byte) 255, (byte)0);
 	}
 	
-	public void renderParticle(int x, int y, byte nX, byte nY, byte nZ, byte nA){
+	public final void renderParticle(int x, int y, byte nX, byte nY, byte nZ, byte nA){
 		if (zoomout > 2) {
 			return;
 		}
@@ -240,7 +268,7 @@ public final class Renderer extends CORE_RESOURCE implements SPRITE_RENDERER{
 		particlesRendererd ++;
 	}
 	
-	public void registerLight(LIGHT_POINT light, int x1, int x2, int y1, int y2){
+	public final void registerLight(LIGHT_POINT light, int x1, int x2, int y1, int y2){
 		registerLight(light, x1, x2, y1, y2, (byte)255, (byte)255, (byte)255, (byte)255);
 	}
 	
@@ -253,7 +281,7 @@ public final class Renderer extends CORE_RESOURCE implements SPRITE_RENDERER{
 	 * @param y2
 	 * @param mask 0b0000|NW|SW|SE|NE
 	 */
-	public void registerLight(LIGHT_POINT light, int x1, int x2, int y1, int y2, byte ne, byte se, byte sw, byte nw){
+	public final void registerLight(LIGHT_POINT light, int x1, int x2, int y1, int y2, byte ne, byte se, byte sw, byte nw){
 		lightsRendererd ++;
 		if (zoomout != 0){
 			x1 = x1 >> zoomout;
@@ -266,7 +294,7 @@ public final class Renderer extends CORE_RESOURCE implements SPRITE_RENDERER{
 		renderMode.registerLight(light, light.cx(), light.cy(), light.cz(), light.getRadius(), x1, x2, y1, y2, ne, se, sw, nw, lightDepth);
 	}
 	
-	public void registerAmbient(LIGHT_AMBIENT light, int x1, int x2, int y1, int y2){
+	public final void registerAmbient(LIGHT_AMBIENT light, int x1, int x2, int y1, int y2){
 		lightsRendererd ++;
 		if (zoomout != 0){
 			x1 = x1 >> zoomout;
@@ -283,10 +311,11 @@ public final class Renderer extends CORE_RESOURCE implements SPRITE_RENDERER{
 	 * @param zoomout - how much zoom-out, will be an exponent of two.
 	 * @return the index of this layer
 	 */
-	public void newLayer(boolean keeplight, int zoomout){
+	public final int newLayer(boolean keeplight, int zoomout){
 		this.zoomout = zoomout;
 		int pz = CLAMP.i(pointSize >> zoomout, 1, pointSize);
-		renderMode.newLayer(keeplight, pz);
+		layer = renderMode.newLayer(keeplight, pz);
+		return layer;
 	}
 	
 	
@@ -296,10 +325,16 @@ public final class Renderer extends CORE_RESOURCE implements SPRITE_RENDERER{
 	 * once for all layers.)
 	 * @param zoomout
 	 */
-	public int newFinalLightWithShadows(int zoomout){
+	
+	private Object debugOld = null;
+	public final int newFinalLightWithShadows(int zoomout, Object o){
 		this.zoomout = zoomout;
 		int pz = CLAMP.i(pointSize >> zoomout, 1, pointSize);
-		return renderMode.newFinalLightLayer(pz);
+		if (debugOld != null && debugOld != o)
+			throw new RuntimeException(debugOld + " " + o);
+		debugOld = o;
+		layer = renderMode.newFinalLightLayer(pz);
+		return layer;
 	}
 	
 	
@@ -314,6 +349,8 @@ public final class Renderer extends CORE_RESOURCE implements SPRITE_RENDERER{
 		particlesRendererd = 0;
 		lightsRendererd = 0;
 		zoomout = 0;
+		layer = 0;
+		debugOld = null;
 	}
 
 	public int getZoomout() {

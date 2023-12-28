@@ -4,6 +4,9 @@ import init.D;
 
 public class DicRes {
 
+	public static CharSequence ¤¤basePrice = "Base Price";
+	
+	public static CharSequence ¤¤Riches = "¤Riches";
 	public static CharSequence ¤¤InitialCost = "¤Initial Cost";
 	public static CharSequence ¤¤Upkeep = "¤Upkeep";
 	public static CharSequence ¤¤Curr = "¤Denari";
@@ -22,13 +25,11 @@ public class DicRes {
 	public static CharSequence ¤¤Buyers = "¤Buyers";
 	public static CharSequence ¤¤Sellers = "¤Sellers";
 	public static CharSequence ¤¤Capacity = "¤Capacity";
-	public static CharSequence ¤¤ImportCapacity = "¤Import Capacity";
-	public static CharSequence ¤¤ImportCapacityDesc = "¤The available space of your import depots for import and tribute, minus stored and incoming goods.";
+
 	// private final CharSequence sBuyPrice;
 	public static CharSequence ¤¤ImportLevel = "¤Import Level";
 	
-	public static CharSequence ¤¤ExportCapacity = "¤Export Capacity";
-	public static CharSequence ¤¤ExportCapacityDesc = "The amount of goods in your export depots ready to be exported.";
+
 	// private final CharSequence sSellPrice;
 	public static CharSequence ¤¤ExportLevel = "¤Export Level";
 
@@ -45,20 +46,24 @@ public class DicRes {
 	public static CharSequence ¤¤TaxesD = "¤What is possible to tax from this region in mid-game.";
 	public static CharSequence ¤¤Net = "¤Net";
 	
+	public static CharSequence ¤¤Traders = "Traders";
 	public static CharSequence ¤¤sellPrice = "¤Sell Price";
-	public static CharSequence ¤¤noBuyers = "¤No buyer of this resource is available.";
-	public static CharSequence ¤¤noSellers = "¤No sellers of this resource is available. They are too distant.";
+	public static CharSequence ¤¤noTradePartners = "¤You have no trade agreements for this resource. An agreement must be reached through diplomacy with a neighbouring faction";
+	public static CharSequence ¤¤noTrade = "¤There are no trades of this resource available.";
 	public static CharSequence ¤¤buyPrice = "¤Buy Price";
 	public static CharSequence ¤¤Price = "¤Price";
+	public static CharSequence ¤¤PriceCap = "¤Price Cap";
 	public static CharSequence ¤¤Toll = "¤Toll";
+	public static CharSequence ¤¤Tariff = "¤Tariff";
+	public static CharSequence ¤¤TariffD = "¤Each trade partner has its own tariff they add to their sell price and remove from their buy price. This is based on the opinion of the ruler of the faction.";
+	public static CharSequence ¤¤TollD = "Toll is based on the distance between you and this faction. The toll is added to the sell price and subtracted from the buy price.";
 	public static CharSequence ¤¤NotEnoughCurr = "¤Not enough Denari.";
-	public static CharSequence ¤¤cantAfford = "¤You don't have enough credits to buy this resource. Trades are done in increments of 32. You need at least {0} credits to purchase a batch of this resource. Get more credits exporting something at an export depot.";
-	public static CharSequence ¤¤cantStore = "¤You don't have enough import depot space to accept a batch of this resource. Build an import depot and set it to accept this resource.";
-	public static CharSequence ¤¤noStorage = "¤You don't have enough export depot space to sell a batch of this resource. Build an export depot and set it to fetch this resource.";
+
 	public static CharSequence ¤¤Storage = "¤Storage";
 	
 	public static CharSequence ¤¤SpoilRate = "¤Spoil-Rate";
 	public static CharSequence ¤¤Edible = "¤Edible";
+	public static CharSequence ¤¤Drinkable = "¤Drinkable";
 	public static CharSequence ¤¤Rate = "¤Rate";
 	public static CharSequence ¤¤Supplies = "¤Supplies";
 	public static CharSequence ¤¤Spoils = "¤Spoils";

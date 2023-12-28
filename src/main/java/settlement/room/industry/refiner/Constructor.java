@@ -6,8 +6,6 @@ import java.io.IOException;
 
 import init.C;
 import init.RES;
-import init.sprite.ICON;
-import settlement.main.RenderData.RenderIterator;
 import settlement.main.SETT;
 import settlement.path.AVAILABILITY;
 import settlement.room.main.*;
@@ -17,9 +15,10 @@ import settlement.room.main.util.RoomInitData;
 import settlement.room.sprite.*;
 import snake2d.SPRITE_RENDERER;
 import snake2d.util.color.OPACITY;
-import snake2d.util.datatypes.AREA;
-import snake2d.util.datatypes.DIR;
+import snake2d.util.datatypes.*;
 import snake2d.util.file.Json;
+import snake2d.util.sprite.SPRITE;
+import util.rendering.RenderData.RenderIterator;
 import util.rendering.ShadowBatch;
 
 final class Constructor extends Furnisher{
@@ -39,7 +38,17 @@ final class Constructor extends Furnisher{
 		this.blue = blue;
 		
 
-		workers = new FurnisherStat.FurnisherStatEmployees(this);
+		workers = new FurnisherStat.FurnisherStatEmployees(this) {
+			@Override
+			public double get(AREA area, double acc) {
+				int am = 0;
+				for (COORDINATE c : area.body()) {
+					if (area.is(c) && (SETT.ROOMS().fData.tileData.get(c) == B_WORK || SETT.ROOMS().fData.tileData.get(c) == B_FETCH))
+						am++;
+				}
+				return am;
+			}
+		};
 		efficiency = new FurnisherStat.FurnisherStatEfficiency(this, workers);
 		output = new FurnisherStat.FurnisherStatProduction2(this, blue) {
 			@Override
@@ -50,9 +59,9 @@ final class Constructor extends Furnisher{
 		
 		Json js = init.data().json("SPRITES");
 		
-		final RoomSprite sMachineTop = new RoomSpriteComboN(js, "MAIN_MACHINE_COMBO_TOP");
+		final RoomSprite sMachineTop = new RoomSpriteCombo(js, "MAIN_MACHINE_COMBO_TOP");
 		
-		final RoomSprite sMachine = new RoomSpriteComboN(js, "MAIN_MACHINE_COMBO") {
+		final RoomSprite sMachine = new RoomSpriteCombo(js, "MAIN_MACHINE_COMBO") {
 			final RoomSprite1x1 top2 = new RoomSprite1x1(js, "MAIN_MACHINE_COMBO_TOP_MACHINE");
 			
 			@Override
@@ -96,7 +105,7 @@ final class Constructor extends Furnisher{
 			
 			@Override
 			protected boolean joins(int tx, int ty, int rx, int ry, DIR d, FurnisherItem item) {
-				return item.sprite(rx, ry) instanceof RoomSpriteComboN;
+				return item.sprite(rx, ry) instanceof RoomSpriteCombo;
 			}
 			
 		};
@@ -104,7 +113,7 @@ final class Constructor extends Furnisher{
 		final RoomSprite sFecth = new RoomSprite1x1(js, "STORAGE_IN_1X1") {
 			@Override
 			protected boolean joins(int tx, int ty, int rx, int ry, DIR d, FurnisherItem item) {
-				return item.sprite(rx, ry) instanceof RoomSpriteComboN;
+				return item.sprite(rx, ry) instanceof RoomSpriteCombo;
 
 			}
 			
@@ -121,7 +130,7 @@ final class Constructor extends Furnisher{
 			
 			@Override
 			protected boolean joins(int tx, int ty, int rx, int ry, DIR d, FurnisherItem item) {
-				return item.sprite(rx, ry) instanceof RoomSpriteComboN;
+				return item.sprite(rx, ry) instanceof RoomSpriteCombo;
 			}
 			
 			@Override
@@ -139,7 +148,7 @@ final class Constructor extends Furnisher{
 			
 			@Override
 			protected boolean joins(int tx, int ty, int rx, int ry, DIR d, FurnisherItem item) {
-				return item.sprite(rx, ry) instanceof RoomSpriteComboN;
+				return item.sprite(rx, ry) instanceof RoomSpriteCombo;
 			}
 			
 			@Override
@@ -181,7 +190,7 @@ final class Constructor extends Furnisher{
 			
 		};
 		
-		final RoomSprite sStorageEnd = new RoomSpriteComboN(sMachine) {
+		final RoomSprite sStorageEnd = new RoomSpriteCombo(sMachine) {
 			
 			@Override
 			public boolean render(SPRITE_RENDERER r, ShadowBatch s, int data, RenderIterator it, double degrade,
@@ -190,7 +199,7 @@ final class Constructor extends Furnisher{
 				sMachineTop.render(r, s, getData2(it), it, degrade, isCandle);
 				RefinerInstance ins = blue.get(it.tx(), it.ty());
 				if (!isCandle && ins != null) {
-					ICON.MEDIUM i = ins.industry().outs().get(0).resource.icon();
+					SPRITE i = ins.industry().outs().get(0).resource.icon();
 					OPACITY.O99.bind();
 					i.render(r, it.x()+8, it.x()+C.TILE_SIZE-8, it.y()+8, it.y()+C.TILE_SIZE-8);
 					OPACITY.unbind();

@@ -3,7 +3,6 @@ package settlement.room.health.asylum;
 import java.io.IOException;
 
 import init.sprite.SPRITES;
-import settlement.main.RenderData.RenderIterator;
 import settlement.main.SETT;
 import settlement.path.AVAILABILITY;
 import settlement.room.main.*;
@@ -11,13 +10,12 @@ import settlement.room.main.furnisher.*;
 import settlement.room.main.util.RoomInit;
 import settlement.room.main.util.RoomInitData;
 import settlement.room.sprite.*;
-import settlement.tilemap.Floors.Floor;
+import settlement.tilemap.floor.Floors.Floor;
 import snake2d.SPRITE_RENDERER;
 import snake2d.util.datatypes.*;
 import snake2d.util.file.Json;
-import snake2d.util.sprite.TILE_SHEET;
+import util.rendering.RenderData.RenderIterator;
 import util.rendering.ShadowBatch;
-import util.spritecomposer.*;
 
 final class Constructor extends Furnisher{
 
@@ -38,11 +36,11 @@ final class Constructor extends Furnisher{
 			throws IOException {
 		super(init, 1, 2, 88, 44);
 		this.blue = blue;
-		floor2 = SETT.FLOOR().get(init.data().value("FLOOR2"), init.data());
+		floor2 = SETT.FLOOR().map.get(init.data().value("FLOOR2"), init.data());
 		
 		Json sjson = init.data().json("SPRITES");
 		
-		sWalls = new RoomSpriteComboN(sjson, "WALLS_COMBO") {
+		sWalls = new RoomSpriteCombo(sjson, "WALLS_COMBO") {
 			
 			@Override
 			protected boolean joins(int tx, int ty, int rx, int ry, DIR d, FurnisherItem item) {
@@ -105,7 +103,7 @@ final class Constructor extends Furnisher{
 		
 
 		
-		RoomSpriteComboN stablemisc = new RoomSpriteComboN(sjson, "TABLE_COMBO") {
+		RoomSpriteCombo stablemisc = new RoomSpriteCombo(sjson, "TABLE_COMBO") {
 			
 			RoomSprite sTableTop = new RoomSprite1x1(sjson, "TABLE_ONTOP_1X1") {
 				@Override
@@ -153,7 +151,7 @@ final class Constructor extends Furnisher{
 			}
 		};
 		
-		RoomSprite stablefood = new RoomSpriteComboN(sjson, "TABLE_COMBO") {
+		RoomSprite stablefood = new RoomSpriteCombo(sjson, "TABLE_COMBO") {
 			
 			@Override
 			public void renderAbove(SPRITE_RENDERER r, ShadowBatch s, int data, RenderIterator it, double degrade) {
@@ -281,11 +279,6 @@ final class Constructor extends Furnisher{
 		return false;
 		
 		
-	}
-	
-	@Override
-	protected TILE_SHEET sheet(ComposerUtil c, ComposerSources s, ComposerDests d, int y1) {
-		return null;
 	}
 
 	@Override

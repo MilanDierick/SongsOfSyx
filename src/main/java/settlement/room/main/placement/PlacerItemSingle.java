@@ -3,15 +3,15 @@ package settlement.room.main.placement;
 import static settlement.main.SETT.*;
 
 import init.D;
-import init.sprite.ICON.MEDIUM;
 import init.sprite.SPRITES;
 import settlement.main.SETT;
 import settlement.room.main.*;
 import settlement.room.main.construction.ConstructionInit;
 import settlement.room.main.furnisher.*;
-import settlement.tilemap.TBuilding;
+import settlement.tilemap.terrain.TBuilding;
 import snake2d.SPRITE_RENDERER;
 import snake2d.util.datatypes.*;
+import snake2d.util.sprite.SPRITE;
 import util.gui.misc.GBox;
 import view.tool.*;
 
@@ -66,7 +66,7 @@ class PlacerItemSingle extends PlacableFixed{
 	
 	public void set(RoomBlueprintImp b, int group, int upgrade) {
 		this.blueprint = b;
-		this.group = b.constructor().groups().getC(group);
+		this.group = b.constructor().pgroups().getC(group);
 		this.upgrade = upgrade;
 		
 	}
@@ -85,7 +85,7 @@ class PlacerItemSingle extends PlacableFixed{
 			TBuilding s = blueprint.constructor().mustBeIndoors() ? embryo.structure.get() : null;
 			
 		
-			if (s != null && embryo.autoWalls.isOn()) {
+			if (s != null && embryo.autoWalls.is()) {
 				embryo.instance.clear(blueprint);
 				for (int y = 0; y < it.height(); y++) {
 					for (int x = 0; x < it.width(); x++) {
@@ -178,7 +178,7 @@ class PlacerItemSingle extends PlacableFixed{
 		group.blueprint.renderExtra(r, x, y, tx, ty, rx, ry, it);
 		
 		
-		if (blueprint.constructor().mustBeIndoors() && ROOMS().placement.placer.autoWalls.isOn()) {
+		if (blueprint.constructor().mustBeIndoors() && ROOMS().placement.placer.autoWalls.is()) {
 			ROOMS().placement.placer.door.renderWall(r, it, tx, ty, rx, ry, x, y);
 		}
 	}
@@ -252,7 +252,7 @@ class PlacerItemSingle extends PlacableFixed{
 		}
 		
 
-		if (blueprint.constructor().mustBeIndoors() && ROOMS().placement.placer.autoWalls.isOn() && embryo.structure.get() != null) {
+		if (blueprint.constructor().mustBeIndoors() && ROOMS().placement.placer.autoWalls.is() && embryo.structure.get() != null) {
 			FurnisherItem it = group.item(size(), rot());
 			int roofs = 0;
 			int walls = 0;
@@ -296,6 +296,9 @@ class PlacerItemSingle extends PlacableFixed{
 				box.add(s.format(box.text(), am));
 			}
 		}
+		
+		box.NL(8);
+		group.blueprint.placeInfo(box, group.item(size(), rot()), x1, y1);
 	}
 	
 	@Override
@@ -336,7 +339,7 @@ class PlacerItemSingle extends PlacableFixed{
 	}
 
 	@Override
-	public MEDIUM getIcon() {
+	public SPRITE getIcon() {
 		// TODO Auto-generated method stub
 		return null;
 	}

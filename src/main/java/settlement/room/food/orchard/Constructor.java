@@ -4,7 +4,6 @@ import java.io.IOException;
 
 import init.C;
 import init.D;
-import settlement.main.RenderData.RenderIterator;
 import settlement.main.SETT;
 import settlement.path.AVAILABILITY;
 import settlement.room.food.orchard.OTile.STATE;
@@ -16,11 +15,10 @@ import settlement.room.sprite.*;
 import snake2d.SPRITE_RENDERER;
 import snake2d.util.datatypes.*;
 import snake2d.util.file.Json;
-import snake2d.util.sprite.TILE_SHEET;
 import util.gui.misc.GText;
 import util.info.GFORMAT;
+import util.rendering.RenderData.RenderIterator;
 import util.rendering.ShadowBatch;
-import util.spritecomposer.*;
 
 final class Constructor extends Furnisher{
 
@@ -69,7 +67,7 @@ final class Constructor extends Furnisher{
 		
 	};
 	
-	final RoomSpriteComboN sEdge;
+	final RoomSpriteCombo sEdge;
 	final FurnisherStat output;
 	
 	protected Constructor(ROOM_ORCHARD blue, RoomInitData init)
@@ -161,7 +159,7 @@ final class Constructor extends Furnisher{
 			}
 		};
 		
-		sEdge = new RoomSpriteComboN(sp, "EDGE_COMBO");
+		sEdge = new RoomSpriteCombo(sp, "EDGE_COMBO");
 
 		FurnisherItemTile tt = new FurnisherItemTile(this, tree, AVAILABILITY.AVOID_PASS, false);
 		tt.setData(TREE);
@@ -311,11 +309,6 @@ final class Constructor extends Furnisher{
 		
 		
 
-	}
-
-	@Override
-	protected TILE_SHEET sheet(ComposerUtil c, ComposerSources s, ComposerDests d, int y1) {
-		return null;
 	}
 
 	@Override

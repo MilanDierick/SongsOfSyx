@@ -6,6 +6,7 @@ import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Arrays;
 import java.util.zip.InflaterInputStream;
 
 public final class FileGetter {
@@ -46,10 +47,6 @@ public final class FileGetter {
 	}
 
 	public FileGetter(Path path, boolean zipped) throws IOException {
-		this(path, zipped, ClassLoader.getSystemClassLoader());
-	}
-	
-	public FileGetter(Path path, boolean zipped, ClassLoader loader) throws IOException {
 		this.path = "" + path;
 		File f = new File("" + path);
 		if (!Files.exists(path) || !Files.isReadable(path)) {
@@ -76,17 +73,7 @@ public final class FileGetter {
 			in.close();
 			buffer = ByteBuffer.wrap(data);
 			InputStream inn = new ByteBufferBackedInputStream(buffer);
-			object = new ObjectInputStream(inn) {
-				@Override
-				protected Class<?> resolveClass(ObjectStreamClass desc) throws IOException, ClassNotFoundException {
-					String name = desc.getName();
-					try {
-						return Class.forName(name, false, loader);
-					} catch (ClassNotFoundException ex) {
-						return super.resolveClass(desc);
-					}
-				}
-			};
+			object = new ObjectInputStream(inn);
 
 		} catch (Exception e) {
 			f.delete();
@@ -102,12 +89,12 @@ public final class FileGetter {
 		}
 
 	}
-
+	
 	public Object object() throws IOException {
 		try {
 			return object.readObject();
 		} catch (Exception e) {
-			throw new IOException(e);
+			throw new IOException("A code artefact is missing in the current configuration of the game. The usual suspect is a mod version change. Contact the modder in question.", e);
 		}
 	}
 
@@ -124,12 +111,12 @@ public final class FileGetter {
 			// pp++;
 			// }
 			//
-			throw new IOException("corrupt data, expecting : " + s + " (+" + h + ", " + i + "), " + path);
+			throw new IOException("corrupt data, expecting : " + s + " (" + h + ", " + i + "), " + path);
 		}
 	}
 
 	public void check(Object o) throws IOException {
-		check(o.getClass().getName());
+		check(o.getClass().getSimpleName());
 	}
 
 	public void readArray(short[][] shorts) throws IOException {
@@ -143,6 +130,17 @@ public final class FileGetter {
 
 		for (int i = 0; i < shorts.length; i++)
 			shorts[i] = s();
+	}
+	
+	public void ssE(short[] data) throws IOException {
+		int l = i();
+		if (l != data.length) {
+			short[] b = new short[l];
+			ss(b);
+			for (int i = 0; i < l && i < data.length; i++)
+				data[i] = b[i];
+		} else
+			ss(data);
 	}
 
 	public void is(int[] data) throws IOException {
@@ -300,6 +298,8 @@ public final class FileGetter {
 		int k = i();
 		if (k < 0)
 			throw new IOException();
+		if (k > 1000000)
+			throw new IOException();
 		char[] chars = new char[k];
 		for (int i = 0; i < chars.length; i++) {
 			if (!buffer.hasRemaining())
@@ -358,6 +358,19 @@ public final class FileGetter {
 	public void ls(long[] ls) {
 		for (int i = 0; i < ls.length; i++)
 			ls[i] = buffer.getLong();
+	}
+	
+	public boolean lsE(long[] ls) throws IOException {
+		int l = i();
+		if (l != ls.length) {
+			ls(new long[l]);
+			Arrays.fill(ls, 0l);
+			return true;
+		}else {
+			ls(ls);
+			return false;
+		}
+		
 	}
 
 	public void ls(long[][] ls) {

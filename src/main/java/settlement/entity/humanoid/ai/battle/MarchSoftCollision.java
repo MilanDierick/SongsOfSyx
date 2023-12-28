@@ -1,7 +1,7 @@
 package settlement.entity.humanoid.ai.battle;
 
+import game.boosting.BOOSTABLES;
 import game.time.TIME;
-import init.boostable.BOOSTABLES;
 import settlement.entity.ENTITY;
 import settlement.entity.humanoid.HEvent;
 import settlement.entity.humanoid.HEvent.HEventData;
@@ -106,7 +106,7 @@ final class MarchSoftCollision extends AISUB.Resumable{
 				d.overwrite(a, stop.set(a, d));
 				return false;
 			case EXHAUST:
-				if (RND.oneIn(BOOSTABLES.PHYSICS().STAMINA.get(a)*8)) {
+				if (RND.oneIn(BOOSTABLES.PHYSICS().STAMINA.get(a.indu())*8)) {
 					if (STATS.NEEDS().EXHASTION.indu().isMax(a.indu())) {
 						d.interrupt(a, e);
 						d.overwrite(a, AI.listeners().EXHAUSTED.activate(a, d));

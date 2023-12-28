@@ -9,11 +9,10 @@ class Util {
 	}
 	
 	public static int prospect(FarmInstance ins) {
-		ROOM_FARM b = ins.blueprintI();
 		
 		double base = base(ins);
 
-		double fertility = b.constructor.isIndoors ? 1 : ins.tData.fertility();
+		double fertility = ins.tData.fertility();
 		double skill = ins.tData.skill();
 		double work = ins.tData.work();
 		double e =  ins.blueprintI().event();

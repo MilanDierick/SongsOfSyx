@@ -294,8 +294,13 @@ public class MapDataF {
 				return res;
 			}
 		}
+		LOG.ln(tx + " " + ty + " " + room + " " + room.constructor() + " " + it.group.name + " " + it.width() + " " + it.height());
 		
-		throw new RuntimeException(tx + " " + ty + " " + room + " " + room.constructor() + " " + it.group.name + " " + it.width() + " " + it.height());
+		String m = "A very strange bug has happened that the developer is looking for. It has to do with the remove tool that has been used to remove houses. "
+				+ "The house in question was at tile x: " + tx + " y" + + ty + " " + 
+				"If you can replicate this by attemting the removal again around these tiles, the devloper is dying for a reproducable example. Please send the save with instructions of where to delete to info@songsofsyx.com. You can find the saves through the game launcher."; 
+		
+		throw new RuntimeException(m);
 	}
 	
 	public COORDINATE itemMaster(int tx, int ty, Coo res) {

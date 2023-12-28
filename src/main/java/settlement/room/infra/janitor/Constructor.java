@@ -3,7 +3,6 @@ package settlement.room.infra.janitor;
 import java.io.IOException;
 
 import init.resources.RESOURCES;
-import settlement.main.RenderData.RenderIterator;
 import settlement.main.SETT;
 import settlement.path.AVAILABILITY;
 import settlement.room.main.*;
@@ -13,9 +12,8 @@ import settlement.room.main.util.RoomInitData;
 import settlement.room.sprite.*;
 import snake2d.SPRITE_RENDERER;
 import snake2d.util.file.Json;
-import snake2d.util.sprite.TILE_SHEET;
+import util.rendering.RenderData.RenderIterator;
 import util.rendering.ShadowBatch;
-import util.spritecomposer.*;
 
 final class Constructor extends Furnisher{
 
@@ -32,7 +30,7 @@ final class Constructor extends Furnisher{
 		
 		Json sp = init.data().json("SPRITES");
 		
-		RoomSprite res = new RoomSpriteComboN(sp, "TABLE_COMBO") {
+		RoomSprite res = new RoomSpriteCombo(sp, "TABLE_COMBO") {
 			
 			@Override
 			public void renderAbove(SPRITE_RENDERER r, ShadowBatch s, int data, RenderIterator it, double degrade) {
@@ -43,13 +41,13 @@ final class Constructor extends Furnisher{
 					int ri = ins.viewRes >> (8*((it.tx()+it.ty())%3));
 					ri &= 0x0FF;
 					if (ri != 0)
-						RESOURCES.ALL().get(ri-1).renderLaying(r, it.x(), it.y(), it.ran(), blue.res.resources.get(ri-1).get(ins));
+						RESOURCES.ALL().get(ri-1).renderLaying(r, it.x(), it.y(), it.ran(), ins.resbits.get(ri-1));
 				}
 			}
 			
 		};
 		
-		RoomSprite table = new RoomSpriteComboN(res) {
+		RoomSprite table = new RoomSpriteCombo(res) {
 			final RoomSprite1x1 top = new RoomSprite1x1(sp, "TABLE_MISC_1X1");
 			@Override
 			public void renderAbove(SPRITE_RENDERER r, ShadowBatch s, int data, RenderIterator it, double degrade) {
@@ -120,13 +118,6 @@ final class Constructor extends Furnisher{
 		}, 2);
 		
 		flush(1, 3);
-	}
-	
-
-	@Override
-	protected TILE_SHEET sheet(ComposerUtil c, ComposerSources s, ComposerDests d, int y1) {
-		
-		return null;
 	}
 
 	@Override

@@ -17,6 +17,10 @@ public abstract class GStat implements TITLEABLE{
 		this(64);
 	}
 	
+	public GStat(Font f) {
+		this(new GText(f, 64));
+	}
+	
 	public GStat(int size) {
 		this(new GText(UI.FONT().S, size));
 	}

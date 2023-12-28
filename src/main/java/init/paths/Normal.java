@@ -64,4 +64,9 @@ final class Normal extends PATH {
 		return f.getExistingFile(null);
 	}
 
+	@Override
+	public boolean existsFolder(CharSequence folder) {
+		return f.exists(folder, "");
+	}
+
 }

@@ -2,12 +2,14 @@ package settlement.army.ai.util;
 
 import init.sprite.SPRITES;
 import settlement.army.Div;
-import settlement.main.*;
+import settlement.main.ON_TOP_RENDERABLE;
+import settlement.main.SETT;
 import snake2d.Renderer;
 import snake2d.util.color.COLOR;
 import snake2d.util.misc.ACTION;
 import snake2d.util.sets.ArrayList;
 import util.colors.GCOLORS_MAP;
+import util.rendering.RenderData;
 import util.rendering.ShadowBatch;
 import view.sett.IDebugPanelSett;
 

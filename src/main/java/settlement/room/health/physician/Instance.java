@@ -1,6 +1,5 @@
 package settlement.room.health.physician;
 
-import settlement.main.RenderData;
 import settlement.misc.job.*;
 import settlement.room.main.RoomInstance;
 import settlement.room.main.TmpArea;
@@ -10,6 +9,7 @@ import settlement.room.service.module.ROOM_SERVICER;
 import settlement.room.service.module.RoomServiceInstance;
 import snake2d.Renderer;
 import snake2d.util.datatypes.COORDINATE;
+import util.rendering.RenderData;
 import util.rendering.ShadowBatch;
 
 final class Instance extends RoomInstance implements JOBMANAGER_HASER, ROOM_SERVICER{
@@ -66,7 +66,7 @@ final class Instance extends RoomInstance implements JOBMANAGER_HASER, ROOM_SERV
 		
 		for (COORDINATE c : body()) {
 			if (is(c))
-				Service.dispose(this, c.x(), c.y());
+				blueprintI().s.dispose(this, c.x(), c.y());
 		}
 		service.dispose(blueprintI().data);
 	}
@@ -97,12 +97,12 @@ final class Instance extends RoomInstance implements JOBMANAGER_HASER, ROOM_SERV
 
 		@Override
 		protected boolean isAndInit(int tx, int ty) {
-			return Service.getJ(tx, ty) != null;
+			return ins.blueprintI().s.getJ(tx, ty) != null;
 		}
 
 		@Override
 		protected SETT_JOB get(int tx, int ty) {
-			return Service.getJ(tx, ty);
+			return ins.blueprintI().s.getJ(tx, ty);
 		}
 		
 		

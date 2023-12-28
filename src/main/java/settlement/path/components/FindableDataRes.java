@@ -2,20 +2,19 @@ package settlement.path.components;
 
 import static settlement.main.SETT.*;
 
-import init.resources.RESOURCE;
-import init.resources.RESOURCES;
+import init.resources.*;
+import init.resources.RBIT.RBITImp;
 import settlement.path.components.SCompFinder.SCompPatherFinder;
 import snake2d.util.datatypes.DIR;
 import snake2d.util.sets.ArrayList;
 import snake2d.util.sets.LinkedList;
-import util.data.LONG_O.LONG_OE;
 
 public final class FindableDataRes {
 
 	static final LinkedList<FindableDataRes> all = new LinkedList<>();
 	
 	private final ArrayList<FindableData> datas;
-	private final LONG_OE<SComponent> mask;
+	private final int index;
 	public final CharSequence title;
 
 	FindableDataRes(CharSequence title) {
@@ -24,8 +23,7 @@ public final class FindableDataRes {
 		for (int i = 0; i < RESOURCES.ALL().size(); i++) {
 			datas.add(new Res(RESOURCES.ALL().get(i)));
 		}
-		mask = FindableData.datao.new DataLong();
-		all.add(this);
+		index = all.add(this);
 	}
 
 	void add(SComponent c, RESOURCE res) {
@@ -48,21 +46,21 @@ public final class FindableDataRes {
 		return datas.get(res).get(c);
 	}
 
-	public long bits(SComponent c) {
-		return mask.get(c);
+	public RBIT bits(SComponent c) {
+		return c.ress[index];
 	}
 	
-	public long bits(int sx, int sy) {
+	public RBIT bits(int sx, int sy) {
 		SComponent s = PATH().comps.zero.get(sx, sy);
 		if (s == null)
-			return 0;
+			return RBIT.NONE;
 		while(s.superComp() != null)
 			s = s.superComp();
-		return mask.get(s);
+		return s.ress[index];
 	}
 
-	public boolean has(SComponent c, long mask) {
-		return (bits(c) & mask) != 0;
+	public boolean has(SComponent c, RBIT mask) {
+		return bits(c).has(mask);
 	}
 	
 	public final void reportPresence(int tx, int ty, RESOURCE res) {
@@ -78,7 +76,7 @@ public final class FindableDataRes {
 		DIR.C,DIR.N,DIR.E,DIR.S,DIR.W
 	};
 	
-	public boolean has(int startX, int startY, long mask) {
+	public boolean has(int startX, int startY, RBIT mask) {
 		for (DIR d : dirs) {
 			SComponent s = PATH().comps.zero.get(startX, startY, d);
 			if (s == null)
@@ -91,45 +89,41 @@ public final class FindableDataRes {
 		return false;
 	}
 	
-	public SCompPatherFinder finder(long mask) {
+	public SCompPatherFinder finder(RBITImp mask) {
 		fetchmask = mask;
 		return finder;
 	}
 	
-	private long fetchmask;
+	private RBITImp fetchmask;
 	private final SCompPatherFinder finder = new SCompPatherFinder() {
 
 		@Override
 		public boolean isInComponent(SComponent c, double distance) {
-			return (mask.get(c) & fetchmask) != 0;
+			return c.ress[index].has(fetchmask);
 		}
 		
 	};
 	
 	private final class Res extends FindableData {
 		
-		private final long bit;
+		private final RESOURCE res;
 		
 		Res(RESOURCE res) {
 			super(res.name);
-			this.bit = res.bit;
+			this.res = res;
 		}
 		
 		@Override
 		void add(SComponent c) {
 			super.add(c);
-			long m = mask.get(c);
-			m |= bit;
-			mask.set(c, m);
+			c.ress[index].or(res);
 		}
 		
 		@Override
 		boolean remove(SComponent c) {
 			boolean ret = super.remove(c);
 			if (get(c) == 0) {
-				long m = mask.get(c);
-				m &= ~bit;
-				mask.set(c, m);
+				c.ress[index].clear(res);
 			}
 			return ret;
 		}

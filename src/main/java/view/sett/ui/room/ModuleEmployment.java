@@ -1,21 +1,23 @@
 package view.sett.ui.room;
 
+import game.boosting.BOOSTABLES;
+import game.boosting.Booster;
 import game.time.TIME;
 import init.D;
-import init.boostable.BOOSTABLES;
+import init.race.RACES;
 import init.resources.RESOURCE;
 import init.resources.RESOURCES;
+import init.settings.S;
 import init.sprite.SPRITES;
 import settlement.entity.ENTITY;
 import settlement.entity.humanoid.Humanoid;
 import settlement.main.SETT;
 import settlement.misc.job.JOBMANAGER_HASER;
 import settlement.room.main.*;
+import settlement.room.main.employment.*;
 import settlement.room.main.job.ROOM_EMPLOY_AUTO;
 import settlement.stats.STATS;
-import settlement.stats.StatsEquippables;
-import settlement.stats.StatsEquippables.StatEquippableWork;
-import settlement.stats.StatsMultipliers.StatMultiplierWork;
+import settlement.stats.muls.StatsMultipliers.StatMultiplierWork;
 import snake2d.SPRITE_RENDERER;
 import snake2d.util.datatypes.DIR;
 import snake2d.util.gui.GUI_BOX;
@@ -72,6 +74,7 @@ final class ModuleEmployment implements ModuleMaker {
 	private class I extends UIRoomModule {
 		
 		private final RoomBlueprintIns<?> blueprint;
+		private final GChart chart = new GChart();
 		
 		I(RoomBlueprintIns<?> blue){
 			this.blueprint = blue;
@@ -87,7 +90,19 @@ final class ModuleEmployment implements ModuleMaker {
 							blueprint.employment().employed(), 
 							blueprint.employment().neededWorkers());
 				}
-			}.hh(SPRITES.icons().s.human).hoverInfoSet(¤¤EMPLOYEES_DESC));
+				
+				@Override
+				public void hoverInfoGet(GBox b) {
+					if (blueprint.employmentExtra() != null) {
+						b.title(STATS.WORK().EMPLOYED.info.name);
+						b.text(¤¤EMPLOYEES_DESC);
+						b.NL(8);
+						b.add(chart.sprite(blueprint.employmentExtra().history()));
+					}
+					
+				};
+				
+			}.hh(SPRITES.icons().s.human));
 			
 			grid.add(new GStat() {
 
@@ -129,45 +144,56 @@ final class ModuleEmployment implements ModuleMaker {
 
 				@Override
 				public void update(GText text) {
-					GFORMAT.perc(text, blueprint.employment().accidentsPerYear*100 / (1+BOOSTABLES.CIVICS().ACCIDENT.get(null, null)));
+					GFORMAT.perc(text, blueprint.employment().accidentsPerYear*100 / (1+BOOSTABLES.CIVICS().ACCIDENT.get(RACES.clP(null, null))));
 					
 				}
 			}.hh(SPRITES.icons().s.death).hoverInfoSet(DicMisc.¤¤AccidentRate));
 			
-			for (StatEquippableWork w : STATS.EQUIP().work()) {
-				if (w.max(blueprint.employment()) > 0) {
+			RoomEmploymentSimple ee = blueprint.employment();
+			
+			for (RoomEquip w : ee.tools()) {
+				GTarget t = new GTarget(20, false, true, w.target(blueprint.employment()));
+				
+				
+				RENDEROBJ r = new CLICKABLE.Pair(new GHeader(w.resource.icon()), t, DIR.E, 2) {
 					
-					INTE i = new INTE() {
+					@Override
+					public void hoverInfoGet(GUI_BOX text) {
+						GBox b = (GBox) text;
 						
-						@Override
-						public int min() {
-							return 0;
-						}
+						b.add(w.info);
+						b.NL(8);
 						
-						@Override
-						public int max() {
-							return w.max(blueprint.employment());
-						}
+						b.textLL(DicMisc.¤¤Target);
+						b.tab(7);
+						b.add(GFORMAT.iofk(b.text(), w.target(ee).get(), w.target(ee).max()));
+						b.NL();;
 						
-						@Override
-						public int get() {
-							return w.target(blueprint.employment());
-						}
+						b.textLL(DicMisc.¤¤Target);
+						b.add(b.text().para(DicMisc.¤¤Total));
+						b.tab(7);
+						b.add(GFORMAT.i(b.text(), w.targetI(ee)));
+						b.NL();
 						
-						@Override
-						public void set(int t) {
-							w.targetSet(blueprint.employment(), t);
-						}
-					};
+						b.textLL(DicMisc.¤¤Current);
+						b.tab(7);
+						b.add(GFORMAT.i(b.text(), w.current(ee)));
+						b.NL();
+						
+						b.textLL(DicMisc.¤¤Degrade);
+						b.add(b.text().para(DicMisc.¤¤Total));
+						b.add(b.text().para(DicTime.¤¤Day));
+						b.tab(7);
+						b.add(GFORMAT.f0(b.text(), -w.targetI(ee)*w.degradePerDay));
+						
+						b.sep();
+						Booster bo = w.boost(blueprint.employment()).booster;
+						bo.hoverDetailed(b, bo.getValue(w.value(ee)));
+					}
 					
-					GTarget t = new GTarget(20, false, true, i);
 					
-					
-					RENDEROBJ r = new CLICKABLE.Pair(new GHeader(w.resource.icon()), t, DIR.E, 2).hoverInfoSet(w.stat().info().desc);
-					grid.add(r);
-					
-					
-				}
+				};
+				grid.add(r);
 			}
 			
 			
@@ -452,62 +478,68 @@ final class ModuleEmployment implements ModuleMaker {
 				s.addRightC(60, r);
 			}
 			
-			for (StatsEquippables.StatEquippableWork e : STATS.EQUIP().work()) {
-				if (e.max(blueprint.employment()) > 0) {
-					r = new GStat() {
+			RoomEmploymentSimple ee = blueprint.employment();
+			for (RoomEquip w : ee.tools()) {
+				r = new GStat() {
 
-						@Override
-						public void update(GText text) {
-							double am = 0;
+					@Override
+					public void update(GText text) {
+						GFORMAT.f(text, (double)g(get).employees().toolsPerPerson(w));
+						
+					}
+					
+					@Override
+					public void hoverInfoGet(GBox b) {
+						
+						RoomEmploymentIns e = g(get).employees();
+						
+						b.add(w.info);
+						b.NL(8);
+						
+						b.textLL(b.text().lablify().add(DicMisc.¤¤Target).para(DicMisc.¤¤global));
+						b.tab(7);
+						b.add(GFORMAT.iofk(b.text(), w.target(ee).get(), w.target(ee).max()));
+						b.NL();
+						
+						b.textLL(DicMisc.¤¤Current);
+						b.tab(7);
+						b.add(GFORMAT.iofk(b.text(), e.tools(w), e.toolsTarget(w)));
+						b.NL();
+						
+						b.textLL(b.text().lablify().add(DicMisc.¤¤Degrade).para(DicTime.¤¤Day));
+						b.tab(7);
+						b.add(GFORMAT.f0(b.text(), e.tools(w)*w.degradePerDay));
+						
+						b.sep();
+						
+						double v = w.boost(blueprint.employment()).booster.getValue(e.toolD(w));
+						
+						w.boost(blueprint.employment()).booster.hoverDetailed(b, v);
+						b.NL(8);
+						
+						if (S.get().debug) {
 							
-							for (Humanoid h : g(get).employees().employees()) {
-								am += e.stat().indu().get(h.indu());
-							}
-							if (am > 0)
-								am /= g(get).employees().employees().size();
-							GFORMAT.f0(text, am);
+							b.NL();
+							b.text("res " + e.toolReserved(w));
+							b.NL();
+							b.text("need " + e.toolsNeeded(w));
+							b.NL();
+							b.text("target " + e.toolsTarget(w));
+							b.NL();
+							b.text("expire " + e.toolsToExpire(w));
+							b.NL();
+							
+							
+							
 						}
 						
-						@Override
-						public void hoverInfoGet(GBox b) {
-							b.title(e.targetInfo.name);
-							b.NL(8);
-							
-							double d = 0;
-							int t = e.target(blueprint.employment());
-							double am = 0;
-							
-							for (Humanoid h : g(get).employees().employees()) {
-								am += e.stat().indu().get(h.indu());
-							}
-							
-							
-							b.textLL(DicMisc.¤¤Equipped);
-							b.tab(4);
-							b.add(GFORMAT.i(b.text(), (int) am));
-							b.NL();
-							b.textLL(DicMisc.¤¤Target);
-							b.tab(4);
-							b.add(GFORMAT.i(b.text(), (int) t*g(get).employees().employees().size()));
-							b.NL(8);
-							
-							if (am > 0)
-								d = am / (g(get).employees().employees().size()*t);
-							b.textL(BOOSTABLES.INFO().name);
-							b.tab(4);
-							b.add(GFORMAT.percInc(b.text(), d*e.maxBoost(blueprint.employment())));
-						};
-						
-					}.hh(e.resource().icon().small);
-					s.addRightC(60, r);
+					};
 					
-					
-					
-					
-					
-				}
-				
+				}.hh(w.resource.icon().small);
+				s.addRightC(60, r);
 			}
+			
+			
 			
 			
 			
@@ -603,7 +635,7 @@ final class ModuleEmployment implements ModuleMaker {
 			}
 			
 			if ((blueprint instanceof ROOM_EMPLOY_AUTO)) {
-				CLICKABLE c = new GButt.CheckboxTitle(¤¤AUTO) {
+				CLICKABLE c = new GButt.Checkbox(¤¤AUTO) {
 					@Override
 					protected void clickA() {
 						boolean b = ((ROOM_EMPLOY_AUTO)get.get().blueprint()).autoEmploy(get.get());

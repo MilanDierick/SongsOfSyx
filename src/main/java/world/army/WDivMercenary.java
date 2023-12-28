@@ -3,46 +3,38 @@ package world.army;
 import java.io.IOException;
 
 import game.faction.FACTIONS;
-import game.faction.Faction;
 import init.config.Config;
 import init.race.RACES;
 import init.race.Race;
-import settlement.army.DivisionBanners.DivisionBanner;
-import settlement.main.SETT;
+import init.resources.RESOURCES;
+import settlement.stats.Induvidual;
 import settlement.stats.STATS;
-import settlement.stats.StatsEquippables.EQUIPPABLE_MILITARY;
-import settlement.stats.StatsEquippables.StatEquippableRange;
+import settlement.stats.colls.StatsBattle.StatTraining;
+import settlement.stats.equip.EquipBattle;
 import snake2d.util.file.FileGetter;
 import snake2d.util.file.FilePutter;
 import snake2d.util.misc.CLAMP;
 import snake2d.util.rnd.RND;
-import util.dic.DicRes;
-import util.gui.misc.GBox;
-import util.info.GFORMAT;
-import world.World;
-import world.army.WINDU.WDivGeneration;
-import world.army.WINDU.WInduStored;
-import world.entity.army.WArmy;
+import world.army.util.DivSpec;
+import world.army.util.DivType;
+import world.regions.data.RD;
+import world.regions.data.pop.RDRace;
 
-final class WDivMercenary implements WDIV {
+final class WDivMercenary extends ADDiv {
 	
 	static final int type = 2;
 	
 	private byte race = 0;
 	private short men;
 	private short menTarget;
-	private byte trainingM;
-	private byte trainingR;
+	private final DivSpec spec = new DivSpec();
 	private float exp;
 	private short costPerMan;
 	private short nameI;
-	private short armyI = -1;
-	private final int index;
-	private final byte[] equip = new byte[STATS.EQUIP().military_all().size()]; 
-	private short bannerI = 0;
+	private short bannerI;
 			
 	WDivMercenary(int index) {
-		this.index = index;
+		super(index);
 	}
 	
 	void randomize() {
@@ -50,14 +42,14 @@ final class WDivMercenary implements WDIV {
 		race = (byte) RACES.all().rnd().index;
 		
 		double am = 0;
-		for (Race r : RACES.all()) {
-			am += FACTIONS.player().kingdom().realm().population().get(r)+1;
+		for (RDRace r : RD.RACES().all) {
+			am += r.pop.faction().get(FACTIONS.player()) +1;
 		}
 		double ri = RND.rFloat()*am;
-		for (Race r : RACES.all()) {
-			ri -= FACTIONS.player().kingdom().realm().population().get(r)+1;
+		for (RDRace r : RD.RACES().all) {
+			ri -= r.pop.faction().get(FACTIONS.player())+1;
 			if (ri <= 0) {
-				race = (byte) r.index;
+				race = (byte) r.race.index;
 				break;
 			}
 		}
@@ -67,93 +59,50 @@ final class WDivMercenary implements WDIV {
 		men = (short) CLAMP.i((int) ((0.5 + 0.5*RND.rFloat())*Config.BATTLE.MEN_PER_DIVISION), 1, Config.BATTLE.MEN_PER_DIVISION);
 		menTarget = men;
 		
-		exp = (float) CLAMP.d(Math.pow(RND.rFloat(), 1.5)*STATS.BATTLE().COMBAT_EXPERIENCE.indu().max(null), 0, 1);
+		exp = (float) CLAMP.d(Math.pow(RND.rFloat(), 1.5), 0, 1);
 		
 		
 		nameI = (short) RND.rInt(race().info.armyNames.size());
 		
-		boolean ranged = RND.oneIn(5);
+		DivType type = AD.UTIL().types.rnd(race(), null, RND.rFloat());
 		
-		double trai = Math.pow(RND.rFloat(), 1.5)*STATS.BATTLE().TRAINING_MELEE.indu().max(null);
-		if (ranged) {
-			trainingR = (byte) (trai*4/5);
-			trainingM = (byte) (trai*1/5);
-		}else {
-			trainingR = (byte) (trai*1/5);
-			trainingM = (byte) (trai*5/5);
-		}
+		spec.copy(type, 0.1 + 0.9*Math.pow(RND.rFloat(), 1.5), 0.1 + 0.9*Math.pow(RND.rFloat(), 1.5));
 		
-		for (EQUIPPABLE_MILITARY m : STATS.EQUIP().military()) {
-			equip[m.indexMilitary()] = (byte) (Math.pow(RND.rFloat(), 1.5)*m.max());
-		}
+		bannerSet(RND.rShort());
 		
-		if (ranged) {
-			StatEquippableRange i = STATS.EQUIP().ammo().rnd(); 
-			equip[i.indexMilitary()] = (byte) (1+RND.rInt(i.max()));
-		}
-		bannerI = RND.rShort();
-		costPerMan = (short) (2 + ((double)provess()/men));
+		
+		costPerMan = (short) (2 + 0.5*RND.rFloat1(0.2)*100*RESOURCES.ALL().size()*((double)provess()/(100.0*men)));
 		
 		report(1);
 	}
 	
-
+	@Override
 	public void save(FilePutter file) {
+		super.save(file);
 		file.b(race);
 		file.s(men);
 		file.s(menTarget);
-		file.b(trainingM);
-		file.b(trainingR);
 		file.f(exp);
 		file.s(costPerMan);
 		file.s(nameI);
-		file.s(armyI);
-		file.bs(equip);
 		file.s(bannerI);
+		spec.save(file);
 	}
 
-
+	@Override
 	public void load(FileGetter file) throws IOException {
+		super.load(file);
 		race = file.b();
 		men = file.s();
 		menTarget = file.s();
-		trainingM = file.b();
-		trainingR = file.b();
 		exp = file.f();
 		costPerMan = file.s();
 		nameI = file.s();
-		armyI = file.s();
-		file.bs(equip);
 		bannerI = file.s();
+		spec.load(file);
 	}
 
-	void armySet(WArmy e) {
-		report(-1);
-		
-		WArmy old = army();
-		if (old != null) {
-			for (int i = 0; i < old.divs().size(); i++) {
-				if (old.divs().get(i) == this) {
-					old.divs().remove(i);
-					break;
-				}
-			}
-		}
-		
-		armyI = e == null ? -1 : e.armyIndex();
-		if (e != null) {
-			
-			int i = army().divs().add();
-			long d = WArmyDivs.BType.set(0, type);
-			d |= index;
-			army().divs().setData(i, d);
-		}
-		report(1);
-	}
 
-	void clear() {
-		armyI = -1;
-	}
 
 	@Override
 	public int men() {
@@ -168,10 +117,10 @@ final class WDivMercenary implements WDIV {
 	}
 	
 	@Override
-	public void resolve(WInduStored[] hs) {
+	public void resolve(Induvidual[] hs) {
 		double exp = 0;
-		for (WInduStored i : hs)
-			exp += WINDU.experience().statSelf.getD(i);
+		for (Induvidual i : hs)
+			exp += STATS.BATTLE().COMBAT_EXPERIENCE.indu().getD(i);
 		if (hs.length > 0)
 			exp /= hs.length;
 		resolve(hs.length, exp);
@@ -186,28 +135,23 @@ final class WDivMercenary implements WDIV {
 	}
 	
 	@Override
-	public void disband() {
-		armySet(null);
-	}
-	
-	@Override
 	public int menTarget() {
 		return menTarget;
 	}
 	
 	@Override
-	public double training_melee() {
-		return (trainingM/(double)STATS.BATTLE().TRAINING_MELEE.indu().max(null));
+	public double training(StatTraining tr) {
+		return spec.training[tr.tIndex];
 	}
 	
 	@Override
-	public double training_ranged() {
-		return (trainingR/(double)STATS.BATTLE().TRAINING_MELEE.indu().max(null));
+	public double trainingTarget(StatTraining tr) {
+		return training(tr);
 	}
 	
 	@Override
 	public double experience() {
-		return (exp)/(double)STATS.BATTLE().COMBAT_EXPERIENCE.indu().max(null);
+		return exp;
 	}
 	
 	@Override
@@ -219,42 +163,8 @@ final class WDivMercenary implements WDIV {
 	public int daysUntilMenArrives() {
 		return 1;
 	}
-
-	@Override
-	public int amountOfMenThatWillArrive() {
-		return 10;
-	}
 	
 	@Override
-	public WArmy army() {
-		if (armyI == -1)
-			return null;
-		return World.ENTITIES().armies.get(armyI);
-	}
-	
-	private void report(int i){
-		WARMYD.register(this, false, 0, costPerMan, i);
-	}
-	
-	@Override
-	public void hover(GBox b) {
-
-		World.ARMIES().hoverer().hover(this, b);
-
-		b.NL(8);
-		
-		b.textL(DicRes.¤¤InitialCost);
-		b.tab(3);
-		b.add(GFORMAT.i(b.text(), 2*costPerMan*men()));
-		b.NL();
-		
-		b.textL(DicRes.¤¤Upkeep);
-		b.tab(3);
-		b.add(GFORMAT.i(b.text(), costPerMan*men()));
-		b.NL();
-		
-	}
-	
 	public int costPerMan() {
 		return costPerMan;
 	}
@@ -264,10 +174,6 @@ final class WDivMercenary implements WDIV {
 		return type;
 	}
 
-	@Override
-	public void reassign(WArmy a) {
-		armySet(a);
-	}
 	
 	@Override
 	public CharSequence name() {
@@ -275,46 +181,37 @@ final class WDivMercenary implements WDIV {
 	}
 
 	@Override
-	public int equipTarget(EQUIPPABLE_MILITARY e) {
-		return equip[e.indexMilitary()];
+	public int equipTarget(EquipBattle e) {
+		return (int) (spec.equip[e.indexMilitary()]*e.max());
 	}
 	
 	@Override
-	public double equip(EQUIPPABLE_MILITARY e) {
-		return equip[e.indexMilitary()];
+	public double equip(EquipBattle e) {
+		return spec.equip[e.indexMilitary()];
 	}
 
 	@Override
 	public boolean needSupplies() {
 		return false;
 	}
-	
-	@Override
-	public DivisionBanner banner() {
-		return SETT.ARMIES().banners.get(bannerI);
-	}
-	
-	@Override
-	public void bannerSet(int bi) {
-		this.bannerI = (short) bi;
-	}
 
-	@Override
-	public Faction faction() {
-		if (army() == null)
-			return null;
-		return army().faction();
-	}
 
 	@Override
 	public WDivGeneration generate() {
-		return WINDU.generate(this, army());
+		return new WDivGeneration(this);
 	}
 
 	@Override
 	public int bannerI() {
 		return bannerI;
 	}
+
+	@Override
+	public void bannerSet(int bi) {
+		this.bannerI = (short) bi;
+	}
+
+
 
 
 

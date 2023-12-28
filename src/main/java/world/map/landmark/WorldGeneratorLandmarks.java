@@ -1,6 +1,6 @@
 package world.map.landmark;
 
-import static world.World.*;
+import static world.WORLD.*;
 
 import init.RES;
 import init.paths.PATHS;
@@ -11,14 +11,14 @@ import snake2d.util.map.MAP_BOOLEAN;
 import snake2d.util.rnd.Polymap;
 import snake2d.util.rnd.RND;
 import snake2d.util.sets.Bitmap1D;
-import world.World;
+import world.WORLD;
 
 public final class WorldGeneratorLandmarks {
 
 
 	
 	public void clear() {
-		World.LANDMARKS().clear();
+		WORLD.LANDMARKS().clear();
 	}
 	
 	public void generate() {
@@ -27,7 +27,7 @@ public final class WorldGeneratorLandmarks {
 	
 	private static class Gen {
 		
-		private final Polymap polly = new Polymap(TWIDTH(), THEIGHT(), 40*(TWIDTH()/256), 1.0);
+		private final Polymap polly = new Polymap(TWIDTH(), THEIGHT(), (int) (40*(TWIDTH()/250.0)), 1.0);
 		private final WorldLandmark rubbish = LANDMARKS().getByIndex(0);
 		private final Rec work = new Rec();
 		
@@ -46,7 +46,7 @@ public final class WorldGeneratorLandmarks {
 
 				@Override
 				public boolean is(int tx, int ty) {
-					return WATER().LAKE.normal.is(tx, ty);
+					return WATER().LAKE.is.is(tx, ty);
 				}
 			},
 			new Type(json, "RIVER", 25, 100) {
@@ -299,6 +299,7 @@ public final class WorldGeneratorLandmarks {
 	private abstract static class Type implements MAP_BOOLEAN{
 		
 		private final String[] names;
+		private final String[] addons;
 		private int nameI = 0;
 		private final Json[] specials;
 		private int sI = 0;
@@ -306,17 +307,18 @@ public final class WorldGeneratorLandmarks {
 		private int maxSize;
 		
 		Type(Json json, String key, int min, int max){
+			json = json.json(key);
 			this.minSize = min;
 			this.maxSize = max;
-			names = json.texts(key);
+			names = json.texts("NAMES");
 			for (int i = 0; i < names.length; i++) {
 				int k = RND.rInt(names.length);
 				String o = names[i];
 				names[i] = names[k];
 				names[k] = o;
 			}
-			
-			specials = json.json("SPECIAL").jsons(key);
+			addons = json.texts("ADDONS");
+			specials = json.jsons("SPECIAL");
 			
 			for (int i = 0; i < specials.length; i++) {
 				int k = RND.rInt(specials.length);
@@ -344,7 +346,11 @@ public final class WorldGeneratorLandmarks {
 				if (names.length == 0) {
 					l.name.clear().add(l.index);
 				}else {
-					l.name.clear().add(names[nameI++]);
+					if (addons.length > 0) {
+						l.name.clear().add(addons[RND.rInt(addons.length)]);
+						l.name.insert(0, names[nameI++]);
+					}else
+						l.name.clear().add(names[nameI++]);
 					if (nameI >= names.length)
 						nameI = 0;
 				}

@@ -2,11 +2,9 @@ package settlement.room.food.pasture;
 
 import java.io.IOException;
 
+import game.boosting.BoostSpec;
 import game.time.TIME;
 import init.biomes.CLIMATE;
-import init.biomes.CLIMATES;
-import init.boostable.BOOSTABLE;
-import init.boostable.BOOSTABLES;
 import init.resources.RESOURCE;
 import init.resources.RESOURCES;
 import settlement.entity.animal.AnimalSpecies;
@@ -17,6 +15,7 @@ import settlement.room.industry.module.Industry;
 import settlement.room.industry.module.Industry.IndustryResource;
 import settlement.room.industry.module.Industry.RoomBoost;
 import settlement.room.main.*;
+import settlement.room.main.BonusExp.RoomExperienceBonus;
 import settlement.room.main.category.RoomCategorySub;
 import settlement.room.main.furnisher.Furnisher;
 import settlement.room.main.job.ROOM_EMPLOY_AUTO;
@@ -25,8 +24,11 @@ import settlement.room.main.util.RoomInitData;
 import snake2d.util.file.FileGetter;
 import snake2d.util.file.FilePutter;
 import snake2d.util.sets.*;
+import util.dic.DicMisc;
 import util.gui.misc.GBox;
 import util.gui.misc.GText;
+import util.info.GFORMAT;
+import util.info.INFO;
 import view.sett.ui.room.UIRoomModule;
 
 public final class ROOM_PASTURE extends RoomBlueprintIns<PastureInstance> implements INDUSTRY_HASER, ROOM_EMPLOY_AUTO{
@@ -37,7 +39,6 @@ public final class ROOM_PASTURE extends RoomBlueprintIns<PastureInstance> implem
 	final int jobsPerDay = TIME.getWorkPerDay(JobManager.workTime);
 	final double capacityPerDay = 1.0/2.0;
 	public final AnimalSpecies species;
-	final BOOSTABLE bonus2;
 	final LIST<Industry> indus;
 	
 	final double ANIMALS_PER_TILE;
@@ -95,13 +96,88 @@ public final class ROOM_PASTURE extends RoomBlueprintIns<PastureInstance> implem
 		ANIMALS_PER_TILE = 5.0/(species.mass()+10);
 		
 		this.constructor = new Constructor(this, data);
-		bonus2 = BOOSTABLES.ROOMS().pushRoom(this, data.data(), type);
-		
+		pushBo(data.data(), type, true);
 		RoomBoost[] bos = new RoomBoost[] {
+			constructor.efficiency,
+			new RoomBoost() {
+				
+				INFO info = new INFO(DicMisc.¤¤Capacity, DicMisc.¤¤Capacity);
+				
+				@Override
+				public INFO info() {
+					return info;
+				}
+				
+				@Override
+				public double get(RoomInstance r) {
+					return constructor.ferarea.get(r)*ROOM_PASTURE.WORKERS_PER_TILE;
+				}
+			},
+			new RoomBoost() {
+				
+				@Override
+				public INFO info() {
+					return SETT.ENV().environment.WATER_SWEET;
+				}
+				
+				@Override
+				public double get(RoomInstance r) {
+					PastureInstance p = (PastureInstance) r;
+					return 1 + p.water*0.25;
+				}
+			},
+			new RoomBoost() {
+				
+				INFO info = new INFO(Gui.¤¤Skill, Gui.¤¤SkillD);
+				
+				@Override
+				public INFO info() {
+					return info;
+				}
+				
+				@Override
+				public double get(RoomInstance r) {
+					PastureInstance p = (PastureInstance) r;
+					return p.skill();
+				}
+			},
+			new RoomBoost() {
+				
+				INFO info = new INFO(Gui.¤¤Animals, Gui.¤¤Animals);
+				
+				@Override
+				public INFO info() {
+					return info;
+				}
+				
+				@Override
+				public double get(RoomInstance r) {
+					PastureInstance p = (PastureInstance) r;
+					return (double)(p.animalsCurrent)/p.animalsMax;
+				}
+			},
+			new RoomBoost() {
+				
+				INFO info = new INFO(Gui.¤¤Tending, Gui.¤¤Tending);
+				
+				@Override
+				public INFO info() {
+					return info;
+				}
+				
+				@Override
+				public double get(RoomInstance r) {
+					PastureInstance p = (PastureInstance) r;
+					if (p.animalsCurrent == 0)
+						return 1.0;
+					
+					return 1.0-(double)(p.animalsToDie)/p.animalsCurrent;
+				}
+			},
 
 		};
 		
-		productionData = new Industry(this, data.data(), bos, bonus2);
+		productionData = new Industry(this, data.data(), bos, bonus());
 		
 		if (productionData.outs().size() > 3)
 			data.data().error("Can't declare more than 3 output in industry!", "");
@@ -109,7 +185,9 @@ public final class ROOM_PASTURE extends RoomBlueprintIns<PastureInstance> implem
 		//productionData = new Industry(this, null, null, resses, rates, bos, bonus2);
 		
 		indus = new ArrayList<>(productionData);
+		new RoomExperienceBonus(this, data.data(), bonus());
 	}
+
 	
 	@Override
 	protected void update(float ds) {
@@ -163,7 +241,11 @@ public final class ROOM_PASTURE extends RoomBlueprintIns<PastureInstance> implem
 	
 	@Override
 	public boolean isAvailable(CLIMATE c) {
-		return CLIMATES.BONUS().mul(bonus2, c)*(1+CLIMATES.BONUS().add(bonus2, c)) > 0;
+		for (BoostSpec s : c.boosters.all()) {
+			if (s.boostable == bonus() && s.booster.isMul && s.booster.min() == 0)
+				return false;
+		}
+		return true;
 	}
 
 	@Override
@@ -183,7 +265,14 @@ public final class ROOM_PASTURE extends RoomBlueprintIns<PastureInstance> implem
 
 	@Override
 	public double industryFormatProductionRate(GText text, IndustryResource i, RoomInstance ins) {
-		return Gui.industryFormatProductionRate(text, i, ins);
+		double prod = i.rate;
+		
+		for (RoomBoost bb : indus.get(0).boosts()) {
+			prod *= bb.get(ins);
+		}
+		text.add('+');
+		GFORMAT.f(text, prod);
+		return prod;
 	}
 	
 	@Override
@@ -193,4 +282,15 @@ public final class ROOM_PASTURE extends RoomBlueprintIns<PastureInstance> implem
 	}
 	
 
+	@Override
+	public double industryFormatProductionRateEmpl(GText text, IndustryResource i, RoomInstance ins) {
+		text.clear();
+		double prod = i.rate;
+		
+		for (RoomBoost bb : indus.get(0).boosts()) {
+			prod *= bb.get(ins);
+		}
+		return prod;
+	}
+	
 }

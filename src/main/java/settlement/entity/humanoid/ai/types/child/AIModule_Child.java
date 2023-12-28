@@ -6,6 +6,7 @@ import java.util.Comparator;
 import game.time.TIME;
 import init.C;
 import init.D;
+import init.need.NEEDS;
 import init.race.RACES;
 import settlement.entity.ENTITY;
 import settlement.entity.humanoid.*;
@@ -42,7 +43,7 @@ public final class AIModule_Child extends AIModule{
 	}
 	
 	@Override
-	protected AiPlanActivation getPlan(Humanoid a, AIManager d) {
+	public AiPlanActivation getPlan(Humanoid a, AIManager d) {
 		
 		
 		
@@ -53,7 +54,7 @@ public final class AIModule_Child extends AIModule{
 		if (!checkSpot(a, d) && !getSpot(a, d))
 			return starve.activate(a, d);
 		
-		if (TIME.light().nightIs() || STATS.NEEDS().HUNGER.getPrio(a.indu()) > 0 || STATS.NEEDS().EXPOSURE.inDanger(a.indu())) {
+		if (TIME.light().nightIs() || NEEDS.TYPES().HUNGER.stat().getPrio(a.indu()) > 0 || STATS.NEEDS().EXPOSURE.inDanger(a.indu())) {
 			return sleep.activate(a, d);
 		}else {
 			if (TIME.light().partOf() < 0.4 && STATS.EDUCATION().canEducateChild(a.indu())) {
@@ -256,7 +257,7 @@ public final class AIModule_Child extends AIModule{
 			@Override
 			protected AISubActivation res(Humanoid a, AIManager d) {
 				if (checkReady(a, d)) {
-					if (STATS.NEEDS().HUNGER.getPrio(a.indu()) > 0)
+					if (NEEDS.TYPES().HUNGER.stat().getPrio(a.indu()) > 0)
 						return eat.set(a, d);
 				}
 				if (TIME.light().nightIs())
@@ -290,9 +291,9 @@ public final class AIModule_Child extends AIModule{
 				ROOM_NURSERY n = rooms[a.race().index];
 				COORDINATE c = AI.modules().coo(d);
 				n.childUseSpot(c.x(), c.y(), true);
-				STATS.NEEDS().HUNGER.fix(a.indu());
+				NEEDS.TYPES().HUNGER.stat().fix(a.indu());
 				if (RND.oneIn(4))
-					STATS.NEEDS().DIRTINESS.fix(a.indu());
+					STATS.NEEDS().DIRTINESS.set(a.indu(), 0);
 				return sleep.set(a, d);
 			}
 			
@@ -331,7 +332,7 @@ public final class AIModule_Child extends AIModule{
 			protected AISubActivation res(Humanoid a, AIManager d) {
 				
 				STATS.NEEDS().EXPOSURE.count.inc(a.indu(), -1);
-				if (STATS.NEEDS().HUNGER.getPrio(a.indu()) > 0) {
+				if (NEEDS.TYPES().HUNGER.stat().getPrio(a.indu()) > 0) {
 					if (checkReady(a, d)) {
 						return eat.set(a, d);
 					}

@@ -101,6 +101,33 @@ public abstract class Tree<T> implements ADDABLE<T> {
 		return false;
 	}
 
+	@SuppressWarnings("unchecked")
+	public boolean removeElement(T element) {
+		Node t = root;
+		if (t == null) {
+			return false;
+		}
+		boolean greater;
+		Node parent;
+
+		do {
+			parent = t;
+			if (parent.element.equals(element)) {
+				deleteEntry(parent);
+				return true;
+			}
+			greater = isGreaterThan(element, (T) t.element);
+
+			if (!greater)
+				t = t.left;
+			else
+				t = t.right;
+
+		} while (t != null);
+
+		return false;
+	}
+	
 	protected abstract boolean isGreaterThan(T current, T cmp);
 
 	private void initTile(Node t, Node parent) {

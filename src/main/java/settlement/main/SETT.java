@@ -3,24 +3,24 @@ package settlement.main;
 
 import java.io.IOException;
 
-import game.GAME;
+import game.*;
 import game.GAME.GameResource;
-import game.GameDisposable;
 import game.faction.FACTIONS;
 import game.faction.Faction;
 import game.time.TIME;
 import init.*;
+import init.config.Config;
 import init.settings.S;
 import init.sound.SOUND;
 import settlement.army.ArmyManager;
 import settlement.army.Div;
 import settlement.army.ai.ARMY_AI;
+import settlement.army.invasion.Invador;
 import settlement.entity.ENTETIES;
 import settlement.entity.animal.ANIMALS;
 import settlement.entity.humanoid.Humanoids;
 import settlement.entry.SENTRY;
 import settlement.environment.ENVIRONMENT;
-import settlement.invasion.Invador;
 import settlement.job.JOBS;
 import settlement.maintenance.MAINTENANCE;
 import settlement.misc.ParticleRenderer;
@@ -33,13 +33,15 @@ import settlement.room.main.ROOMS;
 import settlement.room.main.throne.THRONE;
 import settlement.stats.STATS;
 import settlement.stats.health.HEALTH;
-import settlement.stats.law.LAW;
 import settlement.stats.standing.STANDINGS;
 import settlement.thing.THINGS;
 import settlement.thing.halfEntity.HalfEnts;
 import settlement.thing.pointlight.POINTLIGHTS;
 import settlement.thing.projectiles.SProjectiles;
-import settlement.tilemap.*;
+import settlement.tilemap.TileMap;
+import settlement.tilemap.floor.*;
+import settlement.tilemap.growth.Fertility;
+import settlement.tilemap.terrain.Terrain;
 import settlement.weather.SWEATHER;
 import snake2d.CORE;
 import snake2d.Renderer;
@@ -53,16 +55,16 @@ import snake2d.util.misc.ACTION;
 import snake2d.util.misc.CLAMP;
 import snake2d.util.sets.ArrayList;
 import snake2d.util.sets.LinkedList;
-import util.rendering.Minimap;
-import util.rendering.ShadowBatch;
+import util.dic.DicMisc;
+import util.rendering.*;
 import view.main.VIEW;
 import view.sett.IDebugPanelSett;
 import view.subview.GameWindow;
 
 public final class SETT extends GameResource{
 
-	public static final int TWIDTH = C.SETTLE_TSIZE;
-	public static final int THEIGHT = C.SETTLE_TSIZE;
+	public static final int TWIDTH = Config.SETT.DIMENSION;
+	public static final int THEIGHT = TWIDTH; // must be the same!
 	public static final int PWIDTH = TWIDTH*C.TILE_SIZE;
 	public static final int PHEIGHT = THEIGHT*C.TILE_SIZE;
 	public static final int TAREA = TWIDTH*THEIGHT;
@@ -212,10 +214,6 @@ public final class SETT extends GameResource{
 		return i.armyAI;
 	}
 	
-	public static SettBorder BORDERS() {
-		return i.terrain.borders;
-	}
-	
 	public static Invador INVADOR() {
 		return i.invador;
 	}
@@ -242,9 +240,9 @@ public final class SETT extends GameResource{
 	private final THINGS things = new THINGS();
 	private final SProjectiles projectiles = new SProjectiles();
 	
-	private final settlement.tilemap.TileMap terrain = new settlement.tilemap.TileMap();
+	private final TileMap terrain = new TileMap();
 	private final ANIMALS animals = new ANIMALS();
-	public final ROOMS rooms = new ROOMS();
+	private final ROOMS rooms = new ROOMS();
 	private final JOBS jobs = new JOBS();
 
 	private final ArmyManager battle2 = new ArmyManager(this);
@@ -259,7 +257,13 @@ public final class SETT extends GameResource{
 	private final RenderData renData = new RenderData(TWIDTH, THEIGHT);
 	
 	private final CapitolArea worldArea = new CapitolArea();
-	{new LAW();}
+	
+	{
+		STATS.create();
+		STANDINGS.create();
+		new HEALTH();
+	}
+	
 	private final Humanoids creatures = new Humanoids();
 	private final MAINTENANCE maintenance = new MAINTENANCE();
 	private final POINTLIGHTS lights = new POINTLIGHTS();
@@ -268,16 +272,13 @@ public final class SETT extends GameResource{
 	private final PATHING path = new PATHING();
 
 	private final Invador invador = new Invador();
-	private final Minimap minimap = new Minimap(C.SETTLE_TSIZE);
+	private final Minimap minimap = new Minimap(TWIDTH);
 	private final SWEATHER weather = new SWEATHER();
 	private final SettOverlay details = new SettOverlay();
 	
 	public SETT() throws IOException{
 		new TUpdater();
 		
-		STATS.create();
-		STANDINGS.create();
-		new HEALTH();
 		IDebugPanelSett.add("Regenerate settlement", new ACTION() {
 			
 			@Override
@@ -288,10 +289,10 @@ public final class SETT extends GameResource{
 		
 	}
 	
-	public void CreateFromWorldMap(int wx1, int wy1, SGenerationConfig config){
+	public void CreateFromWorldMap(int wx1, int wy1, boolean isBattle){
 		D.gInit(getClass());
-		this.worldArea.init(wx1, wy1, config);
-		VIEW.s().clear();
+		this.worldArea.init(wx1, wy1, isBattle);
+		
 		RES.loader().init();
 		RES.loader().print(D.g("Clearing"));
 		for (int i = 0; i < SettResource.resources.size(); i++) {
@@ -311,6 +312,7 @@ public final class SETT extends GameResource{
 		VIEW.s().getWindow().centerAt(
 				THRONE.coo().x()*C.TILE_SIZE, 
 				THRONE.coo().y()*C.TILE_SIZE);
+		VIEW.s().clear();
 		//events.landingPartys[0].placeSingle(terrain.rooms.THRONE.getThrone().x(), terrain.rooms.THRONE.getThrone().y());
 		setExists();
 		
@@ -321,7 +323,7 @@ public final class SETT extends GameResource{
 		}
 
 		AvailabilityListener.listenAll(true);
-		update(0);
+		update(0, Profiler.DUMMY);
 		//ArroundPlacer.placeArround(PLACERS().landingParty, terrain.rooms.THRONE.getThrone().x(), terrain.rooms.THRONE.getThrone().y());
 		//update(0);
 		System.gc();
@@ -340,7 +342,7 @@ public final class SETT extends GameResource{
 	}
 	
 	public static void reGenerate() {
-		i.CreateFromWorldMap(i.worldArea.tiles().x1(), i.worldArea.tiles().y1(), i.worldArea.config());
+		i.CreateFromWorldMap(i.worldArea.tiles().x1(), i.worldArea.tiles().y1(), i.worldArea.isBattle);
 	}
 	
 	private void setExists(){
@@ -399,7 +401,8 @@ public final class SETT extends GameResource{
 		k = 0;
 		for (int i = 0; i < SettResource.resources.size(); i++) {
 			SettResource r = SettResource.resources.get(i);
-			RES.loader().print(D.g("Initializing") + ": " + k++ + "/" + m);
+			CharSequence s = S.get().debug ? ""+r : DicMisc.empty;
+			RES.loader().print(D.g("Initializing") + ": " + k++ + "/" + m  + s);
 			r.init(true);
 		}
 		
@@ -573,18 +576,19 @@ public final class SETT extends GameResource{
 		
 		//RENDER ENTITIES
 		
-		r.newLayer(false, zoomout);
-		halfEnts.render(r, s, ds, renWindow, offX, offY);
+
 		r.newLayer(false, zoomout);
 		eHandler.renderA(r, s, ds, renWindow, offX, offY);
+		
+		r.newLayer(false, zoomout);
+		halfEnts.render(r, s, ds, renWindow, offX, offY);
 		
 		r.newLayer(false, zoomout);
 		things.render(r, s, ds, renWindow, offX, offY);
 		r.newLayer(false, zoomout);
 		lights.render(r, s, ds, renWindow, offX, offY);
 		
-		r.newLayer(false, zoomout);
-		halfEnts.renderBelow(r, s, ds, renWindow, offX, offY);
+		
 		
 		r.newLayer(false, zoomout);
 		VIEW.current().renderBelowTerrain(r, s, renData);
@@ -592,7 +596,7 @@ public final class SETT extends GameResource{
 		
 		r.newLayer(false, zoomout);
 		
-		terrain.renderTheRest(r, s, ds, zoomout, renData);
+		terrain.renderTheRest(r, s, ds, zoomout, renData,renWindow, offX, offY);
 		
 		for (SettResource rs : SettResource.resources) {
 			rs.postRender(ds);
@@ -683,13 +687,17 @@ public final class SETT extends GameResource{
 	
 	
 	@Override
-	protected void update(float ds){
+	protected void update(float ds, Profiler prof){
 
+		prof.logStart(SETT.class);
 		if (!exists)
 			return;
-		for (SettResource r : SettResource.resources)
-			r.update(ds);
-		
+		for (SettResource r : SettResource.resources) {
+			prof.logStart(r);
+			r.update(ds, prof);
+			prof.logEnd(r);
+		}
+		prof.logEnd(SETT.class);
 	}
 	
 	@Override
@@ -732,7 +740,7 @@ public final class SETT extends GameResource{
 			
 		}
 		
-		protected void update(float ds){
+		protected void update(float ds, Profiler profiler){
 			
 		}
 		
@@ -772,8 +780,6 @@ public final class SETT extends GameResource{
 	public static void addGeneratorHook(ACTION action) {
 		i.gHooks.add(action);
 	}
-	
-
 	
 	
 }

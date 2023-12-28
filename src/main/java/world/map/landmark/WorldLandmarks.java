@@ -1,6 +1,6 @@
 package world.map.landmark;
 
-import static world.World.*;
+import static world.WORLD.*;
 
 import java.io.IOException;
 
@@ -8,7 +8,7 @@ import snake2d.util.file.FileGetter;
 import snake2d.util.file.FilePutter;
 import snake2d.util.map.MAP_OBJECTE;
 import snake2d.util.sets.*;
-import world.World.WorldResource;
+import world.WORLD.WorldResource;
 
 public final class WorldLandmarks extends WorldResource {
 

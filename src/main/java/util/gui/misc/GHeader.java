@@ -143,10 +143,10 @@ public class GHeader extends HOVERABLE.HoverableAbs{
 		}
 
 		public HeaderHorizontal(CharSequence name, SPRITE s, int width) {
-			super(name, s.height() <= 16 ? UI.FONT().S : UI.FONT().H2);
+			super(name, UI.FONT().S);
 			this.s = s;
 			body.setHeight(text.height() > s.height() ? text.height() : s.height());
-			body.setWidth(width);
+			body.setWidth(width+s.width());
 			fixedWidth = width;
 		}
 		

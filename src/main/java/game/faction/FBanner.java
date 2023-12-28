@@ -3,8 +3,12 @@ package game.faction;
 import java.io.IOException;
 
 import init.D;
-import init.sprite.*;
+import init.sprite.BitmapSprite;
+import init.sprite.SPRITES;
+import init.sprite.UI.Icon;
+import init.sprite.UI.UI;
 import snake2d.SPRITE_RENDERER;
+import snake2d.util.color.COLOR;
 import snake2d.util.color.ColorImp;
 import snake2d.util.datatypes.DIR;
 import snake2d.util.file.FileGetter;
@@ -12,6 +16,7 @@ import snake2d.util.file.FilePutter;
 import snake2d.util.rnd.RND;
 import snake2d.util.sprite.SPRITE;
 import snake2d.util.sprite.TextureCoords;
+import util.colors.GCOLORS_MAP;
 
 public class FBanner extends FactionResource{
 
@@ -29,6 +34,7 @@ public class FBanner extends FactionResource{
 	private final ColorImp foreground = new ColorImp(40 + RND.rInt(87), 40 + RND.rInt(87), 40 + RND.rInt(87));
 	private final ColorImp border = foreground.shade(0.25);
 	private final ColorImp pole = new ColorImp(35 + RND.rInt0(5), 35 + RND.rInt0(5), 35 + RND.rInt(5));
+	private static ColorImp tmp = new ColorImp();
 	
 	public FBanner(Faction f){
 		
@@ -36,6 +42,11 @@ public class FBanner extends FactionResource{
 	
 	public ColorImp colorBG() {
 		return background;
+	}
+	
+	public ColorImp colorBGBright() {
+		tmp.set(background).setMinBrightnessSelf(0.75);
+		return tmp;
 	}
 	
 	public ColorImp colorFG() {
@@ -89,16 +100,46 @@ public class FBanner extends FactionResource{
 		return ¤¤name;
 	}
 
+	
+	public static void render(SPRITE_RENDERER r, Faction f, int X1, int X2, int Y1, int Y2) {
+		
+		if (f == null) {
+			UI.icons().s.crazy.render(r, X1, X2, Y1, Y2);
+			return;
+			
+		}
+		
+		int width = X2-X1;
+		int height = Y2-Y1;
+		
+		double dx = (double)width/BitmapSprite.WIDTH;
+		double dy = (double)height/BitmapSprite.HEIGHT;
+		
+		for (double ry = 0; ry < height; ry+= dy) {
+			for (double rx = 0; rx < width; rx+= dx) {
+				int px = (int) (rx/dx);
+				int py = (int) (ry/dy);
+				
+				int x = (int) (X1+rx);
+				int y = (int) (Y1+ry);
+				if (f.banner().sprite.is(px, py)) {
+					f.banner().foreground.render(r, x, (int)Math.ceil(x+dx), y, (int)Math.ceil(y+dy));
+				}
+			}
+		}
+		
+	}
+	
 	public final SPRITE MEDIUM = new SPRITE() {
 		
 		@Override
 		public int width() {
-			return ICON.MEDIUM.SIZE;
+			return Icon.M;
 		}
 		
 		@Override
 		public int height() {
-			return ICON.MEDIUM.SIZE;
+			return Icon.M;
 		}
 		
 		@Override
@@ -134,12 +175,12 @@ public class FBanner extends FactionResource{
 		
 		@Override
 		public int width() {
-			return ICON.BIG.SIZE;
+			return Icon.L;
 		}
 		
 		@Override
 		public int height() {
-			return ICON.BIG.SIZE;
+			return Icon.L;
 		}
 		
 		@Override
@@ -166,12 +207,12 @@ public class FBanner extends FactionResource{
 		
 		@Override
 		public int width() {
-			return ICON.BIG.SIZE*2;
+			return Icon.HUGE;
 		}
 		
 		@Override
 		public int height() {
-			return ICON.BIG.SIZE*2;
+			return Icon.HUGE;
 		}
 		
 		@Override
@@ -194,12 +235,54 @@ public class FBanner extends FactionResource{
 		}
 	};
 
+	public static class rebel {
+		
+		public static final SPRITE MEDIUM = new SPRITE.Imp(Icon.M) {
+			
+			@Override
+			public void render(SPRITE_RENDERER r, int X1, int X2, int Y1, int Y2) {
+				
+				SPRITES.icons().m.circle_frame.render(r, X1, Y1);
+				GCOLORS_MAP.FRebel.bind();
+				SPRITES.icons().m.circle_inner.render(r, X1, Y1);
+				COLOR.unbind();
+				
+			}
+		};
+		
+		public static final SPRITE BIG = new SPRITE.Imp(Icon.L) {
+			
+			@Override
+			public void render(SPRITE_RENDERER r, int X1, int X2, int Y1, int Y2) {
+				GCOLORS_MAP.FRebel.bind();
+				SPRITES.icons().l.banners[0].render(r, X1, X2, Y1, Y2);
+				COLOR.WHITE30.bind();
+				SPRITES.icons().l.bannerPole.render(r, X1, X2, Y1, Y2);
+				COLOR.unbind();
+				
+			}
+		};
+		
+		public static final SPRITE HUGE = new SPRITE.Imp(Icon.L*2) {
+			
+			@Override
+			public void render(SPRITE_RENDERER r, int X1, int X2, int Y1, int Y2) {
+				GCOLORS_MAP.FRebel.bind();
+				SPRITES.icons().l.banners[0].render(r, X1, X2, Y1, Y2);
+				COLOR.WHITE30.bind();
+				SPRITES.icons().l.bannerPole.render(r, X1, X2, Y1, Y2);
+				COLOR.unbind();
+				
+			}
+		};
+		
+	};
+	
 	@Override
-	protected void update(double ds) {
+	protected void update(double ds, Faction f) {
 		// TODO Auto-generated method stub
 		
 	}
-	
 
 	
 	

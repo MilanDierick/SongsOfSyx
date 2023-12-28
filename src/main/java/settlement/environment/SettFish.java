@@ -42,7 +42,7 @@ public class SettFish extends EnvResource implements MAP_DOUBLEE{
 
 	@Override
 	public double get(int tile) {
-		if (SETT.TERRAIN().WATER.is(tile)) {
+		if (SETT.TERRAIN().WATER.SHALLOW.is(tile)) {
 			return (1 +amounts.get(tile))*bI;
 		}
 		return 0;

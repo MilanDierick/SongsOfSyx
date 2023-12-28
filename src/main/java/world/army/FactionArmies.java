@@ -9,21 +9,21 @@ import game.faction.Faction;
 import snake2d.util.file.*;
 import snake2d.util.sets.ArrayListShort;
 import snake2d.util.sets.LIST;
-import world.World;
+import world.WORLD;
 import world.entity.army.WArmy;
 
-public class FactionArmies {
+public final class FactionArmies {
 
 	public final static int MAX = 64;
 	
 	final ArrayListShort armies = new ArrayListShort(MAX);
 	private final int factionI;
 	private final List list = new List();
-	final int[] data;
+	final long[] data;
 	
 	public FactionArmies(int factionI) {
 		this.factionI = factionI;
-		data = new int[WARMYD.dataT.intCount()];
+		data = new long[AD.self.dataFactionCount];
 	}
 	
 	final SAVABLE saver = new SAVABLE() {
@@ -31,13 +31,14 @@ public class FactionArmies {
 		@Override
 		public void save (FilePutter f) {
 			armies.save(f);
-			f.is(data);
+			f.ls(data);
 		}
 		
 		@Override	
 		public void load (FileGetter f) throws IOException {
 			armies.load(f);
-			f.is(data);
+			f.ls(data);
+			
 		}
 		
 		@Override	
@@ -50,7 +51,7 @@ public class FactionArmies {
 	public Faction faction() {
 		if (factionI == -1)
 			return null;
-		return FACTIONS.all().get(factionI);
+		return FACTIONS.getByIndex(factionI);
 	}
 	
 	public LIST<WArmy> all(){
@@ -58,18 +59,14 @@ public class FactionArmies {
 	}
 	
 	public boolean canCreate() {
-		return World.ENTITIES().armies.canCreate() && armies.hasRoom();
+		return WORLD.ENTITIES().armies.canCreate() && armies.hasRoom();
 	}
 	
 	public WArmy create(int tx, int ty) {
 		if (!canCreate())
 			throw new RuntimeException("" + armies.size());
-		World.ENTITIES().armies.create(tx, ty, faction());
+		WORLD.ENTITIES().armies.create(tx, ty, faction());
 		return list.get(list.size()-1);
-	}
-	
-	void recount() {
-		
 	}
 	
 	private final class List implements LIST<WArmy>, Iterator<WArmy>{
@@ -85,7 +82,7 @@ public class FactionArmies {
 
 		@Override
 		public WArmy get(int index) {
-			return World.ENTITIES().armies.get(armies.get(index));
+			return WORLD.ENTITIES().armies.get(armies.get(index));
 		}
 
 		@Override
@@ -125,5 +122,7 @@ public class FactionArmies {
 		}
 		
 	}
+
+
 	
 }

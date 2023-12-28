@@ -2,7 +2,7 @@ package view.sett.ui.room.construction;
 
 import init.C;
 import init.resources.RESOURCES;
-import init.sprite.ICON;
+import init.sprite.UI.Icon;
 import settlement.main.SETT;
 import snake2d.SPRITE_RENDERER;
 import snake2d.util.gui.GUI_BOX;
@@ -23,7 +23,7 @@ final class SStats {
 	
 	SStats(State s){
 		this.s = s;
-		statResourcesStructure = new HOVERABLE.HoverableAbs((int) (ICON.MEDIUM.SIZE*2.5), ICON.MEDIUM.SIZE) {
+		statResourcesStructure = new HOVERABLE.HoverableAbs((int) (Icon.M*2.5), Icon.M) {
 			final GStat stat = new GStat() {
 				
 				@Override
@@ -35,19 +35,25 @@ final class SStats {
 			};
 			@Override
 			protected void render(SPRITE_RENDERER r, float ds, boolean isHovered) {
-
-				s.placement.placer.structure.get().resource.icon().render(r, body().x1(), body().y1());
-				stat.render(r, body().x1() + ICON.MEDIUM.SIZE+C.SG*2, body().y1()+(body().height()-stat.height())/2);
+				if (s.placement.placer.structure.get().resource != null) {
+					s.placement.placer.structure.get().resource.icon().render(r, body().x1(), body().y1());
+					stat.render(r, body().x1() + Icon.M+C.SG*2, body().y1()+(body().height()-stat.height())/2);
+				}
+				
 			}
 			
 			@Override
 			public void hoverInfoGet(GUI_BOX text) {
-				text.text(s.placement.placer.structure.get().resource.name);
-				text.NL();
-				text.text(s.placement.placer.structure.get().nameCeiling);
+				
+				if (s.placement.placer.structure.get().resource != null) {
+					text.text(s.placement.placer.structure.get().resource.name);
+					text.NL();
+					text.text(s.placement.placer.structure.get().nameCeiling);
+					
+				}
 			}
 		};
-		statResourcesCave = new HOVERABLE.HoverableAbs((int) (ICON.MEDIUM.SIZE*2.5), ICON.MEDIUM.SIZE) {
+		statResourcesCave = new HOVERABLE.HoverableAbs((int) (Icon.M*2.5), Icon.M) {
 			final GStat stat = new GStat() {
 				
 				@Override
@@ -61,7 +67,7 @@ final class SStats {
 				if (s.placement.placer.structure.mountainWalls() == 0)
 					return;
 				RESOURCES.STONE().icon().render(r, body().x1(), body().y1());
-				stat.render(r, body().x1() + ICON.MEDIUM.SIZE+C.SG*2, body().y1()+(body().height()-stat.height())/2);
+				stat.render(r, body().x1() + Icon.M+C.SG*2, body().y1()+(body().height()-stat.height())/2);
 			}
 			
 			@Override
@@ -75,7 +81,7 @@ final class SStats {
 
 		for (int i = 0; i < 8; i++) {
 			final int k = i;
-			statResources[i] = new HOVERABLE.HoverableAbs((int) (ICON.MEDIUM.SIZE*2.5), ICON.MEDIUM.SIZE) {
+			statResources[i] = new HOVERABLE.HoverableAbs((int) (Icon.M*2.5), Icon.M) {
 				final GStat stat = new GStat() {
 					
 					@Override
@@ -90,7 +96,7 @@ final class SStats {
 					if (SETT.ROOMS().placement.placer.resNeeded(k) <= 0)
 						return;
 					s.b.constructor().resource(k).icon().render(r, body().x1(), body().y1());
-					stat.render(r, body().x1() + ICON.MEDIUM.SIZE+C.SG*2, body().y1()+(body().height()-stat.height())/2);
+					stat.render(r, body().x1() + Icon.M+C.SG*2, body().y1()+(body().height()-stat.height())/2);
 				}
 				
 				@Override

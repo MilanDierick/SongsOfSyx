@@ -10,7 +10,7 @@ import settlement.room.main.furnisher.FurnisherItem;
 import settlement.room.main.placement.PLACEMENT;
 import settlement.room.main.placement.UtilWallPlacability;
 import settlement.room.main.util.RoomState;
-import settlement.tilemap.TBuilding;
+import settlement.tilemap.terrain.TBuilding;
 import snake2d.SPRITE_RENDERER;
 import snake2d.util.datatypes.*;
 import snake2d.util.gui.GUI_BOX;

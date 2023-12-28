@@ -6,7 +6,6 @@ import java.io.IOException;
 
 import init.C;
 import init.sprite.SPRITES;
-import settlement.main.RenderData.RenderIterator;
 import settlement.main.SETT;
 import settlement.path.AVAILABILITY;
 import settlement.room.main.*;
@@ -14,7 +13,7 @@ import settlement.room.main.furnisher.*;
 import settlement.room.main.util.RoomInit;
 import settlement.room.main.util.RoomInitData;
 import settlement.room.sprite.*;
-import settlement.tilemap.Floors.Floor;
+import settlement.tilemap.floor.Floors.Floor;
 import snake2d.SPRITE_RENDERER;
 import snake2d.util.color.OPACITY;
 import snake2d.util.datatypes.AREA;
@@ -23,6 +22,7 @@ import snake2d.util.file.Json;
 import snake2d.util.sprite.SPRITE;
 import util.gui.misc.GText;
 import util.info.GFORMAT;
+import util.rendering.RenderData.RenderIterator;
 import util.rendering.ShadowBatch;
 
 final class Constructor extends Furnisher{
@@ -43,7 +43,7 @@ final class Constructor extends Furnisher{
 			throws IOException {
 		super(init, 1, 1, 88, 44);
 		this.blue = blue;
-		floor2 = SETT.FLOOR().getByKey("FLOOR2", init.data());
+		floor2 = SETT.FLOOR().map.getByKey("FLOOR2", init.data());
 		crates = new FurnisherStat(this, 1) {
 			
 			@Override
@@ -69,7 +69,7 @@ final class Constructor extends Furnisher{
 			
 		};
 		
-		RoomSprite sRoof = new RoomSpriteComboN(sp, "ROOF_COMBO") {
+		RoomSprite sRoof = new RoomSpriteCombo(sp, "ROOF_COMBO") {
 			
 			@Override
 			public boolean render(SPRITE_RENDERER r, ShadowBatch s, int data, RenderIterator it, double degrade,

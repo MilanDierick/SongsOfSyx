@@ -22,15 +22,36 @@ final class SComp0Updater {
 		checker = new SComponentChecker(c); 
 	}
 	
-	void update(RECTANGLE r, SComp0Quads sComp0Quads) {
+	void remove(RECTANGLE r, SComp0Quads sComp0Quads) {
+		
+		
 		for (int y = r.y1(); y < r.y2(); y++) {
 			for (int x = r.x1(); x < r.x2(); x++) {
 				SComp0 c = map.get(x, y);
 				if (c != null && !c.retired()) {
-					SETT.PATH().comps.levels.get(0).update(c.superComp(), null);
 					factory.retire(c);
 				}
 				map.set(x, y, null);
+			}
+		}
+	}
+	
+	void removeSuperComp(RECTANGLE r, SComp0Quads sComp0Quads) {
+		
+		
+		for (int y = r.y1(); y < r.y2(); y++) {
+			for (int x = r.x1(); x < r.x2(); x++) {
+				SComp0 c = map.get(x, y);
+				if (c != null && c.superComp() != null) {
+					SETT.PATH().comps.levels.get(0).remove(c.superComp());
+				}
+			}
+		}
+	}
+	
+	void assign(RECTANGLE r, SComp0Quads sComp0Quads) {
+		for (int y = r.y1(); y < r.y2(); y++) {
+			for (int x = r.x1(); x < r.x2(); x++) {
 				assigned[y-r.y1()][x-r.x1()] = false;
 			}
 		}
@@ -39,16 +60,6 @@ final class SComp0Updater {
 			for (int x = r.x1(); x < r.x2(); x++) {
 				if (assigned[y-r.y1()][x-r.x1()] == false)
 					assign(r, x, y);
-			}
-		}
-		
-		// check if this is necessary!
-		for (int y = r.y1(); y < r.y2(); y++) {
-			for (int x = r.x1(); x < r.x2(); x++) {
-				SComp0 c = map.get(x, y);
-				if (c != null && c.retired()) {
-					map.set(x, y, null);
-				}
 			}
 		}
 		
@@ -111,16 +122,19 @@ final class SComp0Updater {
 		}
 		
 		c.init(bounds, size, checker);
+		
+		
 
 		if (c.edgefirst() != null && c.edgefirst().next() == null && size <= r.width()*r.height()/2) {
 			
 			
 		}
 		
-		
-		c = map.get(tx, ty);
-		initData(c, bounds);
-		SETT.PATH().comps.levels.get(0).update(null, c);
+		SETT.PATH().comps.data.initComponent0(c, bounds);
+		SETT.PATH().comps.levels.get(0).addNew(c);
+//		c = map.get(tx, ty);
+//		initData(c, bounds);
+		//SETT.PATH().comps.levels.get(0).update(c);
 		//fix finderdata ( c may be gone )
 		
 	}
@@ -132,17 +146,16 @@ final class SComp0Updater {
 			for (int x = r.x1(); x < r.x2(); x++) {
 				SComp0 c = map.get(x, y);
 				if (c != null && !checker.isSetAndSet(c)) {
-					initData(c, r);
-					SETT.PATH().comps.levels.get(0).update(null, c);
+					SETT.PATH().comps.levels.get(0).remove(c.superComp());
+					SETT.PATH().comps.levels.get(0).addNew(c);
+					SETT.PATH().comps.data.initComponent0(c, r);
+					
+					
 				}
 			}
-		}
-		
+		}		
 	}
-	
-	private void initData(SComp0 c, RECTANGLE bounds) {
-		SETT.PATH().comps.data.initComponent0(c, bounds);
-	}
+
 	
 
 }

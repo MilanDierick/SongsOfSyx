@@ -6,7 +6,6 @@ import init.D;
 import init.paths.PATH;
 import init.paths.PATHS;
 import init.race.appearence.RaceSprites;
-import init.resources.*;
 import settlement.entity.humanoid.HCLASS;
 import snake2d.Errors;
 import snake2d.util.file.Json;
@@ -21,15 +20,13 @@ public class RACES {
 	private final ArrayList<Race> playable;
 	private final RCollection<Race> map;
 	private RaceServiceSorter service;
-	static RacePriorities prios;
 	
 	private static CharSequence ¤¤name = "¤Species";
 	
-	private LIST<LIST<RES_AMOUNT>> homeres;
-	private LIST<RES_AMOUNT> homeresAll;
-	
 	private RaceSprites sprites;
-	
+	private final RaceBoosts boosts;
+	private final RClasses rclasses;
+	private RaceResources resources;
 	static {
 		D.ts(RACES.class);
 	}
@@ -57,7 +54,7 @@ public class RACES {
 				pl++;
 			map.put(r.key, r);
 		}
-		
+		this.rclasses = new RClasses(all);
 		this.map = new RCollection<Race>("RACES", map) {
 
 			@Override
@@ -72,6 +69,7 @@ public class RACES {
 			
 		};
 		
+		
 		playable = new ArrayList<>(pl);
 		for (Race r : all) {
 			if (r.playable)
@@ -80,6 +78,8 @@ public class RACES {
 		}
 
 		EGROUP.init();
+		boosts = new RaceBoosts();
+		
 		
 	}
 	
@@ -90,47 +90,14 @@ public class RACES {
 		for (Race r : i.all) {
 			r.expand(init);
 		}
-		
-		ArrayList<LIST<RES_AMOUNT>> ress = new ArrayList<>(HCLASS.ALL().size());
-		RES_AMOUNT.Imp[] all = new RES_AMOUNT.Imp[RESOURCES.ALL().size()];
-		
-		for (HCLASS c : HCLASS.ALL) {
-			ArrayList<RES_AMOUNT> rr = new ArrayList<>(RESOURCES.ALL().size());
-			for (RESOURCE res : RESOURCES.ALL()) {
-				int am = 0;
-				for (Race r : RACES.all()) {
-					am = Math.max(am, r.home().clas(c).amount(res));
-				}
-				if (am > 0) {
-					rr.add(new RES_AMOUNT.Abs(res, am));
-					if (all[res.index()] != null) {
-						all[res.index()].set(Math.max(all[res.index()].amount(), am));
-					}else {
-						all[res.index()] = new RES_AMOUNT.Imp(res, am);
-					}
-				}
-			}
-			ress.add(new ArrayList<RES_AMOUNT>(rr));
-		}
-		i.homeres = ress;
-		
-		LinkedList<RES_AMOUNT> tm = new LinkedList<>();
-		for (RES_AMOUNT a : all) {
-			if (a != null)
-				tm.add(a);
-		}
-		
-		i.homeresAll = new ArrayList<RES_AMOUNT>(tm);
+		RacePreferrence.init();
 		
 		i.sprites = new RaceSprites();
-		
-		prios = new RacePriorities();
+		i.resources = new RaceResources(i.all);
 	}
 	
-	public static LIST<RES_AMOUNT> homeResMax(HCLASS c){
-		if (c == null)
-			return i.homeresAll;
-		return i.homeres.get(c.index());
+	public static RaceResources res(){
+		return i.resources;
 	}
 	
 	public static LIST<Race> all(){
@@ -157,9 +124,64 @@ public class RACES {
 		return i.sprites;
 	}
 	
-	public static RacePriorities bonus() {
-		return prios;
+	public static RaceBoosts boosts() {
+		return i.boosts;
 	}
 	
+
+	public static POP_CL clP(HCLASS clas) {
+
+		int ci = clas == null ? 0 : clas.index()+1;
+		int ri = 0;
+		return  i.rclasses.classes[ci][ri];
+	}
+	
+	public static POP_CL clP(Race race) {
+		int ci = 0;
+		int ri = race == null ? 0 : race.index+1;
+		return  i.rclasses.classes[ci][ri];
+	}
+	
+	public static POP_CL clP() {
+		return  i.rclasses.classes[0][0];
+	}
+	
+	public static POP_CL clP(Race race, HCLASS clas) {
+		
+		
+		int ci = clas == null ? 0 : clas.index()+1;
+		int ri = race == null ? 0 : race.index+1;
+		return  i.rclasses.classes[ci][ri];
+	}
+	
+	public static LIST<POP_CL> cls() {
+		return i.rclasses.all;
+	}
+	
+	public final static class RClasses {
+		
+		private final POP_CL[][] classes;
+		private final ArrayList<POP_CL> all;
+		
+		RClasses(LIST<Race> all) {
+			
+			this.all = new ArrayList<POP_CL>((all.size()+1)*(all.size()+1));
+			classes = new POP_CL[all.size()+1][all.size()+1];
+			
+			
+			classes[0][0] = this.all.addReturn(new POP_CL(this.all.size(), null, null));
+			for (Race r : all) {
+				classes[0][r.index+1] = this.all.addReturn(new POP_CL(this.all.size(), null, r));
+			}
+			
+			for (HCLASS cl : HCLASS.ALL) {
+				classes[cl.index()+1][0] = this.all.addReturn(new POP_CL(this.all.size(), cl, null));
+				for (Race r : all) {
+					classes[cl.index()+1][r.index+1] = this.all.addReturn(new POP_CL(this.all.size(), cl, r));
+				}
+			}
+		}
+		
+	}
 	
 }

@@ -2,13 +2,14 @@ package game.nobility;
 
 import java.io.IOException;
 
+import game.boosting.BoostSpecs;
 import game.time.TIME;
-import init.boostable.*;
-import init.boostable.BOOST_HOLDER.BOOST_HOLDERCOLL;
+import init.sprite.UI.UI;
 import settlement.entity.ENTITY;
+import settlement.entity.humanoid.HCLASS;
 import settlement.entity.humanoid.Humanoid;
 import settlement.main.SETT;
-import settlement.room.main.RoomBlueprintImp;
+import settlement.room.industry.module.Industry;
 import settlement.room.main.RoomBlueprintIns;
 import snake2d.util.color.COLOR;
 import snake2d.util.color.ColorImp;
@@ -26,30 +27,20 @@ public final class Nobility implements INDEXED{
 	private double rep;
 	private double repInc = 1;
 	private static final double upI = 1.0/(TIME.secondsPerDay*32);
-	private final LIST<RoomBlueprintIns<?>> rooms;
-	public final BOOST_HOLDERCOLL BOOSTER;
+	private LIST<RoomBlueprintIns<?>> rooms;
+	public final BoostSpecs boosters;
+
 	
 	Nobility(String key, Init init){
+		
 		index = init.all.add(this);
 		Json jdata = new Json(init.pData.get(key));
 		Json jtext = new Json(init.pText.get(key));
 		info = new INFO(jtext);
-
-
-		BOOSTER = new BOOST_HOLDER.BOOST_HOLDERCOLL(info.name, jdata);
+		boosters = new BoostSpecs(HCLASS.NOBLE.name + ": " + info.name, UI.icons().s.noble, false);
+		boosters.push(jdata, null);
 		
 		color = new ColorImp(jdata);
-		{
-			ArrayList<RoomBlueprintIns<?>> rooms = new ArrayList<>(SETT.ROOMS().all().size());
-			for (BBoost bo : BOOSTER.boosts()) {
-				if (bo.boostable instanceof BOOSTABLERoom) {
-					RoomBlueprintImp p = ((BOOSTABLERoom)bo.boostable).room;
-					RoomBlueprintIns<?> b = (RoomBlueprintIns<?>) p;
-					rooms.add(b);
-				}
-			}
-			this.rooms = new ArrayList<>(rooms);
-		}
 		
 		
 	}
@@ -132,6 +123,18 @@ public final class Nobility implements INDEXED{
 	}
 	
 	public LIST<RoomBlueprintIns<?>> rooms(){
+		if (rooms == null) {
+			ArrayListGrower<RoomBlueprintIns<?>> rooms = new ArrayListGrower<>();
+			for (Industry ii : SETT.ROOMS().INDUSTRIES) {
+				if (ii.blue instanceof RoomBlueprintIns<?>) {
+					RoomBlueprintIns<?> i = (RoomBlueprintIns<?>) ii.blue;
+					if (!rooms.contains(i))
+						rooms.add(i);
+				}
+			}
+			this.rooms = rooms;
+		}
+		
 		return rooms;
 	}
 	

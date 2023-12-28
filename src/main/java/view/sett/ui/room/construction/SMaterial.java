@@ -3,7 +3,7 @@ package view.sett.ui.room.construction;
 import init.D;
 import init.sprite.SPRITES;
 import settlement.main.SETT;
-import settlement.tilemap.TBuilding;
+import settlement.tilemap.terrain.TBuilding;
 import snake2d.SPRITE_RENDERER;
 import snake2d.util.color.COLOR;
 import snake2d.util.color.OPACITY;
@@ -45,21 +45,21 @@ final class SMaterial {
 		
 		@Override
 		protected void renAction() {
-			selectedSet(s.placement.placer.autoWalls.isOn());
+			selectedSet(s.placement.placer.autoWalls.is());
 		}
 	}.hoverInfoSet(D.g("walls", "Auto build walls around room."));
 
 	private final CLICKABLE buttDoor = new GButt.ButtPanel(SETT.ROOMS().placement.placer.placerDoor.getIcon()) {
 		@Override
 		protected void clickA() {
-			if (s.placement.placer.autoWalls.isOn()) {
+			if (s.placement.placer.autoWalls.is()) {
 				VIEW.s().tools.place(s.placement.placer.placerDoor, s.config);
 			}
 		}
 		
 		@Override
 		protected void renAction() {
-			activeSet(s.placement.placer.autoWalls.isOn());
+			activeSet(s.placement.placer.autoWalls.is());
 			selectedSet(VIEW.s().tools.placer.getCurrent() == s.placement.placer.placerDoor);
 		}
 
@@ -78,14 +78,14 @@ final class SMaterial {
 	private final CLICKABLE buttDoorRemove = new GButt.ButtPanel(SETT.ROOMS().placement.placer.placerDoor.getUndo().getIcon()) {
 		@Override
 		protected void clickA() {
-			if (s.placement.placer.autoWalls.isOn()) {
+			if (s.placement.placer.autoWalls.is()) {
 				VIEW.s().tools.place(s.placement.placer.placerDoor.getUndo(), s.config);
 			}
 		}
 		
 		@Override
 		protected void renAction() {
-			activeSet(s.placement.placer.autoWalls.isOn());
+			activeSet(s.placement.placer.autoWalls.is());
 				selectedSet(VIEW.s().tools.placer.getCurrent() == s.placement.placer.placerDoor.getUndo());
 		}
 	}.hoverInfoSet(SETT.ROOMS().placement.placer.placerDoor.getUndo().name());

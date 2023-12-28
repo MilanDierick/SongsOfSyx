@@ -1,9 +1,12 @@
 package launcher;
 
+import java.io.IOException;
+
 import game.VERSION;
 import init.D;
 import init.error.ErrorHandler;
 import init.paths.PATHS;
+import init.paths.PATHS.PATHS_BASE;
 import snake2d.*;
 import snake2d.CORE.GlJob;
 import snake2d.KeyBoard.KeyEvent;
@@ -11,78 +14,99 @@ import snake2d.util.datatypes.COORDINATE;
 import snake2d.util.datatypes.Coo;
 import snake2d.util.gui.GuiSection;
 import snake2d.util.sets.LIST;
+import util.spritecomposer.Initer;
 
 public class Launcher extends CORE_STATE{
+
+	static boolean startGame = false;
 	
-	//button related
+	void reboot(){
+		CORE.renderer().clear();
+		CORE.swapAndPoll();
+		CORE.setCurrentState(new Constructor() {
+			@Override
+			public CORE_STATE getState() {
+				return new Launcher(false);
+			}
+		});
+	}
+	
+	public static void main(String[] args) {
+		boolean selectLang = !PATHS.local().SETTINGS.exists("LauncherSettings");
+		LSettings settings = new LSettings();
+
+		if (!PATHS_BASE.langs().existsFolder(settings.lang.get())) {
+			
+			selectLang = true;
+		}
+    	CORE.init(new ErrorHandler());
+		CORE.create(new Sett());
+		final boolean l = selectLang;
+		CORE.start(new Constructor() {
+			@Override
+			public CORE_STATE getState() {
+				
+				PreLoader.exit();
+				return new Launcher(l);
+			}
+		});
+		if (!startGame)
+			System.exit(1);
+		System.exit(0);
+	}
+	
+	RES res;
+	final GUI g;
+	private final BG bg;
+	private COORDINATE mCoo = new Coo();
+	final LSettings s = new LSettings();
+	
 	private GuiSection current;
 	private final ScreenMain main;
 	private final ScreenSetting setts;
 	private final ScreenMods mods;
 	private final ScreenInfo info;
 	private final ScreenLog log;
-	private final BG bg;
-	private COORDINATE mCoo = new Coo();
-	final Sett settings = new Sett();
-	final LSettings s = new LSettings();
+	private final ScreenLang lang;
 	
-	static boolean startGame = false;
-	
-	public static void start(){
-		startGame = false;
-		CORE.create(new Sett());
-		CORE.start(new Constructor() {
-			@Override
-			public CORE_STATE getState() {
-				
-				PreLoader.exit();
-				return new Launcher();
-			}
-		});
-		Resources.nullify();
-		
-	}
-	
-	public static void main(String[] args) {
-    	CORE.init(new ErrorHandler());
-    	PATHS.init(new String[0], null, false);
+	private Launcher(boolean selectLang) {
+		PATHS.init(new String[0], s.lang.get().length() > 0 ? s.lang.get() : null, false);
     	D.init();
-		start();
-		if (!startGame)
-			System.exit(1);
-		System.exit(0);
-	}
-	
-	private Launcher(){
-		
-		
-	
 		new GlJob() {
 			@Override
 			public void doJob() {
-				
-				new Resources();
+				new Initer() {
+					
+					@Override
+					public void createAssets() throws IOException {
+						res = new RES();
+					}
+				}.get("launcher", 1024, 0);
 			}
 		}.perform();
-
 		
-		main = new ScreenMain(this);
-		setts = new ScreenSetting(this);
-		mods = new ScreenMods(this);
-		info = new ScreenInfo(this);
+		g = new GUI(res);
+		
+		bg = new BG(res);
 		log = new ScreenLog(this);
+		lang = new ScreenLang(this, true);
+		main = new ScreenMain(this, lang);
+		info = new ScreenInfo(this);
+		mods = new ScreenMods(this);
+		setts = new ScreenSetting(this);
+		current = main;
 		
-
-		if (s.version.get() != VERSION.VERSION) {
-			s.save();
-			current = log;
+		if (selectLang)
+			current = new ScreenLang(this, false);
+		else {
+			if (s.version.get() != VERSION.VERSION) {
+				s.save();
+				current = log;
+			}
 		}
-		else
-			current = main;
-		
-		bg = new BG();
-		
+			
 	}
+
 
 	@Override
 	public void mouseClick(MButt button) {
@@ -116,12 +140,12 @@ public class Launcher extends CORE_STATE{
 		current = info;
 		current.hover(mCoo);
 	}
-	
+//	
 	void setMain(){
 		current = main;
 		current.hover(mCoo);
 	}
-	
+//	
 	void setSetts(){
 		current = setts;
 		current.hover(mCoo);
@@ -132,6 +156,16 @@ public class Launcher extends CORE_STATE{
 		current.hover(mCoo);
 	}
 	
+	void setLang(){
+		current = lang;
+		current.hover(mCoo);
+	}
+	
+	void setModWarning(){
+		current = new ScreenModWarning(this);
+		current.hover(mCoo);
+	}
+//	
 	void setLog(){
 		current = log;
 		current.hover(mCoo);

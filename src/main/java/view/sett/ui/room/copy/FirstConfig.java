@@ -2,10 +2,7 @@ package view.sett.ui.room.copy;
 
 import init.C;
 import init.sprite.SPRITES;
-import init.sprite.UI.UI;
 import settlement.main.ON_TOP_RENDERABLE;
-import settlement.main.RenderData;
-import settlement.main.RenderData.RenderIterator;
 import snake2d.Renderer;
 import snake2d.util.color.COLOR;
 import snake2d.util.datatypes.COORDINATE;
@@ -13,10 +10,13 @@ import snake2d.util.datatypes.DIR;
 import snake2d.util.gui.GuiSection;
 import snake2d.util.gui.clickable.CLICKABLE;
 import snake2d.util.gui.renderable.RENDEROBJ;
+import snake2d.util.misc.ACTION;
 import snake2d.util.sets.LISTE;
 import util.dic.DicMisc;
 import util.gui.misc.GButt;
-import util.gui.panel.GPanelS;
+import util.gui.panel.GPanel;
+import util.rendering.RenderData;
+import util.rendering.RenderData.RenderIterator;
 import util.rendering.ShadowBatch;
 import view.main.VIEW;
 import view.tool.ToolConfig;
@@ -25,17 +25,18 @@ final class FirstConfig implements ToolConfig{
 
 	private final GuiSection section = new GuiSection();
 	private final ON_TOP_RENDERABLE top;
-	private final GPanelS p = new GPanelS();
-	private final GuiSection butts = new GuiSection();
+	private final GPanel p = new GPanel();
 	private final CLICKABLE butt;
 	private final SecondConfig sConfig;
 	
-	CLICKABLE exit = new GButt.Glow(SPRITES.icons().s.cancel, UI.PANEL().panelM.get(0)) {
+	final ACTION exit = new ACTION() {
+		
 		@Override
-		protected void clickA() {
+		public void exe() {
 			VIEW.s().tools.placer.deactivate();
-		};
+		}
 	};
+	
 	
 	FirstConfig(Source source, Second second, First first){
 		sConfig = new SecondConfig(source, first, this);
@@ -57,11 +58,8 @@ final class FirstConfig implements ToolConfig{
 			}
 		};
 		
-		butts.add(UI.PANEL().panelL.get(DIR.E), 0, 0);
-		butts.addRight(0, UI.PANEL().panelL.get(DIR.E, DIR.W));
-		butts.addRight(0, UI.PANEL().panelL.get(DIR.E, DIR.W));
-		butts.addRight(0, UI.PANEL().panelL.get(DIR.W));
 		
+
 		top = new ON_TOP_RENDERABLE() {
 			
 			@Override
@@ -93,21 +91,17 @@ final class FirstConfig implements ToolConfig{
 		
 		section.pad(20, 0);
 		
-		section.addRelBody(4, DIR.S, butts);
-		butt.body().centerIn(butts);
-		section.add(butt);
+		section.addRelBody(4, DIR.S, butt);
 		
 		section.body().centerX(C.DIM());
 		
 		
 		
-		p.setButtBg();
+		p.setButt();
 		p.inner().set(section);
 		
 		
-		
-		p.moveExit(exit);
-		section.add(exit);
+		p.setCloseAction(exit);
 		p.setTitle(DicMisc.¤¤Copy);
 		section.add(p);
 		section.moveLastToBack();

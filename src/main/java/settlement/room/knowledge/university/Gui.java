@@ -1,5 +1,6 @@
 package settlement.room.knowledge.university;
 
+import game.faction.FACTIONS;
 import init.D;
 import settlement.room.main.RoomInstance;
 import snake2d.util.gui.GuiSection;
@@ -32,7 +33,7 @@ class Gui extends UIRoomModuleImp<UniversityInstance, ROOM_UNIVERSITY> {
 			@Override
 			public void update(GText text) {
 				text.add(¤¤learningRateI);
-				text.insert(0, (int)Math.ceil(blueprint.learningSpeed(getter.get())*100));
+				text.insert(0, (int)Math.ceil(blueprint.learningSpeed(getter.get(), FACTIONS.player())*100));
 			}
 		}.hh(¤¤learningRate));
 		grid.NL();

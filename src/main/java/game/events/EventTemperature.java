@@ -11,8 +11,8 @@ import snake2d.util.file.FilePutter;
 import snake2d.util.misc.ACTION;
 import snake2d.util.misc.CLAMP;
 import snake2d.util.rnd.RND;
-import view.main.MessageText;
 import view.sett.IDebugPanelSett;
+import view.ui.message.MessageText;
 
 public final class EventTemperature extends EventResource{
 	
@@ -39,7 +39,7 @@ public final class EventTemperature extends EventResource{
 	protected void update(double ds) {
 		if (dayLast != TIME.days().bitsSinceStart()) {
 			dayLast = TIME.days().bitsSinceStart();
-			if (TIME.days().bitsSinceStart() > 4) {
+			if (TIME.days().bitsSinceStart() > 6) {
 				double ave = SETT.WEATHER().temp.average(TIME.years().bitPartOf());
 				double ran = RND.rFloat();
 				for (int i = 0; i < 5; i++) {

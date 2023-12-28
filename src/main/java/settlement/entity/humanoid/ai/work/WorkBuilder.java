@@ -35,5 +35,9 @@ final class WorkBuilder extends PlanBlueprint{
 		return null;
 	}
 	
+	@Override
+	public boolean shouldReportWorkFailure(Humanoid a, AIManager d) {
+		return d.plan() != AI.modules().work.oddjobber;
+	}
 
 }

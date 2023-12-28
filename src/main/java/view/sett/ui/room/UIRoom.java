@@ -1,8 +1,8 @@
 package view.sett.ui.room;
 
 import init.C;
-import init.sprite.ICON;
 import init.sprite.SPRITES;
+import init.sprite.UI.Icon;
 import init.sprite.UI.UI;
 import settlement.main.SETT;
 import settlement.room.main.*;
@@ -112,7 +112,7 @@ public class UIRoom {
 			body().setWidth(380);
 			if (p instanceof RoomBlueprintIns<?>) {
 				RoomBlueprintIns<?> pp = (RoomBlueprintIns<?>) p;
-				addRightCAbs(180, new GStat() {
+				addRightCAbs(200, new GStat() {
 					@Override
 					public void update(GText text) {
 						GFORMAT.i(text, pp.instancesSize());
@@ -290,7 +290,7 @@ public class UIRoom {
 				}.hoverInfoSet(DicMisc.¤¤delete);
 				section.addRightC(C.SG*4, delete);
 				
-				HOVERABLE problem = new HOVERABLE.HoverableAbs(ICON.MEDIUM.SIZE) {
+				HOVERABLE problem = new HOVERABLE.HoverableAbs(Icon.M) {
 					
 					
 					@Override

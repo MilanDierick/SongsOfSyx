@@ -3,7 +3,8 @@ package view.world.generator;
 import game.faction.FACTIONS;
 import game.faction.player.PTitles.PTitle;
 import init.D;
-import init.sprite.SPRITES;
+import init.sprite.UI.UI;
+import snake2d.SPRITE_RENDERER;
 import snake2d.util.datatypes.DIR;
 import snake2d.util.gui.GUI_BOX;
 import snake2d.util.gui.GuiSection;
@@ -18,26 +19,19 @@ import view.main.VIEW;
 
 class StagePickTitles extends GuiSection{
 
-	private static CharSequence ¤¤spent = "¤Pick 5 unlocked titles to boost your name.";
-	private static CharSequence ¤¤YouSure = "¤You may still pick some unlocked titles. Start anyway?";
+	static CharSequence ¤¤title = "¤Select Titles";
+	static CharSequence ¤¤spent = "¤Pick 5 unlocked titles to boost your name.";
+	static CharSequence ¤¤YouSure = "¤You may still pick some unlocked titles. Start anyway?";
 	
 	static {
 		D.ts(StagePickTitles.class);
 	}
 	
-	StagePickTitles(Stages stage){
+	StagePickTitles(WorldViewGenerator stage){
 		
-		ArrayList<RENDEROBJ> rows = new ArrayList<>(FACTIONS.player().titles.all().size());
+		addRelBody(4, DIR.S, new GText(UI.FONT().M, ¤¤spent));
 		
-		
-		for (PTitle t : FACTIONS.player().titles.all()) {
-			rows.add(new Butt(t));
-		}
-		
-		add(new GScrollRows(rows, 400).view());
-		
-		
-		addRelBody(8, DIR.N, new GStat() {
+		addRelBody(8, DIR.S, new GStat(UI.FONT().M) {
 			
 			@Override
 			public void update(GText text) {
@@ -45,18 +39,16 @@ class StagePickTitles extends GuiSection{
 			}
 			
 		}.r(DIR.N));
-		addRelBody(4, DIR.N, new GHeader(¤¤spent));
 		
-		GuiSection s = new GuiSection();
+		ArrayList<RENDEROBJ> rows = new ArrayList<>(FACTIONS.player().titles.all().size());
 		
-		s.add(new GButt.ButtPanel(SPRITES.icons().m.arrow_left) {
-			@Override
-			protected void clickA() {
-				new StagePickRace(stage);
-			}
-		}.hoverInfoSet(DicMisc.¤¤Previous));
+		for (PTitle t : FACTIONS.player().titles.all()) {
+			rows.add(new Butt(t));
+		}
 		
-		s.addRightC(2, new GButt.ButtPanel(SPRITES.icons().m.arrow_right) {
+		addRelBody(8, DIR.S, new GScrollRows(rows, rows.get(0).body().height()*6).view());
+		
+		addRelBody(16, DIR.S, new GButt.ButtPanel(DicMisc.¤¤confirm) {
 			@Override
 			protected void clickA() {
 				ACTION no = new ACTION() {
@@ -71,8 +63,8 @@ class StagePickTitles extends GuiSection{
 					
 					@Override
 					public void exe() {
-						stage.reset();
-						stage.terrain();
+						stage.hasSelectedTitles = true;
+						stage.set();
 					}
 				};
 				
@@ -82,10 +74,9 @@ class StagePickTitles extends GuiSection{
 					next.exe();
 				}
 			}
-		}.hoverInfoSet(DicMisc.¤¤Next));
-		addRelBody(16, DIR.S, s);
+		});
 		
-		stage.dummy.add(this);
+		stage.dummy.add(this, ¤¤title);
 	}
 	
 	private static final class Butt extends GButt.ButtPanel {
@@ -94,29 +85,10 @@ class StagePickTitles extends GuiSection{
 		
 		Butt(PTitle title){
 			super(title.name);
-			body.setDim(400, 32);
+			icon(title.icon.scaled(2));
+			body.setDim(600, FACTIONS.player().titles.all().get(0).icon.height()*2+8);
 			this.title = title;
 		}
-		
-//		@Override
-//		protected void render(SPRITE_RENDERER r, float ds, boolean isActive, boolean isSelected, boolean isHovered) {
-//			ColorImp c = ColorImp.TMP;
-//			if (title.selected())
-//				c.set(GCOLOR.T().IGREAT);
-//			else if(!title.unlocked())
-//				c.set(GCOLOR.T().ERROR);
-//			else if(FACTIONS.player().titles.selected() >= 5)
-//				c.set(GCOLOR.T().INACTIVE);
-//			else {
-//				c.set(isHovered ? GCOLOR.T().HOVERED : GCOLOR.T().HOVERABLE);
-//			}
-//			
-//			c.bind();
-//			UI.FONT().M.renderCX(r, body().cX(), body().y1(), title.name);
-//			
-//			COLOR.unbind();
-//			
-//		}
 		
 		@Override
 		protected void renAction() {
@@ -134,12 +106,22 @@ class StagePickTitles extends GuiSection{
 				b.text(title.desc);
 				b.NL(6);
 				
-				title.unlock.hoverInfoGet(b);
+				b.sep();
+				
+				title.lockers.hover(text);
+				
+				title.boosters.hover(text, 1.0, -1);
+				
 				b.NL();
 			}
 			
 			
 			
+		}
+		
+		@Override
+		protected void render(SPRITE_RENDERER r, float ds, boolean isActive, boolean isSelected, boolean isHovered) {
+			super.render(r, ds, isActive, isSelected, isHovered);
 		}
 		
 		@Override

@@ -7,9 +7,7 @@ import init.resources.RESOURCES;
 import init.sprite.SPRITES;
 import init.sprite.UI.UI;
 import settlement.main.ON_TOP_RENDERABLE;
-import settlement.main.RenderData;
-import settlement.main.RenderData.RenderIterator;
-import settlement.room.home.HOME_TYPE;
+import settlement.room.home.HOMET;
 import snake2d.Renderer;
 import snake2d.SPRITE_RENDERER;
 import snake2d.util.color.COLOR;
@@ -19,6 +17,8 @@ import snake2d.util.gui.renderable.RENDEROBJ;
 import snake2d.util.misc.ACTION;
 import util.gui.misc.*;
 import util.gui.table.GScrollRows;
+import util.rendering.RenderData;
+import util.rendering.RenderData.RenderIterator;
 import util.rendering.ShadowBatch;
 import view.interrupter.ISidePanel;
 import view.main.VIEW;
@@ -128,13 +128,16 @@ final class SCompUI extends ISidePanel{
 					text.lablify();
 					text.add(comp.index());
 					text.s();
-					for (DIR d : DIR.ORTHO) {
-						if ((d.mask() & comp.edgeMask()) != 0) {
-							text.s();
-							text.add(d.name());
-						}
-							
+					
+					if (comp.hasEdge()) {
+						text.s();
+						text.add('b');
 					}
+					if (comp.hasEntry()) {
+						text.s();
+						text.add('e');
+					}
+					
 					text.s().s().add('s');
 					if (comp.superComp() != null)
 						text.s().add(comp.superComp().index());
@@ -187,7 +190,7 @@ final class SCompUI extends ISidePanel{
 							@Override
 							public void update(GText text) {
 								text.add(r.get(comp, res));
-								text.add((r.bits(comp) & res.bit) != 0 ? '*' : ' ');
+								text.add(r.bits(comp).has(res) ? '*' : ' ');
 								text.normalify();
 								if (r.get(comp, res) > 0)
 									text.lablify();
@@ -229,10 +232,10 @@ final class SCompUI extends ISidePanel{
 			}
 			
 			{
-				RENDEROBJ[] rows = new RENDEROBJ[HOME_TYPE.ALL().size()];
+				RENDEROBJ[] rows = new RENDEROBJ[HOMET.ALL().size()];
 				
 				int i = 0;
-				for (HOME_TYPE t : HOME_TYPE.ALL()) {
+				for (HOMET t : HOMET.ALL()) {
 					rows[i++] = new GStat() {
 						FindableData d = comps.data.home.get(t);
 						@Override
@@ -244,7 +247,7 @@ final class SCompUI extends ISidePanel{
 								}
 							}
 						}
-					}.hh(t.name, 200);
+					}.hh(comps.data.home.get(t).name, 250);
 				}
 				add(new GScrollRows(rows, HEIGHT-getLastY1()-64, 0).view(), getLastX2()+10, getLastY1());
 			}

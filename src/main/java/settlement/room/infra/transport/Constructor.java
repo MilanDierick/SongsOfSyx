@@ -6,32 +6,29 @@ import game.GAME;
 import init.C;
 import init.resources.RESOURCE;
 import init.sprite.SPRITES;
-import settlement.main.RenderData.RenderIterator;
 import settlement.main.SETT;
 import settlement.path.AVAILABILITY;
 import settlement.room.main.*;
 import settlement.room.main.furnisher.*;
 import settlement.room.main.util.RoomInit;
 import settlement.room.main.util.RoomInitData;
-import settlement.room.sprite.*;
-import settlement.tilemap.Floors.Floor;
+import settlement.room.sprite.RoomSprite;
+import settlement.room.sprite.RoomSprite1x1;
+import settlement.tilemap.floor.Floors.Floor;
 import snake2d.SPRITE_RENDERER;
 import snake2d.util.datatypes.AREA;
 import snake2d.util.datatypes.DIR;
 import snake2d.util.file.Json;
-import snake2d.util.sprite.TILE_SHEET;
 import util.gui.misc.GText;
 import util.info.GFORMAT;
+import util.rendering.RenderData.RenderIterator;
 import util.rendering.ShadowBatch;
-import util.spritecomposer.*;
 
 final class Constructor extends Furnisher{
 	
 	private final ROOM_TRANSPORT blue;
 	final FurnisherStat crates;
 	private final Floor floor2;
-	
-	final Sprite cart;
 	
 	final FurnisherItemTile an;
 	final FurnisherItemTile ca;
@@ -40,10 +37,11 @@ final class Constructor extends Furnisher{
 	
 	protected Constructor(ROOM_TRANSPORT blue, RoomInitData init)
 			throws IOException {
-		super(init, 1, 1, 164, 200);
-		cart = new Sprite();
+		super(init, 1, 1);
+		
+
 		this.blue = blue;
-		floor2 = SETT.FLOOR().getByKey("FLOOR2", init.data());
+		floor2 = SETT.FLOOR().map.getByKey("FLOOR2", init.data());
 		
 		crates = new FurnisherStat(this, 1) {
 			
@@ -60,7 +58,7 @@ final class Constructor extends Furnisher{
 		
 		Json sp = init.data().json("SPRITES");
 		
-		RoomSprite marker = new RoomSpriteRot(sheet, 0, 1, SPRITES.cons().ROT.join_big) {
+		RoomSprite marker = new RoomSprite1x1(sp, "GROUND_THING_1X1") {
 			@Override
 			public void renderBelow(SPRITE_RENDERER r, ShadowBatch s, int data, RenderIterator it, double degrade) {
 				super.render(r, s, data, it, degrade, false);
@@ -73,9 +71,10 @@ final class Constructor extends Furnisher{
 			}
 			
 			@Override
-			protected boolean joinsWith(RoomSprite s, boolean outof, int dir, DIR test,int rx, int ry, FurnisherItem item) {
-				return s == this;
+			protected boolean joins(int tx, int ty, int rx, int ry, DIR d, FurnisherItem item) {
+				return item.sprite(rx, ry) == this;
 			}
+			
 		};
 		
 		RoomSprite scart = new RoomSprite.Imp() {
@@ -92,7 +91,7 @@ final class Constructor extends Furnisher{
 					res = ins.resource();
 					am = blue.cart.storage.samount.get();
 					if (blue.cart.storage.saway.get() == 0)
-						cart.renderBelow(r, s, data*2, it.x()+C.TILE_SIZEH, it.y()+C.TILE_SIZEH, 0, it.ran(), degrade, res, am);
+						SETT.HALFENTS().transports.sprite.renderBelow(r, s, data*2, it.x()+C.TILE_SIZEH, it.y()+C.TILE_SIZEH, 0, it.ran(), degrade, res, am);
 				}
 				
 				return false;
@@ -102,7 +101,7 @@ final class Constructor extends Furnisher{
 			@Override
 			public void renderAbove(SPRITE_RENDERER r, ShadowBatch s, int data, RenderIterator it, double degrade) {
 				if (blue.cart.storage.init(it.tx(), it.ty()) != null && blue.cart.storage.saway.get() == 0)
-					cart.render(r, s, data*2, it.x()+C.TILE_SIZEH, it.y()+C.TILE_SIZEH, degrade);
+					SETT.HALFENTS().transports.sprite.render(r, s, data*2, it.x()+C.TILE_SIZEH, it.y()+C.TILE_SIZEH, degrade);
 			}
 			
 			@Override
@@ -324,13 +323,6 @@ final class Constructor extends Furnisher{
 		
 		flush(3);
 		
-	}
-
-	@Override
-	protected TILE_SHEET sheet(ComposerUtil c, ComposerSources s, ComposerDests d, int y1) {
-		s.singles.init(0, y1, 1, 1, 1, 1, d.s16);
-		s.singles.paste(3, true);
-		return d.s16.saveGame();
 	}
 
 	@Override

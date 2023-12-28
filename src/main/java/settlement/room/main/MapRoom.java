@@ -12,7 +12,7 @@ import snake2d.util.map.MAP_INT;
 import snake2d.util.map.MAP_OBJECT;
 import snake2d.util.sets.IntegerStack;
 
-public abstract class MapRoom implements MAP_OBJECT<Room>{
+public final class MapRoom implements MAP_OBJECT<Room>{
 
 	
 	public final static short NOTHING = 0;
@@ -130,7 +130,7 @@ public abstract class MapRoom implements MAP_OBJECT<Room>{
 		tmp.set(room.body());
 		for (COORDINATE c : tmp) {
 			if (room.is(c)) {
-				updateMiniMap(c.x(), c.y());
+				SETT.TILE_MAP().miniCUpdate(c.x(), c.y());
 				PATH().availability.updateAvailability(c.x(), c.y());
 				SETT.ENV().environment.setChanged(c.x(), c.y());
 				PATH().availability.updateService(c.x(), c.y());
@@ -139,8 +139,6 @@ public abstract class MapRoom implements MAP_OBJECT<Room>{
 	}
 	
 	private final Rec tmp = new Rec();
-
-	abstract void updateMiniMap(int tx, int ty);
 
 	public int nrOFRooms() {
 		return ROOMS.ROOM_MAX - stack.size();
@@ -174,6 +172,28 @@ public abstract class MapRoom implements MAP_OBJECT<Room>{
 
 		@Override
 		public RoomBlueprint get(int tx, int ty) {
+			if (IN_BOUNDS(tx, ty))
+				return get(tx + ty * TWIDTH);
+			return null;
+		}
+
+	};
+	
+	public final MAP_OBJECT<RoomBlueprintImp> blueprintImp = new MAP_OBJECT<RoomBlueprintImp>() {
+
+		@Override
+		public RoomBlueprintImp get(int tile) {
+			int i = roomI[tile];
+			if (i != NOTHING) {
+				Room r =  getByIndex(i);
+				if (r != null && r.constructor() != null)
+					return r.constructor().blue();
+			}
+			return null;
+		}
+
+		@Override
+		public RoomBlueprintImp get(int tx, int ty) {
 			if (IN_BOUNDS(tx, ty))
 				return get(tx + ty * TWIDTH);
 			return null;

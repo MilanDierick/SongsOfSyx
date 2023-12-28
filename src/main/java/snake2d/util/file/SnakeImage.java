@@ -13,6 +13,8 @@ import org.lwjgl.stb.STBImageWrite;
 import org.lwjgl.system.MemoryStack;
 
 import snake2d.Errors;
+import snake2d.util.datatypes.COORDINATE;
+import snake2d.util.datatypes.Coo;
 
 public final class SnakeImage {
 
@@ -92,6 +94,31 @@ public final class SnakeImage {
 
 		}
 		
+	}
+	
+	public static int height(Path path) {
+		
+		return dim(path).y();
+	}
+	
+	public static COORDINATE dim(Path path) {
+		
+		if (!Files.exists(path))
+			throw new Errors.DataError("File doesn't exist", path);
+		
+		String p = path.toString();
+		
+		try (MemoryStack stack = MemoryStack.stackPush()) {
+
+			IntBuffer w = stack.mallocInt(1);
+			IntBuffer h = stack.mallocInt(1);
+			IntBuffer comp = stack.mallocInt(1);
+			
+			STBImage.stbi_info(p, w, h, comp);
+			
+			return new Coo(w.get(), h.get());
+
+		}
 	}
 	
 	public SnakeImage(String path, int width, int height) throws IOException {

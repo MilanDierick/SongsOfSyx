@@ -1,5 +1,7 @@
 package settlement.path.components;
 
+import static settlement.main.SETT.*;
+
 import init.RES;
 import settlement.main.SETT;
 import snake2d.PathUtilOnline.Filler;
@@ -17,6 +19,7 @@ final class SCompNUpdater {
 	private final SComponentLevel lower;
 	private final ArrayListResize<SComponent> upUnderlings;
 	private final int size;
+	private final SCompNLevel map;
 	
 	SCompNUpdater(SCompNLevel map, SCompNFactory f, SComponentLevel prev, int size){
 		this.lower = prev;
@@ -26,6 +29,7 @@ final class SCompNUpdater {
 		upUnderlings = new ArrayListResize<>(SComp0Level.startSize >> map.level(), Integer.MAX_VALUE);
 		bounds = new Rec(size, size);
 		this.size = size;
+		this.map = map;
 	}
 
 	void update() {
@@ -37,15 +41,35 @@ final class SCompNUpdater {
 				update(c);
 			}
 		}
-		checkerUnderlings.init();
-		for (int i = 0; i < upUnderlings.size(); i++) {
-			SComponent c = upUnderlings.get(i);
-			if (!checkerUnderlings.isSetAndSet(c)) {
-				update(c);
-			}
-		}
 		
 		upUnderlings.clearSoft();
+	}
+	
+	void remove(SComponent toBeRemoved) {
+		if (toBeRemoved == null)
+			return;
+		SCompN o = (SCompN) toBeRemoved;
+		if (o.superComp() != null) {
+			PATH().comps.levels.get(map.level()).remove(o.superComp());
+		}
+		RES.filler().init(this);
+		RES.filler().fill(toBeRemoved.centreX(), toBeRemoved.centreY());
+		while(RES.filler().hasMore()) {
+			COORDINATE c = RES.filler().poll();
+			SComponent ss = PATH().comps.all.get(map.level()-1).get(c.x(), c.y());
+			ss.superCompSet(null);
+			SComponentEdge e = ss.edgefirst();
+			while(e != null) {
+				if (e.to().superComp() == toBeRemoved) {
+					RES.filler().fill(e.to().centreX(), e.to().centreY());
+				}
+				e = e.next();
+			}
+		}
+		RES.filler().done();
+		
+		factory.retire(o);
+
 	}
 	
 	void add(SComponent c) {
@@ -60,26 +84,21 @@ final class SCompNUpdater {
 			boundsC.clear();
 		}
 		
-		if (underling.superComp() != null && !underling.superComp().retired()){
-			SCompN n = (SCompN) underling.superComp();
-			SETT.PATH().comps.data.initComponentN(n, checkerUnderlings, bounds);
-			if (n.superComp() != null)
-				((SCompNLevel) n.superComp().level()).update(null, n);
-			return;
+		if (underling.superComp() != null) {
+			throw new RuntimeException(size + " " + underling.superComp() + " " + underling.superComp().retired());
 		}
 		
-		if (underling.edgefirst() == null) {
-			underling.superCompSet(null);
-			return;
+		if (lower.get(underling.centreX(),underling.centreY()) != underling) {
+			throw new RuntimeException(size + " " + underling.centreX() + " " + underling.centreY());
 		}
-
 		
 		final SCompN comp = factory.create();
-		
 		
 		Filler f = RES.filler();
 		f.init(this);
 		f.fill(underling.centreX(),underling.centreY());
+		
+		
 		while(f.hasMore()) {
 			COORDINATE coo = f.poll();
 			SComponent c = lower.get(coo);
@@ -101,7 +120,12 @@ final class SCompNUpdater {
 		
 		comp.init(underling, boundsC, lower, checkerSelf);
 		
-		SETT.PATH().comps.data.initComponentN((SCompN) underling.superComp(), checkerUnderlings, boundsC);
+		SETT.PATH().comps.data.initComponentN(comp);
+		
+		if (map.level() < SETT.PATH().comps.levels.size()) {
+			SETT.PATH().comps.levels.get(map.level()).addNew(comp);
+		}
+		
 		
 	}
 

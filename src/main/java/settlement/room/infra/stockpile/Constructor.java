@@ -3,7 +3,6 @@ package settlement.room.infra.stockpile;
 import java.io.IOException;
 
 import init.resources.RESOURCE;
-import settlement.main.RenderData.RenderIterator;
 import settlement.main.SETT;
 import settlement.path.AVAILABILITY;
 import settlement.room.main.*;
@@ -18,6 +17,7 @@ import snake2d.util.datatypes.AREA;
 import snake2d.util.file.Json;
 import util.gui.misc.GText;
 import util.info.GFORMAT;
+import util.rendering.RenderData.RenderIterator;
 import util.rendering.ShadowBatch;
 
 final class Constructor extends Furnisher{
@@ -26,7 +26,7 @@ final class Constructor extends Furnisher{
 		
 		@Override
 		public double get(AREA area, double fromItems) {
-			return fromItems*ROOM_STOCKPILE.CRATE_MAX;
+			return fromItems*blue.upgrades().boost(0);
 		}
 		
 		@Override
@@ -52,21 +52,32 @@ final class Constructor extends Furnisher{
 		final RoomSprite spriteCrate = new RoomSprite1x1(sp, "CRATE_BOTTOM_1X1") {
 			
 			final RoomSprite top = new RoomSprite1x1(sp, "CRATE_TOP_1X1");
+			final RoomSprite topf = new RoomSprite1x1(sp, "CRATE_TOP_FOOD_1X1");
 			
 			@Override
 			public void renderAbove(SPRITE_RENDERER r, ShadowBatch s, int data, RenderIterator it, double degrade) {
+				RoomSprite top = this.top;
+				if (SETT.ROOMS().STOCKPILE.is(it.tile())) {
+					StockpileInstance ins = blue.getter.get(it.tx(), it.ty());
+					StorageCrate cr = blue.crate.get(it.tx(), it.ty(),ins, ins.sdata);
+					RESOURCE res = cr.resource();
+					if (res != null && res.isEdible()) {
+						top = topf;
+					}
+				}
 				top.render(r, s, data, it, degrade, rotates);
 			}
 			
 			@Override
-			public boolean render(snake2d.SPRITE_RENDERER r, ShadowBatch s, int data, settlement.main.RenderData.RenderIterator it, double degrade, boolean isCandle) {
+			public boolean render(snake2d.SPRITE_RENDERER r, ShadowBatch s, int data, util.rendering.RenderData.RenderIterator it, double degrade, boolean isCandle) {
 				super.render(r, s, data, it, degrade, false);
 				if (SETT.ROOMS().STOCKPILE.is(it.tile())) {
-					int d = SETT.ROOMS().data.get(it.tile());
-					RESOURCE res = StorageCrate.resource(d);
+					StockpileInstance ins = blue.getter.get(it.tx(), it.ty());
+					StorageCrate cr =blue.crate.get(it.tx(), it.ty(),ins, ins.sdata);
+					RESOURCE res = cr.resource();
 					if (res != null) {
-						double a = StorageCrate.amount(d);
-						res.renderLayingRel(r, it.x(), it.y(), it.ran(), a/ROOM_STOCKPILE.CRATE_MAX);
+						double a = cr.amount();
+						res.renderLayingRel(r, it.x(), it.y(), it.ran(), a/blue.upgrades().boost(SETT.ROOMS().STOCKPILE.getter.get(it.tx(), it.ty()).upgrade()));
 					}
 				}
 				return false;

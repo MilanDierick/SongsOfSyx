@@ -2,52 +2,32 @@ package settlement.entity.humanoid;
 
 import static settlement.main.SETT.*;
 
-import java.io.IOException;
-
 import init.C;
 import init.race.RACES;
 import init.race.Race;
-import init.sprite.ICON.MEDIUM;
 import init.sprite.SPRITES;
 import settlement.entity.ENTITY;
+import settlement.entity.ENTITY.ECollision;
 import settlement.entity.humanoid.ai.main.AI;
-import settlement.main.CapitolArea;
 import settlement.main.SETT;
-import settlement.main.SETT.SettResource;
-import settlement.stats.CAUSE_ARRIVE;
-import settlement.stats.CAUSE_LEAVE;
-import snake2d.util.file.FileGetter;
-import snake2d.util.file.FilePutter;
+import settlement.stats.util.CAUSE_ARRIVE;
+import settlement.stats.util.CAUSE_LEAVE;
+import snake2d.util.datatypes.VectorImp;
 import snake2d.util.gui.clickable.CLICKABLE;
 import snake2d.util.sets.*;
+import snake2d.util.sprite.SPRITE;
 import util.gui.misc.GButt.Panel;
 import view.sett.IDebugPanelSett;
 import view.tool.PLACABLE;
 import view.tool.PlacableSimple;
 
-public final class Humanoids extends SettResource{
+public final class Humanoids {
 	
 	{AI.init();}
 
 	
-	@Override
-	protected void save(FilePutter file) {
-
-	}
-	
-	@Override
-	protected void load(FileGetter file) throws IOException {
-
-	}
-	
-	@Override
-	protected void clearBeforeGeneration(CapitolArea area) {
-
-	}
-	
 	public Humanoids(){
-		
-		
+
 		final LinkedList<PLACABLE> all = new LinkedList<PLACABLE>();
 		HTYPE[] tt = new HTYPE[] {
 			HTYPE.SUBJECT, HTYPE.PRISONER, HTYPE.SLAVE, HTYPE.CHILD, HTYPE.DERANGED, HTYPE.ENEMY, HTYPE.RIOTER
@@ -89,7 +69,7 @@ public final class Humanoids extends SettResource{
 			}
 			
 			@Override
-			public MEDIUM getIcon() {
+			public SPRITE getIcon() {
 				return SPRITES.icons().m.cancel;
 			}
 
@@ -120,6 +100,68 @@ public final class Humanoids extends SettResource{
 			}
 		};
 		
+		PlacableSimple attack = new PlacableSimple("attack", "") {
+			
+			private CAUSE_LEAVE cause = CAUSE_LEAVE.SLAYED;
+			private final ECollision coll = new ECollision();
+			
+			
+			
+			@Override
+			public PLACABLE getUndo() {
+				return null;
+			}
+			
+			@Override
+			public SPRITE getIcon() {
+				return SPRITES.icons().m.cancel;
+			}
+
+			
+			@Override
+			public void place(int x, int y) {
+				for (ENTITY e : ENTITIES().getAtPointL(x, y)) {
+					if (e instanceof Humanoid) {
+						kill((Humanoid) e, x, y);
+						return;
+					}
+				}
+			}
+			
+			private void kill(Humanoid e, int x, int y) {
+				VectorImp vec = new VectorImp();
+				double m = vec.set(x, y, e.body().cX(), e.body().cY());
+				
+				e.speed.setRaw(vec.nX()*m*C.TILE_SIZEH+e.speed.x(), vec.nY()*m*C.TILE_SIZEH+e.speed.y());
+				
+				coll.damageStrength = 0;
+				coll.momentum = 0;
+				for (int i = 0; i < coll.damage.length; i++)
+					coll.damage[i] = 0;
+				coll.dirDot = 1;
+				coll.dirDotOther = 1;
+				coll.norX = 0.5;
+				coll.norY = 0.5;
+				coll.speedHasChanged = true;
+				coll.other = null;
+				e.collide(coll);
+				if (!e.isRemoved())
+					e.kill(true, cause);
+				
+			}
+			
+			@Override
+			public CharSequence isPlacable(int x, int y) {
+				for (ENTITY e : ENTITIES().getAtPointL(x, y)) {
+					if (e instanceof Humanoid) {
+						return null;
+					}
+				}
+				return E;
+			}
+
+		};
+		all.add(attack);
 		all.add(death);
 		
 		PlacableSimple explode = new PlacableSimple("explode", "") {
@@ -133,7 +175,7 @@ public final class Humanoids extends SettResource{
 			}
 			
 			@Override
-			public MEDIUM getIcon() {
+			public SPRITE getIcon() {
 				return SPRITES.icons().m.cancel;
 			}
 
@@ -142,7 +184,7 @@ public final class Humanoids extends SettResource{
 			public void place(int x, int y) {
 				for (ENTITY e : ENTITIES().getAtPointL(x, y)) {
 					if (e instanceof Humanoid) {
-						((Humanoid) e).inflictDamage(10, 10, cause);
+						((Humanoid) e).inflictDamage(10, cause);
 						return;
 					}
 				}
@@ -188,7 +230,7 @@ public final class Humanoids extends SettResource{
 		}
 		
 		@Override
-		public MEDIUM getIcon() {
+		public SPRITE getIcon() {
 			return r.appearance().icon;
 		}
 

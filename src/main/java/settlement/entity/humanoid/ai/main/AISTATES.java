@@ -1,8 +1,8 @@
 package settlement.entity.humanoid.ai.main;
 
 import game.GAME;
+import game.boosting.BOOSTABLES;
 import init.C;
-import init.boostable.BOOSTABLES;
 import settlement.entity.ENTITY;
 import settlement.entity.humanoid.Humanoid;
 import settlement.entity.humanoid.spirte.HSprite;
@@ -146,14 +146,14 @@ public class AISTATES {
 		public AISTATE activate(Humanoid a, AIManager d) {
 			d.stateTimer = 0.1f;
 			a.speed.magnitudeTargetSet(0);
-			a.speed.magnitudeAdjust(0.25f, 1, 1);
+//			a.speed.magnitudeAdjust(0.25f, 1, 1);
 			return state;
 		};
 		
 		public AISTATE instant(Humanoid a, AIManager d) {
 			a.speed.magnitudeInit(0);
 			a.speed.magnitudeTargetSet(0);
-			a.speed.magnitudeAdjust(0.25f, 1, 1);
+//			a.speed.magnitudeAdjust(0.25f, 1, 1);
 			d.stateTimer = 0.1f;
 			return state;
 		};
@@ -162,14 +162,14 @@ public class AISTATES {
 			a.speed.turnRandom();
 			d.stateTimer = time;
 			a.speed.magnitudeTargetSet(0);
-			a.speed.magnitudeAdjust(0.25f, 1, 1);
+//			a.speed.magnitudeAdjust(0.25f, 1, 1);
 			return state;
 		};
 
 		public AISTATE activate(Humanoid a, AIManager d, double time) {
 			d.stateTimer = (float) time;
 			a.speed.magnitudeTargetSet(0);
-			a.speed.magnitudeAdjust(0.25f, 1, 1);
+//			a.speed.magnitudeAdjust(0.25f, 1, 1);
 			return state;
 		};
 
@@ -187,7 +187,7 @@ public class AISTATES {
 					d.stateTimer -= ds;
 					return d.stateTimer > 0;
 				}
-				a.speed.magnitudeAdjust(ds, 1, 1);
+				a.speed.brake(ds);
 				return true;
 			}
 
@@ -223,7 +223,7 @@ public class AISTATES {
 
 			@Override
 			public boolean update(Humanoid a, AIManager d, float ds) {
-				a.physics.setHeightOverGround(a.physics.getZ() + ds * d.stateTimer * 200.0);
+				a.physics.setHeightOverGround(a.physics.getZ() + ds * d.stateTimer * C.TILE_SIZE);
 				d.stateTimer -= ds;
 				if (a.physics.getZ() < 0) {
 					a.physics.setHeightOverGround(0);

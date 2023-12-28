@@ -18,7 +18,7 @@ import util.gui.misc.GTextR;
 import util.gui.table.GScrollRows;
 import util.save.SaveGame;
 
-class Loader implements SCREEN{
+class Loader implements SC{
 
 	private static CharSequence ¤¤notLoaded = "¤Game could not be loaded!";
 	
@@ -26,7 +26,7 @@ class Loader implements SCREEN{
 		D.ts(Loader.class);
 	}
 	
-	private SCREEN prev;
+	private SC prev;
 	private RENDEROBJ s;
 	private final Menu menu;
 	private int WIDTH = 600;

@@ -1,100 +1,77 @@
 package world.army;
 
 import java.io.IOException;
+import java.util.Arrays;
 
-import game.faction.FACTIONS;
-import game.faction.Faction;
-import init.boostable.BOOSTABLES;
 import init.config.Config;
 import init.race.Race;
 import settlement.army.Div;
-import settlement.army.DivisionBanners.DivisionBanner;
-import settlement.entity.humanoid.*;
+import settlement.entity.humanoid.HTYPE;
+import settlement.entity.humanoid.Humanoid;
 import settlement.main.SETT;
-import settlement.stats.CAUSE_ARRIVE;
+import settlement.stats.Induvidual;
 import settlement.stats.STATS;
-import settlement.stats.StatsEquippables.EQUIPPABLE_MILITARY;
-import settlement.stats.StatsEquippables.StatEquippableRange;
+import settlement.stats.colls.StatsBattle.StatTraining;
+import settlement.stats.equip.Equip;
+import settlement.stats.equip.EquipBattle;
+import settlement.stats.stat.STAT;
+import settlement.stats.util.CAUSE_ARRIVE;
 import snake2d.util.datatypes.COORDINATE;
-import snake2d.util.file.*;
+import snake2d.util.file.FileGetter;
+import snake2d.util.file.FilePutter;
 import snake2d.util.misc.CLAMP;
 import snake2d.util.rnd.RND;
 import snake2d.util.sets.ArrayList;
-import util.dic.DicArmy;
-import util.gui.misc.GBox;
-import util.gui.misc.GText;
-import world.World;
-import world.army.WINDU.WDivGeneration;
-import world.army.WINDU.WInduStored;
-import world.entity.army.WArmy;
+import world.WORLD;
 
-class WDivStored implements WDIV, SAVABLE{
+class WDivStored extends ADDiv {
 
 	final static int type = 1;
 	
-	private int induviduals = 0;
-	private int armyI = -1;
-	private final int index;
-	private ArrayList<WInduStored> all = new ArrayList<>(Config.BATTLE.MEN_PER_DIVISION);
-	private int experience;
-	private int trainingM;
-	private int trainingR;
-	
+	private int[] stats = new int[STATS.all().size()];
+	private ArrayList<Induvidual> all = new ArrayList<>(Config.BATTLE.MEN_PER_DIVISION);
 	
 	WDivStored(int index){
-		this.index = index;
+		super(index);
 	}
 	
+
 	@Override
 	public void save(FilePutter file) {
-		file.i(armyI);
-		file.i(experience);
-		file.i(trainingM);
-		file.i(trainingR);
-		file.i(induviduals);
-		
+		super.save(file);
+		file.is(stats);
 		
 		file.i(all.size());
-		for (WInduStored s : all)
+		for (Induvidual s : all)
 			s.save(file);
 		
 	}
 
 	@Override
 	public void load(FileGetter file) throws IOException {
-		armyI = file.i();
-		experience = file.i();
-		trainingM = file.i();
-		trainingR = file.i();
-		induviduals = file.i();
+		super.load(file);
+		file.is(stats);
 		
 		all.clear();
 		int am = file.i();
 		for (int i = 0; i < am; i++)
-			all.add(new WInduStored());
-		for (WInduStored s : all)
-			s.load(file);
+			all.add(new Induvidual(file));
 	}
 
-	@Override
-	public void clear() {
-		induviduals = 0;
-		armyI = -1;
-		experience = 0;
-		trainingM = 0;
-		trainingR = 0;
+	void clear() {
+		Arrays.fill(stats, 0);
 		all.clear();
 	}
 	
 	@Override
-	public int equipTarget(EQUIPPABLE_MILITARY e) {
+	public int equipTarget(EquipBattle e) {
 		return e.target(div());
 	}
 	
 
 	@Override
-	public double equip(EQUIPPABLE_MILITARY e) {
-		return e.target(div())*WARMYD.supplies().get(e).getD(army());
+	public double equip(EquipBattle e) {
+		return e.target(div())*AD.supplies().get(e).getD(army());
 	}
 	
 	private Div div() {
@@ -103,7 +80,7 @@ class WDivStored implements WDIV, SAVABLE{
 	
 	@Override
 	public int men() {
-		return induviduals;
+		return all.size();
 	}
 
 	@Override
@@ -113,22 +90,28 @@ class WDivStored implements WDIV, SAVABLE{
 
 	@Override
 	public int menTarget() {
-		return SETT.ARMIES().player().divisions().get(index).info.target();
+		return SETT.ARMIES().player().divisions().get(index).info.men();
 	}
 
 	@Override
-	public double training_melee() {
-		return trainingM/(induviduals*15.0);
+	public double training(StatTraining tr) {
+		return stat(tr);
 	}
 	
 	@Override
-	public double training_ranged() {
-		return trainingR/(induviduals*15.0);
+	public double trainingTarget(StatTraining tr) {
+		return div().info.trainingD(tr.room).getD();
+	}
+	
+	public double stat(STAT stat) {
+		if (all.size() == 0)
+			return 0;
+		return (double)stats[stat.index()] / (stat.indu().max(null)*all.size());
 	}
 
 	@Override
 	public double experience() {
-		return experience/(induviduals*15.0);
+		return stat(STATS.BATTLE().COMBAT_EXPERIENCE);
 	}
 	
 	@Override
@@ -142,58 +125,29 @@ class WDivStored implements WDIV, SAVABLE{
 		return index;
 	}
 	
-	@Override
-	public WArmy army() {
-		if (armyI == -1)
-			return null;
-		return World.ENTITIES().armies.get(armyI);
-	}
-	
-	void armySet(WArmy e) {
-		report(-1);
-		
-		WArmy old = army();
-		if (old != null) {
-			for (int i = 0; i < old.divs().size(); i++) {
-				if (old.divs().get(i) == this) {
-					
-					old.divs().remove(i);
-					break;
-				}
-			}
-		}
-		
-		armyI = e == null ? -1 : e.armyIndex();
-		if (e != null) {
-			
-			int i = army().divs().add();
-			long d = WArmyDivs.BType.set(0, type);
-			d |= index;
-			army().divs().setData(i, d);
-		}
-		report(1);
-	}
-	
 	void add(Humanoid indu) {
-		add(new WInduStored(indu));
+		add(indu.indu());
 	}
 	
-	void add(WInduStored n) {
+	void add(Induvidual n) {
 		report(-1);
-		induviduals ++;
-		experience += WINDU.experience().statSelf.get(n);
-		trainingM += WINDU.trainingM().statSelf.get(n);
-		trainingR += WINDU.trainingR().statSelf.get(n);
+		if (all.size() == 0)
+			Arrays.fill(stats, 0);
+		
+		for (int si = 0; si < STATS.all().size(); si++) {
+			stats[si] += STATS.all().get(si).indu().get(n);
+		}
+		
 		all.add(n);
+		
 		report(1);
 	}
 	
-	private void remove(WInduStored n) {
+	private void remove(Induvidual n) {
 		report(-1);
-		induviduals --;
-		experience -= WINDU.experience().statSelf.get(n);
-		trainingM -= WINDU.trainingM().statSelf.get(n);
-		trainingR -= WINDU.trainingR().statSelf.get(n);
+		for (int si = 0; si < STATS.all().size(); si++) {
+			stats[si] -= STATS.all().get(si).indu().get(n);
+		}
 		all.remove(n);
 		report(1);
 	}
@@ -202,60 +156,48 @@ class WDivStored implements WDIV, SAVABLE{
 	public int daysUntilMenArrives() {
 		return 0;
 	}
-
-	@Override
-	public int amountOfMenThatWillArrive() {
-		return STATS.BATTLE().RECRUIT.inDiv(SETT.ARMIES().player().divisions().get(index));
-	}
 	
-	private void report(int d) {
-		World.ARMIES().cityDivs().amount += d*induviduals;
-		World.ARMIES().cityDivs().ramounts[race().index] += d*induviduals;
-		
-		WARMYD.register(this, true, 0, 0, d);
+	@Override
+	protected void report(int d) {
+		WORLD.ARMIES().cityDivs().amount += d*all.size();
+		WORLD.ARMIES().cityDivs().ramounts[race().index] += d*all.size();
+		super.report(d);
+
 	}
 
 
-	@Override
-	public void disband() {
-		armySet(null);
-	}
+//	@Override
+//	public void disband() {
+//		armySet(null);
+//	}
 
 	@Override
-	public void resolve(WInduStored[] hs) {
+	public void resolve(Induvidual[] hs) {
 		report(-1);
-		induviduals = 0;
-		all.clear();
-		experience = 0;
-		trainingM = 0;
-		trainingR = 0;
+		clear();
 		report(1);
-		for (WInduStored h : hs)
-			add(h);
+		for (Induvidual i : hs)
+			add(i);
 	}
 	
 	@Override
 	public void resolve(int surviviors, double experiencePerMan) {
-		
+
 		double dExperience = experiencePerMan - experience();
 		dExperience*= surviviors;
-		ArrayList<WInduStored> all = new ArrayList<>(surviviors);
+		ArrayList<Induvidual> all = new ArrayList<>(surviviors);
 		for (int i = 0; i < surviviors; i++) {
-			WInduStored s = this.all.get(i);
+			Induvidual s = this.all.get(i);
 			int a = (int) dExperience;
 			if (dExperience - a > RND.rFloat())
 				a++;
-			WINDU.experience().statSelf.inc(s, a);
+			STATS.BATTLE().COMBAT_EXPERIENCE.indu().inc(s, a);
 			all.add(s);
 		}
 		report(-1);
-		induviduals = 0;
 		this.all.clear();
-		experience = 0;
-		trainingM = 0;
-		trainingR = 0;
 		report(1);
-		for (WInduStored h : all)
+		for (Induvidual h : all)
 			add(h);
 	}
 
@@ -263,20 +205,28 @@ class WDivStored implements WDIV, SAVABLE{
 	public void menSet(int amount) {
 		amount = CLAMP.i(amount, 0, men());
 		while (amount < men()) {
-			WInduStored t = all.get(all.size()-1);
+			Induvidual t = all.get(all.size()-1);
 			remove(t);
 		}
 		while(amount > men()) {
-			add(new WInduStored(SETT.ARMIES().player().divisions().get(index)));
+			Induvidual i = new Induvidual(HTYPE.SUBJECT, race());
+			add(i);
 		}
 	}
 	
 	public Humanoid popSoldier(int tx, int ty, HTYPE type) {
-		WInduStored t = all.get(all.size()-1);
+		Induvidual t = all.get(all.size()-1);
 		remove(t);
-		Humanoid h = SETT.HUMANOIDS().create(race(), tx, ty, type, CAUSE_ARRIVE.SOLDIER_RETURN);
+		for (Equip e : STATS.EQUIP().allE()) {
+			e.set(t, 0);
+		}
+		
+		STATS.NEEDS().INJURIES.count.set(t, 0);
+		
+		Humanoid h = SETT.HUMANOIDS().create(t.race(), tx, ty, type, CAUSE_ARRIVE.SOLDIER_RETURN);
+		
 		if (!h.isRemoved()) {
-			t.paste(h);
+			h.indu().copyFrom(t);
 		}
 		return h;
 	}
@@ -286,54 +236,24 @@ class WDivStored implements WDIV, SAVABLE{
 		return type;
 	}
 
-	@Override
-	public void reassign(WArmy a) {
-		WArmy oldA = army();
-		double sup = WARMYD.supplies().all.get(0).current().get(army());
-		if(sup > 0) {
-			sup = menTarget()/sup;
-		}
-		
-		armySet(a);
-		
-		WARMYD.supplies().transfer(this, oldA, army());
-	}
+
 
 	public void age() {
 		
+		
 		for (int k = 0; k < all.size(); k++) {
-			WInduStored i = all.get(k);
-			double age = WINDU.ageDays().statSelf.get(i);
-			if (STATS.POP().shouldDieOfOldAge(age, BOOSTABLES.PHYSICS().DEATH_AGE.race(race()))) {
+			Induvidual i = all.get(k);
+			if (STATS.POP().age.shouldDieOfOldAge(i)) {
 				remove(i);
-			}else if (STATS.POP().shoudRetire(HCLASS.CITIZEN, race(),BOOSTABLES.PHYSICS().DEATH_AGE.race(race()), age)) {
+			}else if (STATS.POP().age.shoudRetire(i)) {
 				remove(i);
-				COORDINATE c = SETT.PATH().entryPoints.rnd();
+				COORDINATE c = SETT.ENTRY().points.randomReachable();
 				if (c != null) {
-					Humanoid h = SETT.HUMANOIDS().create(race(), c.x(), c.y(), HTYPE.RETIREE, null);
+					Humanoid h = SETT.HUMANOIDS().create(i.race(), c.x(), c.y(), HTYPE.RETIREE, CAUSE_ARRIVE.SOLDIER_RETURN);
 					if (h != null)
-						i.paste(h);
+						h.indu().copyFrom(i);
 				}
 			}
-		}
-	}
-	
-	@Override
-	public void hover(GBox b) {
-		World.ARMIES().hoverer().hover(this, b);
-		b.NL(8);
-		
-		if (men() < menTarget()) {
-			
-			GText t = b.text();
-			
-			t.add(DicArmy.¤¤SoldiersAreTraining).insert(0, amountOfMenThatWillArrive());	
-			
-			b.NL();
-			
-			b.add(t);
-			b.NL();
-			
 		}
 	}
 
@@ -342,50 +262,23 @@ class WDivStored implements WDIV, SAVABLE{
 		return true;
 	}
 
-	@Override
-	public DivisionBanner banner() {
-		return SETT.ARMIES().banners.get(div().info.symbolI());
-	}
 
+	@Override
+	public int bannerI() {
+		return div().info.symbolI();
+	}
+	
 	@Override
 	public void bannerSet(int bi) {
 		div().info.symbolSet(bi);
 	}
 
 	@Override
-	public Faction faction() {
-		return FACTIONS.player();
-	}
-
-	@Override
 	public WDivGeneration generate() {
-		WDivGeneration res = new WDivGeneration(men());
-		
-		for (int i = 0; i < men() ; i++) {
-			res.indus[i] = new WInduStored(all.get(i));
-		}
-		
-		res.isRange = false;
-		
-		
-		for (EQUIPPABLE_MILITARY m : STATS.EQUIP().military_all()) {
-			res.supplies[m.indexMilitary()] = equip(m);
-			if (m instanceof StatEquippableRange && res.supplies[m.indexMilitary()] > 0)
-				res.isRange = true;
-		}
-		
-		res.name = ""+name();
-		res.race = (short) race().index();
-		res.bannerI = bannerI();
-		
-		
+		WDivGeneration res = new WDivGeneration(this, all);
 		return res;
 	}
 
-	@Override
-	public int bannerI() {
-		return div().info.symbolI();
-	}
 
 
 

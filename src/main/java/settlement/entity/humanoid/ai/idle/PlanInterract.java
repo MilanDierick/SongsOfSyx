@@ -1,9 +1,9 @@
 package settlement.entity.humanoid.ai.idle;
 
 import game.GAME;
+import game.boosting.BOOSTABLES;
 import game.time.TIME;
 import init.D;
-import init.boostable.BOOSTABLES;
 import settlement.entity.ENTITY;
 import settlement.entity.humanoid.HEvent;
 import settlement.entity.humanoid.Humanoid;
@@ -12,9 +12,9 @@ import settlement.entity.humanoid.ai.main.AISTATES.Animation;
 import settlement.entity.humanoid.ai.main.AISUB.AISubActivation;
 import settlement.main.SETT;
 import settlement.path.components.SComponent;
-import settlement.room.home.HOME;
-import settlement.stats.CAUSE_LEAVE;
 import settlement.stats.STATS;
+import settlement.stats.util.CAUSE_LEAVE;
+import snake2d.util.datatypes.COORDINATE;
 import snake2d.util.rnd.RND;
 import snake2d.util.sprite.text.Str;
 
@@ -125,26 +125,7 @@ class PlanInterract {
 			
 			if (backup != null) {
 				if (shouldFight(a, backup)) {
-					if (GAME.events().raceWars.isAtOdds(a.race(), backup.race()))
-						return backup;
-					HOME h = STATS.HOME().GETTER.get(a, this);
-					if (h == null) {
-						return null;
-					}
-					if (a.tc().tileDistanceTo(h.service()) > 16) {
-						h.done();
-						return null;
-					}
-					h.done();
-					h = STATS.HOME().GETTER.get(backup, this);
-					if (h == null) {
-						return null;
-					}
-					if (backup.tc().tileDistanceTo(h.service()) > 16) {
-						h.done();
-						return null;
-					}
-					h.done();
+					return null;
 				}
 				
 			}
@@ -225,10 +206,10 @@ class PlanInterract {
 					a.speed.turn2(a.body(), o.body());
 					return AI.SUBS().STAND.activateTime(a, d, 1 +RND.rInt(2));
 				}
-				double dam = RND.rFloat()*0.25*BOOSTABLES.BATTLE().BLUNT_DAMAGE.get(a)/BOOSTABLES.PHYSICS().MASS.get(o);
+				double dam = RND.rFloat()*0.25*BOOSTABLES.BATTLE().BLUNT_ATTACK.get(a.indu())/BOOSTABLES.BATTLE().BLUNT_DEFENCE.get(o.indu());
 				if (dam > 0.4)
 					dam = 0.4;
-				o.inflictDamage(dam, 0, CAUSE_LEAVE.BRAWL);
+				o.inflictDamage(dam, CAUSE_LEAVE.BRAWL);
 				return AI.SUBS().DUMMY.activate(a, d, AI.STATES().anima.box.activate(a, d, 1));
 			}
 			
@@ -346,9 +327,34 @@ class PlanInterract {
 	
 	public boolean shouldFight(Humanoid a, Humanoid b) {
 		
-		double c = 1.0-a.race().pref().other(b.indu().race());
+		if (GAME.events().riot.shouldBrawl(a, b))
+			return true;
 		
-		long ran = a.indu().randomness() + b.indu().randomness() + TIME.days().bitsSinceStart();
+		if (a.indu().clas() != b.indu().clas())
+			return false;
+		
+		if (a.race() == b.race())
+			return false;
+		
+		
+		COORDINATE h = STATS.HOME().GETTER.hCoo(a);
+		if (h == null) {
+			return false;
+		}
+		if (a.tc().tileDistanceTo(h) > 16) {
+			return false;
+		}
+		h = STATS.HOME().GETTER.hCoo(b);
+		if (h == null) {
+			return false;
+		}
+		if (b.tc().tileDistanceTo(h) > 16) {
+			return false;
+		}
+		
+		double c = 1.0-a.race().pref().race(b.indu().race());
+		
+		long ran = STATS.RAN().get(a.indu(), 0) + STATS.RAN().get(b.indu(), 0) + TIME.days().bitsSinceStart();
 		double d = CHA*(ran&0x0FFFFFF);
 		return c > d;
 	}

@@ -1,8 +1,8 @@
 package settlement.room.food.pasture;
 
 import init.D;
-import settlement.entity.humanoid.HCLASS;
 import settlement.room.industry.module.Industry.IndustryResource;
+import settlement.room.industry.module.Industry.RoomBoost;
 import settlement.room.industry.module.IndustryUtil;
 import settlement.room.main.RoomInstance;
 import snake2d.util.datatypes.DIR;
@@ -158,55 +158,31 @@ class Gui extends UIRoomModuleImp<PastureInstance, ROOM_PASTURE> {
 		b.NL();
 		
 		b.text(¤¤BaseRate);
-		b.tab(5);
+		b.tab(6);
 		b.add(GFORMAT.f(b.text(), i.rate));
 		b.NL();
 		
-		b.text(DicMisc.¤¤Capacity);
-		b.tab(5);
-		b.add(GFORMAT.f(b.text(), ii.blueprintI().constructor.ferarea.get(ii)*ROOM_PASTURE.WORKERS_PER_TILE));
-		b.NL();
+		double prod = i.rate;
 		
-		b.text(¤¤Skill);
-		b.tab(5);
-		b.add(GFORMAT.fRel(b.text(), ii.skill(), ii.blueprintI().bonus2.get(HCLASS.CITIZEN, null)));
-		b.NL();
+		for (RoomBoost bb : ii.blueprintI().indus.get(0).boosts()) {
+			b.text(bb.info().name);
+			b.tab(6);
+			b.add(GFORMAT.f1(b.text(), bb.get(ii)));
+			b.NL();
+			prod *= bb.get(ii);
+		}
 		
-		b.text(¤¤Animals);
-		b.tab(5);
-		b.add(GFORMAT.f1(b.text(), ii.animalsCurrent/(double)ii.animalsMax));
-		b.NL();
-		
-		b.text(¤¤FailedTending);
-		b.tab(5);
-		b.add(GFORMAT.f1(b.text(), Math.max((ii.animalsCurrent-ii.animalsToDie) /(double)ii.animalsCurrent, 0)));
-		b.NL();
-
 		b.NL(8);
-		double a = ii.animalsCurrent-ii.animalsToDie;
-		a /= ii.animalsMax;
-		a = Math.max(a, 0);
-		a *= ii.blueprintI().constructor.ferarea.get(ii)*ROOM_PASTURE.WORKERS_PER_TILE;
-		a *= i.rate*ii.skill();
+		
+
 		b.textL(DicMisc.¤¤Total);
-		b.tab(5);
-		b.add(GFORMAT.f(b.text(), a));
+		b.tab(6);
+		b.add(GFORMAT.f(b.text(), prod));
 		b.NL();
 		
 		
 	}
-	
-	public static double industryFormatProductionRate(GText text, IndustryResource i, RoomInstance ins) {
-		text.add('+');
-		PastureInstance ii = (PastureInstance) ins;
-		double a = ii.animalsCurrent-ii.animalsToDie;
-		a /= ii.animalsMax;
-		a = Math.max(a, 0);
-		a *= ii.blueprintI().constructor.ferarea.get(ii)*ROOM_PASTURE.WORKERS_PER_TILE;
-		a *= i.rate*ii.skill();
-		GFORMAT.f(text, a);
-		return a;
-	}
+
 
 
 }

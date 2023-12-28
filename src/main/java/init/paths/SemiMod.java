@@ -18,7 +18,7 @@ final class SemiMod extends PATH {
 		f = new VirtualFolder(roots, path);
 	}
 	
-	private SemiMod(VirtualFolder f, String filetype) {
+	SemiMod(VirtualFolder f, String filetype) {
 		super(filetype);
 		this.f = f;
 	}
@@ -56,6 +56,11 @@ final class SemiMod extends PATH {
 	@Override
 	public Path get() {
 		return f.getExistingFile(null);
+	}
+	
+	@Override
+	public boolean existsFolder(CharSequence folder) {
+		return f.exists(folder, "");
 	}
 
 }

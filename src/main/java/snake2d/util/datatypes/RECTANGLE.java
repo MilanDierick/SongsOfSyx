@@ -86,7 +86,7 @@ public interface RECTANGLE extends DIMENSION, Serializable, Iterable<COORDINATE>
 	
 
 	public default boolean isOnEdge(int x, int y) {
-		return x == x1() || x == x2()-1 || y1() == y || y2()-1 == y;
+		return holdsPoint(x, y) && (x == x1() || x == x2()-1 || y1() == y || y2()-1 == y);
 	}
 
 	

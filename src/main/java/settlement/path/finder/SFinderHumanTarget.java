@@ -2,13 +2,14 @@ package settlement.path.finder;
 
 import static settlement.main.SETT.*;
 
+import game.GAME;
 import settlement.entity.ENTITY;
 import settlement.entity.humanoid.Humanoid;
 import settlement.main.SETT;
 import settlement.path.components.FindableDataSingle;
 import settlement.path.components.SCompFinder.SCompPatherFinder;
 import settlement.path.components.SComponent;
-import settlement.stats.CAUSE_LEAVE;
+import settlement.stats.util.CAUSE_LEAVE;
 import snake2d.util.misc.CLAMP;
 import snake2d.util.sets.ArrayList;
 import snake2d.util.sets.LIST;
@@ -61,29 +62,34 @@ public final class SFinderHumanTarget {
 		LIST<SComponent> ls = SETT.PATH().comps.pather.fill(cx, cy, fin, distance).path();
 		for (SComponent c : ls) {
 			
-			int x1 = CLAMP.i(c.centreX()-c.level().size(), 0, TWIDTH);
-			int x2 = CLAMP.i(c.centreX()+c.level().size(), 0, TWIDTH);
-			int y1 = CLAMP.i(c.centreY()-c.level().size(), 0, TWIDTH);
-			int y2 = CLAMP.i(c.centreY()+c.level().size(), 0, TWIDTH);
-			
+			int x1 = CLAMP.i((c.centreX() & ~(c.level().size()-1)) - 1, 0, TWIDTH);
+			int x2 = CLAMP.i(x1+c.level().size()+2, 0, TWIDTH);
+			int y1 = CLAMP.i((c.centreY() & ~(c.level().size()-1)) - 1, 0, THEIGHT);
+			int y2 = CLAMP.i(y1+c.level().size()+2, 0, THEIGHT);
+			boolean found = false;
 			for (int y = y1; y < y2; y++) {
 				for (int x = x1; x < x2; x++) {
-					if (c.is(x, y)) {
-						for (ENTITY e : SETT.ENTITIES().getAtTile(x, y)) {
-							if (e instanceof Humanoid) {
-								Humanoid h = (Humanoid) e;
-								if (h.indu().hostile() != player && h.targets() < targetLimit) {
+					for (ENTITY e : SETT.ENTITIES().getAtTile(x, y)) {
+						if (e instanceof Humanoid) {
+							Humanoid h = (Humanoid) e;
+							if (h.indu().hostile() != player) {
+								found = true;
+								if (h.targets() < targetLimit) {
 									res.add(h);
+									
 									targetLimit --;
 									if (targetLimit <= 0 || !res.hasRoom())
 										return;
 								}
 								
 							}
+							
 						}
 					}
 				}
 			}
+			if (!found)
+				GAME.Notify(c.centreX() + " " + c.centreY() + " " + ff.name + " " + x1 + " " + y1);
 			
 			if (targetLimit <= 0 || !res.hasRoom())
 				return;

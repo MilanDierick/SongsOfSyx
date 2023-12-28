@@ -1,9 +1,9 @@
 package settlement.job;
 
 import settlement.main.SETT;
-import settlement.tilemap.*;
-import settlement.tilemap.Floors.Floor;
-import settlement.tilemap.Terrain.TerrainTile;
+import settlement.tilemap.floor.Floors.Floor;
+import settlement.tilemap.terrain.*;
+import settlement.tilemap.terrain.Terrain.TerrainTile;
 import snake2d.util.map.MAP_OBJECT;
 
 final class JobGetter implements MAP_OBJECT<Job>{

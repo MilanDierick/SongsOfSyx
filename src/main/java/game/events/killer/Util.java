@@ -29,7 +29,7 @@ class Util {
 				}
 				return false;
 			}
-		}.iterate(RND.rInt()&Integer.MAX_VALUE);;
+		}.iterate(RND.rInt()&Integer.MAX_VALUE);
 		if (res.get() == null)
 			return -1;
 		return res.get().id();

@@ -8,7 +8,7 @@ import settlement.main.SETT;
 import settlement.path.AVAILABILITY;
 import settlement.path.AvailabilityListener;
 import settlement.room.main.*;
-import settlement.tilemap.Terrain.TerrainTile;
+import settlement.tilemap.terrain.Terrain.TerrainTile;
 import snake2d.util.MATH;
 import snake2d.util.datatypes.*;
 import snake2d.util.file.*;
@@ -99,7 +99,7 @@ public final class RoomIsolation {
 				
 				if (!wall.is(c, d) && !RES.marker().is(c, d)) {
 					if (blue ==  SETT.ROOMS().HOMES.HOME) {
-						if (blue != SETT.ROOMS().map.blueprint.get(c, d)) {
+						if (blue != SETT.ROOMS().map.blueprintImp.get(c, d)) {
 							RES.marker().set(c, d, true);
 							unwalled ++;
 						}

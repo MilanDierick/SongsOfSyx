@@ -1,7 +1,6 @@
 package game.events.killer;
 
 import game.GAME;
-import game.time.TIME;
 import init.paths.PATHS;
 import init.race.Race;
 import settlement.entity.humanoid.Humanoid;
@@ -14,8 +13,8 @@ import snake2d.util.sprite.text.Str;
 import snake2d.util.sprite.text.StrInserter;
 import util.dic.DicMisc;
 import util.gui.misc.GButt;
-import view.main.MessageSection;
-import view.main.MessageText;
+import view.ui.message.MessageSection;
+import view.ui.message.MessageText;
 
 final class Messenger {
 
@@ -51,7 +50,7 @@ final class Messenger {
 			new Insert("VICTIM_AGE") {
 				@Override
 				public void set(Data t, Str str) {
-					str.add((int)(STATS.POP().AGE.indu().get(t.victim.indu())/TIME.years().bitConversion(TIME.days())));
+					str.add(STATS.POP().age.years(t.victim.indu()));
 				}
 			},
 			new Insert("VICTIM_RACE") {

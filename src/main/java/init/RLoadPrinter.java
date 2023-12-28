@@ -14,6 +14,7 @@ import snake2d.util.light.Fire;
 import snake2d.util.rnd.RND;
 import snake2d.util.sprite.text.Text;
 import util.colors.GCOLOR;
+import util.gui.misc.GText;
 import util.gui.misc.GTextR;
 import util.rendering.ShadowBatch;
 import view.main.VIEW;
@@ -34,9 +35,10 @@ public class RLoadPrinter {
 	
 	private boolean minified = false;
 	
-	private final GTextR miniThing;
+	private final GText miniThing = new GText(UI.FONT().H1, 24);
 	private CharSequence miniText;
 	private int miniI;
+	private final int miniD;
 	
 	RLoadPrinter(){
 		
@@ -81,20 +83,16 @@ public class RLoadPrinter {
 		
 		init();
 
-		miniThing = SPRITES.specials().getSprite("hello");
-		
+		miniThing.lablify();
+		miniThing.add('.').add('.').add('.');
+		miniD = miniThing.adjustWidth().width();
 	}
 	
 	public void minify(boolean minify, CharSequence title) {
 		minified = minify;
 		miniText = title;
 		miniI = 0;
-		if (minify) {
-			miniThing.text().clear();
-			miniThing.text().add('.').add('.').add('.').add('.').add('.').add('.').add(title).add('.').add('.').add('.').add('.').add('.').add('.');
-			miniThing.adjust();
-			miniThing.body().centerIn(C.DIM());
-		}
+		
 	}
 	
 	public void print(CharSequence string){
@@ -103,13 +101,17 @@ public class RLoadPrinter {
 			CORE.renderer().clear();
 			TIME.light().applyGuiLight(0, C.DIM());
 			
-			miniThing.text().set(miniText);
+			miniThing.set(miniText);
+			int wi = miniThing.width();
 			for (int i = 0; i < (miniI/4)%4; i++) {
-				miniThing.text().add('.');
+				miniThing.add('.');
 			}
 			miniI++;
+			int x1 = C.DIM().cX()-wi/2;
 			
-			miniThing.render(CORE.renderer(), 0);
+			UI.PANEL().titleBoxes[UI.PANEL().titleBoxes.length-1].renderCY(CORE.renderer(), x1, C.DIM().cY(), wi+miniD);
+			miniThing.renderCY(CORE.renderer(), x1,  C.DIM().cY());
+
 			CORE.renderer().newLayer(false, 0);
 			VIEW.render();
 			CORE.swapAndPoll();
@@ -126,7 +128,8 @@ public class RLoadPrinter {
 	}
 	
 	public void render(CharSequence string, boolean flash){
-
+		if (string == null)
+			return;
 		
 		
 		CORE.renderer().clear();

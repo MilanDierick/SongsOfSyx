@@ -2,6 +2,7 @@ package settlement.entity;
 
 import settlement.entity.humanoid.Humanoid;
 import settlement.main.SETT;
+import snake2d.util.MATH;
 
 public abstract class EntityIterator {
 	
@@ -26,7 +27,7 @@ public abstract class EntityIterator {
 		ENTITY[] es = SETT.ENTITIES().getAllEnts();
 		int m = SETT.ENTITIES().Imax()+1;
 		for (int i = 0; i < m; i++) {
-			int k = (i+off)%m;
+			int k = MATH.mod(i+off, m);
 			if (es[k] != null)
 				if (processAndShouldBreak(es[k], k))
 					return;

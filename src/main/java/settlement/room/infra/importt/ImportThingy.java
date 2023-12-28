@@ -4,6 +4,8 @@ import static settlement.main.SETT.*;
 
 import game.GAME;
 import game.faction.FACTIONS;
+import game.faction.FResources.RTYPE;
+import game.faction.trade.ITYPE;
 import init.RES;
 import init.resources.RESOURCE;
 import init.resources.RESOURCES;
@@ -14,7 +16,6 @@ import snake2d.util.bit.Bits;
 import snake2d.util.datatypes.COORDINATE;
 import snake2d.util.datatypes.DIR;
 import snake2d.util.rnd.RND;
-import util.statistics.HistoryResource;
 import util.statistics.IntResource;
 
 public final class ImportThingy {
@@ -40,33 +41,31 @@ public final class ImportThingy {
 			return;
 		
 		RESOURCE r = RESOURCES.ALL().rnd();
-		update(r, tally.toBeSpoils, FACTIONS.player().res().inMilitary);	
-		update(r, tally.toBeImport, FACTIONS.player().res().inImported);
-		update(r, tally.toBeTaxes, FACTIONS.player().res().inTaxes);
-
-
+		for (ITYPE t : ITYPE.all) {
+			
+			update(r, tally.iAll[t.index], t.rtype);
+		}
 		
 	}
 	
-	private void update(RESOURCE r, IntResource ir, HistoryResource in) {
+	private void update(RESOURCE r, IntResource ir, RTYPE in) {
 		
 		int amount = ir.get(r);
 		
-		while(amount > 0) {
+		if(amount > 0) {
 			
 			int am = amount;
 			if (am > Caravan.MAX_LOAD)
 				am = Caravan.MAX_LOAD;
 			if (SETT.HALFENTS().caravans.createDelivery(r, am, true)) {
 				if (in != null)
-					in.inc(r, am);
+					FACTIONS.player().res().inc(r, in, am);
+				ir.set(r, (int) (amount-am));
 			}else {
-				break;
+				ir.set(r, (int) (amount*0.5));
 			}
-			
-			amount -= am;
 		}
-		ir.set(r, (int) (amount*0.5));
+		
 		
 	}
 	

@@ -4,7 +4,6 @@ import static settlement.main.SETT.*;
 
 import java.io.IOException;
 
-import settlement.main.RenderData.RenderIterator;
 import settlement.main.SETT;
 import settlement.path.AVAILABILITY;
 import settlement.room.main.*;
@@ -12,13 +11,14 @@ import settlement.room.main.furnisher.*;
 import settlement.room.main.util.RoomInit;
 import settlement.room.main.util.RoomInitData;
 import settlement.room.sprite.*;
-import settlement.tilemap.Floors.Floor;
+import settlement.tilemap.floor.Floors.Floor;
 import snake2d.SPRITE_RENDERER;
 import snake2d.util.color.OPACITY;
 import snake2d.util.datatypes.AREA;
 import snake2d.util.datatypes.DIR;
 import snake2d.util.file.Json;
 import snake2d.util.misc.CLAMP;
+import util.rendering.RenderData.RenderIterator;
 import util.rendering.ShadowBatch;
 
 final class CGraveyard extends Furnisher{
@@ -208,7 +208,7 @@ final class CGraveyard extends Furnisher{
 		flush(1,3);
 		
 		{
-			RoomSprite ss = new RoomSpriteComboN(sp, "FLOWER_COMBO");
+			RoomSprite ss = new RoomSpriteCombo(sp, "FLOWER_COMBO");
 			final FurnisherItemTile it = new FurnisherItemTile(
 					this,
 					false,
@@ -217,10 +217,10 @@ final class CGraveyard extends Furnisher{
 			FurnisherItemTools.makeArea(this, it);
 		}
 		
-		pathway = SETT.FLOOR().getByKey("PATHWAY", init.data());
+		pathway = SETT.FLOOR().map.getByKey("PATHWAY", init.data());
 		
 		{
-			RoomSprite ss = new RoomSpriteComboN();
+			RoomSprite ss = new RoomSpriteCombo();
 			final FurnisherItemTile it = new FurnisherItemTile(
 					this,
 					false,

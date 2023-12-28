@@ -2,7 +2,6 @@ package settlement.entity.humanoid.ai.battle;
 
 import init.C;
 import settlement.army.Div;
-import settlement.army.DivMorale;
 import settlement.entity.humanoid.HEvent;
 import settlement.entity.humanoid.HEvent.HEventData;
 import settlement.entity.humanoid.Humanoid;
@@ -44,8 +43,10 @@ final class MarchSubCutTo extends AISUB.Simple {
 	};
 
 	private static final VectorImp vec = new VectorImp();
-	private final int distFar = (int) (C.TILE_SIZE*C.TILE_SIZE);
-	private final int distClose = (int) (0.15*0.15*C.TILE_SIZE*C.TILE_SIZE);
+	private final int distFar = (int) ((C.TILE_SIZE+C.TILE_SIZEH)*(C.TILE_SIZE+C.TILE_SIZEH));
+	private final double distFarI = 1.0/distFar;
+	private final int distClose = (int) (C.TILE_SIZEH*C.TILE_SIZEH);
+	private final double distCloseI = 1.0/distClose;
 	
 	@Override
 	protected AISTATE resume(Humanoid a, AIManager d) {
@@ -57,6 +58,7 @@ final class MarchSubCutTo extends AISUB.Simple {
 			return null;
 		}
 		COORDINATE dest = div.reporter.getPixel(a.divSpot());
+		
 		if (dest == null) {
 			if (d.subByte == 1)
 				return AI.STATES().STAND.activate(a, d, 0.05);
@@ -70,33 +72,33 @@ final class MarchSubCutTo extends AISUB.Simple {
 		}
 		dest = div.reporter.getPixel(a.divSpot());
 		
-		double speed = 0.4; 
-		if (div.settings.charging)
-			speed = 0.9;
-		else if (div.settings.running)
-			speed = 0.7;
-
-		if (DivMorale.PROJECTILES.getD(div) > (div.menNrOf()>>1) || div.settings.isFighting())
-			speed *= 0.75;
+		double speed = div.speed; 
+		
 		int distX = dest.x()-a.physics.body().cX();
 		int distY = dest.y()-a.physics.body().cY();
 		double dist = distX*distX + distY*distY;
+
 		if (dist > distFar)
-			speed = CLAMP.d(speed + (double)(dist-distFar)/distFar, 0.2, 0.9);
+			speed += a.speed.magintudeMax()*(dist-distFar)*distFarI;
 		else if (dist < distClose) {
-			speed = CLAMP.d(speed * (dist)/distClose, 0.1, speed);
-		}else {
-			
+			speed *= dist*distCloseI;
 		}
-		AISTATE s = AI.STATES().MOVE_TO.move(a, d, dest.x(), dest.y(), 0.05, speed*a.speed.magintudeMax());
-		DIR dir = div.position().dir(a.divSpot());
-		if (dir != null) {
-			if (div.settings.threatAt(dir))
-				a.speed.setDirCurrent(dir);
-			else if(div.settings.isFighting()) {
-				a.speed.setDirCurrent(div.position().dir());
+
+		speed = CLAMP.d(speed, C.TILE_SIZEH, a.speed.magintudeMax());
+		
+		AISTATE s = AI.STATES().MOVE_TO.move(a, d, dest.x(), dest.y(), 0.05, speed);
+
+		if (dist < distFar) {
+			DIR dir = div.position().dir(a.divSpot());
+			if (dir != null) {
+				if (div.settings.threatAt(dir))
+					a.speed.setDirCurrent(dir);
+				else if(div.settings.isFighting()) {
+					a.speed.setDirCurrent(div.position().dir());
+				}
 			}
 		}
+		
 		
 		return s;
 	}

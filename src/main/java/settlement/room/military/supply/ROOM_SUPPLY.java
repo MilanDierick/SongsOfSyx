@@ -15,7 +15,7 @@ import snake2d.util.file.FileGetter;
 import snake2d.util.file.FilePutter;
 import snake2d.util.sets.LISTE;
 import view.sett.ui.room.UIRoomModule;
-import world.army.WARMYD.WArmySupply;
+import world.army.ADSupply;
 
 public final class ROOM_SUPPLY extends RoomBlueprintIns<SupplyInstance> implements ROOM_EMPLOY_AUTO{
 
@@ -97,7 +97,7 @@ public final class ROOM_SUPPLY extends RoomBlueprintIns<SupplyInstance> implemen
 		return tally.reservable(tx, ty, res);
 	}
 	
-	public int reservable(WArmySupply s) {
+	public int reservable(ADSupply s) {
 		return tally.amount(s.res)-tally.reserved(s.res);
 	}
 	

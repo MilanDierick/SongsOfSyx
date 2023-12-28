@@ -1,18 +1,17 @@
 package init.race;
 
 import settlement.entity.humanoid.HCLASS;
-import settlement.main.SETT;
-import settlement.room.main.RoomBlueprintImp;
-import settlement.room.main.RoomsJson;
-import settlement.room.spirit.temple.ROOM_TEMPLE;
-import settlement.stats.*;
-import settlement.stats.STANDING.StandingDef;
-import settlement.stats.StatsBurial.StatGrave;
-import settlement.stats.StatsEquippables.EQUIPPABLE;
-import settlement.stats.StatsMultipliers.StatMultiplier;
-import settlement.stats.StatsReligion.Religion;
-import settlement.stats.StatsService.StatService;
-import settlement.stats.StatsTraits.StatTrait;
+import settlement.stats.STATS;
+import settlement.stats.colls.StatsBurial.StatGrave;
+import settlement.stats.colls.StatsService.StatService;
+import settlement.stats.colls.StatsTraits;
+import settlement.stats.colls.StatsTraits.StatTrait;
+import settlement.stats.equip.Equip;
+import settlement.stats.muls.StatsMultipliers.StatMultiplier;
+import settlement.stats.standing.StatStanding;
+import settlement.stats.standing.StatStanding.StandingDef;
+import settlement.stats.stat.STAT;
+import settlement.stats.util.StatsJson;
 import snake2d.Errors;
 import snake2d.util.file.Json;
 import snake2d.util.sets.*;
@@ -20,12 +19,10 @@ import snake2d.util.sets.Tuple.TupleImp;
 
 public class RaceStats {
 
-	private final double[] multipliers;
 	private final double[] traitOccurence = new double[64];
 	private final StandingDef[] reps;
 	private final double[][] repNormalized;
 	private final ArrayList<LIST<STAT>> standings = new ArrayList<>(HCLASS.ALL().size());
-	private double[] religions = new double[SETT.ROOMS().TEMPLES.size()];
 	private final LinkedList<Tuple<STAT, Double>> arrival = new LinkedList<>();
 	
 	public RaceStats(Race race, Json json) {
@@ -48,14 +45,11 @@ public class RaceStats {
 		
 		{
 			
-			multipliers = new double[STATS.MULTIPLIERS().all().size()];
-			for (StatMultiplier m : STATS.MULTIPLIERS().all()) {
-				multipliers[m.index()] = m.defValue;
-			}
+
 			new StatsJson(json) {
 				
 				@Override
-				public void doWithTheJson(StatCollection col, STAT s, Json j, String key) {
+				public void doWithTheJson(STAT s, Json j, String key) {
 					j = j.json(key);
 					boolean prio = j.has("PRIO");
 					StandingDef def = new StandingDef(j);
@@ -66,8 +60,11 @@ public class RaceStats {
 
 				@Override
 				public void doWithMultiplier(StatMultiplier m, Json j, String key) {
-					multipliers[m.index()] = j.d(key, 0, 1);
+					// TODO Auto-generated method stub
+					
 				}
+
+				
 			};
 			
 		}
@@ -108,7 +105,7 @@ public class RaceStats {
 			for (StatService s : STATS.SERVICE().allE()) {
 				StandingDef d = reps[s.total().index()];
 				
-				s.permission().set(c, race, !s.usesTarget || d.get(c).max > 0);
+				s.permission().setD(c.get(race), d.get(c).max > 0 ? 1 : 0);
 			}
 			
 			for (StatGrave s : STATS.BURIAL().graves()) {
@@ -119,46 +116,21 @@ public class RaceStats {
 			//reps[STATS.ENV().CLIMATE.index()].get(c).dismiss = true;
 		}
 		
-		{
-			Json jj = json.json("RELIGION_INCLINATION");
-			for (int i = 0; i < STATS.RELIGION().ALL.size(); i++) {
-				religions[i] = STATS.RELIGION().ALL.get(i).inclination;
-			}
-			
-			for (RoomBlueprintImp b : RoomsJson.get("TEMPLE", jj)) {
-				ROOM_TEMPLE t = (ROOM_TEMPLE) b;
-				if ((jj.has(t.key)))
-					religions[t.typeIndex()] = jj.d(t.key);
-			}
-			
-			
-			double m = 0;
-			for (double d : religions)
-				m += d;
-			if (m != 0) {
-				for (int i = 0; i < religions.length; i++)
-					religions[i] /= m;
-			}else {
-				m = 1.0/religions.length;
-				for (int i = 0; i < religions.length; i++)
-					religions[i] = m;
-			}
-		}
+
 		
 		if (json.has("STATS_ON_SPAWN")) {
 			
 			new StatsJson("STATS_ON_SPAWN", json) {
 				
 				@Override
-				public void doWithTheJson(StatCollection coll, STAT s, Json j, String key) {
-					arrival.add(new TupleImp<STAT, Double>(s, j.d(key)));
-					
-				}
-				
-				@Override
 				public void doWithMultiplier(StatMultiplier m, Json j, String key) {
 					// TODO Auto-generated method stub
 					
+				}
+
+				@Override
+				public void doWithTheJson(STAT s, Json j, String key) {
+					arrival.add(new TupleImp<STAT, Double>(s, j.d(key)));
 				}
 			};
 		}
@@ -169,32 +141,26 @@ public class RaceStats {
 		return arrival;
 	}
 	
-	public double religion(Religion r) {
-		return religions[r.index()];
-	}
+
 	
 	public double traitOccurence(StatTrait t) {
 		return traitOccurence[t.index()];
 	}
 	
-	public int equipArrivalLevel(EQUIPPABLE e) {
+	public int equipArrivalLevel(Equip e) {
 		return 0;
 	}
 	
-	public StandingDef def(STANDING s) {
+	public StandingDef def(StatStanding s) {
 		return reps[s.stat().index()];
 	}
 	
-	public double defNormalized(HCLASS c, STANDING s) {
+	public double defNormalized(HCLASS c, StatStanding s) {
 		return repNormalized[c.index()][s.stat().index()];
 	}
 	
 	public LIST<STAT> standings(HCLASS c){
 		return standings.get(c.index());
-	}
-	
-	public double multiplier(StatMultiplier mul) {
-		return multipliers[mul.index()];
 	}
 	
 }

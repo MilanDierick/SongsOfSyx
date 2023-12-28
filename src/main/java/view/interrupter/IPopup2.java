@@ -7,8 +7,10 @@ import snake2d.util.datatypes.COORDINATE;
 import snake2d.util.gui.GuiSection;
 import snake2d.util.gui.clickable.CLICKABLE;
 import snake2d.util.gui.renderable.RENDEROBJ;
+import snake2d.util.misc.ACTION;
 import util.gui.misc.GBox;
-import util.gui.panel.GPanelS;
+import util.gui.panel.GPanel;
+import view.main.VIEW;
 
 public final class IPopup2{
 	
@@ -24,9 +26,15 @@ public final class IPopup2{
 
 	
 	public void show(RENDEROBJ s, CLICKABLE trigger) {
+		show(s, trigger, false);
+		
+	}
+	
+	public void show(RENDEROBJ s, CLICKABLE trigger, boolean centreAtMouse) {
 		this.s.clear();
 		this.s.add(s);
-		show(trigger);
+		this.trigger = trigger;
+		showP(trigger.body().cX(), trigger.body().cY(), centreAtMouse);
 		
 	}
 	
@@ -34,35 +42,34 @@ public final class IPopup2{
 		return s;
 	}
 	
-	public void show(CLICKABLE trigger) {
-		this.trigger = trigger;
-		showP(trigger.body().cX(), trigger.body().cY());
-	}
-	
 	public void close() {
 		inter.hide();
 	}
 	
-	public void show(int x, int y) {
-		this.trigger = null;
-		showP(x, y);
-	}
 	
 	public boolean showing() {
 		return inter.isActivated();
 	}
 	
-	protected void showP(int x, int y) {
+	protected void showP(int x, int y, boolean centre) {
 		
 		int M = C.SG*32;
 		
-		
-		s.body().moveCX(x);
-		if (y > C.HEIGHT()/2){
-			s.body().moveY2(y-M);
+		if (centre) {
+			s.body().moveC(VIEW.mouse());
+			if (!inter.isActivated()) {
+				m.add(inter);
+			}
 		}else {
-			s.body().moveY1(y+M);
+			s.body().moveCX(x);
+			if (y > C.HEIGHT()/2){
+				s.body().moveY2(y-M);
+			}else {
+				s.body().moveY1(y+M);
+			}
 		}
+		
+		
 		
 		if (s.body().x2()+M >= C.WIDTH()) {
 			s.body().moveX2(C.WIDTH()-M);
@@ -87,11 +94,19 @@ public final class IPopup2{
 
 	private class Inter extends Interrupter {
 		
-		private final GPanelS box;
+		private final GPanel box;
+		ACTION exit = new ACTION() {
+			
+			@Override
+			public void exe() {
+				hide();
+			}
+		};
+		
 		
 		Inter(GuiSection s){
-			box = new GPanelS();
-			box.setButtBg();
+			box = new GPanel();
+			box.setButt();
 		}
 		
 		@Override
@@ -104,7 +119,8 @@ public final class IPopup2{
 			if (button == MButt.RIGHT){
 				hide();
 			}else if(button == MButt.LEFT){
-				s.click();
+				if (!s.click())
+					box.click();
 			}
 		}
 		
@@ -129,13 +145,15 @@ public final class IPopup2{
 
 		@Override
 		protected boolean hover(COORDINATE mCoo, boolean mouseHasMoved) {
-			return s.hover(mCoo);
+			return s.hover(mCoo) || box.hover(mCoo);
 		}
 
 		@Override
 		protected boolean render(Renderer r, float ds) {
 			box.inner().set(s);
+			box.clickActionSet(exit);
 			box.render(r, ds);
+			//box.moveExit(exit);
 			s.render(r, ds);
 			if (trigger != null) {
 				trigger.selectTmp();

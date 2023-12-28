@@ -6,24 +6,26 @@ import static settlement.room.main.construction.ConstructionData.*;
 import java.io.IOException;
 
 import init.sprite.SPRITES;
-import settlement.main.*;
-import settlement.main.RenderData.RenderIterator;
+import settlement.main.ON_TOP_RENDERABLE;
+import settlement.main.SETT;
 import settlement.room.main.*;
 import settlement.room.main.construction.ConstructionData;
 import settlement.room.main.construction.ConstructionInit;
 import settlement.room.main.furnisher.*;
 import settlement.room.main.util.RoomState;
-import settlement.tilemap.TBuilding;
+import settlement.tilemap.terrain.TBuilding;
 import snake2d.Renderer;
 import snake2d.util.color.COLOR;
 import snake2d.util.color.ColorImp;
 import snake2d.util.datatypes.*;
 import snake2d.util.file.*;
-import snake2d.util.misc.TOGGLEBLE;
 import util.colors.GCOLORS_MAP;
+import util.data.BOOLEAN.BOOLEANImp;
+import util.data.BOOLEAN.BOOLEAN_MUTABLE;
+import util.rendering.RenderData;
+import util.rendering.RenderData.RenderIterator;
 import util.rendering.ShadowBatch;
-import view.tool.PLACABLE;
-import view.tool.PlacableFixed;
+import view.tool.*;
 
 public final class RoomPlacer {
 
@@ -36,13 +38,10 @@ public final class RoomPlacer {
 	final UtilExtraCost cost = new UtilExtraCost();
 	final UtilPlacability placability = new UtilPlacability(this);
 	public final PlacerDoor door;
-	public final PLACABLE placerDoor;
+	public final PlacableMulti placerDoor;
 	public final UtilStructure structure = new UtilStructure(this);
 	
-	public final TOGGLEBLE.Imp buildOnWalls = new TOGGLEBLE.Imp();
-	{
-		buildOnWalls.set(true);
-	}
+	public final BOOLEANImp buildOnWalls = new BOOLEANImp(true);
 	public final AutoWalls autoWalls = new AutoWalls();
 	
 	final PLACEMENT p;
@@ -128,18 +127,18 @@ public final class RoomPlacer {
 		}
 		COLOR.unbind();
 		
-		if (autoWalls.isOn()) {
+		if (autoWalls.is()) {
 			door.renderWall(r, i);
 		}
 		
 		
 	}
 	
-	public class AutoWalls implements TOGGLEBLE{
+	public class AutoWalls implements BOOLEAN_MUTABLE{
 		boolean on = true;
 		
 		@Override
-		public boolean isOn() {
+		public boolean is() {
 			return on && blueprint() != null && blueprint().constructor().mustBeIndoors();
 		}
 
@@ -148,8 +147,9 @@ public final class RoomPlacer {
 		}
 		
 		@Override
-		public void set(boolean bool) {
+		public BOOLEAN_MUTABLE set(boolean bool) {
 			on = bool;
+			return this;
 		}
 	}
 	
@@ -267,7 +267,7 @@ public final class RoomPlacer {
 		}
 		
 		if (blueprint().constructor().mustBeIndoors()) {
-			if (autoWalls.isOn()) {
+			if (autoWalls.is()) {
 				door.build(structure);
 			}else {
 				
@@ -301,7 +301,7 @@ public final class RoomPlacer {
 	}
 	
 	public boolean createProblemWalls() {
-		if (autoWalls.isOn())
+		if (autoWalls.is())
 			return door.createProblem() != null;
 		return false;
 	}
@@ -325,7 +325,7 @@ public final class RoomPlacer {
 	public int walls() {
 		if (instance.blue == null)
 			return 0;
-		if (autoWalls.isOn())
+		if (autoWalls.is())
 			return resources.walls;
 		return 0;
 	}
@@ -389,12 +389,6 @@ public final class RoomPlacer {
 		return false;
 	}
 	
-	public double squareness() {
-		if (instance.blue == null)
-			return 0;
-		return SETT.ENV().squareness.getPercent(instance);
-	}
-	
 	public double isolation() {
 		if (instance.blue == null)
 			return 0;
@@ -402,9 +396,9 @@ public final class RoomPlacer {
 			AREA a = placerItemSingle.itemAreaCurrent;
 			if (a == null)
 				return 0;
-			return door.isolation(instance.blue, a, autoWalls.isOn());
+			return door.isolation(instance.blue, a, autoWalls.is());
 		}else {
-			return door.isolation(instance.blue, instance, autoWalls.isOn());
+			return door.isolation(instance.blue, instance, autoWalls.is());
 		}
 	}
 	

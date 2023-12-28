@@ -9,7 +9,7 @@ import snake2d.util.sprite.TextureCoords;
 
 class RenderModeDebug extends RenderMode{
 
-	private final VboSpritePointsOpti vbo;
+	private final VboSprite vbo;
 	private final VboParticles vboParticles;
 	
 	private final _FBODebug fbo;
@@ -17,7 +17,7 @@ class RenderModeDebug extends RenderMode{
 	
 	public RenderModeDebug(SETTINGS sett) {
 		
-		vbo = VboSpritePointsOpti.getDebug(sett);
+		vbo = VboSprite.getDebug(sett);
 		fbo = new _FBODebug(sett);
 		vboParticles = VboParticles.getDebug(sett);
 		GlHelper.enableDepthTest(false);
@@ -37,9 +37,9 @@ class RenderModeDebug extends RenderMode{
 	}
 
 	@Override
-	public void newLayer(boolean keepLights, int pointSize){
+	public int newLayer(boolean keepLights, int pointSize){
 		vboParticles.setNew(pointSize);
-		vbo.setNew();
+		return vbo.setNew();
 	}
 
 	@Override
@@ -143,6 +143,12 @@ class RenderModeDebug extends RenderMode{
 	@Override
 	public void renderDisplace(float tx1, float ty1, float dx1, float dy1, int w, int h, double scale, int x1, int x2,
 			int y1, int y2, COLOR color, OPACITY opacity) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void setMaxDepth(int x1, int x2, int y1, int y2, TextureCoords stencil, int depth) {
 		// TODO Auto-generated method stub
 		
 	}

@@ -4,7 +4,6 @@ import init.C;
 import settlement.entity.ENTITY;
 import settlement.entity.humanoid.Humanoid;
 import settlement.entity.humanoid.ai.main.AI;
-import settlement.main.RenderData;
 import settlement.main.SETT;
 import settlement.overlay.RADIUS_INTER;
 import settlement.room.main.RoomInstance;
@@ -15,6 +14,7 @@ import snake2d.util.bit.Bit;
 import snake2d.util.datatypes.COORDINATE;
 import snake2d.util.datatypes.COORDINATEE;
 import snake2d.util.rnd.RND;
+import util.rendering.RenderData;
 import util.rendering.ShadowBatch;
 
 public final class GuardInstance extends RoomInstance implements RADIUS_INTER{

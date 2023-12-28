@@ -7,8 +7,6 @@ import snake2d.util.datatypes.Coo;
 
 final class Hearth implements FSERVICE{
 
-
-	private static final int NOWOOD = 0;
 	private static final int AVAILABLE = 1;
 	private static final int RESERVED = 2;
 	private static final int USED = 3;
@@ -34,13 +32,7 @@ final class Hearth implements FSERVICE{
 		return null;
 	}
 	
-	boolean makeAvailable() {
-		if (state() == NOWOOD) {
-			stateSet(AVAILABLE);
-			return true;
-		}
-		return false;
-	}
+
 	
 	private void save() {
 		
@@ -49,18 +41,16 @@ final class Hearth implements FSERVICE{
 		if (old != data) {
 			int current = data;
 			data = old;
-			if (state() == NOWOOD)
-				ins.inactive --;
 			if (state() == USED)
 				ins.used --;
-			ins.service.report(this, ins.blueprintI().data, -1);
+			if (findableReservedCanBe())
+				ins.service.report(this, ins.blueprintI().data, -1);
 			data = current;
-			if (state() == NOWOOD)
-				ins.inactive ++;
 			if (state() == USED)
 				ins.used ++;
+			if (findableReservedCanBe())
+				ins.service.report(this, ins.blueprintI().data, 1);
 			ROOMS().data.set(ins, coo, data);
-			ins.service.report(this, ins.blueprintI().data, 1);
 			
 		}
 	}
@@ -79,12 +69,7 @@ final class Hearth implements FSERVICE{
 	public void consume() {
 		if (state() != USED)
 			throw new RuntimeException();
-		ins.use();
-		if (ins.available() > 1) {
-			stateSet(AVAILABLE);
-		}else {
-			stateSet(NOWOOD);
-		}
+		stateSet(AVAILABLE);
 	}
 	
 	@Override
@@ -128,7 +113,11 @@ final class Hearth implements FSERVICE{
 	}
 	
 	void dispose(){
-		stateSet(NOWOOD);
+		stateSet(RESERVED);
+	}
+	
+	void init() {
+		stateSet(AVAILABLE);
 	}
 
 

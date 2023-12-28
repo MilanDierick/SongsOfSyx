@@ -7,6 +7,7 @@ import init.C;
 import settlement.main.SETT;
 import settlement.path.finder.SFinderFindable;
 import settlement.room.main.ROOMS.RoomResource;
+import settlement.room.main.employment.RoomEmploymentSimple;
 import settlement.thing.pointlight.LOS;
 import snake2d.util.color.COLOR;
 import snake2d.util.color.ColorImp;
@@ -79,6 +80,9 @@ public abstract class RoomBlueprint extends RoomResource implements MAP_OBJECT<R
 	public RoomEmploymentSimple employment() {
 		return null;
 	}
+
+
+
 
 
 	

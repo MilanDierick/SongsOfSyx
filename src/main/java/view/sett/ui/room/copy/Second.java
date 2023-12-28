@@ -1,12 +1,12 @@
 package view.sett.ui.room.copy;
 
-import init.sprite.ICON.MEDIUM;
 import init.sprite.SPRITES;
 import settlement.job.Job;
 import snake2d.LOG;
 import snake2d.SPRITE_RENDERER;
 import snake2d.util.datatypes.COORDINATE;
 import snake2d.util.datatypes.DIR;
+import snake2d.util.sprite.SPRITE;
 import view.tool.PLACABLE;
 import view.tool.PlacableFixed;
 
@@ -68,6 +68,9 @@ final class Second extends PlacableFixed{
 	public void renderPlaceHolder(SPRITE_RENDERER r, int mask, int x, int y, int tx, int ty, int rx, int ry,
 			boolean isPlacable, boolean areaIsPlacable) {
 		
+		if (blocked(tx, ty)) {
+			blockedD(tx, ty);
+		}
 		
 		if (blocked(tx, ty)) {
 			SPRITES.cons().color.blocked.bind();
@@ -96,7 +99,7 @@ final class Second extends PlacableFixed{
 	}
 
 	@Override
-	public MEDIUM getIcon() {
+	public SPRITE getIcon() {
 		return null;
 	}
 
@@ -137,6 +140,21 @@ final class Second extends PlacableFixed{
 			LOG.ln(j);
 		if (j != null && j.placer().isPlacable(tx, ty, null, null) != null)
 			return true;
+			
+		return false;
+	}
+	
+	private boolean blockedD(int tx, int ty) {
+		if (room.isBlocked(tx, ty)) {
+			return true;
+		}
+		COORDINATE s = dest.transform(tx, ty);
+		Job j = Jobs.get(s.x(), s.y());
+		if (j != null && j.placer() == null)
+			LOG.ln(j);
+		if (j != null && j.placer().isPlacable(tx, ty, null, null) != null) {
+			return true;
+		}
 			
 		return false;
 	}

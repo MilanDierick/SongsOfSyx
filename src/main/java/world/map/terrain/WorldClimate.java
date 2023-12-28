@@ -1,6 +1,6 @@
 package world.map.terrain;
 
-import static world.World.*;
+import static world.WORLD.*;
 
 import java.io.IOException;
 
@@ -11,7 +11,7 @@ import snake2d.util.file.FilePutter;
 import snake2d.util.map.*;
 import snake2d.util.misc.CLAMP;
 import snake2d.util.sets.Bitsmap1D;
-import world.World.WorldResource;
+import world.WORLD.WorldResource;
 
 public final class WorldClimate extends WorldResource{
 

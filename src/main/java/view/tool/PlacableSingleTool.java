@@ -18,7 +18,7 @@ final class PlacableSingleTool extends placeFunc {
 
 	private PlacableSingle placable;
 	@Override
-	void update(float ds, GameWindow window, boolean pressed) {
+	void updateHovered(float ds, GameWindow window, boolean pressed) {
 		
 		
 	}

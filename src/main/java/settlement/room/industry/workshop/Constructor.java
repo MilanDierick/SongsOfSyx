@@ -6,9 +6,7 @@ import java.io.IOException;
 
 import init.C;
 import init.RES;
-import init.sprite.ICON;
 import init.sprite.game.SheetPair;
-import settlement.main.RenderData.RenderIterator;
 import settlement.main.SETT;
 import settlement.path.AVAILABILITY;
 import settlement.room.main.*;
@@ -18,9 +16,10 @@ import settlement.room.main.util.RoomInitData;
 import settlement.room.sprite.*;
 import snake2d.SPRITE_RENDERER;
 import snake2d.util.color.OPACITY;
-import snake2d.util.datatypes.AREA;
-import snake2d.util.datatypes.DIR;
+import snake2d.util.datatypes.*;
 import snake2d.util.file.Json;
+import snake2d.util.sprite.SPRITE;
+import util.rendering.RenderData.RenderIterator;
 import util.rendering.ShadowBatch;
 
 final class Constructor extends Furnisher{
@@ -38,10 +37,20 @@ final class Constructor extends Furnisher{
 	
 	protected Constructor(ROOM_WORKSHOP blue, RoomInitData init)
 			throws IOException {
-		super(init, 3, 3, 88, 44);
+		super(init, 3, 3);
 		this.blue = blue;
 		
-		workers = new FurnisherStat.FurnisherStatEmployees(this);
+		workers = new FurnisherStat.FurnisherStatEmployees(this) {
+			@Override
+			public double get(AREA area, double acc) {
+				int am = 0;
+				for (COORDINATE c : area.body()) {
+					if (SETT.ROOMS().fData.tileData.get(c) == B_WORK || SETT.ROOMS().fData.tileData.get(c) == B_FETCH)
+						am++;
+				}
+				return am;
+			}
+		};
 		efficiency = new FurnisherStat.FurnisherStatEfficiency(this, workers);
 		output = new FurnisherStat.FurnisherStatProduction2(this, blue) {
 			@Override
@@ -56,7 +65,7 @@ final class Constructor extends Furnisher{
 			
 			@Override
 			protected boolean joins(int tx, int ty, int rx, int ry, DIR d, FurnisherItem item) {
-				return item.sprite(rx, ry) instanceof RoomSpriteComboN;
+				return item.sprite(rx, ry) instanceof RoomSpriteCombo;
 			}
 		};
 		
@@ -68,7 +77,7 @@ final class Constructor extends Furnisher{
 				super.render(r, s, data, it, degrade, isCandle);
 				WorkshopInstance ins = blue.get(it.tx(), it.ty());
 				if (!isCandle && ins != null) {
-					ICON.MEDIUM i = ins.industry().outs().get(0).resource.icon();
+					SPRITE i = ins.industry().outs().get(0).resource.icon();
 					OPACITY.O99.bind();
 					i.render(r, it.x()+8, it.x()+C.TILE_SIZE-8, it.y()+8, it.y()+C.TILE_SIZE-8);
 					OPACITY.unbind();
@@ -155,6 +164,7 @@ final class Constructor extends Furnisher{
 			@Override
 			public void renderAbove(SPRITE_RENDERER r, ShadowBatch s, int data, RenderIterator it, double degrade) {
 				above.render(r, s, getData2(it), it, degrade, false);
+
 			}
 			
 			@Override
@@ -262,7 +272,7 @@ final class Constructor extends Furnisher{
 					new FurnisherItem(tiles, width*height);
 				}
 			}
-			flush(1, 3);
+			flush(1, 1, 3);
 		}
 		
 		new FurnisherItem(new FurnisherItemTile[][] {
@@ -428,13 +438,13 @@ final class Constructor extends Furnisher{
 		flush(3);
 	}
 
-	private static class STable extends RoomSpriteComboN {
+	private static class STable extends RoomSpriteCombo {
 
 		private final RoomSprite top;
 		
 		public STable(Json json) throws IOException {
 			super(json, "TABLE_COMBO");
-			top = new RoomSpriteComboN(json, "TABLE_TOP_COMBO");
+			top = new RoomSpriteCombo(json, "TABLE_TOP_COMBO");
 		}
 		
 		@Override

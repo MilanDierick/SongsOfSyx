@@ -8,7 +8,7 @@ import init.D;
 import init.paths.PATHS;
 import init.paths.PATHS.PATHS_BASE;
 import launcher.LSettings;
-import launcher.LSettings.LSetting;
+import launcher.LSettings.LSettingInt;
 import snake2d.*;
 import snake2d.Displays.DisplayMode;
 import snake2d.util.misc.CLAMP;
@@ -41,7 +41,7 @@ public final class S {
 	public final Setting volumeMusic;
 	public final Setting volumeSound;
 	public final Setting muteUnfocused;
-	public final Setting nightGamma;
+	public final Setting brightness;
 	public final Setting autoSaveInterval;
 	public final Setting autoSaveFiles;
 	public final Setting scroll;
@@ -91,8 +91,8 @@ public final class S {
 			}
 		};
 		
-		nightGamma = new SettingPerc(all, settings.nightGamma, D.g("Night-Gamma"),
-				D.g("Night-GammaD", "The brightness of nights in the game."));
+		brightness = new SettingPerc(all, settings.brightness, D.g("Brightness"),
+				D.g("BrightnessD", "The brightness of the game."));
 
 		lightCycle = get(settings.lightCycle, D.g("Day-cycle"), D.g("Day-cycleD", "Simulates the day and night cycle visually."),
 				new CharSequence[] { DicMisc.¤¤off, DicMisc.¤¤on});
@@ -163,7 +163,7 @@ public final class S {
 		return settings.version.get() != VERSION.VERSION;
 	}
 	
-	private Setting get(LSetting s, CharSequence name, CharSequence desc,
+	private Setting get(LSettingInt s, CharSequence name, CharSequence desc,
 			CharSequence[] values) {
 		return new Setting(all, s, name, desc) {
 
@@ -200,9 +200,9 @@ public final class S {
 
 	public static abstract class Setting extends INFO implements INTE {
 
-		private final LSetting s;
+		protected final LSettingInt s;
 		
-		Setting(LISTE<Setting> all, LSetting s , CharSequence name, CharSequence desc) {
+		Setting(LISTE<Setting> all, LSettingInt s , CharSequence name, CharSequence desc) {
 			super(name, desc);
 			this.s = s;
 			all.add(this);
@@ -229,7 +229,7 @@ public final class S {
 
 	private static class SettingPerc extends Setting {
 
-		SettingPerc(LISTE<Setting> all, LSetting s, CharSequence name, CharSequence desc) {
+		SettingPerc(LISTE<Setting> all, LSettingInt s, CharSequence name, CharSequence desc) {
 			super(all, s, name, desc);
 		}
 
@@ -242,7 +242,20 @@ public final class S {
 		public int max() {
 			return 20;
 		}
+		
+		@Override
+		public void set(int t) {
+			double d = t/5.0;
+			d = CLAMP.d(d, min(), max());
+			s.set(s.max()*t/max());
+			//super.set(t);
+		}
 
+		@Override
+		public int get() {
+			return (int) (s.getD()*max());
+		}
+		
 		@Override
 		public void getValue(Str str) {
 			str.clear().add(get() * 5).add('%');
@@ -285,7 +298,6 @@ public final class S {
 					LOG.ln(settings.screenMode.get());
 					LOG.ln(settings.fullScreenDisplay.get());
 					LOG.ln(settings.monitor.get());
-					LOG.ln(settings.fill.get());
 					
 					for (int i = 0; i < Displays.monitors(); i++) {
 						LOG.ln("M " + i + " " + Displays.current(i));
@@ -355,12 +367,17 @@ public final class S {
 			private int nWidth() {
 				if (settings.screenMode.get() == LSettings.screenModeWindowed)
 					return (int) Math.ceil(Displays.current(monitor()).width * settings.windowWidth.getD());
+				else if (settings.screenMode.get() == LSettings.screenModeBorderLess)
+					return (int) Math.ceil(Displays.current(monitor()).width / (1.0 + settings.windowBorderLessScale.getD()));
+				
 				return display().width;
 			}
 			
 			private int nHeight() {
 				if (settings.screenMode.get() == LSettings.screenModeWindowed)
 					return (int) Math.ceil(Displays.current(monitor()).height * settings.windowHeight.getD());
+				else if (settings.screenMode.get() == LSettings.screenModeBorderLess)
+					return (int) Math.ceil(Displays.current(monitor()).height / (1.0 + settings.windowBorderLessScale.getD()));
 				return display().height;
 			}
 
@@ -376,7 +393,7 @@ public final class S {
 
 			@Override
 			public boolean getFitToScreen() {
-				return settings.screenMode.get() == LSettings.screenModeBorderLess || settings.screenMode.get() == LSettings.screenModeWindowed || settings.fill.get() == 1 || (settings.windowWidth.getD() == 1 && settings.windowHeight.getD() == 1);
+				return settings.screenMode.get() == LSettings.screenModeBorderLess || settings.screenMode.get() == LSettings.screenModeWindowed || (settings.windowWidth.getD() == 1 && settings.windowHeight.getD() == 1);
 			}
 
 			@Override
@@ -389,7 +406,7 @@ public final class S {
 					return Displays.available(monitor()).get(settings.fullScreenDisplay.get());
 				}
 
-				if (settings.fill.get() == 1 || settings.screenMode.get() == LSettings.screenModeBorderLess) {
+				if (settings.screenMode.get() == LSettings.screenModeBorderLess) {
 					return Displays.current(monitor());
 				}
 				int width = (int) (Displays.current(monitor()).width * settings.windowWidth.getD());
@@ -399,7 +416,7 @@ public final class S {
 
 			@Override
 			public boolean decoratedWindow() {
-				return settings.decorated.get() == 1;
+				return settings.decorated.get() == 1 && settings.screenMode.get() == LSettings.screenModeWindowed;
 			}
 
 			@Override
@@ -415,9 +432,8 @@ public final class S {
 
 			@Override
 			public String openALDevice() {
-				return settings.audiodevice;
+				return settings.audiodevice.get();
 			}
-
 
 		};
 	}

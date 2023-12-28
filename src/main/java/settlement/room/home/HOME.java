@@ -3,6 +3,7 @@ package settlement.room.home;
 import init.race.Race;
 import settlement.entity.humanoid.Humanoid;
 import settlement.main.SETT;
+import settlement.room.home.HomeSettings.HomeSetting;
 import snake2d.util.datatypes.AREA;
 import snake2d.util.datatypes.COORDINATE;
 
@@ -28,7 +29,7 @@ public interface HOME extends AREA{
 	public int resourceAm(int ri);
 	public Race race();
 	public double isolation();
-	public HOME_TYPE availability();
+	public HomeSetting availability();
 	public HOME resUpdate();
 	public HOME done();
 	

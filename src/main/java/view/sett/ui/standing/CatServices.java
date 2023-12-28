@@ -5,17 +5,24 @@ import init.race.RACES;
 import init.race.Race;
 import init.sprite.UI.UI;
 import settlement.entity.humanoid.HCLASS;
-import settlement.stats.*;
-import settlement.stats.StatsService.StatService;
-import settlement.stats.StatsService.StatServiceGroup;
+import settlement.room.service.module.RoomServiceNeed;
+import settlement.stats.STATS;
+import settlement.stats.colls.StatsService;
+import settlement.stats.colls.StatsService.StatService;
+import settlement.stats.colls.StatsService.StatServiceGroup;
+import settlement.stats.stat.StatCollection;
 import snake2d.SPRITE_RENDERER;
+import snake2d.util.color.COLOR;
+import snake2d.util.color.OPACITY;
 import snake2d.util.gui.GUI_BOX;
 import snake2d.util.gui.GuiSection;
 import snake2d.util.gui.renderable.RENDEROBJ;
 import snake2d.util.sets.ArrayList;
 import util.colors.GCOLOR;
+import util.data.INT.INTE;
 import util.dic.DicMisc;
 import util.gui.misc.*;
+import util.gui.slider.GSliderInt;
 import util.gui.table.GScrollRows;
 import util.info.GFORMAT;
 import view.sett.ui.standing.Cats.Cat;
@@ -23,8 +30,6 @@ import view.sett.ui.standing.Cats.Cat;
 final class CatServices extends Cat {
 	
 	private static CharSequence ¤¤Other = "¤Other Services";
-	private static CharSequence ¤¤AllowRace = "¤Allow/deny access for Species";
-	private static CharSequence ¤¤Allow = "¤Allow/deny access for whole class";
 	
 	static {
 		D.ts(CatServices.class);
@@ -37,6 +42,7 @@ final class CatServices extends Cat {
 		titleSet(s.info.name);
 		ArrayList<RENDEROBJ> rens = new ArrayList<>(s.all().size() + 1);
 		
+		
 		for (StatServiceGroup g : s.groups()) {
 			rens.add(new StatRowService(g, cl, false));
 		}
@@ -45,6 +51,7 @@ final class CatServices extends Cat {
 			GuiSection sec = new GuiSection();
 			sec.add(new GHeader(¤¤Other));
 			for (StatService ss : s.others()) {
+				
 				boolean has = false;
 				for (Race r : RACES.all()) {
 					if (ss.total().standing().definition(r).get(cl).max > 0) {
@@ -173,34 +180,87 @@ final class CatServices extends Cat {
 					}
 					super.hoverInfoGet(text);
 				}
+				
+				@Override
+				public void render(SPRITE_RENDERER r, float ds) {
+					super.render(r, ds);
+					if (!used()) {
+						OPACITY.O50.bind();
+						COLOR.BLACK.render(r, body());
+						OPACITY.unbind();
+					}
+				}
+				
+				private boolean used() {
+					if (ss.service() instanceof RoomServiceNeed) {
+						RoomServiceNeed n = (RoomServiceNeed) ss.service();
+						if (n.need.rate.get(cl.get(CitizenMain.current)) == 0) {
+							return false;
+						}
+					}
+					return true;
+				}
 			};
 			s.add(new StatRow.Arrow(ss.total(), cl));
-			s.addRightC(4, new GButt.Checkbox() {
-				@Override
-				protected void clickA() {
-					ss.permission().toggle(cl, CitizenMain.current);
-				}
+			
+			INTE in = new INTE() {
 				
 				@Override
-				protected void renAction() {
-					selectedSet(is());
-					//activeSet(ss.usesTarget);
+				public int min() {
+					return 0;
 				}
 				
-				private boolean is() {
-					return ss.permission().get(cl, CitizenMain.current);
+				@Override
+				public int max() {
+					return ss.permission().max(cl.get(CitizenMain.current));
 				}
 				
+				@Override
+				public int get() {
+					return ss.permission().get(cl.get(CitizenMain.current));
+				}
+				
+				@Override
+				public void set(int t) {
+					ss.permission().set(cl.get(CitizenMain.current), t);
+				}
+			};
+			
+			s.addRightC(4, new GSliderInt(in, 64, false) {
 				@Override
 				public void hoverInfoGet(GUI_BOX text) {
-					if (CitizenMain.current != null)
-						text.text(¤¤AllowRace);
-					else
-						text.text(¤¤Allow);
+					GBox b = (GBox) text;
+					b.title(ss.permission().info().name);
+					b.add(GFORMAT.perc(b.text(), in.getD()));
 				}
 			});
+			
+//			s.addRightC(4, new GButt.Checkbox() {
+//				@Override
+//				protected void clickA() {
+//					ss.permission().toggle(cl, CitizenMain.current);
+//				}
+//				
+//				@Override
+//				protected void renAction() {
+//					selectedSet(is());
+//					//activeSet(ss.usesTarget);
+//				}
+//				
+//				private boolean is() {
+//					return ss.permission().get(cl, CitizenMain.current);
+//				}
+//				
+//				@Override
+//				public void hoverInfoGet(GUI_BOX text) {
+//					if (CitizenMain.current != null)
+//						text.text(¤¤AllowRace);
+//					else
+//						text.text(¤¤Allow);
+//				}
+//			});
 			s.addRightC(4, ss.service().room().iconBig());
-			s.addRightC(4, new GText(UI.FONT().S, ss.service().names).lablifySub());
+			s.addRightC(4, new GText(UI.FONT().S, ss.service().room().info.names).lablifySub());
 			s.addCentredY(new GStat() {
 				
 				@Override

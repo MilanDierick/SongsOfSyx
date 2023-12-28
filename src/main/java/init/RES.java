@@ -4,9 +4,12 @@ import java.io.IOException;
 
 import game.GAME;
 import game.GameSaver;
+import game.boosting.BOOSTING;
 import init.biomes.*;
-import init.boostable.BOOSTABLES;
 import init.disease.DISEASES;
+import init.need.NEEDS;
+import init.race.RACES;
+import init.religion.Religions;
 import init.resources.RESOURCES;
 import init.sound.SOUND;
 import init.sprite.SPRITES;
@@ -47,22 +50,22 @@ public class RES {
 		
 		private Data() throws IOException{
 			RES.data = this;
-			
-			
-			
 
 			CORE.checkIn();
 			UI.init();
 			CORE.checkIn();
 			sprites = new SPRITES(this);
 			CORE.checkIn();
+			BOOSTING.init(null);
 
-			BUILDING_PREFS.init();
 			CLIMATES.init();
 			TERRAINS.init();
+			new NEEDS();
+			new RACES();
+			BUILDING_PREFS.init();
 			new DISEASES();
 			RESOURCES.init();
-			BOOSTABLES.init();
+			Religions.init();
 			CORE.checkIn();
 
 			debugger = new Debugger(UI.FONT().M);
@@ -76,7 +79,7 @@ public class RES {
 			
 			saver = new GameSaver();
 			
-			pathOnline = new PathUtilOnline(C.SETTLE_TSIZE);
+			pathOnline = new PathUtilOnline(SETT.TWIDTH);
 			circleIterator = new CircleCooIterator(120, pathOnline.getFlooder());
 			debugger.add(debugger.new Value(general1.name, 0, Formatter.PERCENTAGE) {
 				

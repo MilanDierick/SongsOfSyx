@@ -4,209 +4,191 @@ package snake2d;
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL20.*;
 
+import java.nio.IntBuffer;
+
 import org.lwjgl.opengl.GL11;
 
 import snake2d.util.light.LIGHT_AMBIENT;
 
-class VboLightAmbient extends VboAbs{
-    
+class VboLightAmbient extends VboAbsExt {
+
 	private boolean specialLayer;
 	private final Shader shader;
-	
-    VboLightAmbient(SETTINGS sett){
-    	
-    	super( GL11.GL_TRIANGLES,
-    			500,
-    			new VboAttribute(3, GL_FLOAT, false, 4), //direction/centre position	3*4
-    			new VboAttribute(2, GL_SHORT, false, 2), //coo							4
-    			new VboAttribute(3, GL_FLOAT, false, 4), //colour						3*4
-    			new VboAttribute(4, GL_UNSIGNED_BYTE, true, 1) //shaded + 3 padding
-    	);
-    	shader = new Shader(sett.getNativeWidth(), sett.getNativeHeight());
-    	
-    }   
+	private final IntBuffer sBuff;
+	private final VboSorter sorter;
 
-    private static class Shader extends VboShaderAbs{
+	VboLightAmbient(SETTINGS sett) {
 
-        private final int DIFFUSE_LOC;
-        private final int NORMAL_LOC;
-    	
-    	Shader(float width, float height){
-    		
-         	String VERTEX = "#version 330 core" + "\n"
-         			+ getScreenVec(width, height) 
-        			+ "const vec2 trans = vec2(-1.0,1.0);" + "\n"
-        			+ "const float sqrt2 = sqrt(2);" + "\n"
-        			
-        			+ "layout(location = 0) in vec3 in_tilt;" + "\n"
-        			+ "layout(location = 1) in vec2 in_posXY;" + "\n"
-        			+ "layout(location = 2) in vec3 in_color;" + "\n"
-        			+ "layout(location = 3) in vec4 in_shaded;" + "\n"
-        			
-        			+ "out vec3 v_tilt;" + "\n"
-        			+ "out vec3 v_color;" + "\n"
-        			+ "out vec3 v_dir;" + "\n"
-        			+ "out vec2 v_sampler_coo;" + "\n"
-        			
-        			+ "void main(){" + "\n"
-    					+ "v_tilt = in_tilt;" + "\n"
-    					+ "v_color = in_color;" + "\n"
-        				+ "v_sampler_coo = in_posXY*screen/2.0;" + "\n"
-        				+ "v_dir = (v_tilt - vec3(in_posXY, 0.0));" + "\n"
-        				+ "gl_Position = vec4((in_posXY * screen)+trans, in_shaded.x, 1.0);" + "\n"
-        			+ "}";
-         	
-         	
-        	String FRAGMENT = 
-        			"#version 330 core" + "\n"
-        			
-        			+ "in vec3 v_tilt;" + "\n"
-        			+ "in vec2 v_sampler_coo;" + "\n"
-        			+ "in vec3 v_color;" + "\n"
-        			+ "in vec3 v_dir;" + "\n"
-        			+ "uniform sampler2D Tdiffuse;" + "\n"
-        			+ "uniform sampler2D Tnormal;" + "\n"
-        			
-    				+ "layout(location = 0) out vec4 fragColor;" + "\n"
-    				
-    				+ "vec4 texColor;" + "\n"
-    				+ "vec3 normal;" + "\n"
+		super(GL11.GL_TRIANGLES, 1024*2*2, 
+				new VboAttribute(3, GL_FLOAT, false, 4), // direction/centre position 3*4
+				new VboAttribute(2, GL_SHORT, false, 2), // coo 4
+				new VboAttribute(3, GL_FLOAT, false, 4), // colour 3*4
+				new VboAttribute(4, GL_UNSIGNED_BYTE, true, 1) // shaded + 3 padding
+		);
+		shader = new Shader(sett.getNativeWidth(), sett.getNativeHeight(), "LightAmbient", null, "LightAmbient");
+		shader.setUniform1i("Tdiffuse", 2);
+		shader.setUniform1i("Tnormal", 3);
+		sBuff = buffer.asIntBuffer();
+		sorter = new VboSorter(32*MAX_ELEMENTS);
+		
+	}
 
-    				+ "float intensity;" + "\n"
-    				+ "float dottis;" + "\n"
-    				
-        			
-        			+ "void main(){" + "\n"
-        				
-        				+ "texColor = texture(Tdiffuse, v_sampler_coo);" + "\n"
-        				+ "if (texColor.w <= 0.0){discard; return;}" + "\n"
-        				
-        				+ "normal = texture(Tnormal, v_sampler_coo).rgb;" + "\n"
-        				+ "normal *= 2.0;" + "\n"
-        				+ "normal -= 1.0;" + "\n"
-    					
-
-    					+ "dottis = dot(normal.rgb, v_tilt);"
-    					+ "if (dottis > 0.0){" + "\n"
-        					+ "fragColor.rgb = texColor.rgb*dottis*v_color.rgb;" + "\n"
-        				+ "}else{" + "\n"
-        					+ "discard;" + "\n"
-    					+ "}" + "\n"
-        			+ "}";
-        	
-         	
-        	super.compile(VERTEX, FRAGMENT);
-    		
-            DIFFUSE_LOC = super.getUniformLocation("Tdiffuse");
-            NORMAL_LOC = super.getUniformLocation("Tnormal");
-            super.setUniform1i(DIFFUSE_LOC, 2);
-            super.setUniform1i(NORMAL_LOC, 3);
-        	
-    	}
-    	
-    }
-    
-	void setNew(){
+	void setNew() {
 		if (specialLayer)
 			return;
 		vTo[current] = count;
 		current++;
 		vFrom[current] = count;
 	}
-	
-	void setNewButKeepLight(){
+
+	void setNewButKeepLight() {
 		if (specialLayer)
 			return;
 		vTo[current] = count;
 		current++;
-		vFrom[current] = vFrom[current-1];
-		
+		vFrom[current] = vFrom[current - 1];
 	}
-	
-	void setNewFinal(){
+
+	void setNewFinal() {
 		if (specialLayer)
 			throw new RuntimeException("can't set final layer twice!");
 		specialLayer = true;
 		vTo[current] = count;
 		current++;
 		vFrom[current] = count;
-		
 	}
-    
-	void flush(){
+
+	void flush() {
+
+		sorter.fill(sBuff);
+		buffer.position(sBuff.position()*4);
 		
-		bindAndUpload();
-		
+		bind();
+		upload();
 		GlHelper.setBlendAdditative();
 		GlHelper.enableDepthTest(true);
 		GlHelper.setDepthTestLess();
 		shader.bind();
-		int i = 0;
 		vTo[current] = count;
-		while (i <= current){
-			if (specialLayer && i == current){
+		for (int i = 0; i <= current; i++) {
+			
+			int fromI = vFrom[i];
+			int toI = vTo[i];
+			if (specialLayer && i == current) {
 				GlHelper.Stencil.setLEQUALKeepOnFail(i);
-			}else{
+			} else {
 				GlHelper.Stencil.setEQUALKeepOnFail(i);
 			}
-			flush(vFrom[i], vTo[i]);
-			i++;
+			if (toI > fromI) {
+				flush(fromI, toI);
+			}
+			
+			
+			
 		}
+		
+//		int i = 0;
+//		vTo[current] = count;
+//		while (i <= current) {
+//			if (specialLayer && i == current) {
+//				GlHelper.Stencil.setLEQUALKeepOnFail(i);
+//			} else {
+//				GlHelper.Stencil.setEQUALKeepOnFail(i);
+//			}
+//			flush(vFrom[i], vTo[i]);
+//			i++;
+//		}
 		glUseProgram(0);
 		GlHelper.enableDepthTest(false);
 		GlHelper.setBlendNormal();
 		clear();
 
 	}
-	
-    void render(LIGHT_AMBIENT l,
-    		int x1, int x2, int y1, int y2, byte depth){
-    	
-    	buffer.putFloat(l.x()).putFloat(l.y()).putFloat(l.z());
-    	buffer.putShort((short)x1).putShort((short)y2);
-    	buffer.putFloat((float)l.r()).putFloat((float)l.g()).putFloat((float)l.b());
-    	buffer.put(depth);
-    	
-    	buffer.put(Byte.MAX_VALUE).put(Byte.MAX_VALUE).put(Byte.MAX_VALUE);
-    	
-    	//SE
-    	buffer.putFloat(l.x()).putFloat(l.y()).putFloat(l.z());
-    	buffer.putShort((short)x2).putShort((short)y2);
-    	buffer.putFloat((float)l.r()).putFloat((float)l.g()).putFloat((float)l.b());
-    	buffer.put(depth);
-    	
-    	buffer.put(Byte.MAX_VALUE).put(Byte.MAX_VALUE).put(Byte.MAX_VALUE);
-    	
-    	//NW
-    	buffer.putFloat(l.x()).putFloat(l.y()).putFloat(l.z());
-    	buffer.putShort((short)x1).putShort((short)y1);
-    	buffer.putFloat((float)l.r()).putFloat((float)l.g()).putFloat((float)l.b());
-    	buffer.put(depth);
-    	
-    	buffer.put(Byte.MAX_VALUE).put(Byte.MAX_VALUE).put(Byte.MAX_VALUE);
-    	
-    	//NE
-    	buffer.putFloat(l.x()).putFloat(l.y()).putFloat(l.z());
-    	buffer.putShort((short)x2).putShort((short)y1);
-    	buffer.putFloat((float)l.r()).putFloat((float)l.g()).putFloat((float)l.b());
-    	buffer.put(depth);
-    	
-    	buffer.put(Byte.MAX_VALUE).put(Byte.MAX_VALUE).put(Byte.MAX_VALUE);
-    	
-    	count++;
-    }
-    
-    @Override
-    public void dis() {
-    	shader.dis();
-    	super.dis();
-    }
-    
-    @Override
-    public void clear() {
-    	current = 0;
+
+	void render(LIGHT_AMBIENT l, int x1, int x2, int y1, int y2, byte depth) {
+
+		sorter.add(current, Float.floatToRawIntBits(l.x()));
+		sorter.add(current, Float.floatToRawIntBits(l.y()));
+		sorter.add(current, Float.floatToRawIntBits(l.z()));
+		sorter.add(current, ((y2) << 16) | ((x1 & 0x0FFFF)));
+		sorter.add(current, Float.floatToRawIntBits((float) l.r()));
+		sorter.add(current, Float.floatToRawIntBits((float) l.g()));
+		sorter.add(current, Float.floatToRawIntBits((float) l.b()));
+		sorter.add(current, (depth&0x0FF)|0xEFEFEF00);
+		
+		sorter.add(current, Float.floatToRawIntBits(l.x()));
+		sorter.add(current, Float.floatToRawIntBits(l.y()));
+		sorter.add(current, Float.floatToRawIntBits(l.z()));
+		sorter.add(current, ((y2) << 16) | ((x2 & 0x0FFFF)));
+		sorter.add(current, Float.floatToRawIntBits((float) l.r()));
+		sorter.add(current, Float.floatToRawIntBits((float) l.g()));
+		sorter.add(current, Float.floatToRawIntBits((float) l.b()));
+		sorter.add(current, (depth&0x0FF)|0xEFEFEF00);
+		
+		sorter.add(current, Float.floatToRawIntBits(l.x()));
+		sorter.add(current, Float.floatToRawIntBits(l.y()));
+		sorter.add(current, Float.floatToRawIntBits(l.z()));
+		sorter.add(current, ((y1) << 16) | ((x1 & 0x0FFFF)));
+		sorter.add(current, Float.floatToRawIntBits((float) l.r()));
+		sorter.add(current, Float.floatToRawIntBits((float) l.g()));
+		sorter.add(current, Float.floatToRawIntBits((float) l.b()));
+		sorter.add(current, (depth&0x0FF)|0xEFEFEF00);
+		
+		sorter.add(current, Float.floatToRawIntBits(l.x()));
+		sorter.add(current, Float.floatToRawIntBits(l.y()));
+		sorter.add(current, Float.floatToRawIntBits(l.z()));
+		sorter.add(current, ((y1) << 16) | ((x2 & 0x0FFFF)));
+		sorter.add(current, Float.floatToRawIntBits((float) l.r()));
+		sorter.add(current, Float.floatToRawIntBits((float) l.g()));
+		sorter.add(current, Float.floatToRawIntBits((float) l.b()));
+		sorter.add(current, (depth&0x0FF)|0xEFEFEF00);
+
+//		buffer.putFloat(l.x()).putFloat(l.y()).putFloat(l.z());
+//		buffer.putShort((short) x1).putShort((short) y2);
+//		buffer.putFloat((float) l.r()).putFloat((float) l.g()).putFloat((float) l.b());
+//		buffer.put(depth);
+//
+//		buffer.put(Byte.MAX_VALUE).put(Byte.MAX_VALUE).put(Byte.MAX_VALUE);
+//
+//		// SE
+//		buffer.putFloat(l.x()).putFloat(l.y()).putFloat(l.z());
+//		buffer.putShort((short) x2).putShort((short) y2);
+//		buffer.putFloat((float) l.r()).putFloat((float) l.g()).putFloat((float) l.b());
+//		buffer.put(depth);
+//
+//		buffer.put(Byte.MAX_VALUE).put(Byte.MAX_VALUE).put(Byte.MAX_VALUE);
+//
+//		// NW
+//		buffer.putFloat(l.x()).putFloat(l.y()).putFloat(l.z());
+//		buffer.putShort((short) x1).putShort((short) y1);
+//		buffer.putFloat((float) l.r()).putFloat((float) l.g()).putFloat((float) l.b());
+//		buffer.put(depth);
+//
+//		buffer.put(Byte.MAX_VALUE).put(Byte.MAX_VALUE).put(Byte.MAX_VALUE);
+//
+//		// NE
+//		buffer.putFloat(l.x()).putFloat(l.y()).putFloat(l.z());
+//		buffer.putShort((short) x2).putShort((short) y1);
+//		buffer.putFloat((float) l.r()).putFloat((float) l.g()).putFloat((float) l.b());
+//		buffer.put(depth);
+//
+//		buffer.put(Byte.MAX_VALUE).put(Byte.MAX_VALUE).put(Byte.MAX_VALUE);
+
+		count++;
+	}
+
+	@Override
+	public void dis() {
+		shader.dis();
+		super.dis();
+	}
+
+	@Override
+	public void clear() {
+		current = 0;
 		specialLayer = false;
-    	super.clear();
-    }
-    
+		sorter.clear();
+		super.clear();
+	}
+
 }

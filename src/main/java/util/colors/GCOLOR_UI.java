@@ -1,8 +1,11 @@
 package util.colors;
 
 import init.paths.PATHS;
+import snake2d.SPRITE_RENDERER;
 import snake2d.util.color.*;
+import snake2d.util.datatypes.RECTANGLE;
 import snake2d.util.file.Json;
+import snake2d.util.misc.CLAMP;
 
 public final class GCOLOR_UI {
 	
@@ -18,6 +21,13 @@ public final class GCOLOR_UI {
 	private static final ColorImp tmp = new ColorImp();
 	private final COLOR badShift = new ColorShifting(bg(), new ColorImp(d, ("BAD_SHIFT"))).setSpeed(1);
 	private final COLOR goodShift = new ColorShifting(bg(), new ColorImp(d, ("GOOD_SHIFT"))).setSpeed(1);
+	
+	private final COLOR border = COLOR.WHITE35;
+	private final COLOR borderB = border.shade(1.5);
+	private final COLOR borderD = border.shade(0.5);
+	
+	public final COLOR panBG = COLOR.WHITE15;
+	
 	GCOLOR_UI() {
 		
 	}
@@ -102,6 +112,53 @@ public final class GCOLOR_UI {
 	
 	public GColorUIModel SOSO() {
 		return SOSO;
+	}
+
+	
+	public void badToGood(ColorImp imp, double v) {
+		v = CLAMP.d(v, 0, 1);
+		if (v < 0.5) {
+			imp.interpolate(BAD.normal, SOSO.normal, v*2);
+		}else {
+			imp.interpolate(SOSO.normal, GOOD.normal, (v-0.5)*2);
+		}
+	}
+	
+	
+	public void border(SPRITE_RENDERER ren, int X1, int X2, int Y1, int Y2) {
+		borderB.render(ren, X1, X1+1, Y1, Y2);
+		borderB.render(ren, X1, X2, Y1, Y1+1);
+		borderD.render(ren, X2-1, X2, Y1+1, Y2);
+		borderD.render(ren, X1+1, X2, Y2-1, Y2);
+		border.render(ren, X1+1, X2-1, Y1+1, Y2-1);
+	}
+	
+	public void border(SPRITE_RENDERER ren, RECTANGLE b, int m) {
+		border(ren, b.x1()+m, b.x2()-m, b.y1()+m, b.y2()-m);
+	}
+	
+	public void borderH(SPRITE_RENDERER ren, int X1, int X2, int Y1, int Y2) {
+		borderB.render(ren, X1, X1+1, Y1, Y2);
+		border.render(ren, X1+1, X1+2, Y1+1, Y2-1);
+		borderD.render(ren, X1+2, X1+3, Y1+2, Y2-2);
+		
+		borderD.render(ren, X2-1, X2, Y1, Y2);
+		border.render(ren, X2-2, X2-1, Y1+1, Y2-1);
+		borderB.render(ren, X2-3, X2-2, Y1+2, Y2-2);
+		
+		borderB.render(ren, X1, X2, Y1, Y1+1);
+		border.render(ren, X1+1, X2-1, Y1+1, Y1+2);
+		borderD.render(ren, X1+2, X2-2, Y1+2, Y1+3);
+		
+		borderD.render(ren, X1, X2, Y2-1, Y2);
+		border.render(ren, X1+1, X2-1, Y2-2, Y2-1);
+		borderB.render(ren, X1+2, X2-2, Y2-3, Y2-2);
+		
+		
+	}
+	
+	public void borderH(SPRITE_RENDERER ren, RECTANGLE b, int m) {
+		borderH(ren, b.x1()+m, b.x2()-m, b.y1()+m, b.y2()-m);
 	}
 	
 }

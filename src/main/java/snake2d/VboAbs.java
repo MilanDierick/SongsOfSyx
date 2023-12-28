@@ -23,11 +23,7 @@ abstract class VboAbs {
     
     private final int NR_OF_ATTRIBUTES;
     
-    protected int count = 0;
-    
-	protected int[] vFrom = new int[255];
-	protected int[] vTo = new int[255];
-	protected int current = 0;
+
 	private final int type;
 	private final int indexMul;
     
@@ -102,9 +98,7 @@ abstract class VboAbs {
     
     
     void clear(){
-    	current = 0;
     	buffer.clear();
-    	count = 0;
     }
     
     void dis(){
@@ -135,9 +129,9 @@ abstract class VboAbs {
     }
     
 	final void bindAndUpload() {
-		if (count == 0) {
+
+		if (buffer.position() == 0)
 			return;
-		}
 
 		buffer.flip();
 

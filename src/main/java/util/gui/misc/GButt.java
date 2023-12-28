@@ -1,8 +1,8 @@
 package util.gui.misc;
 
 import init.C;
-import init.sprite.ICON;
 import init.sprite.SPRITES;
+import init.sprite.UI.Icon;
 import init.sprite.UI.UI;
 import snake2d.SPRITE_RENDERER;
 import snake2d.util.color.COLOR;
@@ -95,46 +95,22 @@ public abstract class GButt extends CLICKABLE.ClickableAbs{
 
 	
 	public static class Panel extends GButt{
-		
-		private final SPRITE bg;
+
 		
 		public Panel(CharSequence label){
-			super(UI.FONT().M.getText(label));
-			bg = UI.PANEL().buttBG.get(0);
-			body.setDim(bg);
+			this(UI.FONT().M.getText(label));
 		}
 		
 		public Panel(SPRITE label){
 			super(label);
-			
-			if (label.width() >= UI.PANEL().buttBG.get(2).width()-4) {
-				if (label.width() >= UI.PANEL().buttBG.get(1).width()-4) {
-					bg = UI.PANEL().buttBG.get(0);
-				}else {
-					bg = UI.PANEL().buttBG.get(1);
-				}
-			}else {
-				bg = UI.PANEL().buttBG.get(2);
-			}
-			body.setDim(bg);
+			body.setDim(label.width()+6, label.height()+6);
 				
 			
 		}
 		
 		public Panel(SPRITE label, CharSequence hovInfo){
-			super(label);
+			this(label);
 			
-			if (label.width() >= UI.PANEL().buttBG.get(2).width()-4) {
-				if (label.width() >= UI.PANEL().buttBG.get(1).width()-4) {
-					bg = UI.PANEL().buttBG.get(0);
-				}else {
-					bg = UI.PANEL().buttBG.get(1);
-				}
-			}else {
-				bg = UI.PANEL().buttBG.get(2);
-			}
-			body.setDim(bg);
-				
 			hoverInfoSet(hovInfo);
 		}
 
@@ -144,13 +120,14 @@ public abstract class GButt extends CLICKABLE.ClickableAbs{
 			renAction();
 			
 			if (isSelected ||isHovered) {
-				if (isSelected & isHovered) {
-					OPACITY.O25To50.bind();
-				}else {
-					OPACITY.O25.bind();
-				}
 				
-				bg.render(r, body().x1(), body().y1());
+				if (isSelected) {
+					OPACITY.O25To50.bind();
+					COLOR.WHITE100.render(r, body);
+				}else if (isHovered){
+					OPACITY.O25.bind();
+					COLOR.WHITE100.render(r, body);
+				}
 				OPACITY.unbind();
 			}
 			
@@ -173,38 +150,7 @@ public abstract class GButt extends CLICKABLE.ClickableAbs{
 		}
 	}
 	
-	public static class Icon extends GButt{
-		
-		public Icon(SPRITE label){
-			super(label);
-			body.setWidth(label.width());
-			body.setHeight(label.height());
-		}
-		
-		@Override
-		protected void render(SPRITE_RENDERER r, float ds, boolean isActive,
-				boolean isSelected, boolean isHovered) {
-			renAction();
-			int x = body.x1();
-			int y = body.y1();
-			
-			if (isSelected && isHovered){
-				COLOR.WHITE200.bind();
-			}
-			else if (isSelected){
-				COLOR.WHITE150.bind();
-			}else if (isHovered){
-				COLOR.WHITE150.bind();
-			}else if (isActive){
-				COLOR.WHITE100.bind();
-			}else{
-				GCOLOR.T().INACTIVE.bind();
-			}
-			label.render(r, x, y);
-			COLOR.unbind();
-			
-		}
-	}
+
 	
 	public static class Glow extends GButt{
 		
@@ -294,104 +240,49 @@ public abstract class GButt extends CLICKABLE.ClickableAbs{
 		protected abstract void update(Text text);
 	}
 	
-	public static class Standalone extends Glow{
-		
-		public Standalone(SPRITE label){
-			super(label, UI.PANEL().panelL.get(0));
-		}
-	}
 	
-	public static class Checkbox extends GButt{
+	public static class Checkbox extends GButt.ButtPanel{
 		
-		protected final LIST<ICON.SMALL> sprite = UI.PANEL().buttCheckbox;
-		
-		public Checkbox(){
-			super(null);
-			int w = sprite.get(0).width();
-			int h = sprite.get(0).height();
-			body.setDim(w,h);
-		}
-		
-		@Override
-		protected void render(SPRITE_RENDERER r, float ds, boolean isActive,
-				boolean isSelected, boolean isHovered) {
-			renAction();
-			int x = body.x1();
-			int y = body.y1();
-			render(r, x, y, isActive, isSelected, isHovered);
-			
-			
-			
-		}
-		
-		public static void render(SPRITE_RENDERER r, int x, int y, boolean isActive,
-				boolean isSelected, boolean isHovered) {
-			LIST<ICON.SMALL> sprite = UI.PANEL().buttCheckbox;
-			if (isSelected && isHovered){
-				sprite.get(3).render(r, x, y);
-			}
-			else if (isSelected){
-				sprite.get(2).render(r, x, y);
-			}else if (isHovered){
-				sprite.get(1).render(r, x, y);
-			}else if (isActive){
-				sprite.get(0).render(r, x, y);
-			}else{
-				GCOLOR.T().INACTIVE.bind();
-				sprite.get(0).render(r, x, y);
-				COLOR.unbind();
-			}
-		}
-	}
-	
-	public static class CheckboxTitle extends GButt{
-		
-		private static int labelXOff = (int) (ICON.SMALL.SIZE)/2;
 		private final static String on = "turn off";
 		private final static String off = "turn on";
 		
-		public CheckboxTitle(SPRITE label){
+		public Checkbox(){
+			this(16);
+			icon(iconn());
+		}
+		
+		public Checkbox(int dim){
+			super((SPRITE)null);
+			icon(iconn());
+		}
+		
+		public Checkbox(CharSequence label){
+			super(UI.FONT().H2.getText(label));
+			icon(iconn());
+		}
+		
+		public Checkbox(SPRITE label){
 			super(label);
-			body.setWidth(sprite(0).width() + labelXOff + label.width());
-			body.setHeight(sprite(0).height() >= label.height() ? sprite(0).height() : label.height());
+			icon(iconn());
 		}
 		
-		public CheckboxTitle(CharSequence text) {
-			this((SPRITE)new GText(UI.FONT().S, text).lablify());
+		private SPRITE iconn() {
+			return new SPRITE.Imp(Icon.S) {
+				
+				@Override
+				public void render(SPRITE_RENDERER r, int X1, int X2, int Y1, int Y2) {
+					if (selectedIs()) {
+						GCOLOR.UI().GOOD.hovered.bind();
+						UI.icons().s.allRight.render(r, X1, X2, Y1, Y2);
+					}else {
+						GCOLOR.UI().BAD.hovered.bind();
+						UI.icons().s.cancel.render(r, X1, X2, Y1, Y2);
+					}
+					
+				}
+			};
 		}
 		
-		@Override
-		protected void render(SPRITE_RENDERER r, float ds, boolean isActive,
-				boolean isSelected, boolean isHovered) {
-			
-			int y = body.y1();
-			label.render(r, body.x1(), y+(body().height()-label.height())/2);
-			y += (body().height()-sprite(0).height())/2;
-			
-			int x = body.x1()+labelXOff + label.width();
-			
-			renAction();
-			if (!isActive){
-				GCOLOR.T().INACTIVE.bind();
-				sprite(0).render(r, x, y);
-				COLOR.unbind();
-			}else if (isSelected && isHovered){
-				sprite(3).render(r, x, y);
-			}
-			else if (isSelected){
-				sprite(2).render(r, x, y);
-			}else if (isHovered){
-				sprite(1).render(r, x, y);
-			}else{
-				sprite(0).render(r, x, y);
-			}
-			//label.render(r, x + sprite(0).width() + labelXOff, y+(body().height()-label.height())/2);
-			
-		}
-		
-		private static SPRITE sprite(int i) {
-			return UI.PANEL().buttCheckbox.get(i);
-		}
 		
 		@Override
 		public void hoverInfoGet(GUI_BOX text) {
@@ -402,7 +293,9 @@ public abstract class GButt extends CLICKABLE.ClickableAbs{
 			else
 				text.text(selectedIs() ? on : off);
 		}
+		
 	}
+
 	
 	
 	public static class BStat2 extends GButt {
@@ -500,7 +393,10 @@ public abstract class GButt extends CLICKABLE.ClickableAbs{
 		
 		public ButtPanel(SPRITE label){
 			super(label);
-			body.setDim(this.label.width() + M*2, this.label.height() + M*2);
+			if (label == null)
+				body.setDim(16);
+			else
+				body.setDim(this.label.width() + M*4, this.label.height() + M*2);
 		}
 		
 		public ButtPanel setDim(int width, int height) {
@@ -545,37 +441,89 @@ public abstract class GButt extends CLICKABLE.ClickableAbs{
 			color.render(r, body(), -4);
 			OPACITY.unbind();
 			
+
 			
-			if (!isActive)
-				GCOLOR.T().INACTIVE.bind();
-			else if (isSelected && isHovered)
-				GCOLOR.T().HOVER_SELECTED.bind();
-			else if (isSelected)
-				GCOLOR.T().SELECTED.bind();
-			else if (isHovered)
-				GCOLOR.T().HOVERED.bind();
-			else if (label instanceof Text) {
+			if (icon != null) {
+				if (label == null)
+					icon.renderC(r, body);
+				else {
+					icon.renderC(r, body().x1()+icon.width()/2+M, body().cY());
+				}
+			}
+			
+			if (label instanceof Text) {
 				GCOLOR.T().H1.bind();
+				
+				int ww = body.width();
+				if (icon != null)
+					ww -= 24 + icon.width();
+				((Text)label).setMultipleLines(false);
+				((Text)label).setMaxWidth(ww);
+				
+				
 			}else {
 				COLOR.WHITE100.bind();
 			}
-			if (icon != null) {
-				label.renderC(r, body().x1()+icon.width()+12+label.width()/2, body().cY());
-				COLOR.unbind();
-				icon.renderC(r, body().x1()+icon.width()/2+6, body().cY());
+			
+			if (label != null) {
+				if (icon != null) {
+					label.renderC(r, body().x1()+icon.width()+12+label.width()/2, body().cY());
+				}else {
+					int dx = align.x()*(body().width()-label.width()-8)/2;
+					int dy = align.y()*(body().height()-label.height()-8)/2;
+					label.renderC(r, body.cX()+dx, body().cY()+dy);
+				}
 				
-			}else {
-				int dx = align.x()*(body().width()-label.width()-8)/2;
-				int dy = align.y()*(body().height()-label.height()-8)/2;
-				label.renderC(r, body.cX()+dx, body().cY()+dy);
-				COLOR.unbind();
 			}
 			
+			COLOR.unbind();
+			
+			if (!isActive) {
+				OPACITY.O50.bind();
+				COLOR.BLACK.render(r, body,-2);
+				OPACITY.unbind();
+			}
 			
 			
 
 			
 			
+		}
+		
+		public static void renderBG(SPRITE_RENDERER r, boolean isActive, boolean isSelected, boolean isHovered, RECTANGLE body) {
+			GCOLOR.UI().bg().render(r, body, -1);
+			
+			if (isSelected)
+				COLOR.WHITE85.render(r, body, -2);
+			else if (isHovered)
+				COLOR.WHITE50.render(r, body, -2);
+			else
+				COLOR.BLACK.render(r, body, -2);
+			
+			GCOLOR.UI().bg().render(r, body, -4);
+			
+			if (!isActive) {
+				OPACITY.O0.bind();
+			}else if (isHovered || isSelected) {
+				OPACITY.O100.bind();
+			}else {
+				OPACITY.O35.bind();
+				
+			}
+			COLOR.WHITE35.render(r, body, -5);
+			OPACITY.unbind();
+		}
+		
+		public static void renderFrame(SPRITE_RENDERER r, boolean isActive, boolean isSelected, boolean isHovered, RECTANGLE body) {
+			COLOR border = GCOLOR.UI().border();
+			COLOR.BLACK.renderFrame(r, body.x1()+1, body.x2(), body.y1()+1, body.y2(), 0, 1);
+			border.renderFrame(r, body.x1(), body.x2()-1, body.y1(), body.y2()-1, 0, 1);
+		}
+		
+		public static void renderFrame(SPRITE_RENDERER r, RECTANGLE body) {
+			COLOR border = GCOLOR.UI().border();
+			//COLOR.BLACK.renderFrame(r, body.x1()+1, body.x2(), body.y1()+1, body.y2(), 0, 1);
+			border.renderFrame(r, body.x1(), body.x2(), body.y1(), body.y2(), 0, 1);
 		}
 		
 		public ButtPanel align(DIR d) {
@@ -595,69 +543,23 @@ public abstract class GButt extends CLICKABLE.ClickableAbs{
 		
 		public ButtPanel icon(SPRITE icon) {
 			this.icon = icon;
-			int w = icon.width()+16+label.width();
-			if (body().width() < w)
-				body().setWidth(w);
 			
-			return this;
-		}
-		
-		@Override
-		public Rec body() {
-			return body;
-		}
-	}
-	
-	
-	public static class ButtPanelCheck extends GButt{
-		
-		public ButtPanelCheck(){
-			super(SPRITES.icons().s.cancel);
-		}
-		
-		public ButtPanelCheck setDim(int width, int height) {
-			this.body.setDim(width, height);
-			return this;
-		}
-		
-		public ButtPanelCheck setDim(int width) {
-			this.body.setWidth(width);
-			return this;
-		}
-		
-		public ButtPanelCheck pad(int x, int y) {
-			this.body.incrW(x*2);
-			this.body.incrH(y*2);
-			return this;
-		}
-
-		@Override
-		protected void render(SPRITE_RENDERER r, float ds, boolean isActive, boolean isSelected, boolean isHovered) {
-			renAction();
-			COLOR border = GCOLOR.UI().border();
-			border.render(r, body());
-			GCOLOR.UI().bg().render(r, body(), -1);
-			
-			if (isSelected)
-				COLOR.WHITE85.render(r, body, -2);
-			else if (isHovered)
-				COLOR.WHITE50.render(r, body, -2);
-			
-			GCOLOR.UI().bg().render(r, body(), -4);
-			
-			
-			label = SPRITES.icons().s.cancel;
-			COLOR col = GCOLOR.UI().BAD.get(isActive, isSelected, isHovered);
-			
-			if (isSelected) {
-				label = SPRITES.icons().s.allRight;
-				col = GCOLOR.UI().GOOD.get(isActive, isSelected, isHovered);
+			if (label == null) {
+				if (body().width() < icon.width()+ M*2)
+					body().setWidth(icon.width()+ M*2);
+				if (body().height() < icon.height()+ M*2)
+					body.setHeight(icon.height()+ M*2);
+			}else {
+				int w = icon.width()+16+label.width();
+				if (body().width() < w)
+					body().setWidth(w);
+				if (body().height() < icon.height()+ M*2)
+					body.setHeight(icon.height()+ M*2);
 			}
-			col.bind();
-			label.renderC(r, body.cX(), body().cY());
-			COLOR.unbind();
 			
 			
+			
+			return this;
 		}
 		
 		@Override
@@ -707,7 +609,7 @@ public abstract class GButt extends CLICKABLE.ClickableAbs{
 					COLOR.BLACK.render(r, body(), -1);
 					OPACITY.unbind();
 				}else if (hov && link) {
-					SPRITES.icons().m.arrow_right.render(r, body().x2()-ICON.MEDIUM.SIZE-6, body().y1());
+					SPRITES.icons().m.arrow_right.render(r, body().x2()-init.sprite.UI.Icon.M-6, body().y1());
 				}
 				
 				
@@ -717,27 +619,10 @@ public abstract class GButt extends CLICKABLE.ClickableAbs{
 		}
 		
 		public static void renderBG(SPRITE_RENDERER r, RECTANGLE body, boolean isActive, boolean isHovered, boolean isSelected) {
-			COLOR border = GCOLOR.UI().border();
-			border.render(r, body);
-			GCOLOR.UI().bg().render(r, body, -1);
 			
-			if (isSelected)
-				COLOR.WHITE85.render(r, body, -2);
-			else if (isHovered)
-				COLOR.WHITE50.render(r, body, -2);
+			ButtPanel.renderFrame(r, body);
+			ButtPanel.renderBG(r, isActive, isSelected, isHovered, body);
 			
-			GCOLOR.UI().bg().render(r, body, -4);
-			
-			if (!isActive) {
-				OPACITY.O0.bind();
-			}else if (isHovered || isSelected) {
-				OPACITY.O100.bind();
-			}else {
-				OPACITY.O35.bind();
-				
-			}
-			GCOLOR.UI().bg(isActive, isSelected, isHovered).render(r, body, -4);
-			OPACITY.unbind();
 			
 		}
 		

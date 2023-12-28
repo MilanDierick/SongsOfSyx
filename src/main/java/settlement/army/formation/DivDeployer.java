@@ -6,6 +6,7 @@ import init.C;
 import settlement.army.Army;
 import settlement.army.Div;
 import settlement.main.SETT;
+import settlement.path.AVAILABILITY;
 import snake2d.*;
 import snake2d.PathUtilOnline.Flooder;
 import snake2d.util.datatypes.*;
@@ -182,7 +183,8 @@ public class DivDeployer {
 			int y = f.pixel(i).y()+dy;
 			int tx = x >>C.T_SCROLL;
 			int ty = y >>C.T_SCROLL;
-			if (SETT.PATH().availability.get(tx, ty).isSolid(a)) {
+			AVAILABILITY av = SETT.PATH().availability.get(tx, ty);
+			if (av != null && SETT.PATH().availability.get(tx, ty).isSolid(a)) {
 				if (!SETT.ARMIES().map.attackable.is(tx, ty, a)) {
 					position.deploy(f.pixel(i).x(), f.pixel(i).y());
 					continue;

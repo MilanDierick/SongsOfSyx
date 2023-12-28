@@ -26,7 +26,7 @@ public final class AIModule_Retired extends AIModule{
 	}
 
 	@Override
-	protected AiPlanActivation getPlan(Humanoid a, AIManager d) {
+	public AiPlanActivation getPlan(Humanoid a, AIManager d) {
 		for (ROOM_RESTHOME h : a.race().pref().resthomes) {
 			if (h.emp.employ(a))
 				return plan.activate(a, d);

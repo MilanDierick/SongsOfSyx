@@ -4,8 +4,6 @@ import java.io.IOException;
 
 import init.C;
 import init.D;
-import init.sprite.ICON;
-import settlement.main.RenderData.RenderIterator;
 import settlement.main.SETT;
 import settlement.path.AVAILABILITY;
 import settlement.room.main.*;
@@ -18,8 +16,10 @@ import snake2d.util.color.OPACITY;
 import snake2d.util.datatypes.*;
 import snake2d.util.file.Json;
 import snake2d.util.map.MAP_BOOLEAN;
+import snake2d.util.sprite.SPRITE;
 import util.gui.misc.GText;
 import util.info.GFORMAT;
+import util.rendering.RenderData.RenderIterator;
 import util.rendering.ShadowBatch;
 
 final class Constructor extends Furnisher{
@@ -34,7 +34,7 @@ final class Constructor extends Furnisher{
 	final FurnisherStat workers;
 	final FurnisherStat output;
 	
-	final RoomSpriteComboN sedge;
+	final RoomSpriteCombo sedge;
 	
 	final FurnisherStat efficiency;
 	private final ROOM_WOODCUTTER blue;
@@ -76,7 +76,7 @@ final class Constructor extends Furnisher{
 			}
 		};
 		
-		sedge = new RoomSpriteComboN(sp, "EDGE_COMBO");
+		sedge = new RoomSpriteCombo(sp, "EDGE_COMBO");
 		
 		final RoomSprite sStorageTop = new RoomSprite1xN(sp, "STORAGE_1X1_TOP", true) {
 			
@@ -133,7 +133,7 @@ final class Constructor extends Furnisher{
 					boolean isCandle) {
 				super.render(r, s, data, it, degrade, isCandle);
 				if (!isCandle) {
-					ICON.MEDIUM i = blue.indus.get(0).outs().get(0).resource.icon();
+					SPRITE i = blue.indus.get(0).outs().get(0).resource.icon();
 					OPACITY.O99.bind();
 					i.render(r, it.x()+8, it.x()+C.TILE_SIZE-8, it.y()+8, it.y()+C.TILE_SIZE-8);
 					OPACITY.unbind();

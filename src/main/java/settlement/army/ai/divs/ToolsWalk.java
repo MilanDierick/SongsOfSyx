@@ -389,7 +389,7 @@ final class ToolsWalk {
 	
 	private final Paths pp = new Paths();
 	
-	public static class Paths extends Path.PathSync {
+	public static class Paths extends Path.PathFancy {
 
 		public Paths() {
 			super(1024*4);

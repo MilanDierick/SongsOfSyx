@@ -3,17 +3,17 @@ package settlement.room.service.speaker;
 import java.io.IOException;
 
 import init.C;
-import settlement.main.RenderData.RenderIterator;
 import settlement.path.AVAILABILITY;
 import settlement.room.main.*;
 import settlement.room.main.furnisher.*;
 import settlement.room.main.util.RoomInit;
 import settlement.room.main.util.RoomInitData;
 import settlement.room.sprite.RoomSprite;
-import settlement.room.sprite.RoomSpriteComboN;
+import settlement.room.sprite.RoomSpriteCombo;
 import snake2d.SPRITE_RENDERER;
 import snake2d.util.datatypes.DIR;
 import snake2d.util.file.Json;
+import util.rendering.RenderData.RenderIterator;
 import util.rendering.ShadowBatch;
 
 final class SpeakerConstructor extends Furnisher{
@@ -31,9 +31,9 @@ final class SpeakerConstructor extends Furnisher{
 		
 		Json sp = init.data().json("SPRITES");
 		
-		RoomSprite sSprite = new RoomSpriteComboN(sp, "CENTER_COMBO");
+		RoomSprite sSprite = new RoomSpriteCombo(sp, "CENTER_COMBO");
 		
-		RoomSprite sFrame = new RoomSpriteComboN(sp, "FRAME_COMBO") {
+		RoomSprite sFrame = new RoomSpriteCombo(sp, "FRAME_COMBO") {
 			@Override
 			public boolean render(SPRITE_RENDERER r, ShadowBatch s, int data, RenderIterator it, double degrade, boolean isCandle) {
 				super.render(r, s, data, it, degrade, isCandle);

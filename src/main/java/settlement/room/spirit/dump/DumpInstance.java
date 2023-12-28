@@ -1,7 +1,5 @@
 package settlement.room.spirit.dump;
 
-import settlement.main.RenderData.RenderIterator;
-import settlement.main.SETT;
 import settlement.room.main.RoomInstance;
 import settlement.room.main.TmpArea;
 import settlement.room.main.util.RoomInit;
@@ -10,6 +8,7 @@ import settlement.room.service.module.RoomServiceInstance;
 import snake2d.Renderer;
 import snake2d.util.datatypes.COORDINATE;
 import snake2d.util.sprite.text.Str;
+import util.rendering.RenderData.RenderIterator;
 import util.rendering.ShadowBatch;
 import view.main.VIEW;
 
@@ -103,10 +102,10 @@ final class DumpInstance extends RoomInstance implements ROOM_SERVICER{
 	}
 	
 	@Override
-	public TmpArea remove(int tx, int ty, boolean scatter, Object obj, boolean force) {
+	protected boolean canRemoveAndRemoveAction(int tx, int ty, boolean scatter, Object obj, boolean force) {
 		if (force || !prompt())
-			return super.remove(tx, ty, scatter, obj, force);
-		return SETT.ROOMS().tmpArea(obj);
+			return true;
+		return false;
 	}
 	
 	private boolean prompt() {

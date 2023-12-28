@@ -3,7 +3,6 @@ package settlement.room.law.execution;
 import java.io.IOException;
 
 import game.GAME;
-import settlement.main.RenderData.RenderIterator;
 import settlement.main.SETT;
 import settlement.path.AVAILABILITY;
 import settlement.room.main.*;
@@ -11,14 +10,16 @@ import settlement.room.main.furnisher.*;
 import settlement.room.main.util.RoomInit;
 import settlement.room.main.util.RoomInitData;
 import settlement.room.sprite.*;
-import settlement.tilemap.Floors.Floor;
+import settlement.tilemap.floor.Floors.Floor;
 import snake2d.SPRITE_RENDERER;
 import snake2d.util.color.OPACITY;
 import snake2d.util.datatypes.*;
 import snake2d.util.file.Json;
 import snake2d.util.sprite.TILE_SHEET;
+import util.rendering.RenderData.RenderIterator;
 import util.rendering.ShadowBatch;
 import util.spritecomposer.*;
+import util.spritecomposer.ComposerThings.ITileSheet;
 
 final class Constructor extends Furnisher{
 
@@ -36,12 +37,45 @@ final class Constructor extends Furnisher{
 	
 	private final RoomSprite spritePedistal;
 	private final RoomSprite spriteCandle;
+	private final TILE_SHEET sheet;
 	
 	protected Constructor(ROOM_EXECTUTION blue, RoomInitData init)
 			throws IOException {
 		super(init, 3, 3, 276, 104);
 		this.blue = blue;
-		floor2 = SETT.FLOOR().getByKey("FLOOR2", init.data());
+		sheet = new ITileSheet(init.sp(), 276, 84) {
+			
+			@Override
+			protected TILE_SHEET init(ComposerUtil c, ComposerSources s, ComposerDests d)  {
+				s.singles.init(0, 0, 1, 1, 6, 1, d.s16);
+				s.singles.setSkip(0, 1).paste(3, true);
+				s.singles.setSkip(1, 1).paste(3, true);
+				s.singles.setSkip(2, 1).paste(3, true);
+				s.singles.setSkip(3, 1).paste(3, true);
+				s.singles.setSkip(4, 1).paste(3, true);
+				s.singles.setSkip(5, 1).paste(3, true);
+				
+				s.singles.init(s.singles.body().x1(), s.singles.body().y2(), 1, 1, 6, 1, d.s16);
+				s.singles.setSkip(0, 1).paste(3, true);
+				s.singles.setSkip(1, 1).paste(3, true);
+				s.singles.setSkip(2, 1).paste(3, true);
+				s.singles.setSkip(3, 1).paste(3, true);
+				s.singles.setSkip(4, 1).paste(3, true);
+				s.singles.setSkip(5, 1).paste(3, true);
+				
+				s.singles.init(s.singles.body().x1(), s.singles.body().y2(), 1, 1, 6, 1, d.s16);
+				s.singles.setSkip(0, 1).paste(3, true);
+				s.singles.setSkip(1, 1).paste(3, true);
+				s.singles.setSkip(2, 1).paste(3, true);
+				s.singles.setSkip(3, 1).paste(3, true);
+				s.singles.setSkip(4, 1).paste(3, true);
+				s.singles.setSkip(5, 1).paste(3, true);
+				
+				return d.s16.saveGame();
+			}
+		}.get();
+		
+		floor2 = SETT.FLOOR().map.getByKey("FLOOR2", init.data());
 		
 		Json sp = init.data().json("SPRITES");
 		
@@ -386,37 +420,6 @@ final class Constructor extends Furnisher{
 		return false;
 		
 		
-	}
-
-	
-	@Override
-	protected TILE_SHEET sheet(ComposerUtil c, ComposerSources s, ComposerDests d, int y1) {
-		
-		s.singles.init(0, y1, 1, 1, 6, 1, d.s16);
-		s.singles.setSkip(0, 1).paste(3, true);
-		s.singles.setSkip(1, 1).paste(3, true);
-		s.singles.setSkip(2, 1).paste(3, true);
-		s.singles.setSkip(3, 1).paste(3, true);
-		s.singles.setSkip(4, 1).paste(3, true);
-		s.singles.setSkip(5, 1).paste(3, true);
-		
-		s.singles.init(s.singles.body().x1(), s.singles.body().y2(), 1, 1, 6, 1, d.s16);
-		s.singles.setSkip(0, 1).paste(3, true);
-		s.singles.setSkip(1, 1).paste(3, true);
-		s.singles.setSkip(2, 1).paste(3, true);
-		s.singles.setSkip(3, 1).paste(3, true);
-		s.singles.setSkip(4, 1).paste(3, true);
-		s.singles.setSkip(5, 1).paste(3, true);
-		
-		s.singles.init(s.singles.body().x1(), s.singles.body().y2(), 1, 1, 6, 1, d.s16);
-		s.singles.setSkip(0, 1).paste(3, true);
-		s.singles.setSkip(1, 1).paste(3, true);
-		s.singles.setSkip(2, 1).paste(3, true);
-		s.singles.setSkip(3, 1).paste(3, true);
-		s.singles.setSkip(4, 1).paste(3, true);
-		s.singles.setSkip(5, 1).paste(3, true);
-		
-		return d.s16.saveGame();
 	}
 
 	@Override

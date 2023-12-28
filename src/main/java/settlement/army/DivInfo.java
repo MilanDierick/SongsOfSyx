@@ -3,17 +3,25 @@ package settlement.army;
 import java.io.IOException;
 
 import game.faction.FACTIONS;
+import game.faction.Faction;
 import init.race.RACES;
 import init.race.Race;
+import settlement.army.DivisionBanners.DivisionBanner;
 import settlement.main.SETT;
+import settlement.room.military.training.ROOM_M_TRAINER;
+import settlement.stats.STATS;
+import settlement.stats.colls.StatsBattle.StatTraining;
+import settlement.stats.equip.EquipBattle;
 import snake2d.util.file.*;
 import snake2d.util.misc.CLAMP;
 import snake2d.util.sprite.text.Str;
+import util.data.DOUBLE.DoubleImp;
 import util.data.GETTER.GETTERE;
 import util.data.INT.INTE;
 import util.dic.DicArmy;
+import world.army.util.DIV_STATS;
 
-public final class DivInfo{
+public final class DivInfo implements DIV_STATS{
 	
 	private final Str name = new Str(32);
 	private final Div div;
@@ -21,38 +29,51 @@ public final class DivInfo{
 	private int raceI;
 	private int exMin;
 	private int symbolI;
+	private final DoubleImp[] trains = new DoubleImp[ROOM_M_TRAINER.ALL().size()];
 	
 	DivInfo(Div div){
 		this.div = div;
 		raceI = 0;
 		symbolI = div.index();
 		name.clear().add(DicArmy.¤¤Division).add(' ').add('#').add(div.index());
+		for (int i = 0; i < trains.length; i++)
+			trains[i] = new DoubleImp();
 	}
 	
 	public Div div() {
 		return div;
 	}
 	
-	public int target() {
+	@Override
+	public int men() {
 		return menTarget;
 	}
 	
-//	public int trainingMin() {
-//		return trainingI*2 + 1;
-//	}
-//	
-//	public int trainingMax() {
-//		return trainingI*4 + 2;
-//	}
-//	
-//	public int trainingRangeMin() {
-//		return trainingRI * 2;
-//	}
-//	
-//	public int trainingRangeMax() {
-//		return trainingRI * 4 + 2;
-//	}
+	@Override
+	public double equip(EquipBattle e) {
+		return (double)e.target(div)/e.equipMax;
+	}
 	
+	@Override
+	public double training(StatTraining e) {
+		return trainingD(e.room).getD();
+	}
+	
+	@Override
+	public double experience() {
+		return STATS.BATTLE().COMBAT_EXPERIENCE.div().getD(div);
+	}
+	
+	@Override
+	public Faction faction() {
+		return FACTIONS.player();
+	}
+	
+	public DoubleImp trainingD(ROOM_M_TRAINER<?> room) {
+		return trains[room.INDEX_TRAINING];
+	}
+	
+	@Override
 	public Race race() {
 		return RACES.all().get(raceI);
 	}
@@ -63,6 +84,10 @@ public final class DivInfo{
 	
 	public void symbolSet(int i) {
 		symbolI = i;
+	}
+	
+	public DivisionBanner banner() {
+		return SETT.ARMIES().banners.get(symbolI);
 	}
 	
 	public Str name() {
@@ -111,28 +136,6 @@ public final class DivInfo{
 		}
 	};
 	
-	public final Training training = new Training() {
-		
-		@Override
-		public double toStat() {
-			if (get() == 0 && trainingR.get() > 0) {
-				return 0;
-			}
-			return super.toStat();
-		};
-		
-	};
-	
-	public final Training trainingR = new Training() {
-		@Override
-		public double toStat() {
-			if (get() == 0 && training.get() > 0) {
-				return 0;
-			}
-			return super.toStat();
-		};
-	};
-	
 	public final INTE men = new INTE() {
 		
 		@Override
@@ -164,8 +167,11 @@ public final class DivInfo{
 		
 		@Override
 		public void save(FilePutter file) {
-			file.i(training.t);
-			file.i(trainingR.t);
+			for (DoubleImp t : trains) {
+				t.save(file);
+			}
+				
+			
 			file.i(menTarget);
 			file.i(raceI);
 			file.i(exMin);
@@ -175,8 +181,9 @@ public final class DivInfo{
 		
 		@Override
 		public void load(FileGetter file) throws IOException {
-			training.t = file.i();
-			trainingR.t = file.i();
+			for (DoubleImp t : trains) {
+				t.load(file);
+			}
 			menTarget = file.i();
 			raceI = file.i();
 			exMin = file.i();
@@ -186,8 +193,9 @@ public final class DivInfo{
 		
 		@Override
 		public void clear() {
-			training.t = 0;
-			trainingR.t = 0;
+			for (DoubleImp t : trains) {
+				t.setD(0);
+			}
 			menTarget = 0;
 			raceI = FACTIONS.player().race().index;
 			exMin = 0;
@@ -199,7 +207,7 @@ public final class DivInfo{
 	public static class Training implements INTE {
 		
 		private int t = 0;
-		private final static double[] stat = new double[] {0.1, 0.25, 0.5, 0.75, 1.0};
+		private final static double[] stat = new double[] {0, 0.25, 0.5, 0.75, 1.0};
 
 		@Override
 		public int get() {

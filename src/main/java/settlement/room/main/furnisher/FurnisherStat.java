@@ -6,7 +6,7 @@ import settlement.room.industry.module.INDUSTRY_HASER;
 import settlement.room.industry.module.Industry.IndustryResource;
 import settlement.room.industry.module.Industry.RoomBoost;
 import settlement.room.main.*;
-import settlement.room.service.module.RoomServiceDataSimple.ROOM_SERVICE_HASER;
+import settlement.room.service.module.RoomService.ROOM_SERVICE_HASER;
 import snake2d.Errors;
 import snake2d.util.datatypes.AREA;
 import snake2d.util.datatypes.DIR;
@@ -158,7 +158,7 @@ public abstract class FurnisherStat implements INDEXED, RoomBoost{
 	public static class FurnisherStatEfficiency extends FurnisherStat {
 		
 		private final FurnisherStat other;
-		private final double mul;
+		protected final double mul;
 		
 		public FurnisherStatEfficiency(Furnisher f, FurnisherStat workers) {
 			this(f, workers, 1);
@@ -370,7 +370,7 @@ public abstract class FurnisherStat implements INDEXED, RoomBoost{
 			double rr = 0;
 			for (IndustryResource r : p.industries().get(0).outs())
 				rr += r.rate;
-			return rr*FACTIONS.player().bonus().tot(p.industries().get(0).bonus());
+			return rr*p.industries().get(0).bonus().get(FACTIONS.player());
 		}
 		
 		@Override

@@ -3,13 +3,14 @@ package settlement.room.home.chamber;
 import static settlement.main.SETT.*;
 
 import init.race.Race;
+import settlement.entity.humanoid.HCLASS;
 import settlement.entity.humanoid.Humanoid;
-import settlement.main.RenderData;
 import settlement.main.SETT;
 import settlement.maintenance.ROOM_DEGRADER;
 import settlement.misc.job.*;
 import settlement.room.home.HOME;
-import settlement.room.home.HOME_TYPE;
+import settlement.room.home.HOMET;
+import settlement.room.home.HomeSettings.HomeSetting;
 import settlement.room.main.RoomInstance;
 import settlement.room.main.TmpArea;
 import settlement.room.main.job.JobIterator;
@@ -17,6 +18,7 @@ import settlement.room.main.util.RoomInit;
 import settlement.stats.STATS;
 import snake2d.Renderer;
 import snake2d.util.datatypes.*;
+import util.rendering.RenderData;
 import util.rendering.ShadowBatch;
 
 public final class ChamberInstance extends RoomInstance implements JOBMANAGER_HASER, HOME{
@@ -62,7 +64,7 @@ public final class ChamberInstance extends RoomInstance implements JOBMANAGER_HA
 		employees().maxSet(4);
 		employees().neededSet(4);
 		activate();
-		SETT.ROOMS().HOMES.report(0, 1, HOME_TYPE.NOBLE());
+		SETT.ROOMS().HOMES.report(0, 1, SETT.ROOMS().HOMES.settings.specific(HOMET.get(HCLASS.NOBLE, null)));
 	}
 	
 	@Override
@@ -163,10 +165,10 @@ public final class ChamberInstance extends RoomInstance implements JOBMANAGER_HA
 	}
 
 	@Override
-	public HOME_TYPE availability() {
+	public HomeSetting availability() {
 		if (occupant() != null)
 			return null;
-		return HOME_TYPE.NOBLE();
+		return SETT.ROOMS().HOMES.settings.specific(HOMET.get(HCLASS.NOBLE, null));
 	}
 	
 	@Override
@@ -182,15 +184,15 @@ public final class ChamberInstance extends RoomInstance implements JOBMANAGER_HA
 	}
 	
 	private void remove() {
-		if (occupant() == null && working)
+		if (occupant() == null)
 			SETT.PATH().comps.data.home.reportAbsence(serviceCoo.x(), serviceCoo.y(), availability());
-		SETT.ROOMS().HOMES.report(occupant() != null ? -1 : 0, -1, HOME_TYPE.NOBLE());
+		SETT.ROOMS().HOMES.report(occupant() != null ? -1 : 0, -1, SETT.ROOMS().HOMES.settings.specific(HOMET.get(HCLASS.NOBLE, null)));
 	}
 	
 	private void add() {
-		if (occupant() == null && working)
+		if (occupant() == null)
 			SETT.PATH().comps.data.home.reportPresence(serviceCoo.x(), serviceCoo.y(), availability());
-		SETT.ROOMS().HOMES.report(occupant() != null ? 1 : 0, 1, HOME_TYPE.NOBLE());
+		SETT.ROOMS().HOMES.report(occupant() != null ? 1 : 0, 1,  SETT.ROOMS().HOMES.settings.specific(HOMET.get(HCLASS.NOBLE, null)));
 	}
 
 	@Override

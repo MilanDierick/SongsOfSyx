@@ -12,13 +12,12 @@ import settlement.entity.humanoid.Humanoid;
 import settlement.stats.STATS;
 import settlement.stats.standing.STANDINGS;
 import snake2d.LOG;
-import snake2d.util.file.FileGetter;
-import snake2d.util.file.FilePutter;
+import snake2d.util.file.*;
 import snake2d.util.misc.ACTION;
 import snake2d.util.misc.CLAMP;
 import snake2d.util.rnd.RND;
-import view.main.MessageText;
 import view.sett.IDebugPanelSett;
+import view.ui.message.MessageText;
 
 public final class EventCitizen extends EventResource{
 
@@ -40,6 +39,14 @@ public final class EventCitizen extends EventResource{
 	private final EventCitizenEmmigrate emmi = new EventCitizenEmmigrate();
 	private final EventCitizenStrike strike = new EventCitizenStrike();
 	private final EventCitizenRiot riot = new EventCitizenRiot();
+	private final EventCitizenRace brawl = new EventCitizenRace();
+	private final EventCitizenRel rel = new EventCitizenRel();
+	
+	private final SMALL_EVENT[] all = new SMALL_EVENT[] {
+		emmi,strike,brawl,rel
+	};
+	
+	private final SMALL_EVENT[] tmp = new SMALL_EVENT[all.length];
 	
 	private final int[] amounts = new int[RACES.all().size()];
 	
@@ -65,7 +72,7 @@ public final class EventCitizen extends EventResource{
 					LOG.ln("nay!");
 				}else {
 					Race r = getRace(total);
-					emmi.emmigrate(amounts[r.index], r);
+					emmi.event(amounts[r.index], r);
 				}
 			}
 		});
@@ -79,8 +86,9 @@ public final class EventCitizen extends EventResource{
 		file.bool(emigrate);
 		file.bool(hasSentWarning);
 		file.i(warmup);
-		emmi.save(file);
-		strike.save(file);
+		for (SMALL_EVENT e : all) {
+			e.save(file);
+		}
 		riot.save(file);
 	}
 	
@@ -91,8 +99,9 @@ public final class EventCitizen extends EventResource{
 		emigrate = file.bool(); 
 		hasSentWarning = file.bool();
 		warmup = file.i();
-		emmi.load(file);
-		strike.load(file);
+		for (SMALL_EVENT e : all) {
+			e.load(file);
+		}
 		riot.load(file);
 	}
 	
@@ -102,10 +111,24 @@ public final class EventCitizen extends EventResource{
 		hasSentWarning = false;
 		timer = timerD;
 		count = 2.0;
-		emmi.clear();
-		strike.clear();
-		riot.clear();
+		for (SMALL_EVENT e : all) {
+			e.clear();
+		}
 		warmup = 3;
+		riot.clear();
+		shuffleSmall();
+	}
+	
+	private void shuffleSmall() {
+		for (int i = 0; i < all.length; i++)
+			tmp[i] = all[i];
+		
+		for (int i = 0; i < tmp.length; i++) {
+			int ri = RND.rInt(tmp.length);
+			SMALL_EVENT o = tmp[i];
+			tmp[i] = tmp[ri];
+			tmp[ri] = o;
+		}
 	}
 	
 	public boolean shouldEmigrate(Humanoid h) {
@@ -124,11 +147,17 @@ public final class EventCitizen extends EventResource{
 		return strike.isStriking(h);
 	}
 	
+	public boolean shouldBrawl(Humanoid a, Humanoid b) {
+		return brawl.isAtOdds(a, b) || rel.isAtOdds(a, b);
+	}
+	
 	@Override
 	protected void update(double ds) {
 		
+		for (SMALL_EVENT e : all) {
+			e.update(ds);
+		}
 		riot.update(ds);
-		strike.update(ds);
 		
 		timer -= ds;
 		if (timer > 0)
@@ -136,7 +165,7 @@ public final class EventCitizen extends EventResource{
 		
 		timer += timerD;
 		
-		if (STATS.POP().POP.data().get(null) == 0)
+		if (STATS.POP().POP.data().get(null) < 15)
 			return;
 		
 		double total = 0;
@@ -168,18 +197,15 @@ public final class EventCitizen extends EventResource{
 				if (old > 0.25) {
 					emigrate = !RND.oneIn(3);
 					Race r = getRace(total);
-					
-					
-					
-					if (RND.rBoolean() && strike.strike(r))
-						addCount(0.5);
-					else if (emmi.emmigrate(amounts[r.index], r)) {
-						addCount(0.5);
-					}else {
-						emigrate = false;
-						new MessageText(¤¤riotWarning, ¤¤riotWarningD).send();
+					shuffleSmall();
+					for (SMALL_EVENT e : tmp) {
+						if (e.event(amounts[r.index], r)) {
+							addCount(0.5);
+							return;
+						}
 					}
-					
+					emigrate = false;
+					new MessageText(¤¤riotWarning, ¤¤riotWarningD).send();
 				}
 				
 			}else if (count <= 0) {
@@ -219,7 +245,7 @@ public final class EventCitizen extends EventResource{
 	
 	private int getAmount(Race r) {
 		
-		double m = Math.max(STANDINGS.CITIZEN().main.getD(r), STANDINGS.CITIZEN().mainTarget.getD(r));
+		double m = Math.max(STANDINGS.CITIZEN().loyalty.getD(r), STANDINGS.CITIZEN().loyaltyTarget.getD(r));
 		if (m >= breakPoint) {
 			return 0;
 		}
@@ -239,7 +265,12 @@ public final class EventCitizen extends EventResource{
 	}
 	
 
-	
+	interface SMALL_EVENT extends SAVABLE{
+		
+		boolean event(int am, Race race);
+		void update(double ds);
+		
+	}
 	
 
 

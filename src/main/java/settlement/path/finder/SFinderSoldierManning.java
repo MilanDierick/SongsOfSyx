@@ -3,6 +3,7 @@ package settlement.path.finder;
 import static settlement.main.SETT.*;
 
 import settlement.army.Army;
+import settlement.entity.humanoid.Humanoid;
 import settlement.misc.util.FINDABLE;
 import settlement.room.main.Room;
 import snake2d.util.datatypes.DIR;
@@ -41,7 +42,7 @@ public final class SFinderSoldierManning extends SFinderFindable{
 	
 	public interface FINDABLE_MANNING extends FINDABLE {
 		public DIR faceDIR();
-		public void work(double time);
+		public void work(double time, Humanoid a);
 		public boolean needsWork();
 		public Army army();
 	}

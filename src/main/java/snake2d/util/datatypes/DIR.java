@@ -1,8 +1,11 @@
 package snake2d.util.datatypes;
 
+import java.io.IOException;
 import java.io.ObjectStreamException;
 
 import snake2d.UTIL;
+import snake2d.util.file.FileGetter;
+import snake2d.util.file.FilePutter;
 import snake2d.util.sets.ArrayList;
 import snake2d.util.sets.LIST;
 
@@ -101,6 +104,7 @@ public enum DIR implements COORDINATE{
 	private final transient double norY;
 	private final transient String name;
 	private final byte index;
+	public final int bit;
 	private final transient int mask;
 	private final transient double distance;
 	public final int boxID;
@@ -109,6 +113,7 @@ public enum DIR implements COORDINATE{
 		this.x = 0;
 		this.y = 0;
 		index = (byte) ordinal();
+		bit = 0;
 		this.mask = 0;
 		this.norX = 0;
 		this.norY = 0;
@@ -121,6 +126,7 @@ public enum DIR implements COORDINATE{
 		this.x = x;
 		this.y = y;
 		index = (byte) ordinal();
+		bit = 1 << index;
 		this.name = name;
 		this.mask = mask;
 		if (x != 0 && y != 0){
@@ -173,6 +179,10 @@ public enum DIR implements COORDINATE{
 	public int id() {
 		return index;
 	}
+	
+//	public int bit() {
+//		return index;
+//	}
 	
 	public DIR next(int nr) {
 		return ALL.get((index+nr)&7);
@@ -283,5 +293,16 @@ public enum DIR implements COORDINATE{
 		return index>>1;
 	}
 
+	public static void save(DIR dir, FilePutter file) {
+		byte b = (byte) (dir == null ? -1 : dir.id());
+		file.b(b);
+	}
+
+	public static DIR load(FileGetter file) throws IOException {
+		byte b = file.b();
+		if (b < 0)
+			return null;
+		return ALL.get(b);
+	}
 	
 }

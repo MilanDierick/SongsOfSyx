@@ -1,8 +1,7 @@
 package settlement.entity.humanoid.ai.work;
 
 import init.D;
-import init.resources.RESOURCE;
-import init.resources.RESOURCES;
+import init.resources.*;
 import settlement.entity.humanoid.Humanoid;
 import settlement.entity.humanoid.ai.main.AI;
 import settlement.entity.humanoid.ai.main.AIManager;
@@ -101,8 +100,8 @@ class WorkAbs extends PlanBlueprint {
 	private AISubActivation initBegin(Humanoid a, AIManager d, SETT_JOB j, JOB_MANAGER jm) {
 		d.planTile.set(j.jobCoo());
 		d.planByte1 = -1;
-		if (j.jobResourceBitToFetch() != 0) {
-			long res = j.jobResourceBitToFetch();
+		if (j.jobResourceBitToFetch() != null) {
+			RBIT res = j.jobResourceBitToFetch();
 			
 			AISubActivation s = fetch.activate(a, d, res, CLAMP.i(j.jobResourcesNeeded(), 0 , maxCarry), j.longFetch() ? 1000 : 250, true, true);
 			
@@ -112,12 +111,10 @@ class WorkAbs extends PlanBlueprint {
 					return null;
 				return initBegin(a, d, j, jm);
 			}
-			jm.reportResourceFound(res);
+			
 			d.planByte1 = (byte) fetch.resource(a, d).index();
-//			j = jm.getReservableJob(d.planTile);
-//			if (j == null)
-//				throw new RuntimeException(jm + " " + work(a));
-			j.jobReserve(fetch.resource(a, d));
+			jm.reportResourceFound(resource(d));
+			j.jobReserve(resource(d));
 			return s;
 		}else {
 			j.jobReserve(null);
@@ -150,7 +147,7 @@ class WorkAbs extends PlanBlueprint {
 			//new RuntimeException(""+work(a)).printStackTrace();
 			return null;
 		}
-			DIR dir = jobGet(a, d).jobStandDir();
+		DIR dir = jobGet(a, d).jobStandDir();
 		if (dir != null && !a.tc().isSameAs(d.planTile.x()+dir.x(),d.planTile.y()+dir.y())) {
 			return walkToJobAjacent.set(a, d);
 		}
@@ -172,7 +169,7 @@ class WorkAbs extends PlanBlueprint {
 			if(j.jobPerformTime(a) == 0) {
 				return storeResource.set(a, d);
 			}else {
-				return work.set(a, d);
+				return work(a, d);
 			}
 		}
 		
@@ -247,10 +244,15 @@ class WorkAbs extends PlanBlueprint {
 			RESOURCE res = j.jobPerform(a, null, 0);
 			if (res == null) {
 				LOG.ln("" + j);
+				return AI.SUBS().STAND.activate(a, d);
 			}
 			return AI.SUBS().walkTo.deposit(a, d, res);
 		}
 	};
+	
+	protected AISubActivation work(Humanoid a, AIManager d) {
+		return work.set(a, d);
+	}
 	
 	final Resumer work = new Resumer("working") {
 		
@@ -337,6 +339,11 @@ class WorkAbs extends PlanBlueprint {
 		return RESOURCES.ALL().get(d.planByte1);
 	}
 	
+	@Override
+	protected String debug(Humanoid a, AIManager d) {
+		// TODO Auto-generated method stub
+		return super.debug(a, d);
+	}
 	
 
 

@@ -128,12 +128,12 @@ public final class FindableDatas {
 						Humanoid a = (Humanoid) ent;
 						people(!a.indu().hostile()).add(c);
 					}else if (ent instanceof Animal) {
-						if (((Animal)ent).reservable())
+						if (((Animal)ent).huntReservable())
 							reservableAnimals.add(c);
 					}
 				}
 				
-				if (TERRAIN().WATER.reservable(x, y))
+				if (SETT.PATH().finders().water.getReservable(x, y) != null)
 					findable[SETT.PATH().finders().water.index].add(c);
 				else if (PATH().finders.indoor.getReservable(x, y) != null)
 					findable[SETT.PATH().finders().indoor.index].add(c);
@@ -204,7 +204,7 @@ public final class FindableDatas {
 		
 	}
 	
-	void initComponentN(SCompN c, SComponentChecker checker, RECTANGLE boundsC) {
+	void initComponentN(SCompN c) {
 
 		c.clearData();
 		c.edgeMask = 0;
@@ -217,8 +217,8 @@ public final class FindableDatas {
 		while(RES.filler().hasMore()) {
 			COORDINATE coo = RES.filler().poll();
 			SComponent s = l.get(coo);
-			checker.isSetAndSet(s);
-			c.edgeMask |= s.edgeMask();
+			c.edgeMask |= s.hasEdge() ? 1 : 0;
+			c.edgeMask |= s.hasEntry() ? 2 : 0;
 			for (FindableData d : FindableData.all) {
 				if (d.get(s) > 0) {
 					d.add(c);
@@ -227,7 +227,7 @@ public final class FindableDatas {
 			
 			SComponentEdge e = s.edgefirst();
 			while(e != null) {
-				if (e.to().superComp() == c && boundsC.holdsPoint(e.to().centreX(), e.to().centreY())) {
+				if (e.to().superComp() == c) {
 					RES.filler().fill(e.to().centreX(), e.to().centreY());
 				}
 				e = e.next();

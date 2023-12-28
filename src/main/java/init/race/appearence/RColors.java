@@ -1,7 +1,9 @@
 package init.race.appearence;
 
 import settlement.entity.humanoid.HTYPE;
-import settlement.stats.*;
+import settlement.stats.Induvidual;
+import settlement.stats.STATS;
+import settlement.stats.stat.STAT;
 import snake2d.util.color.COLOR;
 import snake2d.util.color.ColorImp;
 import snake2d.util.file.Json;
@@ -96,7 +98,7 @@ public final class RColors {
 		public boolean turnsGrayWhenOld;
 		public boolean turnsWhiteWhenDead;
 		public boolean addsSickColor;
-		public DOUBLE_O<Induvidual> statDerive;
+		public final DOUBLE_O<Induvidual> statDerive;
 		
 		private ColorCollection(ArrayList<ColorCollection> all, Json json, String key) {
 			this.key = key;
@@ -109,15 +111,13 @@ public final class RColors {
 			
 			if (json.has("PICK_BY_STAT")) {
 				DOUBLE_O<Induvidual> statDerive = null;
-				Json j = json.json("PICK_BY_STAT");
-				if (j.keys().size() == 0)
-					j.error("No stat declared. If no condition is wanted, remove the whole condition block.", "USE_STAT");
-				StatCollection coll = STATS.COLLECTION(j.keys().get(0));
-				STAT s = coll.MAP().tryGet(j.value(coll.key));
+				STAT s = STATS.STAT(json.value("PICK_BY_STAT"));
 				if (s != null) {
 					statDerive = s.indu();
 				}
 				this.statDerive = statDerive;
+			}else {
+				this.statDerive = null;
 			}
 			
 			LIST<ColorImp> lcols = ColorImp.cols(json, "VALUES");
@@ -156,6 +156,7 @@ public final class RColors {
 				this.colors[i] = color;
 			}
 			ran = 0;
+			this.statDerive = null;
 		}
 		
 		ColorCollection(COLOR[] color) {
@@ -163,6 +164,7 @@ public final class RColors {
 			index = -1;
 			this.colors = color;
 			ran = 0;
+			this.statDerive = null;
 		}
 
 		@Override
@@ -183,7 +185,7 @@ public final class RColors {
 			if (statDerive != null) {
 				col = get((int)(statDerive.getD(in)*15));	
 			}else {
-				col = get((int) (in.randomness2() >> (ran*4)));
+				col = get((int) (STATS.RAN().get(in, 64) >> (ran*4)));
 			}
 			if (turnsWhiteWhenDead && dead)
 				return col = ColorImp.TMP.interpolate(col, COLOR.WHITE100, 0.3);

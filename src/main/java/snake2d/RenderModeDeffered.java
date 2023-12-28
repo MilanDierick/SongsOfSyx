@@ -10,7 +10,7 @@ import snake2d.util.sprite.TextureCoords;
 
 class RenderModeDeffered extends RenderMode{
 
-	private final VboSpritePointsOpti vboTextured;
+	private final VboSprite vboTextured;
 	private final VboShadowPoints vboShadows;
 	private final VboLightAmbient vboLightAmbient;
 	private final VboTileLight vboTileLight;
@@ -19,6 +19,7 @@ class RenderModeDeffered extends RenderMode{
 	private final _FBODeffered fbo;
 	private final VboSpriteDisplace vboDisplace2;
 	private final VboLightPointUni vboLightPointUni;
+	private final VboStencilMaxSetter depth;
 	private final boolean debug;
 //	private final VboSpriteTiles vboTiles;
 //	private final VboSpriteTiles vboTilesO;
@@ -26,7 +27,7 @@ class RenderModeDeffered extends RenderMode{
 	public RenderModeDeffered(SETTINGS sett) {
 		GlHelper.checkErrors();
 		Printer.ln("SHADERS: ");
-		vboTextured = VboSpritePointsOpti.getDeffered(sett);
+		vboTextured = VboSprite.getDeffered(sett);
 		vboShadows = new VboShadowPoints(sett);
 		vboLightAmbient = new VboLightAmbient(sett);
 		vboLightPoint = new VboLightPoint(sett);
@@ -34,6 +35,7 @@ class RenderModeDeffered extends RenderMode{
 		vboTileLight = new VboTileLight(sett);
 		vboDisplace2 = VboSpriteDisplace.getDeffered(sett);
 		vboLightPointUni = new VboLightPointUni(sett);
+		depth = new VboStencilMaxSetter(sett);
 //		vboTiles = VboSpriteTiles.getDeffered(sett, false);
 //		vboTilesO = VboSpriteTiles.getDeffered(sett, true);
 		fbo = new _FBODeffered(sett);
@@ -65,6 +67,8 @@ class RenderModeDeffered extends RenderMode{
 		GlHelper.checkErrors();
 		vboLightPointUni.dis();
 		GlHelper.checkErrors();
+		depth.dis();
+		GlHelper.checkErrors();
 //		vboTiles.dis();
 //		vboTilesO.dis();
 		ElementArrays.dispose();
@@ -72,7 +76,7 @@ class RenderModeDeffered extends RenderMode{
 	}
 
 	@Override
-	public void newLayer(boolean keepLights, int pointSize){
+	public int newLayer(boolean keepLights, int pointSize){
 		if (keepLights) {
 			vboLightAmbient.setNewButKeepLight();
 			vboLightPoint.setNewButKeepLight();
@@ -90,6 +94,8 @@ class RenderModeDeffered extends RenderMode{
 //		vboTilesO.setNew();
 		vboDisplace2.setNew();
 		vboShadows.setNewFinalOverride(i);
+		depth.setNewFinalOverride(i);
+		return i;
 		
 	}
 	
@@ -100,11 +106,13 @@ class RenderModeDeffered extends RenderMode{
 		vboTileLight.setNewFinal();
 		vboLightPointUni.setNewFinal();
 		vboParticles.setNew(pointSize);
+
 		int i = vboTextured.setNew();
 //		vboTiles.setNew();
 //		vboTilesO.setNew();
 		vboDisplace2.setNew();
 		vboShadows.setNewFinalOverride(i);
+		depth.setNewFinalOverride(i);
 		return i;
 	}
 	
@@ -118,46 +126,49 @@ class RenderModeDeffered extends RenderMode{
 		vboParticles.clear(pointSize);
 		vboDisplace2.clear();
 		vboLightPointUni.clear();
+		depth.clear();
 //		vboTiles.clear();
 //		vboTilesO.clear();
 	}
 	
 	@Override
-	public void renderShadow(TextureCoords t, int x1, int y1, int x2, int y2, int x3, int y3, int x4, int y4
+	public final void renderShadow(TextureCoords t, int x1, int y1, int x2, int y2, int x3, int y3, int x4, int y4
 			, byte d, byte depth) {
 		vboShadows.render(t, x1, y1, x2, y2, x3, y3, x4, y4, d, depth);
 		
 	}
 	
 	@Override
-	public void renderSprite(TextureCoords t, TextureCoords to, int x1, int x2, int y1, int y2, COLOR color,
+	public final void renderSprite(TextureCoords t, TextureCoords to, int x1, int x2, int y1, int y2, COLOR color,
 			OPACITY opacity) {
 		vboTextured.render(t, to, x1, x2, y1, y2, color, opacity);
 		
 	}
 	
 	@Override
-	public void registerLight(LIGHT_POINT l, float x, float y, float z, int radius,
+	public final void registerLight(LIGHT_POINT l, float x, float y, float z, int radius,
 			int x1, int x2, int y1, int y2, byte ne, byte se, byte sw, byte nw, byte depth) {
 		vboLightPoint.render(l, x, y, z, radius, x1, x2, y1, y2, ne, se, sw, nw, depth);
 	}
 	
 	@Override
-	public void registerAmbient(LIGHT_AMBIENT l, int x1, int x2, int y1, int y2, byte depth) {
+	public final void registerAmbient(LIGHT_AMBIENT l, int x1, int x2, int y1, int y2, byte depth) {
 		vboLightAmbient.render(l, x1, x2, y1, y2, depth);
 		
 	}
 	
 	@Override
-	public void renderParticle(short x, short y, byte nx, byte ny, byte nz, byte nA, COLOR color, OPACITY opacity) {
+	public final void renderParticle(short x, short y, byte nx, byte ny, byte nz, byte nA, COLOR color, OPACITY opacity) {
 		vboParticles.render(x, y, nx, ny, nz, nA, color, opacity);
 	}
 	
 	@Override
-	public void applySettings(SETTINGS sett) {
+	public final void applySettings(SETTINGS sett) {
 		fbo.applySettings(sett);
 	}
 
+	private int di = 0;
+	
 	@Override
 	public void flush(int pointSize) {
 		
@@ -175,7 +186,9 @@ class RenderModeDeffered extends RenderMode{
 		debug();
 		vboDisplace2.flush();
 		debug();
+		depth.flush();
 		vboShadows.flush();
+		
 		//vboShadows.clear();
 		debug();
 		
@@ -199,8 +212,10 @@ class RenderModeDeffered extends RenderMode{
 	}
 	
 	private void debug() {
-		if (debug)
+		if (debug && di++ >= 1000) {
+			di = 0;
 			GlHelper.checkErrors();
+		}
 	}
 
 	@Override
@@ -229,6 +244,12 @@ class RenderModeDeffered extends RenderMode{
 			int y1, int y2, COLOR color, OPACITY opacity) {
 		vboDisplace2.render(tx1, ty1, dx1, dy1, w, h, scale, x1, x2, y1, y2, color, opacity);
 		
+		
+	}
+
+	@Override
+	public void setMaxDepth(int x1, int x2, int y1, int y2, TextureCoords stencil, int depth) {
+		this.depth.render(stencil, x1, y1, x2, y2, depth);
 		
 	}
 

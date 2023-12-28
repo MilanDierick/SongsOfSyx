@@ -26,29 +26,45 @@ public class AIUtilMoveH {
 				SETT.ROOMS().fData.itemX1Y1(h.tc(), coo);
 				rec.moveX1Y1(coo.x(), coo.y());
 				rec.setDim(it.width(), it.height());
+				double best = Double.MAX_VALUE;
+				int bi = -1;
 				for (int di = 0; di < DIR.ORTHO.size(); di++) {
 					DIR d = DIR.ORTHO.get(di);
 					if (rec.holdsPoint(h.tc(), d)) {
 						AVAILABILITY a = SETT.PATH().availability.get(h.tc(), d);
-						if (a.player > 0 && a.player <= 1 && a.from < 1) {
-							unfuck(h, d);
-							return;
+						if (a.player > 0) {
+							double v = a.player + a.from;
+							if (v < best) {
+								best = v;
+								bi = di;
+							}
 						}
 
 					}
 				}
+				if (bi != -1) {
+					unfuck(h, DIR.ORTHO.get(bi));
+				}
 			}
 		}
+		
+		double best = Double.MAX_VALUE;
+		int bi = -1;
 		
 		for (int di = 0; di < DIR.ORTHO.size(); di++) {
 			DIR d = DIR.ORTHO.get(di);
 			AVAILABILITY a = SETT.PATH().availability.get(h.tc(), d);
-			if (a != null && a.player > 0 && a.player <= 1 && a.from < 1) {
-				unfuck(h, d);
-				return;
+			if (a != null && a.player > 0) {
+				double v = a.player + a.from;
+				if (v < best) {
+					best = v;
+					bi = di;
+				}
 			}
 		}
-		
+		if (bi != -1) {
+			unfuck(h, DIR.ORTHO.get(bi));
+		}
 		for (int di = 0; di < DIR.ORTHO.size(); di++) {
 			DIR d = DIR.ORTHO.get(di);
 			if (!SETT.PATH().solidity.is(h.tc(), d)) {

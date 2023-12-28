@@ -2,11 +2,17 @@ package game.faction.player;
 
 import java.io.IOException;
 
+import game.Profiler;
 import game.faction.*;
+import game.faction.FCredits.CTYPE;
+import game.faction.player.emissary.Emissaries;
 import game.faction.trade.FACTION_EXPORTER;
 import game.faction.trade.FACTION_IMPORTER;
+import game.time.TIME;
 import init.race.RACES;
 import init.race.Race;
+import init.resources.RESOURCE;
+import init.resources.RESOURCES;
 import settlement.main.SETT;
 import settlement.stats.STATS;
 import snake2d.util.file.*;
@@ -14,26 +20,36 @@ import snake2d.util.misc.ACTION;
 import snake2d.util.sets.KeyMap;
 import snake2d.util.sets.LISTE;
 import view.interrupter.IDebugPanel;
+import world.regions.data.RD;
+import world.regions.data.pop.RDRace;
 
 public final class Player extends Faction {
 
 	public final PTech tech = new PTech();
 	public final PTitles titles = new PTitles();
 	public final PlayerRaces races;
-	private final PResources resources = new PResources();
-	private final FCapitol population = new FCapitol(this);
-	private final FAppearance appearence = new FAppearance();
+	private final FResources resources = new FResources(48, TIME.seasons()) {
+
+		@Override
+		public int get(RESOURCE t) {
+			long stocked = SETT.ROOMS().STOCKPILE.tally().amountReservable(t);
+			stocked += SETT.ROOMS().EXPORT.tally.forSale(t);
+			return (int) stocked;
+		}
+		
+		
+	};
 	private final FBanner banner = new FBanner(this);
 	private final PLevels level = new PLevels();
-	private final PBonus bonus;
 	private final PCredits credits = new PCredits();
 	private final PAdmin admin = new PAdmin();
-	private final FKingdom kingdom = new FKingdom(this);
-	private final PTribute tribute = new PTribute();
 	private final FRuler ruler = new FRuler();
-	public final PLocks locks = new PLocks(this);
+	public final Emissaries emissaries = new Emissaries();
+	private final PBonusSetting psett;
+	private int ri;
+	public final PRel rel = new PRel();
 	
-	public Player(LISTE<Faction> all, KeyMap<Double> boosts){
+	public Player(LISTE<Faction> all, KeyMap<Double> boosts) throws IOException{
 		super(all);
 		races = new PlayerRaces();
 		ri = races.get(0).index();
@@ -42,7 +58,7 @@ public final class Player extends Faction {
 			
 			@Override
 			public void exe() {
-				credits.purchases.IN.inc(50);
+				credits.inc(50, CTYPE.MISC);
 			}
 		});
 		
@@ -50,15 +66,21 @@ public final class Player extends Faction {
 			
 			@Override
 			public void exe() {
-				credits.purchases.IN.inc(500000);
+				credits.inc(500000, CTYPE.MISC);
 			}
 		});
-		bonus = new PBonus(this, boosts);
+		
+		psett = new PBonusSetting(boosts);
 	}
 	
 	public void setRace(Race race) {
 		ri = race.index;
 		races.set(race);
+	}
+	
+	@Override
+	public Race race() {
+		return RACES.all().get(ri);
 	}
 	
 	@Override
@@ -68,10 +90,12 @@ public final class Player extends Faction {
 		titles.saver.save(file);
 		level.saver.save(file);
 		admin.saver.save(file);
-		tribute.save(file);
 		races.saver.save(file);
-		bonus.saver.save(file);
-
+		emissaries.saver.save(file);
+		psett.save(file);
+		rel.saver.save(file);
+		file.i(ri);
+		PlayerColors.saver.save(file);
 	}
 
 	@Override
@@ -81,9 +105,12 @@ public final class Player extends Faction {
 		titles.saver.load(file);
 		level.saver.load(file);
 		admin.saver.load(file);
-		tribute.load(file);
 		races.saver.load(file);
-		bonus.saver.load(file);
+		emissaries.saver.load(file);
+		psett.load(file);
+		rel.saver.load(file);
+		ri = file.i();
+		PlayerColors.saver.load(file);
 	}
 	
 	@Override
@@ -93,9 +120,11 @@ public final class Player extends Faction {
 		titles.saver.clear();
 		level.saver.clear();
 		admin.saver.clear();
-		tribute.clear();
 		races.saver.clear();
-		bonus.saver.clear();
+		emissaries.saver.clear();
+		psett.clear();
+		rel.saver.clear();
+		PlayerColors.saver.clear();
 	}
 	
 	@Override
@@ -110,39 +139,55 @@ public final class Player extends Faction {
 	
 	@Override
 	public boolean isActive() {
-		return super.isActive() && SETT.exists();
+		return true;
 	}
 	
 	@Override
 	protected void update(double ds) {
-		tribute.update(ds);
 		super.update(ds);
+		
 	}
 	
-	public void updateSpecial(double ds) {
-		for (Race r : RACES.all()) {
-			population.population.set(r, STATS.POP().POP.data(null).get(r, 0));
+	public void updateSpecial(double ds, Profiler prof) {
+		if (capitolRegion() != null) {
+			int ex = 0;
+			for (Race r : RACES.all()) {
+				if (RD.RACES().get(r) == null)
+					ex += STATS.POP().POP.data(null).get(r, 0);
+			}
 			
+			ex /= (RACES.all().size()-RD.RACES().all.size() + 1);
+			
+			for (RDRace rr : RD.RACES().all) {
+				rr.pop.set(capitolRegion(),  STATS.POP().POP.data(null).get(rr.race, 0)+ex);
+			}
 		}
+		
+		
+		prof.logStart(tech.getClass());
 		tech.update(ds);
+		prof.logEnd(tech.getClass());
+		
+		prof.logStart(titles.getClass());
 		titles.update(ds);
+		prof.logEnd(titles.getClass());
+		
+		prof.logStart(level.getClass());
 		level.update();
-		bonus.update(ds);
+		prof.logEnd(level.getClass());
+		
+		prof.logStart(emissaries.getClass());
+		emissaries.update(ds);
+		prof.logEnd(emissaries.getClass());
+		
+		prof.logStart(rel.getClass());
+		rel.update(ds);
+		prof.logEnd(rel.getClass());
 	}
 
 	@Override
-	public PResources res() {
+	public FResources res() {
 		return resources;
-	}
-
-	@Override
-	public FCapitol capitol() {
-		return population;
-	}
-
-	@Override
-	public FAppearance appearence() {
-		return appearence;
 	}
 
 	@Override
@@ -166,20 +211,10 @@ public final class Player extends Faction {
 	public PAdmin admin() {
 		return admin;
 	}
-	
-	@Override
-	public FKingdom kingdom() {
-		return kingdom;
-	}
 
 	@Override
 	public FRuler ruler() {
 		return ruler;
-	}
-	
-	@Override
-	public PBonus bonus() {
-		return bonus;
 	}
 	
 	public static final class PlayerRaces{
@@ -273,4 +308,20 @@ public final class Player extends Faction {
 		
 	}
 
+	@Override
+	protected void setActive(boolean active) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public double power() {
+		return super.power();
+	}
+	
+	@Override
+	public double powerW() {
+		return super.powerW() + RD.MILITARY().power.getD(capitolRegion()) + Math.max(credits.getD()/RESOURCES.ALL().size(), 0);
+	}
+	
 }

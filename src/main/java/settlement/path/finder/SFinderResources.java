@@ -2,8 +2,8 @@ package settlement.path.finder;
 
 import static settlement.main.SETT.*;
 
-import init.resources.RESOURCE;
-import init.resources.ResGroup;
+import init.resources.*;
+import init.resources.RBIT.RBITImp;
 import settlement.main.SETT;
 import settlement.misc.util.RESOURCE_TILE;
 import settlement.path.components.SComponent;
@@ -21,9 +21,9 @@ public final class SFinderResources {
 	public final Normal normal = new Normal();
 	public final Scattered scattered = new Scattered();
 
-	private long bscattered;
-	private long bstored;
-	private long bfetch;
+	private final RBITImp bscattered = new RBITImp();
+	private final RBITImp bstored = new RBITImp();
+	private final RBITImp bfetch = new RBITImp();
 	
 	SFinderResources() {
 		
@@ -67,24 +67,28 @@ public final class SFinderResources {
 		});
 	}
 	
-	public boolean has(int sx, int sy, long scattered, long stored, long fetch) {
+	public boolean has(int sx, int sy, RBIT scattered, RBIT stored, RBIT fetch) {
 		return PATH().comps.data.resScattered.has(sx, sy, scattered) || 
 				PATH().comps.data.resCrate.has(sx, sy, stored) || 
 				PATH().comps.data.resCrateGet.has(sx, sy, fetch);
 	}
 	
-	public RESOURCE find(long scattered, long stored, long fetch, COORDINATE start, SPath path, int maxdistance) {
+	public RESOURCE find(RBIT scattered, RBIT stored, RBIT fetch, COORDINATE start, SPath path, int maxdistance) {
 		return find(scattered, stored, fetch, start.x(), start.y(), path, maxdistance);
 	}
 	
-	public RESOURCE find(long scattered, long stored, long fetch, int sx, int sy, SPath path, int maxdistance) {
-		this.bscattered = scattered;
-		this.bstored = stored;
-		this.bfetch = fetch;
-		if (has(sx, sy, scattered, stored, fetch) && path.request(sx, sy, finder, maxdistance)) {
-			RESOURCE_TILE t = reservable(scattered, stored, fetch, path.destX(), path.destY());
-			t.findableReserve();
-			return t.resource();
+	public RESOURCE find(RBIT scattered, RBIT stored, RBIT fetch, int sx, int sy, SPath path, int maxdistance) {
+
+		if (has(sx, sy, scattered, stored, fetch)) {
+			this.bscattered.clearSet(scattered);
+			this.bstored.clearSet(stored);
+			this.bfetch.clearSet(fetch);
+			if (path.request(sx, sy, finder, maxdistance)) {
+				RESOURCE_TILE t = reservable(scattered, stored, fetch, path.destX(), path.destY());
+				t.findableReserve();
+				return t.resource();
+			}
+			
 		}
 		
 		return null;
@@ -105,8 +109,14 @@ public final class SFinderResources {
 		}
 	};
 
-	private RESOURCE_TILE reservable(long scattered, long stored, long fetch, int tx, int ty) {
-		ScatteredResource sc = THINGS().resources.getReservable(tx, ty, scattered | stored | fetch);
+	private final RBITImp tmp = new RBITImp();
+	
+	private RESOURCE_TILE reservable(RBIT scattered, RBIT stored, RBIT fetch, int tx, int ty) {
+		
+		tmp.clear();
+		tmp.or(scattered).or(stored).or(fetch);
+		
+		ScatteredResource sc = THINGS().resources.getReservable(tx, ty,tmp);
 		if (sc != null && sc.findableReservedCanBe()) {
 			return sc;
 		}
@@ -123,16 +133,16 @@ public final class SFinderResources {
 		if (!res.findableReservedCanBe())
 			return null;
 		if (res.isfetching()) {
-			if ((fetch & r.bit) != 0)
+			if (fetch.has(r))
 				return res;
 			return null;
 		}
 		if (res.isStoring()) {
-			if ((stored & r.bit) != 0)
+			if (stored.has(r))
 				return res;
 			return null;
 		}
-		if ((r.bit & scattered)!= 0)
+		if (scattered.has(r))
 			return res;
 		return null;
 	}
@@ -158,9 +168,9 @@ public final class SFinderResources {
 	}
 	
 	public int reserveExtra(boolean stored, boolean fetch, RESOURCE r, int tx, int ty, int amount) {
-		long sc = r.bit;
-		long st = stored ? r.bit : 0;
-		long fe = fetch ? r.bit : 0;
+		RBIT sc = r.bit;
+		RBIT st = stored ? r.bit : RBIT.NONE;
+		RBIT fe = fetch ? r.bit : RBIT.NONE;
 
 		int am = 0;
 		while(am < amount) {
@@ -180,6 +190,20 @@ public final class SFinderResources {
 	}
 	
 	public final int pickup(RESOURCE r, int tx, int ty, int amount) {
+		int am = 0;
+		while(am < amount) {
+			RESOURCE_TILE t = reserved(r, tx, ty);
+			if (t == null)
+				return am;
+			while(am < amount && t.findableReservedIs()) {
+				t.resourcePickup();
+				am ++;
+			}
+		}
+		return am;
+	}
+	
+	public final int pickupD(RESOURCE r, int tx, int ty, int amount) {
 		int am = 0;
 		while(am < amount) {
 			RESOURCE_TILE t = reserved(r, tx, ty);
@@ -241,7 +265,7 @@ public final class SFinderResources {
 			return has(sx, sy, group.mask);
 		}
 		
-		public boolean has(int sx, int sy, long mask) {
+		public boolean has(int sx, int sy, RBIT mask) {
 			return SFinderResources.this.has(sx, sy, mask, mask, mask);
 		}
 		
@@ -249,7 +273,7 @@ public final class SFinderResources {
 			return reserve(start, r.bit, path, maxdistance) != null;
 		}
 		
-		public RESOURCE reserve(COORDINATE start, long mask, SPath path, int maxdistance) {
+		public RESOURCE reserve(COORDINATE start, RBIT mask, SPath path, int maxdistance) {
 			return SFinderResources.this.find(mask, mask, mask, start, path, maxdistance);
 		}
 
@@ -282,20 +306,20 @@ public final class SFinderResources {
 			return has(sx, sy, r.bit);
 		}
 		
-		public boolean has(int sx, int sy, long mask) {
-			return SFinderResources.this.has(sx, sy, mask, 0, 0);
+		public boolean has(int sx, int sy, RBIT mask) {
+			return SFinderResources.this.has(sx, sy, mask, RBIT.NONE, RBIT.NONE);
 		}
 		
 		public boolean reserve(COORDINATE start, RESOURCE r, SPath path, int maxdistance) {
 			return reserve(start, r.bit, path, maxdistance) != null;
 		}
 		
-		public RESOURCE reserve(COORDINATE start, long resMask, SPath path, int maxdistance) {
+		public RESOURCE reserve(COORDINATE start, RBIT resMask, SPath path, int maxdistance) {
 			return reserve(start.x(), start.y(), resMask, path, maxdistance);
 		}
 		
-		public RESOURCE reserve(int sx, int sy, long resMask, SPath path, int maxdistance) {
-			return SFinderResources.this.find(resMask, 0, 0, sx, sy, path, maxdistance);
+		public RESOURCE reserve(int sx, int sy, RBIT resMask, SPath path, int maxdistance) {
+			return SFinderResources.this.find(resMask, RBIT.NONE, RBIT.NONE, sx, sy, path, maxdistance);
 		}
 
 		public int reserveExtra(RESOURCE r, int x, int y, int amount) {

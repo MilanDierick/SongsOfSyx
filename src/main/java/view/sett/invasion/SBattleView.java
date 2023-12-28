@@ -6,7 +6,6 @@ import static game.GAME.*;
 import java.io.IOException;
 
 import init.C;
-import settlement.main.RenderData;
 import settlement.main.SETT;
 import settlement.room.main.throne.THRONE;
 import snake2d.MButt;
@@ -15,6 +14,7 @@ import snake2d.util.datatypes.COORDINATE;
 import snake2d.util.file.FileGetter;
 import snake2d.util.file.FilePutter;
 import util.gui.misc.GBox;
+import util.rendering.RenderData;
 import util.rendering.ShadowBatch;
 import view.battle.*;
 import view.interrupter.ISidePanels;
@@ -22,7 +22,7 @@ import view.keyboard.KEYS;
 import view.main.VIEW;
 import view.sett.ui.minimap.UIMinimap;
 import view.subview.GameWindow;
-import view.ui.UIPanelTop;
+import view.ui.top.UIPanelTop;
 
 public final class SBattleView extends VIEW.ViewSub{
 	

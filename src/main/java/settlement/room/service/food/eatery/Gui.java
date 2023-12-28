@@ -1,14 +1,15 @@
 package settlement.room.service.food.eatery;
 
 import init.D;
-import init.resources.Edible;
+import init.race.RACES;
+import init.race.Race;
 import init.resources.RESOURCES;
-import init.sprite.UI.UI;
+import init.resources.ResG;
+import settlement.stats.STATS;
 import snake2d.util.datatypes.DIR;
 import snake2d.util.gui.GUI_BOX;
 import snake2d.util.gui.GuiSection;
 import snake2d.util.gui.renderable.RENDEROBJ;
-import util.data.BOOLEAN;
 import util.data.GETTER;
 import util.gui.misc.*;
 import util.info.GFORMAT;
@@ -31,7 +32,7 @@ class Gui extends UIRoomModuleImp<EateryInstance, ROOM_EATERY> {
 		
 		GuiSection s = new GuiSection();
 		int i = 0;
-		for (Edible e : RESOURCES.EDI().all()) {
+		for (ResG e : RESOURCES.EDI().all()) {
 			
 			GButt.BSection ss = new GButt.BSection() {
 				
@@ -45,6 +46,16 @@ class Gui extends UIRoomModuleImp<EateryInstance, ROOM_EATERY> {
 					b.NL();
 					b.textLL(¤¤Consumed).add(GFORMAT.i(b.text(), (int) -blueprint.industry().ins().get(e.index()).year.get(g.get())));
 					b.NL();
+					
+					b.sep();
+					b.textLL(STATS.FOOD().FOOD_PREFFERENCE.info().name);
+					b.NL();
+					for (Race r : RACES.all()) {
+						if (r.pref().foodMask.has(e.resource))
+							b.add(r.appearance().icon);
+					}
+					
+					
 				}
 				
 				@Override
@@ -58,13 +69,6 @@ class Gui extends UIRoomModuleImp<EateryInstance, ROOM_EATERY> {
 				}
 			};
 			
-			ss.add(UI.PANEL().checkSprite(new BOOLEAN() {
-				
-				@Override
-				public boolean is() {
-					return g.get().uses(e);
-				}
-			}), 0, 0);
 			
 			ss.addRightC(4, e.resource.icon());
 			
@@ -104,9 +108,26 @@ class Gui extends UIRoomModuleImp<EateryInstance, ROOM_EATERY> {
 	}
 	
 	@Override
-	protected void hover(GBox b, EateryInstance i) {
+	protected void hover(GBox b, EateryInstance ins) {
 		b.NL();
-		b.textLL(¤¤Food).add(GFORMAT.i(b.text(), i.amountTotal()));	
+		b.textLL(¤¤Food).add(GFORMAT.i(b.text(), ins.amountTotal()));	
+		b.NL();
+		for (int i = 0; i < RESOURCES.EDI().all().size(); i++) {
+			ResG r = RESOURCES.EDI().all().get(i);
+			b.add(r.resource.icon());
+			GText t = b.text();
+			GFORMAT.i(t, ins.amount(r));
+			if (!ins.uses(r))
+				t.errorify();
+			b.add(t);
+			b.space();
+			if (i % 6 == 5) {
+				b.NL();
+			}
+				
+		}
+		
+		
 		b.NL();
 	}
 
@@ -115,7 +136,7 @@ class Gui extends UIRoomModuleImp<EateryInstance, ROOM_EATERY> {
 		GuiSection s = new GuiSection();
 		GChart cc = new GChart();
 		int i = 0;
-		for (Edible e : RESOURCES.EDI().all()) {
+		for (ResG e : RESOURCES.EDI().all()) {
 			RENDEROBJ r = new GStat() {
 				
 				@Override
@@ -133,6 +154,14 @@ class Gui extends UIRoomModuleImp<EateryInstance, ROOM_EATERY> {
 					cc.clear();
 					cc.add(blueprint.industry().ins().get(e.index()).history());
 					b.add(cc);
+					
+					b.sep();
+					b.textLL(STATS.FOOD().FOOD_PREFFERENCE.info().name);
+					b.NL();
+					for (Race r : RACES.all()) {
+						if (r.pref().foodMask.has(e.resource))
+							b.add(r.appearance().icon);
+					}
 					
 				};
 			}.hv(e.resource.icon());

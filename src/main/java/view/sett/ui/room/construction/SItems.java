@@ -201,11 +201,11 @@ final class SItems {
 				if (d < 0) {
 					b.error(s.name());
 					b.tab(6);
-					b.add(SPRITES.icons().s.minus);
+					b.add(SPRITES.icons().m.minus);
 				}else if (d > 0) {
 					b.text(s.name());
 					b.tab(6);
-					b.add(SPRITES.icons().s.plus);
+					b.add(SPRITES.icons().m.plus);
 				}
 				b.NL();
 					

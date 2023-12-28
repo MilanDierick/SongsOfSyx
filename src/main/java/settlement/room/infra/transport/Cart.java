@@ -1,10 +1,10 @@
 package settlement.room.infra.transport;
 
 import game.faction.FACTIONS;
+import game.faction.FResources.RTYPE;
 import game.time.TIME;
 import init.D;
-import init.resources.RESOURCE;
-import init.resources.RESOURCES;
+import init.resources.*;
 import init.sound.SoundSettlement.Sound;
 import settlement.entity.humanoid.Humanoid;
 import settlement.main.SETT;
@@ -324,10 +324,10 @@ final class Cart {
 		}
 		
 		@Override
-		public long jobResourceBitToFetch() {
+		public RBIT jobResourceBitToFetch() {
 			if (wlivestock.get() < 1)
 				return RESOURCES.LIVESTOCK().bit;
-			return 0;
+			return null;
 		}
 		
 		@Override
@@ -350,7 +350,7 @@ final class Cart {
 				return false;
 			if (wreserved.get() == 1)
 				return false;
-			if (jobResourceBitToFetch() != 0)
+			if (jobResourceBitToFetch() != null)
 				return false;
 			return tending.get() == tending.max();
 		}
@@ -366,7 +366,7 @@ final class Cart {
 				return false;
 			if (wreserved.get() == 1)
 				return false;
-			if (jobResourceBitToFetch() != 0)
+			if (jobResourceBitToFetch() != null)
 				return true;
 			return tending.get() != tending.max();
 		}
@@ -386,7 +386,7 @@ final class Cart {
 			jobReserveCancel(r);
 			
 			if (r == RESOURCES.LIVESTOCK()) {
-				FACTIONS.player().res().outConsumed.inc(r, ri);
+				FACTIONS.player().res().inc(r, RTYPE.CONSUMED, -ri);
 				wlivestockCount.set(ins, wlivestockCount.max());
 			}else {
 				tending.inc(ins, 1);

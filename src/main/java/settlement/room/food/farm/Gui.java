@@ -9,7 +9,7 @@ import settlement.room.industry.module.Industry;
 import settlement.room.industry.module.Industry.IndustryResource;
 import settlement.room.industry.module.IndustryUtil;
 import settlement.room.main.RoomInstance;
-import settlement.tilemap.Fertility;
+import settlement.tilemap.growth.Fertility;
 import snake2d.util.datatypes.DIR;
 import snake2d.util.gui.GUI_BOX;
 import snake2d.util.gui.GuiSection;
@@ -61,12 +61,10 @@ class Gui extends UIRoomModuleImp<FarmInstance, ROOM_FARM> {
 	public void hover(GBox box, FarmInstance i) {
 		super.hover(box, i);
 		box.NL();
-		if (!i.blueprintI().constructor.isIndoors) {
-			box.text(blueprint.constructor.fertility.name());
-			box.add(GFORMAT.perc(box.text(), i.tData.fertility()));
-			
-			box.NL();
-		}
+		box.text(blueprint.constructor.fertility.name());
+		box.add(GFORMAT.perc(box.text(), i.tData.fertility()));
+		
+		box.NL();
 		box.text(¤¤estimated);
 		box.add(GFORMAT.i(box.text(), Util.prospect(i)));
 		
@@ -129,7 +127,7 @@ class Gui extends UIRoomModuleImp<FarmInstance, ROOM_FARM> {
 				int i = res.history().historyRecords()-1-stapleI;
 				int am = res.history().get(i);
 				GText t = box.text();
-				DicTime.setYearsAgo(t, i);
+				DicTime.setDaysAgo(t, i);
 				box.add(t);
 				box.NL(2);
 				box.add(GFORMAT.i(box.text(), am));
@@ -161,7 +159,7 @@ class Gui extends UIRoomModuleImp<FarmInstance, ROOM_FARM> {
 							
 							@Override
 							protected void clickA() {
-								if (FACTIONS.player().locks.unlockText(f) == null && f != getter.get().blueprintI()) {
+								if (f.reqs.passes(FACTIONS.player()) && f != getter.get().blueprintI()) {
 									VIEW.inters().popup.close();
 									getter.get().changeTo(f);
 									
@@ -171,7 +169,7 @@ class Gui extends UIRoomModuleImp<FarmInstance, ROOM_FARM> {
 							
 							@Override
 							protected void renAction() {
-								activeSet(FACTIONS.player().locks.unlockText(f) == null && f != getter.get().blueprintI() && f.constructor.isIndoors == getter.get().blueprintI().constructor.isIndoors);
+								activeSet(f.reqs.passes(FACTIONS.player()) && f != getter.get().blueprintI() && f.constructor.isIndoors == getter.get().blueprintI().constructor.isIndoors);
 							};
 							
 						}.hoverSet(f.info);
@@ -217,14 +215,14 @@ class Gui extends UIRoomModuleImp<FarmInstance, ROOM_FARM> {
 			
 			s = new GuiSection();
 			
-			if (!blueprint.constructor.isIndoors)
-				s.add(new GStat() {
-					
-					@Override
-					public void update(GText text) {
-						GFORMAT.perc(text, getter.get().tData.fertility());
-					}
-				}.hv(Fertility.¤¤name, blueprint.constructor.fertility.desc()));
+			s.add(new GStat() {
+				
+				@Override
+				public void update(GText text) {
+					GFORMAT.perc(text, getter.get().tData.fertility());
+				}
+			}.hv(Fertility.¤¤name, blueprint.constructor.fertility.desc()));
+				
 			
 			s.addRightC(32, new GStat() {
 				
@@ -336,12 +334,10 @@ class Gui extends UIRoomModuleImp<FarmInstance, ROOM_FARM> {
 				b.add(GFORMAT.f(b.text(), Util.base(ins)));
 				b.NL();
 				
-				if (!blueprint.constructor.isIndoors) {
-					b.textL(Fertility.¤¤name);
-					b.tab(6);
-					b.add(GFORMAT.f1(b.text(), ins.tData.fertility()));
-					b.NL();
-				}
+				b.textL(Fertility.¤¤name);
+				b.tab(6);
+				b.add(GFORMAT.f1(b.text(), ins.tData.fertility()));
+				b.NL();
 				
 				b.textL(¤¤workValue);
 				b.tab(6);

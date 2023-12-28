@@ -5,15 +5,15 @@ import java.io.IOException;
 import init.RES;
 import init.sprite.game.SheetPair;
 import init.sprite.game.SheetType;
-import settlement.main.RenderData.RenderIterator;
 import settlement.room.main.furnisher.FurnisherItem;
 import snake2d.SPRITE_RENDERER;
 import snake2d.util.color.COLOR;
 import snake2d.util.datatypes.DIR;
 import snake2d.util.file.Json;
+import util.rendering.RenderData.RenderIterator;
 import util.rendering.ShadowBatch;
 
-public class RoomSprite1x1 extends RoomSpriteNew{
+public class RoomSprite1x1 extends RoomSpriteImp{
 
 	
 	public RoomSprite1x1(Json json, String key) throws IOException{
@@ -36,7 +36,6 @@ public class RoomSprite1x1 extends RoomSpriteNew{
 		ran = ran>>4;
 		
 		int tile = type().tile(sheet.s, sheet.d, 0, frame(sheet, it), this.rotates ? (data&0x03) : ran&0b11);
-		
 		
 		sheet.s.render(sheet.d, it.x(), it.y(), it, r, tile, ran, degrade);
 		COLOR.unbind();

@@ -2,6 +2,7 @@ package settlement.thing.halfEntity;
 
 import java.io.IOException;
 
+import game.Profiler;
 import init.C;
 import init.sprite.SPRITES;
 import settlement.main.CapitolArea;
@@ -9,6 +10,8 @@ import settlement.main.SETT;
 import settlement.main.SETT.SettResource;
 import settlement.thing.halfEntity.caravan.Caravans;
 import settlement.thing.halfEntity.crate.TransportFactory;
+import settlement.thing.halfEntity.dingy.DingyFactory;
+import settlement.thing.halfEntity.halfCorpse.MovingCorpseFactory;
 import snake2d.Renderer;
 import snake2d.util.color.COLOR;
 import snake2d.util.datatypes.COORDINATE;
@@ -27,7 +30,8 @@ public class HalfEnts extends SettResource {
 
 	public final Caravans caravans = new Caravans(constructors);
 	public final TransportFactory transports = new TransportFactory(constructors);
-
+	public final MovingCorpseFactory corpses = new MovingCorpseFactory(constructors);
+	public final DingyFactory dingy = new DingyFactory(constructors);
 	private final Tree<HalfEntity> renderables = new Tree<HalfEntity>(2056) {
 
 		@Override
@@ -37,7 +41,7 @@ public class HalfEnts extends SettResource {
 		
 	};
 
-	public HalfEnts() {
+	public HalfEnts() throws IOException {
 
 		ents = new ArrayListResize<HalfEntity>(1024, 64000);
 		map = new _WMap(SETT.PWIDTH, SETT.PHEIGHT);
@@ -122,7 +126,7 @@ public class HalfEnts extends SettResource {
 
 
 	@Override
-	public void update(float ds) {
+	public void update(float ds, Profiler profiler) {
 		for (int i = 0; i < ents.size(); i++) {
 			HalfEntity e = ents.get(i);
 			e.update(ds);
@@ -131,11 +135,6 @@ public class HalfEnts extends SettResource {
 			else
 				map.move(e);
 		}
-	}
-
-	@Override
-	protected void afterTick() {
-
 	}
 
 	public LIST<HalfEntity> all(){
@@ -171,7 +170,7 @@ public class HalfEnts extends SettResource {
 
 	public void renderInit( RECTANGLE renWindow) {
 		renderables.clear();
-		int min = C.TILE_SIZE*7;
+		int min = C.TILE_SIZE*3;
 		map.fill(renWindow.x1()-min, renWindow.x2()+min, renWindow.y1()-min, renWindow.y2()+min, renderables);
 		tmp.clear();
 
@@ -180,6 +179,7 @@ public class HalfEnts extends SettResource {
 			e = renderables.pollGreatest();
 			tmp.add(e);
 		}
+		
 	}
 	
 	public void renderBelow(Renderer r, ShadowBatch s, float ds, RECTANGLE renWindow, int offX, int offY) {

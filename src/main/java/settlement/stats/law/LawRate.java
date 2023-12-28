@@ -55,7 +55,7 @@ public final class LawRate {
 		}
 	};
 
-	void update(float ds) {
+	void update(double ds) {
 		upI -= ds;
 		if (upI > 0)
 			return;

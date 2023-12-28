@@ -4,7 +4,6 @@ import java.util.LinkedList;
 
 import game.GAME;
 import game.faction.FACTIONS;
-import game.time.Intervals;
 import init.race.RACES;
 import init.race.Race;
 import init.settings.S;
@@ -12,15 +11,13 @@ import init.sprite.SPRITES;
 import settlement.entity.humanoid.HCLASS;
 import settlement.entity.humanoid.HTYPE;
 import settlement.main.SETT;
-import settlement.stats.STAT;
 import settlement.stats.STATS;
 import settlement.stats.health.HEALTH;
 import settlement.stats.law.Crimes;
 import settlement.stats.law.LAW;
 import settlement.stats.standing.STANDINGS;
-import snake2d.SPRITE_RENDERER;
+import settlement.stats.stat.STAT;
 import snake2d.util.MATH;
-import snake2d.util.color.*;
 import snake2d.util.datatypes.DIR;
 import snake2d.util.gui.GUI_BOX;
 import snake2d.util.gui.GuiSection;
@@ -28,13 +25,13 @@ import snake2d.util.gui.clickable.CLICKABLE;
 import snake2d.util.gui.renderable.RENDEROBJ;
 import snake2d.util.misc.CLAMP;
 import snake2d.util.sprite.SPRITE;
-import util.colors.GCOLOR;
 import util.dic.*;
 import util.gui.misc.*;
 import util.info.GFORMAT;
 import view.interrupter.ISidePanel;
 import view.main.VIEW;
 import view.sett.ui.army.UIArmy;
+import view.sett.ui.food.UIFood;
 import view.sett.ui.home.UIHomes;
 import view.sett.ui.law.UILaw;
 import view.sett.ui.noble.UINobles;
@@ -42,7 +39,7 @@ import view.sett.ui.room.UIRooms;
 import view.sett.ui.standing.UICitizens;
 import view.sett.ui.standing.UISlaves;
 import view.sett.ui.subject.UISubjects;
-import view.ui.UIPanelTop;
+import view.ui.top.*;
 
 public final class UISettManagePanel {
 
@@ -52,7 +49,7 @@ public final class UISettManagePanel {
 	}
 	
 	
-	private GuiSection buttss = new GuiSection();
+
 	private int i;
 	
 	public final UIRooms rooms = new UIRooms();
@@ -63,14 +60,137 @@ public final class UISettManagePanel {
 	public final UINobles nobles = new UINobles();
 	public final UILaw law = new UILaw();
 	public final UIHomes home = new UIHomes();
+	public final UIFood prod = new UIFood();
 	
-	
-	public UISettManagePanel(UIPanelTop panel) {
+	public UISettManagePanel(SettView w, UIPanelTop panel) {
 		
 		CLICKABLE b;
 		
-
+		GuiSection big = new GuiSection();
+		GuiSection small = new GuiSection();
+		
 		{
+			addB(big, new StandingButt(HCLASS.CITIZEN, standing), "CITIZENS");
+			addB(big, new StandingButt(HCLASS.SLAVE, slaves), "SLAVES");
+			b = new UIPanelTopButtL(SPRITES.icons().s.noble) {
+				
+				@Override
+				protected double valueNext() {
+					return value();
+				}
+				
+				@Override
+				protected double value() {
+					return 1.0;
+				}
+				
+				@Override
+				protected int getNumber() {
+					return GAME.NOBLE().active();
+				}
+				
+				@Override
+				public void hoverInfoGet(GUI_BOX text) {
+					text.title(HCLASS.NOBLE.names);
+					text.text(HCLASS.NOBLE.desc);
+				}
+
+				@Override
+				protected boolean isActive() {
+					return getNumber() > 0;
+				};
+				
+				@Override
+				protected void renAction() {
+					selectedSet(nobles != null && VIEW.s().panels.added(nobles));
+				}
+				
+				@Override
+				protected void clickA() {
+					if (nobles != null)
+						VIEW.s().panels.add(nobles, true);
+				}
+			};
+			addB(big, b, "NOBLES");
+			
+			b = new UIPanelTopButtL(SPRITES.icons().s.hammer) {
+				
+				@Override
+				protected double valueNext() {
+					return value();
+				}
+				
+				@Override
+				protected double value() {
+					double t = STATS.WORK().workforce();
+					double e = SETT.ROOMS().employment.NEEDED.get();
+					if (t == 0)
+						return e > 0 ? 0 : 1;
+					return CLAMP.d(t/e, 0, 1);
+				}
+				
+				@Override
+				protected int getNumber() {
+					int t = STATS.WORK().workforce();
+					int e = SETT.ROOMS().employment.NEEDED.get();
+					return t-e;
+				}
+				
+				@Override
+				public void hoverInfoGet(GUI_BOX text) {
+					GBox b = (GBox) text;
+					
+					b.title(DicMisc.¤¤Workforce);
+					b.text(DicMisc.¤¤WorkforceD);
+					b.NL();
+					
+					int e = STATS.WORK().workforce();
+					int t = SETT.ROOMS().employment.NEEDED.get();
+					
+					b.textLL(DicMisc.¤¤Needed);
+					b.tab(7);
+					b.add(GFORMAT.i(b.text(), t));
+					b.NL();
+					
+					b.textLL(DicMisc.¤¤Employees);
+					b.tab(7);
+					b.add(GFORMAT.i(b.text(), e));
+					b.NL();
+					
+					b.textLL(DicMisc.¤¤Oddjobbers);
+					b.tab(7);
+					b.add(GFORMAT.i(b.text(), e-t));
+					b.NL();
+					
+				};
+
+				@Override
+				protected boolean isActive() {
+					return STATS.WORK().workforce() > 0;
+				};
+				
+				@Override
+				protected void renAction() {
+					selectedSet(rooms.main() != null && VIEW.s().panels.added(rooms.main()));
+				}
+				
+				@Override
+				protected void clickA() {
+					if (rooms.main() != null)
+						VIEW.s().panels.add(rooms.main(), true);
+				}
+			};
+			addB(big, b, "ROOMS");
+		}
+		
+		{
+
+			
+			
+			
+			
+			
+			
 			b = new GButt.BStat2(SPRITES.icons().s.human, new GStat() {
 
 				@Override
@@ -88,50 +208,17 @@ public final class UISettManagePanel {
 					selectedSet(subjects.listActive());
 				}
 			}.hoverInfoSet(STATS.POP().POP.info().name);
-			add(b, "SUBJECTS");
-			
-			
-			add(new StandingButt(HCLASS.CITIZEN, standing), "CITIZENS");
-			add(new StandingButt(HCLASS.SLAVE, slaves), "SLAVES");
-			b = new Buttt(SPRITES.icons().s.noble, nobles) {
-				
-				@Override
-				double valueNext() {
-					return value();
-				}
-				
-				@Override
-				double value() {
-					return 1.0;
-				}
-				
-				@Override
-				int getNumber() {
-					return GAME.NOBLE().active();
-				}
-				
-				@Override
-				public void hoverInfoGet(GUI_BOX text) {
-					text.title(HCLASS.NOBLE.names);
-					text.text(HCLASS.NOBLE.desc);
-				}
-
-				@Override
-				boolean isActive() {
-					return getNumber() > 0;
-				};
-			};
-			add(b, "NOBLES");
+			add(small, b, "SUBJECTS");
 			
 			b = new Buttt(SPRITES.icons().s.house, home) {
 				
 				@Override
-				double valueNext() {
+				protected double valueNext() {
 					return value();
 				}
 				
 				@Override
-				double value() {
+				protected double value() {
 					double pop = STATS.POP().POP.data(null).get(null);
 					if (pop == 0)
 						return 1;
@@ -139,7 +226,7 @@ public final class UISettManagePanel {
 				}
 				
 				@Override
-				int getNumber() {
+				protected int getNumber() {
 					return STATS.HOME().GETTER.hasSearched.data(null).get(null);
 				}
 				
@@ -177,27 +264,27 @@ public final class UISettManagePanel {
 				}
 
 				@Override
-				boolean isActive() {
+				protected boolean isActive() {
 					return true;
 				};
 			};
-			add(b, "HOUSING");			
+			add(small, b, "HOUSING");			
 			
 			
 			b = new Buttt(SPRITES.icons().s.law, law) {
 				
 				@Override
-				double valueNext() {
+				protected double valueNext() {
 					return 1.0-LAW.crimes().rate().getD();
 				}
 				
 				@Override
-				double value() {
+				protected double value() {
 					return 1.0-LAW.crimes().rate().getD(1);
 				}
 				
 				@Override
-				int getNumber() {
+				protected int getNumber() {
 					return STATS.POP().pop(HTYPE.PRISONER);
 				}
 				
@@ -231,167 +318,32 @@ public final class UISettManagePanel {
 				};
 
 				@Override
-				boolean isActive() {
+				protected boolean isActive() {
 					return LAW.crimes().rate().getD() > 0 || STATS.POP().pop(HTYPE.PRISONER) > 0;
 				};
 			};
-			add(b, "LAW");
+			add(small, b, "LAW");
 			
-			b = new Buttt(SPRITES.icons().s.hammer, rooms.main()) {
-				
-				@Override
-				double valueNext() {
-					return value();
-				}
-				
-				@Override
-				double value() {
-					double t = STATS.WORK().workforce();
-					double e = SETT.ROOMS().employment.NEEDED.get();
-					if (t == 0)
-						return e > 0 ? 0 : 1;
-					return CLAMP.d(t/e, 0, 1);
-				}
-				
-				@Override
-				int getNumber() {
-					int t = STATS.WORK().workforce();
-					int e = SETT.ROOMS().employment.NEEDED.get();
-					return t-e;
-				}
-				
-				@Override
-				public void hoverInfoGet(GUI_BOX text) {
-					GBox b = (GBox) text;
-					
-					b.title(DicMisc.¤¤Workforce);
-					b.text(DicMisc.¤¤WorkforceD);
-					b.NL();
-					
-					int e = STATS.WORK().workforce();
-					int t = SETT.ROOMS().employment.NEEDED.get();
-					
-					b.textLL(DicMisc.¤¤Needed);
-					b.tab(7);
-					b.add(GFORMAT.i(b.text(), t));
-					b.NL();
-					
-					b.textLL(DicMisc.¤¤Employees);
-					b.tab(7);
-					b.add(GFORMAT.i(b.text(), e));
-					b.NL();
-					
-					b.textLL(DicMisc.¤¤Oddjobbers);
-					b.tab(7);
-					b.add(GFORMAT.i(b.text(), e-t));
-					b.NL();
-					
-				};
 
-				@Override
-				boolean isActive() {
-					return STATS.WORK().workforce() > 0;
-				};
-			};
-			add(b, "ROOMS");
 			
-			b = new Buttt(VIEW.UI().trade.icon, VIEW.UI().trade) {
-				
-				@Override
-				double valueNext() {
-					return STATS.GOVERN().RICHES.data().getD(null);
-				}
-				
-				@Override
-				double value() {
-					if (!isActive())
-						return 1;
-					return STATS.GOVERN().RICHES.data().getD(null, 1);
-				}
-				
-				@Override
-				int getNumber() {
-					return (int)FACTIONS.player().credits().credits();
-				}
-				
-				@Override
-				public void hoverInfoGet(GUI_BOX text) {
-					GBox b = (GBox) text;
-					
-					b.title(DicRes.¤¤Treasury);
-					b.text(DicRes.¤¤TreasuryDesc);
-					b.NL();
-				};
-
-				@Override
-				boolean isActive() {
-					return FACTIONS.player().credits().credits() != 0 || FACTIONS.player().credits().creditsH().get(1) != 0;
-				};
-			};
-			add(b, "ECONOMY");
 			
-			b = new Buttt(VIEW.UI().goods.icon, VIEW.UI().goods) {
-				
-				@Override
-				double valueNext() {
-					return value();
-				}
-				
-				@Override
-				double value() {
-					double s = SETT.ROOMS().STOCKPILE.tally().totalSpace();
-					if (s == 0)
-						return 1;
-					double d = SETT.ROOMS().STOCKPILE.tally().totalAmount();
-					return d/s;
-				}
-				
-				@Override
-				int getNumber() {
-					return (int) SETT.ROOMS().STOCKPILE.tally().totalAmount();
-				}
-				
-				@Override
-				public void hoverInfoGet(GUI_BOX text) {
-					GBox b = (GBox) text;
-					
-					b.title(VIEW.UI().goods.¤¤Name);
-					b.text(VIEW.UI().goods.¤¤Desc);
-					b.NL();
-					
-					b.textL(DicRes.¤¤Stored);
-					b.tab(7);
-					b.add(GFORMAT.i(b.text(), SETT.ROOMS().STOCKPILE.tally().totalAmount()));
-					b.NL();
-					b.textL(DicRes.¤¤Capacity);
-					b.tab(7);
-					b.add(GFORMAT.i(b.text(), SETT.ROOMS().STOCKPILE.tally().totalSpace()));
-					b.NL();
-				};
-
-				@Override
-				boolean isActive() {
-					return SETT.ROOMS().STOCKPILE.tally().totalAmount() > 0;
-				};
-			};
-			add(b, "GOODS");
 			
 			b = new Buttt(SPRITES.icons().s.sword, army) {
 				
 
 				@Override
-				double valueNext() {
-					return CLAMP.d(1.0-GAME.events().raider.CHANCE.getD(), 0, 1);
+				protected double valueNext() {
+					return CLAMP.d(1.0-GAME.events().world.raider.CHANCE.getD(), 0, 1);
 				}
 				
 				@Override
-				double value() {
+				protected double value() {
 					return valueNext();
 					
 				}
 				
 				@Override
-				int getNumber() {
+				protected int getNumber() {
 					return (int)STATS.BATTLE().DIV.stat().data(null).get(null, 0);
 				}
 				
@@ -413,56 +365,28 @@ public final class UISettManagePanel {
 					b.NL();
 					
 					b.NL(8);
-					b.textLL(GAME.events().raider.CHANCE.info().name);
+					b.textLL(GAME.events().world.raider.CHANCE.info().name);
 					b.tab(7);
-					b.add(GFORMAT.percBig(b.text(), GAME.events().raider.CHANCE.getD()));
+					b.add(GFORMAT.percBig(b.text(), GAME.events().world.raider.CHANCE.getD()));
 					b.NL();
-					b.text(GAME.events().raider.CHANCE.info().desc);
+					b.text(GAME.events().world.raider.CHANCE.info().desc);
 					
 					
 				};
 
 				@Override
-				boolean isActive() {
-					return GAME.events().raider.CHANCE.getD() != 0 || getNumber() != 0 || STATS.BATTLE().RECRUIT.stat().data(null).get(null, 0) != 0;
+				protected boolean isActive() {
+					return GAME.events().world.raider.CHANCE.getD() != 0 || getNumber() != 0 || STATS.BATTLE().RECRUIT.stat().data(null).get(null, 0) != 0;
 				};
 			};
-			add(b, "ARMY");
+			add(small, b, "ARMY");
 			
-			b = new Buttt(SPRITES.icons().s.vial, VIEW.UI().tech) {
-				
-				@Override
-				double valueNext() {
-					return value();
-				}
-				
-				@Override
-				double value() {
-					return GAME.player().tech.penalty().getD();
-				}
-				
-				@Override
-				int getNumber() {
-					return (int) GAME.player().tech.available().get();
-				}
-				
-				@Override
-				public void hoverInfoGet(GUI_BOX text) {
-					FACTIONS.player().tech.info.hover(text);
-				};
-
-				@Override
-				boolean isActive() {
-					return GAME.player().tech.available().get() != 0 || GAME.player().tech.allocated().get() != 0;
-				};
-				
-			};
-			add(b, "TECH");
+			
 			
 			b = new Buttt(SPRITES.icons().s.heart, VIEW.UI().health) {
 				
 				@Override
-				double valueNext() {
+				protected double valueNext() {
 					return HEALTH.rate().getD();
 				}
 				
@@ -470,7 +394,7 @@ public final class UISettManagePanel {
 				double cache = 0;
 				
 				@Override
-				double value() {
+				protected double value() {
 					if (GAME.updateI()-upI >= 60) {
 						cache = HEALTH.rate().getPeriod(3, 0)/100.0;
 						upI = GAME.updateI();
@@ -479,7 +403,7 @@ public final class UISettManagePanel {
 				}
 				
 				@Override
-				int getNumber() {
+				protected int getNumber() {
 					return STATS.NEEDS().disease.infected().data().get(null);
 				}
 				
@@ -490,68 +414,113 @@ public final class UISettManagePanel {
 				};
 
 				@Override
-				boolean isActive() {
+				protected boolean isActive() {
 					return true;
 				};
 				
 			};
-			add(b, "HEALTH");
+			add(small, b, "HEALTH");
 			
 			
-			
+			b = new Buttt(SPRITES.icons().s.plate, prod) {
+				
+				@Override
+				protected double valueNext() {
+					
+					return STATS.FOOD().FOOD_DAYS.data().getD(null);
+				}
+				
+				@Override
+				protected double value() {
+					return STATS.FOOD().FOOD_DAYS.data().getPeriodD(null, 8, 0);
+				}
+				
+				@Override
+				protected int getNumber() {
+					return (int) (STATS.FOOD().FOOD_DAYS.data(null).getD(null, 0)* STATS.FOOD().FOOD_DAYS.dataDivider());
+				}
+				
+				@Override
+				public void hoverInfoGet(GUI_BOX text) {
+					text.title(DicRes.¤¤Food);
+				};
+
+				@Override
+				protected boolean isActive() {
+					return true;
+				};
+				
+			};
+			add(small, b, "PRODUCTION");
 
 			
 			
 
-			if (S.get().developer) {
-				  b = new GButt.Glow(SPRITES.icons().s.cog) {
-					@Override
-					protected void clickA() {
-						VIEW.s().debug.show();
-					}
-					@Override
-					protected void renAction() {
-						selectedSet(VIEW.s().debug.isActivated());
-					}
-				}.hoverInfoSet("developer tools");
-				buttss.addRelBody(8, DIR.E, b);
-			}
+			
 			
 		}
 		
-		panel.addLeft(buttss);
+		GuiSection s = new GuiSection();
+		s.add(big);
+		s.addRightC(0, small);
+		if (S.get().developer) {
+			  b = new GButt.Glow(SPRITES.icons().s.cog) {
+				@Override
+				protected void clickA() {
+					VIEW.s().debug.show();
+				}
+				@Override
+				protected void renAction() {
+					selectedSet(VIEW.s().debug.isActivated());
+				}
+			}.hoverInfoSet("developer tools");
+			s.addRelBody(8, DIR.E, b);
+		}
+		
+		panel.addLeft(s);
 		
 	}
 	
-	private void add(RENDEROBJ o, String key) {
-		buttss.add(o, (i%6)*80, (i/6)*24);
+	private void add(GuiSection bb, RENDEROBJ o, String key) {
+		bb.add(o, (i/2)*80, (i%2)*24);
 		i++;
 		UISettMap.add(o, key);
 	}
+	
+	private void addB(GuiSection bb, RENDEROBJ o, String key) {
+		bb.addRightC(0, o);
+		UISettMap.add(o, key);
+	}
 
-	private static class StandingButt extends Buttt {
+	private static class StandingButt extends UIPanelTopButtL {
 		
 		private final HCLASS c;
+		private final ISidePanel p;
 		
 		public StandingButt(HCLASS c, ISidePanel p) {
-			super(c.iconSmall(), p);
+			super(c.iconSmall());
 			this.c = c;
-			
+			this.p = p;
 		}
 
 		@Override
-		int getNumber() {
+		protected int getNumber() {
 			return STATS.POP().POP.data(c).get(null);
 		}
 
 		@Override
-		double value() {
-			return (int)(100*STANDINGS.get(c).current())/100.0;
+		protected double value() {
+			return v(STANDINGS.get(c).current());
 		}
 
 		@Override
-		double valueNext() {
-			return (int)(100*STANDINGS.get(c).target())/100.0;
+		protected double valueNext() {
+			return v(STANDINGS.get(c).target());
+		}
+		
+		private double v(double v) {
+			v = (int)(100*v)/100.0;
+			return v;
 		}
 		
 		@Override
@@ -576,116 +545,31 @@ public final class UISettManagePanel {
 		}
 
 		@Override
-		boolean isActive() {
+		protected boolean isActive() {
 			return STATS.POP().POP.data(c).get(null) != 0;
 		}
-
+		@Override
+		protected void renAction() {
+			selectedSet(p != null && VIEW.s().panels.added(p));
+		}
+		
+		@Override
+		protected void clickA() {
+			if (p != null)
+				VIEW.s().panels.add(p, true);
+		}
 
 	}
 	
-	private static abstract class Buttt extends GButt {
+	private static abstract class Buttt extends UIPanelTopButtS {
 
-		private final GStat stat = new GStat() {
-			@Override
-			public void update(GText text) {
-				GFORMAT.i(text, getNumber());
-				text.lablify();
-			}
-		}.decrease();
+
 		private final ISidePanel p;
-		
-
-		private static final COLOR worse = new ColorImp(60, 20, 0);
-		private static final COLOR badbg = new ColorImp(60, 5, 5);
-		private static final COLOR full = new ColorImp(20, 80, 15);
-		private static final COLOR notFull = new ColorImp(100, 100,20);
-		private static final COLOR fuller = new ColorImp(20, 120, 60);
 
 		public Buttt(SPRITE icon, ISidePanel p) {
 			super(icon);
-			body.setWidth(icon.width() + stat.height()*4);
-			body.setHeight(24);
 			this.p = p;
 		}
-
-		@Override
-		protected void render(SPRITE_RENDERER r, float ds, boolean isActive, boolean isSelected, boolean isHovered) {
-			
-			renAction();
-			GCOLOR.UI().border().render(r, body());
-			GCOLOR.UI().bg().render(r, body(), -1);
-			
-			double op = 0;
-			if (isHovered || isSelected) {
-				if (isSelected)
-					COLOR.WHITE85.render(r, body, -2);
-				else
-					COLOR.WHITE50.render(r, body, -2);
-				op = 0.8;
-			}else if(isActive) {
-				op = 0.6;
-			}else {
-				op = 0.1;
-			}
-			
-			boolean active = isActive();
-			
-			ColorImp.TMP.set(active ? badbg : COLOR.WHITE10).shadeSelf(op);
-			ColorImp.TMP.render(r, body, -4);
-		
-			double cu = value();
-			double ta = valueNext();
-			ta = CLAMP.d(ta, 0, 1);
-			ColorImp col = ColorImp.TMP;
-			
-			if (active) {
-				if (cu == ta && cu == 1) {
-					col.set(full);
-				}else if (ta > cu){
-					col.interpolate(notFull, fuller, Intervals.circlePow(VIEW.renderSecond(), 1));
-				}else if (ta < cu){
-					col.interpolate(notFull, worse, Intervals.circlePow(VIEW.renderSecond(),  1));
-				}else {
-					col.set(notFull);
-				}
-			}else {
-				cu = 1.0;
-				col.set(COLOR.WHITE35);
-			}
-			
-			
-			
-			col.shadeSelf(op);
-			col.render(r, body.x1()+4, (int) (body.x1()+4+(body.width()-8)*cu), body.y1()+4, body.y2()-4);
-			
-			label.renderCY(r, body().x1()+4, body.cY());
-			
-			if (active) {
-				OPACITY.O35.bind();
-				stat.adjust();
-				COLOR.BLACK.render(r, body().x1()+4+label.width()+2, body().x1()+4+label.width()+2+stat.width()+4, body.y1()+4, body.y2()-4);
-				OPACITY.unbind();
-				stat.renderCY(r, body().x1()+4+label.width()+4, body.cY());
-			}
-			
-			
-			
-
-			
-		}
-//		
-//		@Override
-//		public void hoverInfoGet(GUI_BOX text) {
-//			
-//			GBox b = (GBox) text;
-//			
-//			
-//			super.hoverInfoGet(text);
-//			b.NL(8);
-//			b.add(GFORMAT.perc(b.text(), value()));
-//			b.add(value() <= valueNext() ? SPRITES.icons().m.arrow_right : SPRITES.icons().m.arrow_left);
-//			b.add(GFORMAT.perc(b.text(), valueNext()));
-//		}
 		
 		@Override
 		protected void renAction() {
@@ -697,11 +581,6 @@ public final class UISettManagePanel {
 			if (p != null)
 				VIEW.s().panels.add(p, true);
 		}
-		
-		abstract int getNumber();
-		abstract double value();
-		abstract double valueNext();
-		abstract boolean isActive();
 		
 	}
 	

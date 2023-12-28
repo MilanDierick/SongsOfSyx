@@ -1,9 +1,8 @@
 package view.tool;
 
 import init.D;
-import init.sprite.ICON;
-import init.sprite.ICON.MEDIUM;
 import init.sprite.SPRITES;
+import init.sprite.UI.Icon;
 import snake2d.util.map.MAP_SETTER;
 import snake2d.util.sets.ArrayList;
 import snake2d.util.sets.LIST;
@@ -16,7 +15,7 @@ public abstract class PLACER_TYPE {
 	
 	public final static PLACER_TYPE SQUARE = new PLACER_TYPE(true, false, D.g("rectangle")) {
 		@Override
-		MEDIUM icon() {
+		Icon icon() {
 			return SPRITES.icons().m.place_rec;
 		}
 
@@ -34,7 +33,7 @@ public abstract class PLACER_TYPE {
 	};
 	public final static PLACER_TYPE BRUSH = new PLACER_TYPE(false, true, D.g("brush")) {
 		@Override
-		MEDIUM icon() {
+		Icon icon() {
 			return SPRITES.icons().m.place_brush;
 		}
 
@@ -61,7 +60,7 @@ public abstract class PLACER_TYPE {
 
 	public final static PLACER_TYPE LINE = new PLACER_TYPE(true, true, D.g("line")) {
 		@Override
-		MEDIUM icon() {
+		Icon icon() {
 			return SPRITES.icons().m.place_line;
 		}
 
@@ -140,7 +139,7 @@ public abstract class PLACER_TYPE {
 	};
 	public final static PLACER_TYPE OVAL = new PLACER_TYPE(true, false, D.g("ellipse")) {
 		@Override
-		MEDIUM icon() {
+		Icon icon() {
 			return SPRITES.icons().m.place_ellispse;
 		}
 
@@ -181,7 +180,7 @@ public abstract class PLACER_TYPE {
 	};
 	public final static PLACER_TYPE SQUARE_HOLLOW = new PLACER_TYPE(true, true, D.g("hollow rectangle")) {
 		@Override
-		MEDIUM icon() {
+		Icon icon() {
 			return SPRITES.icons().m.place_rec_hollow;
 		}
 
@@ -219,7 +218,7 @@ public abstract class PLACER_TYPE {
 	
 	public final static PLACER_TYPE FILL = new PLACER_TYPE(false, true, D.g("fill")) {
 		@Override
-		MEDIUM icon() {
+		Icon icon() {
 			return SPRITES.icons().m.place_fill;
 		}
 
@@ -245,7 +244,7 @@ public abstract class PLACER_TYPE {
 
 	abstract void paint(int x1, int y1, int x2, int y2, int size, MAP_SETTER area);
 
-	abstract ICON.MEDIUM icon();
+	abstract Icon icon();
 
 	
 }

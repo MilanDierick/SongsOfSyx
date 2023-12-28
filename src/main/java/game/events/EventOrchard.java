@@ -8,13 +8,14 @@ import init.D;
 import settlement.main.SETT;
 import settlement.room.food.orchard.ROOM_ORCHARD;
 import settlement.room.main.RoomInstance;
+import settlement.stats.STATS;
 import snake2d.util.file.FileGetter;
 import snake2d.util.file.FilePutter;
 import snake2d.util.misc.ACTION;
 import snake2d.util.rnd.RND;
 import snake2d.util.sprite.text.Str;
-import view.main.MessageText;
 import view.sett.IDebugPanelSett;
+import view.ui.message.MessageText;
 
 public class EventOrchard extends EventResource{
 
@@ -111,7 +112,11 @@ public class EventOrchard extends EventResource{
 	}	
 	
 	private void event(ROOM_ORCHARD farm) {
-		int r = RND.rInt();
+		int r = RND.rInt()&Integer.MAX_VALUE;
+		if (STATS.POP().POP.data().get(null)-100 < RND.rInt(1000))
+			return;
+		
+		
 		for (int i = 0; i < farm.instancesSize(); i++) {
 			RoomInstance ro = farm.getInstance((i+r)%farm.instancesSize());
 			if (farm.event(ro.mX(), ro.mY(), 1.0)) {

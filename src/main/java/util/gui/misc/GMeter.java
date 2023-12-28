@@ -11,75 +11,86 @@ import util.data.DOUBLE;
 
 public class GMeter{
 
-	public final static GGaugeColor C_ORANGE = new GGaugeColor(
-			new ColorImp(52, 26, 9),
-			new ColorImp(96, 38, 0),
-			new ColorImp(127, 53, 0));
+	public final static GMeterCol C_ORANGE = new GMeterCol(
+			new ColorImp(15, 6, 1),
+			new ColorImp(52, 26, 5),
+			new ColorImp(158/2, 83/2, 28/2),
+			new ColorImp(127, 75, 20));
 	
-	public final static GGaugeColor C_REDGREEN = new GGaugeColor(
+	public final static GMeterCol C_YELLOW = new GMeterCol(
+			new ColorImp(15, 6, 1),
+			new ColorImp(45, 33, 10),
+			new ColorImp(64, 46, 13),
+			new ColorImp(127, 93, 28));
+	
+	public final static GMeterCol C_BLUE = new GMeterCol(
+			new ColorImp(0, 0, 12),
+			new ColorImp(9, 9, 45),
+			new ColorImp(0, 0, 85),
+			new ColorImp(0, 40, 127));
+	
+	public final static GMeterCol C_REDGREEN = new GMeterCol(
 			new ColorImp(45, 16, 16),
 			new ColorImp(31, 82, 35).shade(0.5),
 			new ColorImp(23, 80, 28));
 	
-	public final static GGaugeColor C_INACTIVE = new GGaugeColor(
+	public final static GMeterCol C_INACTIVE = new GMeterCol(
 			new ColorImp(16, 16, 16),
 			new ColorImp(48, 48, 48),
 			new ColorImp(78, 78, 78));
 	
-	public final static GGaugeColor C_REDORANGE = new GGaugeColor(
+	public final static GMeterCol C_REDORANGE = new GMeterCol(
 			new ColorImp(45, 16, 16),
 			new ColorImp(96, 38, 0),
 			new ColorImp(127, 53, 0));
 	
-	public final static GGaugeColor C_REDPURPLE = new GGaugeColor(
+	public final static GMeterCol C_REDPURPLE = new GMeterCol(
 			new ColorImp(45, 16, 16),
 			new ColorImp(127, 16, 60).shade(0.5),
 			new ColorImp(127, 16, 60));
 	
-	public final static GGaugeColor C_REDBLUE = new GGaugeColor(
+	public final static GMeterCol C_REDBLUE = new GMeterCol(
 			new ColorImp(45, 16, 16),
 			new ColorImp(0, 0, 85),
 			new ColorImp(0, 40, 127));
 	
-	public final static GGaugeColor C_GREENRED = new GGaugeColor(
+	public final static GMeterCol C_GREENRED = new GMeterCol(
 			new ColorImp(31, 82, 35),
 			new ColorImp(45, 16, 16),
 			new ColorImp(100, 16, 16));
 	
-	public final static GGaugeColor C_RED = new GGaugeColor(
-			new ColorImp(16, 16, 16),
-			new ColorImp(45, 16, 16),
-			new ColorImp(100, 16, 16));
+	public final static GMeterCol C_RED = new GMeterCol(
+			new ColorImp(12, 0, 0),
+			new ColorImp(45, 9, 9),
+			new ColorImp(85, 0, 0),
+			new ColorImp(127, 40, 0));
 	
-	public final static GGaugeColor C_GRAY = new GGaugeColor(
+	public final static GMeterCol C_GRAY = new GMeterCol(
 			new ColorImp(15, 15, 15),
 			new ColorImp(30, 30, 30),
-			new ColorImp(60, 60, 60));
+			new ColorImp(100, 100, 100));
 	
-	public final static GGaugeColor C_GREEN = new GGaugeColor(
+	public final static GMeterCol C_GREEN = new GMeterCol(
 			new ColorImp(16, 16, 16),
 			new ColorImp(16, 45, 16),
 			new ColorImp(16, 100, 16));
 	
-	public final static GGaugeColor C_GREEN_DARK = new GGaugeColor(
+	public final static GMeterCol C_GREEN_DARK = new GMeterCol(
 			new ColorImp(10, 10, 10),
 			new ColorImp(0, 22, 0),
 			new ColorImp(0, 45, 0));
 	
-	public final static GGaugeColor C_BLUE = new GGaugeColor(
-			new ColorImp(9, 9, 45),
-			new ColorImp(0, 0, 85),
-			new ColorImp(0, 40, 127));
+
 	
 	private GMeter() {
 		
 	}
 	
-	public static void render(SPRITE_RENDERER r, GGaugeColor color, double d, RECTANGLE body) {
+	public static void render(SPRITE_RENDERER r, GMeterCol color, double d, RECTANGLE body) {
 		render(r, color, d, body.x1(), body.x2(), body.y1(), body.y2());
 	}
 	
-	public static void render(SPRITE_RENDERER r, GGaugeColor color, double d, int x1, int x2, int y1, int y2) {
+	public static void render(SPRITE_RENDERER r, GMeterCol color, double d, int x1, int x2, int y1, int y2) {
 
 		d = CLAMP.d(d, 0, 1);
 		
@@ -130,7 +141,7 @@ public class GMeter{
 		GCOLOR.UI().border().render(r, x1+w/2, x1+w/2+1, y1, y2);
 	}
 	
-	public static void renderH(SPRITE_RENDERER r, GGaugeColor color, double d, int x1, int x2, int y1, int y2) {
+	public static void renderH(SPRITE_RENDERER r, GMeterCol color, double d, int x1, int x2, int y1, int y2) {
 
 		int h = y2-y1;
 		GCOLOR.UI().border().render(r, x1, x2, y1, y2);
@@ -147,85 +158,161 @@ public class GMeter{
 		}
 	}
 	
-	public static void renderH(SPRITE_RENDERER r, GGaugeColor color, double d, RECTANGLE body) {
+	public static void renderH(SPRITE_RENDERER r, GMeterCol color, double d, RECTANGLE body) {
 		renderH(r, color, d, body.x1(), body.x2(), body.y1(), body.y2());
 	}
 	
-	public static void render(SPRITE_RENDERER r, GGaugeColor color, double d1, double d2, int x1, int x2, int y1, int y2) {
+	public static void render(SPRITE_RENDERER r, GMeterCol color, double d1, double d2, int x1, int x2, int y1, int y2) {
 
 		int w = x2-x1;
 		GCOLOR.UI().border().render(r, x1, x2, y1, y2);
+		if (w <= 2)
+			return;
 		
-		int dw = (int)((w-1)*d1);
-		color.bg.render(r, x1+1, x1+dw-1, y1+1, y2-1);
+		color.bg.render(r, x1+1, x2-1, y1+1, y2-1);
 		
-		w = (int) ((w-2)*d2);
-		if (w > 0) {
-			color.dark.render(r, x1+2, x1+w, y1+2, y2-2);
+		if (w <= 4)
+			return;
+		d1 = CLAMP.d(d1, 0, 1);
+		d2 = CLAMP.d(d2, 0, 1);
+		double max = Math.max(d1, d2);
+		double min = Math.min(d1, d2);
+		int dx1 = (int) ((w-4)*min);
+		int dx2 = (int) ((w-4)*max);
+		
+		color.between.render(r, x1+2, x1+2+dx2, y1+2, y2-2);
+		
+		COLOR c = color.bright;
+		if (d2 < d1) {
+			c = color.dark;
 		}
-		if (w > 2) {
-			color.bright.render(r, x1+3, x1+w-1, y1+3, y2-3);
+		
+		if (dx2-dx1 > 0) {
+			OPACITY.O75TO100.bind();
+			c.render(r, x1+dx1+2, x1+dx2+2, y1+2, y2-2);
+			OPACITY.unbind();
 		}
+		
+		
+		
+		
 	}
 	
 	public static void renderDelta(SPRITE_RENDERER r, double now, double next, RECTANGLE body) {
 		renderDelta(r, now, next, body.x1(), body.x2(), body.y1(), body.y2());
 	}
 	
+	
+	
 	public static void renderDelta(SPRITE_RENDERER r, double now, double next, int x1, int x2, int y1, int y2) {
+		renderDelta(r, now, next, x1, x2, y1, y2, C_REDGREEN, C_BLUE, C_ORANGE, true);
+	}
+	
+	public static void renderDelta(SPRITE_RENDERER r, double now, double next, int x1, int x2, int y1, int y2, boolean flash) {
+		renderDelta(r, now, next, x1, x2, y1, y2, C_REDGREEN, C_BLUE, C_ORANGE, flash);
+	}
+	
+	public static void renderDelta(SPRITE_RENDERER r, double now, double next, int x1, int x2, int y1, int y2, boolean flash, boolean frame) {
+		renderDelta(r, now, next, x1, x2, y1, y2, C_REDGREEN, C_BLUE, C_ORANGE, flash, frame);
+	}
+	
+	public static void renderDelta(SPRITE_RENDERER r, double now, double next, int x1, int x2, int y1, int y2, GMeterCol bg, GMeterCol good, GMeterCol bad, boolean flash) {
+		renderDelta(r, now, next, x1, x2, y1, y2, bg, good, bad, flash, true);
+	}
+	
+	public static void renderDelta(SPRITE_RENDERER r, double now, double next, int x1, int x2, int y1, int y2, GMeterCol bg, GMeterCol good, GMeterCol bad, boolean flash, boolean frame) {
+		int w = x2-x1;
+		now = CLAMP.d(now, 0, 1);
+		next = CLAMP.d(next, 0, 1);
+		if (frame) {
+			GCOLOR.UI().border().render(r, x1, x2, y1, y2);
+			GCOLOR.UI().bg().render(r, x1+1, x1+w-1, y1+1, y2-1);
+		}
+		bg.bg.render(r, x1+2, x2-2, y1+2, y2-2);
+		
+		renderFraction(r, bg.bright, 0, Math.max(now, next), x1, x2, y1, y2);
+		
+		if (flash)
+			OPACITY.O25TO100.bind();
+		if (next > now) {
+			renderFraction(r, good.bright, now, next, x1, x2, y1, y2);
+		}else {
+			renderFraction(r, bad.bright, next, now, x1, x2, y1, y2);
+			
+		}
+		OPACITY.unbind();
+	}
+	
+	public static void renderDelta(SPRITE_RENDERER r, double now, double next, RECTANGLE body, GMeterCol col) {
+		
+		renderDelta(r, now, next, body.x1(), body.x2(), body.y1(), body.y2(), col);
+	}
+	
+	public static void renderDelta(SPRITE_RENDERER r, double now, double next, int x1, int x2, int y1, int y2, GMeterCol col) {
 		int w = x2-x1;
 		now = CLAMP.d(now, 0, 1);
 		next = CLAMP.d(next, 0, 1);
 		GCOLOR.UI().border().render(r, x1, x2, y1, y2);
 		GCOLOR.UI().bg().render(r, x1+1, x1+w-1, y1+1, y2-1);
-		C_REDGREEN.bg.render(r, x1+2, x2-2, y1+2, y2-2);
+		col.bg.render(r, x1+2, x2-2, y1+2, y2-2);
+		
+		renderFraction(r, col.between, 0, Math.max(now, next), x1, x2, y1, y2);
 		
 		if (next > now) {
-			OPACITY.O25TO100.bind();
-			renderFG(r, C_BLUE, next, x1, x2, y1, y2);
-			OPACITY.unbind();
-			renderFG(r, C_REDGREEN, now, x1, x2, y1, y2);
+			renderFraction(r, col.bright, now, next, x1, x2, y1, y2);
 		}else {
-			OPACITY.O25TO100.bind();
-			renderFG(r, C_ORANGE, now, x1, x2, y1, y2);
-			OPACITY.unbind();
-			renderFG(r, C_REDGREEN, next, x1, x2, y1, y2);
+			renderFraction(r, col.dark, next, now, x1, x2, y1, y2);
+			
 		}
 	}
 	
-	private static void renderFG(SPRITE_RENDERER r, GGaugeColor color, double d, int x1, int x2, int y1, int y2) {
+	
+	private static void renderFraction(SPRITE_RENDERER r, COLOR color, double from, double to, int x1, int x2, int y1, int y2) {
 
-		int w = x2-x1;
-		
-		w = (int) Math.ceil((x2-x1-4)*d);
-		if (w > 0) {
-			color.dark.render(r, x1+2, x1+2+w, y1+2, y2-2);
+		if (from > to) {
+			double f = from;
+			from = to;
+			to = f;
 		}
-		w = (int) Math.ceil((x2-x1-6)*d);
 		
-		int dy = y2-y1 > 12 ? 4: 3;
-		if (y2-y1 > 20)
-			dy = 5;
 		
+		int w = (x2-x1)-4;
+		
+		x1 += 2 + Math.ceil(from*w);
+		x2 = (int) (x1 + Math.ceil((to-from)*w));
+				
+		
+		w = x2-x1;
 		if (w > 0) {
-			color.bright.render(r, x1+3, x1+3+w, y1+dy, y2-dy);
+			ColorImp.TMP.set(color).shadeSelf(0.5);
+			ColorImp.TMP.render(r, x1, x2, y1+2, y2-2);
+			color.render(r, x1, x2, y1+3, y2-3);
 		}
+		
 	}
 	
-	public static class GGaugeColor {
+	public static class GMeterCol {
 		
 		public final COLOR bg;
 		public final COLOR dark;
 		public final COLOR bright;
-		
-		private GGaugeColor(COLOR bg, COLOR bg1, COLOR bg2) {
+		public final COLOR between;
+		private GMeterCol(COLOR bg, COLOR bg1, COLOR bg2) {
 			this.bg = bg; 
 			this.dark = bg1;
 			this.bright = bg2;
+			between = new ColorImp(dark).shadeSelf(1.5);
+		}
+		
+		private GMeterCol(COLOR bg, COLOR dark, COLOR normal, COLOR bright) {
+			this.bg = bg; 
+			this.dark = dark;
+			this.bright = bright;
+			between = normal;
 		}
 	}
 	
-	public static SPRITE sprite(GGaugeColor c, DOUBLE d, int width, int height) {
+	public static SPRITE sprite(GMeterCol c, DOUBLE d, int width, int height) {
 		return new GMeterSprite(c, d, width, height);
 	}
 	
@@ -233,9 +320,9 @@ public class GMeter{
 		
 		private final int width,height;
 		private final DOUBLE d;
-		private final GGaugeColor c;
+		private final GMeterCol c;
 		
-		public GMeterSprite(GGaugeColor c, DOUBLE d, int width, int height){
+		public GMeterSprite(GMeterCol c, DOUBLE d, int width, int height){
 			this.c = c;
 			this.d = d;
 			this.width = width;

@@ -1,33 +1,32 @@
 package view.world;
 
-import static world.World.*;
+import static world.WORLD.*;
 
 import game.faction.FACTIONS;
 import init.C;
-import init.biomes.CLIMATE;
-import init.biomes.CLIMATES;
+import init.biomes.*;
+import init.resources.Minable;
 import init.settings.S;
 import init.sprite.SPRITES;
-import init.sprite.UI.UI;
 import snake2d.MButt;
 import snake2d.SPRITE_RENDERER;
 import snake2d.util.datatypes.COORDINATE;
 import util.colors.GCOLORS_MAP;
+import util.dic.DicMisc;
 import util.gui.misc.GBox;
 import util.info.GFORMAT;
 import view.main.VIEW;
 import view.subview.GameWindow;
 import view.tool.*;
 import view.world.ui.WorldHoverer;
-import world.World;
+import world.WORLD;
 import world.entity.WEntity;
 import world.entity.army.WArmy;
 import world.map.buildings.camp.WCampInstance;
 import world.map.landmark.WorldLandmark;
-import world.map.regions.REGIOND;
-import world.map.regions.Region;
+import world.regions.Region;
 
-public class ToolDefault extends Tool{
+final class ToolDefault extends Tool{
 	
 	private boolean exploring = false;
 	
@@ -57,20 +56,20 @@ public class ToolDefault extends Tool{
 			return;
 		WEntity e = ENTITIES().getTallest(coo);
 		GBox box = VIEW.hoverBox();
-		if (e != null) {
-			World.OVERLAY().hover(e);
+		if (e != null && (e.faction() == FACTIONS.player() || !WORLD.FOW().is(window.tile()))) {
+			WORLD.OVERLAY().hoverEntity(e);
 			WorldHoverer.hover(box, e);
-		}else if(World.camps().map.get(window.tile()) != null) {
-			WCampInstance w = World.camps().map.get(window.tile());
-			World.OVERLAY().hover(w.coo().x()*C.TILE_SIZE+C.TILE_SIZEH-C.TILE_SIZE, w.coo().y()*C.TILE_SIZE+C.TILE_SIZEH-C.TILE_SIZE, C.TILE_SIZE*2, C.TILE_SIZE*2, GCOLORS_MAP.get(w.faction()), false);
-			w.hoverInfo(box);
+		}else if(WORLD.camps().map.get(window.tile()) != null) {
+			WCampInstance w = WORLD.camps().map.get(window.tile());
+			WORLD.OVERLAY().things.hover(w.coo().x()*C.TILE_SIZE+C.TILE_SIZEH-C.TILE_SIZE, w.coo().y()*C.TILE_SIZE+C.TILE_SIZEH-C.TILE_SIZE, C.TILE_SIZE*2, C.TILE_SIZE*2, GCOLORS_MAP.get(w.regionFaction()), false);
+			VIEW.world().UI.camps.hover(box, w);
 			
 		}else {
-			Region reg = World.REGIONS().getter.get(window.tile());
-			if (reg != null && !reg.isWater()) {
-				World.OVERLAY().hoverRegion(reg);
-				if ( MButt.RIGHT.isDown() || ( Math.abs(window.tile().x()-reg.cx()) <= 1 && Math.abs(window.tile().x()-reg.cx()) <= 1))
-					WorldHoverer.hover(box, reg);
+			
+			Region reg = WORLD.REGIONS().map.centre.get(window.tile());
+			if (reg != null) {
+				WORLD.OVERLAY().hover(reg);
+				VIEW.world().UI.regions.hover(reg, box);
 			}
 			
 		}
@@ -105,19 +104,22 @@ public class ToolDefault extends Tool{
 		if (!PIXELS().holdsPoint(window.pixel()))
 			return;
 		
-		WEntity e = ENTITIES().getTallest(window.pixel());
-		if (e != null) {
-			if (e instanceof WArmy) {
-				WArmy a = (WArmy) e;
-				if (a.faction() == FACTIONS.player() || S.get().developer)
-					VIEW.world().UI.armies.open(a);
+		for (WEntity e : ENTITIES().fill(window.pixel().x(), window.pixel().y())) {
+			if (e != null && (e.faction() == FACTIONS.player() || !WORLD.FOW().is(window.tile()))) {
+				if (e instanceof WArmy) {
+					WArmy a = (WArmy) e;
+					if (a.faction() == FACTIONS.player() || S.get().developer) {
+						VIEW.world().UI.armies.open(a);
+						return;
+					}
+				}
 			}
-		}else {
-			Region reg = World.REGIONS().getter.get(window.tile());
-			if (reg != null && !reg.isWater() && reg.faction() == FACTIONS.player()) {
-				VIEW.world().UI.region.open(reg);
-			}else if (reg != null && REGIOND.isCapitol(reg)) {
-				VIEW.world().UI.faction.open(reg.faction());
+		}
+		{
+			
+			Region reg = WORLD.REGIONS().map.centre.get(window.tile());
+			if (reg != null) {
+				VIEW.world().UI.regions.open(reg, true);
 			}
 			
 		}
@@ -129,9 +131,7 @@ public class ToolDefault extends Tool{
 		return config;
 	}
 	
-	private static final CharSequence sFertility = "Fertility" + ":";
-	private static final CharSequence sBonus = "+ WIP bonus.";
-	private final static int tabs = 3;
+	private final static int tabs = 5;
 	
 	static void explore(GameWindow win) {
 		if (!PIXELS().holdsPoint(win.pixel()))
@@ -141,65 +141,57 @@ public class ToolDefault extends Tool{
 		
 		GBox b = VIEW.hoverBox();
 		
-		int inc = 1;
-		
-		Region reg = World.REGIONS().getter.get(tx, ty);
-		if (reg != null && !reg.isWater())
-			WorldHoverer.hover(b, World.REGIONS().getter.get(tx, ty));
-		b.NL();
+		WORLD.OVERLAY().landmarks.add();
 		
 		{
-			WorldLandmark a = LANDMARKS().setter.get(tx, ty);
-			if (a != null) {
-				b.add(b.text().lablify().add(a.name.toCamel()).add(a.index()));
-				b.NL();
-				b.add(b.text().normalify().add(a.description));
-				
-				for (int i = 0; i < 2; i++) {
-					b.NL();
-					b.tab(inc);
-					b.add(b.text().normalify2().set(sBonus));
-				}
-				b.NL();
-			}
-			
-			World.OVERLAY().hoverLandmark(World.LANDMARKS().setter.get(tx, ty));
-			
-			//AREAS().render(tx, ty);
-		}
-		
-		{
-			b.add(SPRITES.icons().m.crossair).add(b.text().add(tx).add(',').add(ty));
+			b.title(TERRAINS.world.get(tx, ty).name);
+			b.add(SPRITES.icons().m.crossair);
+			b.tab(1);
+			b.add(b.text().add(tx));
+			b.tab(2);
+			b.add(b.text().add(ty));
 			b.NL();
 		}
 		
 		{
-			b.add(b.text().lablify().setFont(UI.FONT().H2).set(sFertility));
+			b.textLL(DicMisc.¤¤Fertility);
 			b.tab(tabs);
 			b.add(GFORMAT.perc(b.text(), FERTILITY().map.get(tx, ty)));
 			b.NL();
-		}
-		
-		{
-
-		}
-		
-		{
-			CLIMATE z = CLIMATE().getter.get(tx, ty);
-			b.add(b.text().lablify().setFont(UI.FONT().H2).set(CLIMATES.INFO().name).add(':'));
-			b.tab(tabs);
-			b.add(b.text().lablifySub().setFont(UI.FONT().M).set(z.name));
-			b.NL();
-			b.text(z.desc);
 			
+			b.textLL(DicMisc.¤¤Minerals);
+			b.tab(tabs);
+			Minable m = WORLD.MINERALS().get(tx, ty);
+			if (m != null) {
+				b.text(m.name);
+			}
 			b.NL();
+			
+			CLIMATE z = CLIMATE().getter.get(tx, ty);
+			b.textLL(CLIMATES.INFO().name);
+			b.tab(tabs);
+			b.text(z.name);
+			b.NL();
+			
 		}
 		
+		{
+			
+			WorldLandmark a = LANDMARKS().setter.get(tx, ty);
+			if (a != null) {
+				b.NL(8);
+				WORLD.OVERLAY().landmarks.hover(a);
+				b.textLL(a.name);
+				b.NL();
+				b.text(a.description);
+				b.NL();
+			}
+		}
 		
-		
-		
-//		
-//		VIEW.world().inters.section.activate(tileInfo);
+		if (S.get().developer) {
+			b.add(b.text().add(WORLD.FOW().is(tx, ty)));
+			b.NL();
+		}
 		
 	}
 	

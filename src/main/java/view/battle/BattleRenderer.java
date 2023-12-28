@@ -13,7 +13,8 @@ import settlement.army.formation.DivRenderer;
 import settlement.army.order.DivTDataTask;
 import settlement.entity.ENTITY;
 import settlement.entity.humanoid.Humanoid;
-import settlement.main.*;
+import settlement.main.ON_TOP_RENDERABLE;
+import settlement.main.SETT;
 import settlement.room.military.artillery.ArtilleryInstance;
 import snake2d.*;
 import snake2d.util.color.COLOR;
@@ -21,6 +22,7 @@ import snake2d.util.color.ColorImp;
 import snake2d.util.datatypes.COORDINATE;
 import snake2d.util.datatypes.DIR;
 import snake2d.util.sprite.SPRITE;
+import util.rendering.RenderData;
 import util.rendering.ShadowBatch;
 import view.keyboard.KEYS;
 

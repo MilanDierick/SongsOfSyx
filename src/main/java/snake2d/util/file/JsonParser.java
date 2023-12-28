@@ -214,6 +214,11 @@ class JsonParser {
 		}
 	}
 	
+	public int line(String key) {
+		Value v = testKey(key);
+		return v.line;
+	}
+	
 	private Value testKey(String key) {
 		if (!map.containsKey(key)) {
 			throw new Errors.DataError("Missing property: " + key + ", in object starting at line: " + linestart, path);
@@ -357,6 +362,39 @@ class JsonParser {
 		String[] res = new String[vv.length];
 		for (int i = 0; i < vv.length; i++)
 			res[i] = content.substring(vv[i].start, vv[i].end); 
+		return res;
+	}
+	
+	public String content(String key) {
+		Value v = testKey(key);
+		int rem = 1;
+		int ti = v.start-1;
+		while(ti >= 0 && content.charAt(ti) != '\r' && content.charAt(ti) != '\n') {
+			if (content.charAt(ti) == '\t')
+				rem ++;
+			ti--;
+		}
+
+		String[] ss = content.substring(v.start, v.end).split("\\r?\\n");
+		
+		if (ss[ss.length-1].indexOf(',') >= 0) {
+			ss[ss.length-1] = ss[ss.length-1].substring(0, ss[ss.length-1].lastIndexOf(','));
+		}
+		
+		
+		String res = "";
+		for (int si = 0; si < ss.length; si++) {
+			String s = ss[si];
+			int start = 0;
+			while(start < rem && start < s.length() && s.charAt(start) == '\t') {
+				
+				start++;
+			}
+			res += s.substring(start, s.length());
+			if (si < ss.length -1)
+				res += System.lineSeparator();
+		}
+		
 		return res;
 	}
 	

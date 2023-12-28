@@ -19,7 +19,7 @@ import util.gui.misc.GInput;
 import util.gui.slider.GTarget;
 import view.main.VIEW;
 
-final class SearchToolPanel extends GuiSection{
+final class SearchToolPanel extends SPanel{
 
 	static LinkedList<Holder> all;
 	private final GInput input;
@@ -40,8 +40,8 @@ final class SearchToolPanel extends GuiSection{
 		
 		nonFiltered = new Holder[all.size()];
 		int i = 0;
-		while (!all.isEmpty())
-			nonFiltered[i++] = all.removeFirst();
+		for (Holder rr : all)
+			nonFiltered[i++] = rr;
 		filtered = new ArrayList<>(nonFiltered.length);
 		Arrays.sort(nonFiltered, new Comparator<Holder>() {
 
@@ -61,7 +61,7 @@ final class SearchToolPanel extends GuiSection{
 		add(new GHeader(DicMisc.¤¤Filter));
 		addRightC(16, input);
 		
-		content.body().setDim((Popup.width+8)*width, (Popup.bh+2)*height);
+		content.body().setDim((BButt.WIDTH+8)*width, (BButt.HEIGHT+2)*height);
 		
 		addRelBody(16, DIR.S, content);
 		
@@ -91,12 +91,14 @@ final class SearchToolPanel extends GuiSection{
 		addRelBody(8, DIR.S, t);
 		
 		filter("");
+		
+		pad(8, 8);
 	}
 	
 	
 	
-	void open(CLICKABLE c) {
-		VIEW.inters().popup.show(this, c);
+	void open(CLICKABLE c, Inter inter) {
+		inter.set(c, this);
 		input.focus();
 	}
 	
@@ -120,7 +122,7 @@ final class SearchToolPanel extends GuiSection{
 			Holder h = filtered.get(s);
 			s++;
 			
-			content.add(h, (i%width)*(Popup.width+8), (i/width)*(Popup.bh+2));
+			content.add(h, (i%width)*(BButt.WIDTH+8), (i/width)*(BButt.HEIGHT+2));
 			
 		}
 		content.body().moveX1Y1(x1, y1);

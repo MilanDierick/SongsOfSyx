@@ -5,13 +5,13 @@ import java.io.IOException;
 import init.C;
 import init.paths.PATHS;
 import init.sprite.SPRITES;
-import settlement.main.RenderData;
-import settlement.main.RenderData.RenderIterator;
 import snake2d.CORE;
 import snake2d.SPRITE_RENDERER;
 import snake2d.util.color.*;
 import snake2d.util.sprite.TILE_SHEET;
 import snake2d.util.sprite.TileTexture.TileTextureScroller;
+import util.rendering.RenderData;
+import util.rendering.RenderData.RenderIterator;
 import util.spritecomposer.*;
 import util.spritecomposer.ComposerThings.ITileSheet;
 

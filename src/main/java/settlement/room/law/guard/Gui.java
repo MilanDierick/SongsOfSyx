@@ -38,7 +38,7 @@ class Gui extends UIRoomModuleImp<GuardInstance, ROOM_GUARD> {
 			public void update(GText text) {
 				GFORMAT.perc(text, g.get().eff());
 			}
-		}.hv(DicMisc.¤¤Effectivness, ¤¤effDesc));
+		}.hv(DicMisc.¤¤Efficiency, ¤¤effDesc));
 
 	}
 	

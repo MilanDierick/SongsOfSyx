@@ -17,7 +17,7 @@ import view.tool.PlacableSimple;
 class Test {
 
 	static final int vel = C.TILE_SIZE*40;
-	
+	static final double ang = 75;
 	public Test() {
 		
 		IDebugPanelSett.add(new Single());
@@ -42,7 +42,7 @@ class Test {
 			
 			@Override
 			public int max() {
-				return STATS.EQUIP().ammo().size()-1;
+				return STATS.EQUIP().RANGED().size()-1;
 			}
 			
 			@Override
@@ -64,15 +64,15 @@ class Test {
 			
 			@Override
 			public void place(int x, int y) {
-				if (t.calcLow(0, sx, sy, x, y, vel)) {
-					SETT.PROJS().launch(sx, sy, 0, t, Projectile.ALL.getLast(), 0);
+				if (t.calcLow(0, sx, sy, x, y, ang, vel)) {
+					SETT.PROJS().launch(sx, sy, 0, t, Projectile.ALL.getLast(), (byte)0, (byte)0);
 				}
 				
 			}
 			
 			@Override
 			public CharSequence isPlacable(int x, int y) {
-				return t.calcLow(0, sx, sy, x, y, vel) ? null : E;
+				return t.calcLow(0, sx, sy, x, y, ang, vel) ? null : E;
 			}
 			
 			@Override
@@ -115,13 +115,13 @@ class Test {
 			
 			@Override
 			public void place(int x, int y) {
-				if (t.calcLow(0, sx, sy, x, y, vel)) {
+				if (t.calcLow(0, sx, sy, x, y, ang, vel)) {
 					vec.set(sx, sy, x, y);
 					vec.rotate90();
 					for (int i = -8; i <= 8; i++) {
 						int xx = (int) (sx+vec.nX()*i*C.TILE_SIZEH);
 						int yy = (int) (sy+vec.nY()*i*C.TILE_SIZEH);
-						SETT.PROJS().launch(xx, yy, 0, t, Projectile.ALL.getLast(), 0.05, 0);
+						SETT.PROJS().launch(xx, yy, 0, t, Projectile.ALL.getLast(), 0.05, (short)0);
 					}
 					
 					
@@ -131,7 +131,7 @@ class Test {
 			
 			@Override
 			public CharSequence isPlacable(int x, int y) {
-				return t.calcLow(0, sx, sy, x, y, vel) ? null : E;
+				return t.calcLow(0, sx, sy, x, y, ang, vel) ? null : E;
 			}
 			
 			@Override

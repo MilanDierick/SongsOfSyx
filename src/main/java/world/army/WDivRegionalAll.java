@@ -30,9 +30,9 @@ public final class WDivRegionalAll implements SAVABLE{
 
 	}
 	
-	public WDivRegional create(Race race, double amount, int training, int trainingR, WArmy a) {
+	public WDivRegional create(Race race, double amount, WArmy a) {
 		int i = create();
-		get(i).init(race, amount, training, trainingR, a);
+		get(i).init(race, amount, a);
 		return get(i);
 
 	}

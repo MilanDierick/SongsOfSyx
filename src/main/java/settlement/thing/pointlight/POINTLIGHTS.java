@@ -2,6 +2,7 @@ package settlement.thing.pointlight;
 
 import java.io.IOException;
 
+import game.Profiler;
 import settlement.main.CapitolArea;
 import settlement.main.SETT;
 import settlement.main.SETT.SettResource;
@@ -102,13 +103,8 @@ public class POINTLIGHTS extends SettResource {
 	}
 
 	@Override
-	protected void update(float ds) {
+	protected void update(float ds, Profiler profiler) {
 		
-	}
-
-	@Override
-	protected void afterTick() {
-
 	}
 
 	public void render(Renderer r, ShadowBatch s, float ds, RECTANGLE renWindow, int offX, int offY) {

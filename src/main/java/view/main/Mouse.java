@@ -3,12 +3,13 @@ package view.main;
 import init.sprite.UI.UI;
 import snake2d.Renderer;
 import snake2d.util.datatypes.*;
+import snake2d.util.gui.clickable.CLICKABLE;
 import snake2d.util.sprite.SPRITE;
 
-public class Mouse implements COORDINATE{
+public final class Mouse implements COORDINATE{
 
 	private final Coo coo = new Coo();
-	private final SPRITE sprites ;
+	private final SPRITE sprites;
 	private boolean hidden = false;
 	private SPRITE overlay = null; 
 	
@@ -23,12 +24,15 @@ public class Mouse implements COORDINATE{
 			return;
 		}
 		
-		sprites.render(r, coo.x(), coo.y());
+		if (overlay == null && CLICKABLE.ClickableAbs.clickableHovered) {
+			UI.decor().mouseHov.render(r, coo.x(), coo.y());
+		}else
+			sprites.render(r, coo.x(), coo.y());
 		if (overlay != null){
 			overlay.render(r, coo.x()+10, coo.y());
 		}
 		overlay = null;
-
+		CLICKABLE.ClickableAbs.clickableHovered = false;
 	}
 	
 	public void setReplacement(SPRITE o){

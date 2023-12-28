@@ -1,69 +1,115 @@
 package init.sprite.game;
 
 import java.io.IOException;
-import java.nio.file.Path;
 
 import game.GAME;
 import init.paths.PATH;
 import init.paths.PATHS;
 import snake2d.util.file.Json;
 import snake2d.util.sets.*;
+import snake2d.util.sprite.TILE_SHEET;
 
 public class GameSheets {
 	
 	private final Sheet[] overlays = new Sheet[SheetType.ALL.size()];
-	private final LIST<KeyMap<LIST<Sheet>>> map;
+	private final LIST<KeyMap<LIST<Sheet>>> gsheets;
+	private final LIST<KeyMap<LIST<TILE_SHEET>>> raws;
 	final KeyMap<SheetType> imap = new KeyMap<>();
+	
+//	public final Textures textures;
+	
 	public GameSheets() throws IOException {
 		ArrayList<KeyMap<LIST<Sheet>>> m = new ArrayList<>(SheetType.ALL.size());
-		map = m;
+		ArrayList<KeyMap<LIST<TILE_SHEET>>> r = new ArrayList<>(SheetType.ALL.size());
+		gsheets = m;
+		raws = r;
 		for (SheetType t : SheetType.ALL) {
 			imap.put(t.path, t);
 			m.add(new KeyMap<LIST<Sheet>>());
+			r.add(new KeyMap<LIST<TILE_SHEET>>());
 		}
 		for (SheetType t : SheetType.ALL) {
 			if (t == SheetType.sCombo)
 				continue;
 			if (t == SheetType.sBox)
 				continue;
-			this.overlays[t.index()] = get(t, "_OVERLAY").get(0);
+			if (t == SheetType.sTex)
+				continue;
+			this.overlays[t.index()] = sheets(t, "_OVERLAY", null).get(0);
 		}
+	}
+	
+	public LIST<TILE_SHEET> raws(SheetType t, String file, Json error) throws IOException {
+		
+		if (raws.get(t.index()).containsKey(file)) {
+			return raws.get(t.index()).get(file);
+		}
+		LIST<TILE_SHEET> sh = t.make(file, error);
+		raws.get(t.index()).put(file, sh);
+		
+		ArrayList<Sheet> res = new ArrayList<Sheet>(sh.size());
+		for (TILE_SHEET s : sh)
+			res.add(new Sheet.Imp(t, s, true));
+		
+		gsheets.get(t.index()).put(file, res);
+		
+		return sh;
 		
 	}
 	
-	
-	private static LIST<Sheet> make(SheetType t, Path p, boolean rotates) throws IOException {
-		return t.make(p, rotates);
+	public TILE_SHEET raw(SheetType t, Json json) throws IOException {
+		json = json.json("GAME_TEXTURE");
+		String file = json.value("FILE");
+		int row = json.i("ROW");
+		return raw(t, file, row, json);
+		
 	}
+	
+	public TILE_SHEET raw(SheetType t, String key, Json json) throws IOException {
+		json = json.json(key);
+		String file = json.value("FILE");
+		int row = json.i("ROW");
+		return raw(t, file, row, json);
+		
+	}
+	
+	public TILE_SHEET raw(SheetType t, String file, int row, Json error) throws IOException{
+		
+		LIST<TILE_SHEET> li = raws(t, file, error);
+		
+		if (row >= li.size()) {
+			if (error != null)
+				GAME.WarnLight(row + "is outside of the available sprites. In + file " + error.path());
+			return SheetType.DUMMY;
+		}
+		return li.get(row);
+	}
+
 	
 	public Sheet overlay(SheetType t) {
 		return overlays[t.index()];
 	}
 	
-	public LIST<Sheet> get(SheetType t, String file) throws IOException {
+	public LIST<Sheet> sheets(SheetType t, String file, Json error) throws IOException {
+		if (gsheets.get(t.index()).containsKey(file))
+			return gsheets.get(t.index()).get(file);
+		raws(t, file, error);
+		LIST<Sheet> ss = gsheets.get(t.index()).get(file);
 		
-		if (map.get(t.index()).containsKey(file)) {
-			return map.get(t.index()).get(file);
-		}
-		
-		Path p = PATHS.SPRITE_GAME().getFolder(t.path).get(file);
-		
-		LIST<Sheet> sh = make(t, p, true);
-		map.get(t.index()).put(file, sh);
-		return sh;
+		return ss;
 		
 	}
 	
 	public void add(SheetType t, LIST<Sheet> sh, String key) {
-		if (map.get(t.index()).containsKey(key)) {
+		if (gsheets.get(t.index()).containsKey(key)) {
 			throw new RuntimeException(key);
 		}
-		map.get(t.index()).put(key, sh);
+		gsheets.get(t.index()).put(key, sh);
 	}
 	
 	private boolean[] adump = new boolean[SheetType.ALL.size()];
 	
-	public LIST<SheetPair> get(SheetType type, Json json) throws IOException {
+	public LIST<SheetPair> sheets(SheetType type, Json json) throws IOException {
 		String[] ss = json.values("FRAMES");
 		
 		SheetData[] datas = new SheetData[ss.length];
@@ -106,7 +152,7 @@ public class GameSheets {
 			
 			PATH p = PATHS.SPRITE_GAME().getFolder(type.path);
 			
-			if (!map.get(type.index()).containsKey(file)) {
+			if (!gsheets.get(type.index()).containsKey(file)) {
 				
 				
 				if (!p.exists(file)) {
@@ -114,11 +160,11 @@ public class GameSheets {
 					if (!adump[type.index()]) {
 						a = System.lineSeparator() + "Available: ";
 						adump[type.index()] = true;
-						for (String ke : map.get(type.index()).keys()) {
+						for (String ke : gsheets.get(type.index()).keys()) {
 							a += System.lineSeparator() + ke;
 						}
 						for (String ke : p.getFiles()) {
-							if (!map.get(type.index()).containsKey(ke)) {
+							if (!gsheets.get(type.index()).containsKey(ke)) {
 								a += System.lineSeparator() + ke;
 							}
 						}
@@ -128,7 +174,7 @@ public class GameSheets {
 					continue;
 				}
 			}
-			LIST<Sheet> shs = get(type, file);
+			LIST<Sheet> shs = sheets(type, file, json);
 			
 			int nr = 0;
 			try {

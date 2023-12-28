@@ -3,8 +3,7 @@ package settlement.room.main.placement;
 import static settlement.main.SETT.*;
 import static settlement.room.main.construction.ConstructionData.*;
 
-import init.sprite.ICON.BIG;
-import settlement.main.RenderData.RenderIterator;
+import init.sprite.UI.Icon;
 import settlement.main.SETT;
 import settlement.maintenance.ROOM_DEGRADER;
 import settlement.path.AVAILABILITY;
@@ -15,6 +14,7 @@ import settlement.room.sprite.RoomSprite;
 import snake2d.Renderer;
 import snake2d.util.datatypes.*;
 import snake2d.util.misc.CLAMP;
+import util.rendering.RenderData.RenderIterator;
 import util.rendering.ShadowBatch;
 
 final class Instance extends Room.RoomInstanceImp{
@@ -32,12 +32,14 @@ final class Instance extends Room.RoomInstanceImp{
 	int unroofed = 0;
 	int upgrade = 0;
 
+	private boolean bodyChange = false;
+	
 	protected void set(int tx, int ty) {
 		if (SETT.IN_BOUNDS(tx, ty) && !SETT.ROOMS().map.is(tx, ty)) {
 			int i = tx+ty*SETT.TWIDTH;			
 			setSoft(tx, ty);
 			ROOMS().data.set(this, i, 0);
-			SETT.TILE_MAP().minimap.update(tx, ty);
+			SETT.TILE_MAP().miniCUpdate(tx, ty);
 		}
 	}
 	
@@ -94,10 +96,11 @@ final class Instance extends Room.RoomInstanceImp{
 			int i = tx+ty*SETT.TWIDTH;
 			
 			if (is(tx, ty)) {
+				bodyChange = true;
 				ROOMS().fData.itemClear(tx, ty, this);
 				ROOMS().data.set(this, tx, ty, 0);
 				clearIndex(tx, ty);
-				SETT.TILE_MAP().minimap.update(tx, ty);
+				SETT.TILE_MAP().miniCUpdate(tx, ty);
 				if (dFloored.is(ROOMS().data.get(i), 1))
 					FLOOR().clearer.clear(i);
 				
@@ -188,8 +191,28 @@ final class Instance extends Room.RoomInstanceImp{
 		return false;
 	}
 	
+	private Rec tmp = new Rec();
+	private Rec tmp2 = new Rec();
+	
 	@Override
 	protected boolean renderAbove(Renderer r, ShadowBatch shadowBatch, RenderIterator it) {
+		
+		if (bodyChange && area > 0) {
+			bodyChange = false;
+			boolean first = true;
+			tmp.set(body());
+			for (COORDINATE c : tmp) {
+				if (is(c)) {
+					if (first) {
+						first = false;
+						tmp2.setDim(1).moveX1Y1(c);
+					}else {
+						tmp2.unify(c.x(), c.y());
+					}
+				}
+			}
+			bounds.set(tmp2);
+		}
 		
 		if (dConstructed.is(it.tile(), 1) && dBroken.is(it.tile(), 0)) {
 			RoomSprite sp = ROOMS().fData.sprite.get(it.tile());
@@ -280,7 +303,7 @@ final class Instance extends Room.RoomInstanceImp{
 	}
 
 	@Override
-	public BIG icon() {
+	public Icon icon() {
 		// TODO Auto-generated method stub
 		return null;
 	}

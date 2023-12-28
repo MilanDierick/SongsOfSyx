@@ -35,8 +35,8 @@ final class WorkTemple extends PlanBlueprint {
 		
 		d.planTile.set(j.coo());
 		d.planByte1 = -1;
-		if (j.jobResourceBitToFetch() != 0) {
-			AISubActivation s = fetch.activate(a, d, j.jobResourceBitToFetch(), maxCarry, 250, true, true);
+		if (j.jobResourceBitToFetch() != null) {
+			AISubActivation s = fetch.activate(a, d, j.jobResourceBitToFetch(), maxCarry, 1000, true, true);
 			if (s != null) {
 				j = ins.job(d.planTile.x(), d.planTile.y());
 				j.jobReserve();

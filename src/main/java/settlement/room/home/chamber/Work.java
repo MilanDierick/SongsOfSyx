@@ -2,16 +2,21 @@ package settlement.room.home.chamber;
 
 import static settlement.main.SETT.*;
 
+import init.race.RACES;
+import init.resources.RBIT;
+import init.resources.RBIT.RBITImp;
 import init.resources.RESOURCE;
-import init.resources.RES_AMOUNT;
 import init.sound.SoundSettlement.Sound;
-import settlement.entity.humanoid.HCLASS;
 import settlement.entity.humanoid.Humanoid;
 import settlement.misc.job.SETT_JOB;
 import settlement.path.AVAILABILITY;
+import settlement.stats.Induvidual;
 import settlement.stats.STATS;
+import settlement.stats.colls.StatsHome.StatFurniture;
+import settlement.stats.equip.WearableResource;
 import snake2d.util.datatypes.COORDINATE;
 import snake2d.util.datatypes.Coo;
+import snake2d.util.misc.CLAMP;
 
 final class Work implements SETT_JOB{
 	
@@ -80,19 +85,22 @@ final class Work implements SETT_JOB{
 	
 	int i = 0;
 	
+	private final RBITImp bit = new RBITImp();
+	
 	@Override
-	public long jobResourceBitToFetch() {
+	public RBIT jobResourceBitToFetch() {
 		i++;
 		if ((i & 1) == 0 && !ins.fetching && ins.occupant() != null) {
-			long m = 0;
-			int i = 0;
-			for (RES_AMOUNT am : ins.occupant().race().home().clas(HCLASS.NOBLE).resources()) {
-				if (STATS.HOME().shouldFetch(ins.occupant(), i++) && ins.jobs.resourceReachable(am.resource()))
-					m |= am.resource().bit;
+			bit.clear();
+			Induvidual in = ins.occupant().indu();
+			for (StatFurniture f : STATS.HOME().getTmp(in)) {
+				if (f.needed(ins.occupant().indu()) > 0 && ins.jobs.resourceReachable(f.resource(in)))
+					bit.or(f.resource(in));
 			}
-			return m;
+			
+			return bit.isClear() ? null : bit;
 		}
-		return 0;
+		return null;
 	}
 	
 	
@@ -137,7 +145,16 @@ final class Work implements SETT_JOB{
 		
 		if (res != null) {
 			if (ins.occupant() != null) {
-				STATS.HOME().fetchResource(ins.occupant(), res);
+				Induvidual in = ins.occupant().indu();
+				for (WearableResource rr : RACES.res().get(ins.occupant().indu().popCL(), res)) {
+					int nn = rr.needed(in);
+					int aa = CLAMP.i(ram, 0, nn);
+					rr.inc(in, aa);
+					ram -= aa;
+					if (ram <= 0)
+						break;
+				}
+				
 			}
 			ins.fetching = false;
 		}

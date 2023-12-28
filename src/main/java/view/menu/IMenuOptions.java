@@ -3,7 +3,6 @@ package view.menu;
 import init.C;
 import init.settings.S;
 import init.settings.S.Setting;
-import menu.screens.Screener;
 import snake2d.SPRITE_RENDERER;
 import snake2d.util.color.COLOR;
 import snake2d.util.gui.GuiSection;

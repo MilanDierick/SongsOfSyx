@@ -16,7 +16,6 @@ public abstract class Scrollable {
 				move(itemTop);
 			}
 			
-			
 			super.render(r, ds);
 		};
 		
@@ -62,68 +61,7 @@ public abstract class Scrollable {
 		
 		this.elements.body().setDim(width, height);
 		section.add(this.elements);
-//		
-//		up.clickActionSet(actionUp).hoverInfoSet(descUp);
-//		down.clickActionSet(actionDown).hoverInfoSet(descDown);
 
-
-//		CLICKABLE centre = new CLICKABLE.Abs(up.body().width(), h) {
-//			
-//			private boolean mouseDown;
-//			
-//			@Override
-//			protected void render(SPRITE_RENDERER r, float ds, boolean isActive, boolean isSelected, boolean isHovered) {
-//				double nr = nrOFEntries();
-//				if (nr != nrs) {
-//					int i = itemTop;
-//					itemTop = -1;
-//					move(i);
-//					nrs = (int) nr;
-//				}
-//				if (itemTop == 0 && itemTop+elementsY >= nrOFEntries())
-//					return;
-//				
-//				double v = 0;
-//				if (nr > 0)
-//					v = itemTop/(nr-elementsY);
-//				
-//				c.render(r, body().x1(), (int) (body().y1()+v*(body().height()-c.height())));
-//			}
-//			
-//			@Override
-//			public boolean hover(COORDINATE mCoo) {
-//				
-//				if (super.hover(mCoo) || mouseDown) {
-//					mouseDown = MButt.LEFT.isDown();
-//					if (mouseDown) {
-//						double dy = mCoo.y()-body().y1();
-//						double d = (dy/body().height());
-//						
-//						int i = (int) (d*(nrOFEntries()-elementsY));
-//						move(i);
-//					}
-//					
-//					return true;
-//				}
-//				
-//				return false;
-//				
-//			}
-//			
-//			@Override
-//			protected void clickA() {
-//				mouseDown = true;
-//			}
-//
-//		}.hoverInfoSet(descDrag);
-		
-//		up.body().moveX1Y1(section.body().x2()+5, section.body().y1());
-//		down.body().moveX1(section.body().x2()+5);
-//		down.body().moveY2(section.body().y2());
-//		centre.body().moveX1Y1(up.body().x1(), up.body().y2());
-//		
-//		section.add(up).add(down).add(centre);
-		
 		
 		if (title != null) {
 			title.body().centerX(section);

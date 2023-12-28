@@ -22,7 +22,7 @@ public class DivFormation extends DivPositionAbs implements Copyable<DivFormatio
 	private DIV_FORMATION ts = DIV_FORMATION.LOOSE;
 	private int centreI = -1;
 	private boolean hasExtraRoom = false;
-
+	
 	private final byte[] dirMasks;
 	
 	public DivFormation() {

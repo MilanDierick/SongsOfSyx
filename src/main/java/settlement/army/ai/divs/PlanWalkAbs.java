@@ -53,6 +53,7 @@ abstract class PlanWalkAbs extends Plan {
 
 		@Override
 		void update(int updateI, int gameMillis) {
+			
 			if (amountOfPaths++ > 10)
 				return;
 			setStart.set();

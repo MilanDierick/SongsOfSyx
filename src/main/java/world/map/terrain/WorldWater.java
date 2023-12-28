@@ -1,18 +1,16 @@
 package world.map.terrain;
 
-import static world.World.*;
+import static world.WORLD.*;
 
 import java.io.IOException;
 import java.util.Arrays;
 
+import game.Profiler;
 import game.time.TIME;
 import init.C;
 import init.biomes.TERRAINS;
-import init.paths.PATHS;
-import init.sprite.ICON;
 import init.sprite.SPRITES;
-import settlement.main.RenderData;
-import settlement.main.RenderData.RenderIterator;
+import init.sprite.UI.Icon;
 import snake2d.Renderer;
 import snake2d.SPRITE_RENDERER;
 import snake2d.util.color.COLOR;
@@ -20,13 +18,19 @@ import snake2d.util.color.ColorImp;
 import snake2d.util.datatypes.AREA;
 import snake2d.util.datatypes.DIR;
 import snake2d.util.file.*;
+import snake2d.util.gui.clickable.CLICKABLE;
 import snake2d.util.map.MAP_BOOLEAN;
 import snake2d.util.map.MAP_OBJECT;
 import snake2d.util.sets.*;
 import snake2d.util.sprite.SPRITE;
+import util.dic.DicMisc;
+import util.gui.misc.GButt;
+import util.rendering.RenderData;
+import util.rendering.RenderData.RenderIterator;
 import view.tool.*;
-import view.world.IDebugPanelWorld;
-import world.World.WorldResource;
+import view.world.panel.IDebugPanelWorld;
+import world.WConfig;
+import world.WORLD.WorldResource;
 import world.map.terrain.WorldWater.WATER;
 
 public class WorldWater extends WorldResource implements MAP_OBJECT<WATER>{
@@ -65,6 +69,11 @@ public class WorldWater extends WorldResource implements MAP_OBJECT<WATER>{
 			return false;
 		}
 
+		@Override
+		protected boolean canTravelTo(int data, DIR to) {
+			return false;
+		}
+
 	};
 	
 	public final OpenSet LAKE;
@@ -72,13 +81,10 @@ public class WorldWater extends WorldResource implements MAP_OBJECT<WATER>{
 	public final WATER RIVER = new River();
 	public final WATER RIVER_SMALL = new RiverSmall();
 	
-	public final SPRITE iconSweet;
-	public final SPRITE iconSalt;
-	
 	public WorldWater() throws IOException{
 
-		Json js = new Json(PATHS.CONFIG().get("GenerationWorld")).json("WATER");
-
+		Json js = WConfig.json("Water");
+		
 		LAKE = new OpenSet("lake", new ColorImp(js, "COLOR_LAKE_SHORE"), new ColorImp(js, "COLOR_LAKE"), true);
 		OCEAN = new OpenSet("ocean", new ColorImp(js, "COLOR_OCEAN_SHORE"), new ColorImp(js, "COLOR_OCEAN"), false);
 		
@@ -101,24 +107,7 @@ public class WorldWater extends WorldResource implements MAP_OBJECT<WATER>{
 			seasonColors[(int) i] = p;
 			
 		}
-		
-		iconSweet = new SPRITE.Imp(ICON.BIG.SIZE) {
-			
-			@Override
-			public void render(SPRITE_RENDERER r, int X1, int X2, int Y1, int Y2) {
-				((Normal)LAKE.normal).renderIcon(r, X1, Y1, X2-X1);
-				
-			}
-		};
-		
-		iconSalt = new SPRITE.Imp(ICON.BIG.SIZE) {
-			
-			@Override
-			public void render(SPRITE_RENDERER r, int X1, int X2, int Y1, int Y2) {
-				((Normal)OCEAN.normal).renderIcon(r, X1, Y1, X2-X1);
-				
-			}
-		};
+
 		
 	}
 	
@@ -146,7 +135,7 @@ public class WorldWater extends WorldResource implements MAP_OBJECT<WATER>{
 	}
 	
 	@Override
-	protected void update(float ds) {
+	protected void update(float ds, Profiler prof) {
 		sprites.update(ds);
 	}
 	
@@ -164,18 +153,11 @@ public class WorldWater extends WorldResource implements MAP_OBJECT<WATER>{
 		COLOR.unbind();
 	}
 	
-	public void renderMid(Renderer r, RenderData data, double season){
+	public void renderShorelines(Renderer r, RenderIterator it){
 		
-		RenderIterator it = data.onScreenTiles();
-
-		while(it.has()) {
-			ColorImp.TMP.bind();
-			if (get(it.tx(), it.ty()).renderMid(r, dataGet(it.tile()), it)) {
-				it.hiddenSet();
-			}
-			it.next();
+		if (get(it.tx(), it.ty()).renderShore(r, dataGet(it.tile()), it)) {
+			it.hiddenSet();
 		}
-		COLOR.unbind();
 	}
 	
 	public void render(Renderer r, RenderData data, double season){
@@ -189,7 +171,7 @@ public class WorldWater extends WorldResource implements MAP_OBJECT<WATER>{
 		OCEAN.update(i, ColorImp.TMP);
 		
 		while(it.has()) {
-			ColorImp.TMP.bind();
+			
 			if (get(it.tx(), it.ty()).render(r, dataGet(it.tile()), it)) {
 				it.hiddenSet();
 			}
@@ -277,7 +259,7 @@ public class WorldWater extends WorldResource implements MAP_OBJECT<WATER>{
 		boolean renderShore(SPRITE_RENDERER r, int data, RenderIterator it) {
 			return false;
 		}
-		boolean renderMid(SPRITE_RENDERER r, int data, RenderIterator it) {
+		boolean rend2erMid(SPRITE_RENDERER r, int data, RenderIterator it) {
 			return false;
 		}
 		abstract boolean isFertile();
@@ -288,9 +270,11 @@ public class WorldWater extends WorldResource implements MAP_OBJECT<WATER>{
 		}
 		
 		@Override
-		public final SPRITE getIcon() {
+		public SPRITE getIcon() {
 			return SPRITES.icons().m.cancel;
 		}
+		
+		protected abstract boolean canTravelTo(int data, DIR to);
 		
 	}
 	
@@ -299,18 +283,91 @@ public class WorldWater extends WorldResource implements MAP_OBJECT<WATER>{
 		private final COLOR cShore;
 		private final COLOR cWater;
 		private final ColorImp col = new ColorImp();
-	
 		public final WATER normal;
 		public final WATER deep;
 		public final WATER delta;
+		public final PLACABLE placer;
+		public final SPRITE icon;
 		
 		private OpenSet(String name, COLOR cShore, COLOR cWater, boolean isFertile) {
 			this.cShore = cShore;
 			this.cWater = cWater;
 			
-			delta = new Delta(name + " delta", this);
-			normal = new Normal(name, this, isFertile);
-			deep = new Deep(name, this, isFertile);
+			delta = new Delta(name + " (" + DicMisc.¤¤delta + ")", this);
+			normal = new Normal(name + " (" + DicMisc.¤¤normal + ")", this, isFertile);
+			deep = new Deep(name + " (" + DicMisc.¤¤deep + ")", this, isFertile);
+			
+			icon = new SPRITE.Imp(Icon.L) {
+				
+				@Override
+				public void render(SPRITE_RENDERER r, int X1, int X2, int Y1, int Y2) {
+					((Normal)normal).renderIcon(r, X1, Y1, X2-X1);
+					
+				}
+			};
+			
+			placer = new PlacableMulti(name, "", icon) {
+				LinkedList<CLICKABLE> butts = new LinkedList<>();
+				WATER current = normal;
+				{
+					butts.add(new GButt.ButtPanel(DicMisc.¤¤normal) {
+						@Override
+						protected void clickA() {
+							current = normal;
+						}
+						@Override
+						protected void renAction() {
+							selectedSet(current == normal);
+						};
+						
+					});
+					butts.add(new GButt.ButtPanel(DicMisc.¤¤deep) {
+						@Override
+						protected void clickA() {
+							current = deep;
+						}
+						@Override
+						protected void renAction() {
+							selectedSet(current == deep);
+						};
+						
+					});
+					butts.add(new GButt.ButtPanel(DicMisc.¤¤delta) {
+						@Override
+						protected void clickA() {
+							current = delta;
+						}
+						@Override
+						protected void renAction() {
+							selectedSet(current == delta);
+						};
+						
+					});
+				}
+				
+				@Override
+				public void place(int tx, int ty, AREA area, PLACER_TYPE type) {
+					current.place(tx, ty, area, type);
+				}
+				
+				@Override
+				public CharSequence isPlacable(int tx, int ty, AREA area, PLACER_TYPE type) {
+					return current.isPlacable(tx, ty, area, type);
+				}
+				
+				@Override
+				public LIST<CLICKABLE> getAdditionalButt() {
+					return butts;
+				}
+				
+				
+				@Override
+				public PLACABLE getUndo() {
+					return NOTHING;
+				}
+				
+			};
+			
 		}
 		
 		void update(double ts, COLOR season) {
@@ -344,6 +401,7 @@ public class WorldWater extends WorldResource implements MAP_OBJECT<WATER>{
 			}
 		};
 
+		
 	}
 	
 	private final class Normal extends WATER {
@@ -429,6 +487,15 @@ public class WorldWater extends WorldResource implements MAP_OBJECT<WATER>{
 			COLOR.unbind();
 		}
 
+
+		@Override
+		protected boolean canTravelTo(int data, DIR to) {
+			if (to.isOrtho())
+				return (data & to.mask()) != 0;
+			data = data >>>4;
+			return (data & to.mask()) == 0;
+		}
+
 	}
 	
 	private final class Deep extends WATER {
@@ -477,8 +544,8 @@ public class WorldWater extends WorldResource implements MAP_OBJECT<WATER>{
 		
 		@Override
 		public CharSequence isPlacable(int tx, int ty, AREA area, PLACER_TYPE type) {
-			for (int i = 0; i < DIR.ORTHO.size(); i++) {
-				DIR d = DIR.ORTHO.get(i);
+			for (int i = 0; i < DIR.ALL.size(); i++) {
+				DIR d = DIR.ALL.get(i);
 				if (IN_BOUNDS(tx, ty, d) && !is(tx, ty, d) && !set.normal.is(tx, ty, d))
 					return "";
 				if (set.delta.is(tx, ty))
@@ -490,6 +557,11 @@ public class WorldWater extends WorldResource implements MAP_OBJECT<WATER>{
 		@Override
 		boolean isFertile() {
 			return fertile;
+		}
+		
+		@Override
+		protected boolean canTravelTo(int data, DIR to) {
+			return true;
 		}
 
 	}
@@ -553,6 +625,30 @@ public class WorldWater extends WorldResource implements MAP_OBJECT<WATER>{
 		boolean isFertile() {
 			return true;
 		}
+
+		@Override
+		protected boolean canTravelTo(int data, DIR to) {
+			if (to.isOrtho())
+				return (data & to.mask()) != 0;
+			return (data & to.mask()) != 0 || (data & to.next(1).mask()) != 0;
+		}
+		
+		private final SPRITE iconSprite = new SPRITE.Imp(C.T_PIXELS*2) {
+			
+			@Override
+			public void render(SPRITE_RENDERER r, int X1, int X2, int Y1, int Y2) {
+				LAKE.cShore.bind();
+				sprites.riverBG.render(r, 0, X1, X2, Y1, Y2);
+				LAKE.col.bind();
+				sprites.riverFG.render(r, 0, X1, X2, Y1, Y2);
+				COLOR.unbind();
+			}
+		};
+		
+		@Override
+		public SPRITE getIcon() {
+			return iconSprite;
+		}
 		
 	}
 	
@@ -564,7 +660,7 @@ public class WorldWater extends WorldResource implements MAP_OBJECT<WATER>{
 
 		@Override
 		boolean coversCompleatly(int tile) {
-			return dataGet(tile) == 0x0F;
+			return false;
 		}
 
 		@Override
@@ -584,30 +680,13 @@ public class WorldWater extends WorldResource implements MAP_OBJECT<WATER>{
 			}
 			dataSet(tx, ty, res | (other <<4));
 		}
-
-		@Override
-		boolean renderMid(SPRITE_RENDERER r, int data, RenderIterator it) {
-			LAKE.col.bind();
-			int o = data >>> 4;
-			data &= 0x0F;
-			sprites.riverSmallFG.render(r, data+(it.ran()&7)*16, it.x(), it.y());
-			if (o != 0) {
-				for (int i = 0; i < DIR.ORTHO.size(); i++) {
-					DIR d = DIR.ORTHO.get(i);
-					if ((d.mask() & o) != 0) {
-						int x = it.x()+d.x()*C.TILE_SIZE;
-						int y = it.y()+d.y()*C.TILE_SIZE;
-						int da = d.perpendicular().mask();
-						sprites.riverSmallFG.render(r, da+(it.ran()&7)*16, x, y);
-					}
-				}
-			}
-			
-			return false;
-		}
 		
 		@Override
 		boolean renderShore(SPRITE_RENDERER r, int data, RenderIterator it) {
+			
+			
+			
+			
 			LAKE.cShore.bind();
 			int o = data >>> 4;
 			data &= 0x0F;
@@ -623,6 +702,21 @@ public class WorldWater extends WorldResource implements MAP_OBJECT<WATER>{
 					}
 				}
 			}
+			
+			LAKE.col.bind();
+			sprites.riverSmallFG.render(r, data+(it.ran()&7)*16, it.x(), it.y());
+			if (o != 0) {
+				for (int i = 0; i < DIR.ORTHO.size(); i++) {
+					DIR d = DIR.ORTHO.get(i);
+					if ((d.mask() & o) != 0) {
+						int x = it.x()+d.x()*C.TILE_SIZE;
+						int y = it.y()+d.y()*C.TILE_SIZE;
+						int da = d.perpendicular().mask();
+						sprites.riverSmallFG.render(r, da+(it.ran()&7)*16, x, y);
+					}
+				}
+			}
+			
 			return false;
 		}
 
@@ -639,6 +733,28 @@ public class WorldWater extends WorldResource implements MAP_OBJECT<WATER>{
 		@Override
 		boolean render(SPRITE_RENDERER r, int data, RenderIterator it) {
 			return false;
+		}
+
+		@Override
+		protected boolean canTravelTo(int data, DIR to) {
+			return false;
+		}
+		
+		private final SPRITE iconSprite = new SPRITE.Imp(C.T_PIXELS*2) {
+			
+			@Override
+			public void render(SPRITE_RENDERER r, int X1, int X2, int Y1, int Y2) {
+				LAKE.cShore.bind();
+				sprites.riverSmallBG.render(r, 0, X1, X2, Y1, Y2);
+				LAKE.col.bind();
+				sprites.riverSmallFG.render(r, 0, X1, X2, Y1, Y2);
+				COLOR.unbind();
+			}
+		};
+		
+		@Override
+		public SPRITE getIcon() {
+			return iconSprite;
 		}
 		
 	}
@@ -702,15 +818,15 @@ public class WorldWater extends WorldResource implements MAP_OBJECT<WATER>{
 		boolean isFertile() {
 			return true;
 		}
+
+		@Override
+		protected boolean canTravelTo(int data, DIR to) {
+			int m = DIR.ORTHO.get(data).mask() | DIR.ORTHO.get(data).perpendicular().mask();
+			return RIVER.canTravelTo(m, to);
+		}
 	}
 	
-	public boolean canCrossRiver(int fromX, int fromY, int toX, int toY) {
-		if (RIVER.is(fromX, fromY)) {
-			return (Math.abs(fromX-toX) + Math.abs(fromY-toY) <= 1) && !RIVER.is(toX, toY);
-		}
-		return false;
-		
-	}
+
 	
 	public MAP_BOOLEAN isRivery = new MAP_BOOLEAN() {
 		
@@ -737,6 +853,29 @@ public class WorldWater extends WorldResource implements MAP_OBJECT<WATER>{
 			return get(tile) instanceof Delta;
 		}
 	};
+	
+	public boolean canTravelToByBoat(int sx, int sy, DIR d) {
+		if (!isBig.is(sx, sy, d))
+			return false;
+		WATER w = get(sx, sy);
+		int dd = dataGet(sx+TWIDTH()*sy);
+		return w.canTravelTo(dd, d);
+	}
+	
+	public boolean canCrossByLand(int fromX, int fromY, int toX, int toY) {
+		if (!isBig.is(toX, toY))
+			return true;
+		if (RIVER_SMALL.is(fromX, fromY))
+			return true;
+		if (RIVER.is(fromX, fromY)) {
+			return (Math.abs(fromX-toX) + Math.abs(fromY-toY) <= 1) && !RIVER.is(toX, toY);
+		}
+		if (has.is(fromX, fromY))
+			return false;
+		return true;
+		
+	}
+
 	
 	double add(WorldTerrainInfo info, int tx, int ty) {
 		if (RIVER.is(tx, ty)) {
@@ -787,6 +926,20 @@ public class WorldWater extends WorldResource implements MAP_OBJECT<WATER>{
 		@Override
 		public boolean is(int tile) {
 			return all.get(tiles.get(tile)) != NOTHING;
+		}
+	};
+	
+	public MAP_BOOLEAN isBig = new MAP_BOOLEAN() {
+		@Override
+		public boolean is(int tx, int ty) {
+			if (!IN_BOUNDS(tx, ty))
+				return false;
+			return !NOTHING.is(tx, ty) && !RIVER_SMALL.is(tx, ty);
+		}
+		
+		@Override
+		public boolean is(int tile) {
+			return all.get(tiles.get(tile)) != NOTHING && all.get(tiles.get(tile)) != RIVER_SMALL;
 		}
 	};
 	

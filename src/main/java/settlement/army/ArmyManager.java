@@ -3,6 +3,7 @@ package settlement.army;
 
 import java.io.IOException;
 
+import game.Profiler;
 import init.C;
 import init.config.Config;
 import settlement.army.formation.DivDeployerUser;
@@ -13,6 +14,7 @@ import snake2d.util.file.FileGetter;
 import snake2d.util.file.FilePutter;
 import snake2d.util.sets.ArrayList;
 import snake2d.util.sets.LIST;
+import util.updating.IUpdater;
 import view.main.VIEW;
 
 public class ArmyManager extends SettResource{
@@ -29,6 +31,7 @@ public class ArmyManager extends SettResource{
 	public final TargetMap map = new TargetMap();
 	
 	public ArmyManager(SETT s) throws IOException{
+		
 		for (int i = 0; i < ARMIES; i++) {
 			
 			new Army(armies, divisions, Config.BATTLE.MEN_PER_DIVISION);
@@ -92,10 +95,11 @@ public class ArmyManager extends SettResource{
 	
 	private double ti = 0;
 	@Override
-	protected void update(float ds) {
-		for (Div d : divisions) {
-			d.update(ds);
-		}
+	protected void update(float ds, Profiler profiler) {
+
+		profiler.logStart(Div.class);
+		uper.update(ds);
+		profiler.logEnd(Div.class);
 		
 		for (Army a : armies())
 			a.update(ds);
@@ -105,6 +109,14 @@ public class ArmyManager extends SettResource{
 			SETT.ARMIES().info.update();
 		}
 	}
+	
+	private final IUpdater uper = new IUpdater(DIVISIONS, 0.1) {
+		
+		@Override
+		protected void update(int i, double timeSinceLast) {
+			divisions.get(i).update(timeSinceLast);
+		}
+	};
 	
 	public Army player() {
 		return armies.get(0);

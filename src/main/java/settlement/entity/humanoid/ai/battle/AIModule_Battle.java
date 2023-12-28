@@ -25,7 +25,7 @@ public final class AIModule_Battle extends AIModule{
 	}
 	
 	@Override
-	protected AiPlanActivation getPlan(Humanoid a, AIManager d) {
+	public AiPlanActivation getPlan(Humanoid a, AIManager d) {
 		if (STATS.BATTLE().ROUTING.indu().get(a.indu()) == 1) {
 			return dessert.activate(a, d);
 		}

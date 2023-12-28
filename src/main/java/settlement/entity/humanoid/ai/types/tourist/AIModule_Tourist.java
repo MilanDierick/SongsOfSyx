@@ -18,7 +18,7 @@ import settlement.main.SETT;
 import settlement.misc.util.FSERVICE;
 import settlement.room.main.RoomBlueprintIns;
 import settlement.room.main.RoomInstance;
-import settlement.stats.CAUSE_LEAVE;
+import settlement.stats.util.CAUSE_LEAVE;
 import snake2d.util.bit.Bits;
 import snake2d.util.datatypes.DIR;
 import snake2d.util.rnd.RND;
@@ -42,7 +42,7 @@ public class AIModule_Tourist extends AIModule{
 	}
 	
 	@Override
-	protected AiPlanActivation getPlan(Humanoid a, AIManager d) {
+	public AiPlanActivation getPlan(Humanoid a, AIManager d) {
 		if (SETT.ENTRY().beseiged()) {
 			return leaving.activate(a, d);
 		}

@@ -1,9 +1,9 @@
 package settlement.room.food.cannibal;
 
 import game.GAME;
+import game.faction.FResources.RTYPE;
 import game.time.TIME;
 import init.resources.RESOURCE;
-import settlement.main.RenderData;
 import settlement.misc.job.SETT_JOB;
 import settlement.misc.util.RESOURCE_TILE;
 import settlement.room.main.RoomInstance;
@@ -12,6 +12,7 @@ import settlement.room.main.util.RoomInit;
 import snake2d.Renderer;
 import snake2d.util.datatypes.COORDINATE;
 import snake2d.util.sets.ArrayCooShort;
+import util.rendering.RenderData;
 import util.rendering.ShadowBatch;
 
 public final class CannibalInstance extends RoomInstance {
@@ -150,7 +151,7 @@ public final class CannibalInstance extends RoomInstance {
 		}
 		blueprintI().produced[res.index()] += am;
 		blueprintI().reportCannibal2();
-		GAME.player().res().inProduced.inc(res, am);
+		GAME.player().res().inc(res, RTYPE.PRODUCED, am);
 		return i;
 	}
 

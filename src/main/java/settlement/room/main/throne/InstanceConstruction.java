@@ -4,12 +4,8 @@ import static settlement.main.SETT.*;
 
 import init.D;
 import init.resources.RESOURCE;
-import init.sprite.ICON;
-import init.sprite.ICON.BIG;
 import init.sprite.SPRITES;
 import settlement.job.ROOM_JOBBER;
-import settlement.main.RenderData;
-import settlement.main.RenderData.RenderIterator;
 import settlement.main.SETT;
 import settlement.maintenance.ROOM_DEGRADER;
 import settlement.path.AVAILABILITY;
@@ -18,6 +14,9 @@ import settlement.room.main.TmpArea;
 import snake2d.Renderer;
 import snake2d.util.color.COLOR;
 import snake2d.util.datatypes.*;
+import snake2d.util.sprite.SPRITE;
+import util.rendering.RenderData;
+import util.rendering.RenderData.RenderIterator;
 import util.rendering.ShadowBatch;
 
 final class InstanceConstruction extends Room.RoomInstanceImp implements ROOM_JOBBER{
@@ -25,7 +24,7 @@ final class InstanceConstruction extends Room.RoomInstanceImp implements ROOM_JO
 	private static final long serialVersionUID = 1L;
 	private final RECTANGLE body;
 	private final int rot;
-	private transient ICON.BIG icon;
+	private transient SPRITE icon;
 	
 	private boolean active;
 	private int jobs;
@@ -152,9 +151,9 @@ final class InstanceConstruction extends Room.RoomInstanceImp implements ROOM_JO
 	}
 	
 	@Override
-	public BIG icon() {
+	public SPRITE icon() {
 		if (icon == null)
-			icon = new ICON.BIG.Twin(blueprintI().sprite.icon, SPRITES.icons().s.hammer);
+			icon = new SPRITE.Twin(blueprintI().sprite.icon, SPRITES.icons().s.hammer);
 		return icon;
 	}
 

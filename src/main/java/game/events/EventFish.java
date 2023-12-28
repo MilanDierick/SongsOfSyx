@@ -7,20 +7,21 @@ import game.time.TIME;
 import init.D;
 import settlement.main.SETT;
 import settlement.room.food.fish.ROOM_FISHERY;
+import settlement.stats.STATS;
 import snake2d.util.file.FileGetter;
 import snake2d.util.file.FilePutter;
 import snake2d.util.misc.ACTION;
 import snake2d.util.rnd.RND;
 import snake2d.util.sprite.text.Str;
-import view.main.MessageText;
 import view.sett.IDebugPanelSett;
+import view.ui.message.MessageText;
 
 public class EventFish extends EventResource{
 
 	private static CharSequence ¤¤mTitleGood = "Good catch!";
 	private static CharSequence ¤¤mTitleBad = "Bad Catch!";
-	private static CharSequence ¤¤mBodyGood = "Our {0} are reporting big catches today. Make sure we can store all that extra {1}.";
-	private static CharSequence ¤¤mBodyBad = "Our {0} are reporting bad catches today. Lets hope the catch of {1} of tomorrow will be better.";
+	private static CharSequence ¤¤mBodyGood = "Reports from our {0} are indicating the catch is unusually good today. Make sure we can store all that extra {1}.";
+	private static CharSequence ¤¤mBodyBad = "Reports from our {0} are indicating the catch is unusually low today. Lets hope the catch of {1} of tomorrow will be better.";
 	
 	static {
 		D.ts(EventFish.class);
@@ -52,6 +53,7 @@ public class EventFish extends EventResource{
 			if (timer > 0)
 				return;
 			spawn();
+			reset();
 		}
 	}
 
@@ -93,9 +95,12 @@ public class EventFish extends EventResource{
 		
 		ROOM_FISHERY f = SETT.ROOMS().FISHERIES.getC(fishery);
 		if (f.employment().employed() == 0) {
-			reset();
 			return;
 		}
+		if (STATS.POP().POP.data().get(null)-100 < RND.rInt(1000))
+			return;
+		
+		f.eventSet(value);
 		
 		CharSequence t = ¤¤mTitleGood;
 		CharSequence b = ¤¤mBodyGood;
@@ -106,7 +111,7 @@ public class EventFish extends EventResource{
 			b = ¤¤mBodyBad;
 		}
 		
-		Str.TMP.clear().add(b).insert(0, f.employment().title).insert(1, f.industries().get(0).outs().get(0).resource.names);
+		Str.TMP.clear().add(b).insert(0, f.employment().blueprint().info.names).insert(1, f.industries().get(0).outs().get(0).resource.names);
 		
 		new MessageText(t).paragraph(Str.TMP).send();
 		

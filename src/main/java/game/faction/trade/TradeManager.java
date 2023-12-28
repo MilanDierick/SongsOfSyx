@@ -4,17 +4,23 @@ import java.io.IOException;
 
 import game.faction.*;
 import game.faction.npc.FactionNPC;
+import game.faction.npc.ruler.ROpinions;
 import game.faction.trade.TradeShipper.Partner;
 import game.time.TIME;
 import init.resources.RESOURCE;
 import init.resources.RESOURCES;
+import settlement.entity.humanoid.HCLASS;
 import settlement.main.SETT;
 import snake2d.LOG;
 import snake2d.util.file.FileGetter;
 import snake2d.util.file.FilePutter;
+import snake2d.util.misc.ACTION;
+import snake2d.util.misc.CLAMP;
 import util.updating.TileUpdater;
-import world.World;
+import view.interrupter.IDebugPanel;
+import world.WORLD;
 import world.entity.caravan.Shipment;
+import world.regions.data.RD;
 
 public class TradeManager extends FactionResource{
 
@@ -24,23 +30,54 @@ public class TradeManager extends FactionResource{
 	private final TradeShipper shipper = new TradeShipper();
 	private final TradeSorter sorter = new TradeSorter();
 	
-	private static final double TOLL = 0.00625;
+
+	private static final double TOLLP = 0.5;
+//	private static final double TOLL = 0.05;
 	public static final int MIN_LOAD = 32;
 
-	public static double priceToll(double distance, int amount) {
-		return amount*(distance * TOLL);
+	public static int toll(Faction f, Faction to, double distance, int price) {
+		
+		if (f == FACTIONS.player()) {
+			
+			int t = tollPlayer((FactionNPC) to, price, distance);
+			t += price*ROpinions.tradeCost((FactionNPC) to);
+			
+			return (int) Math.ceil(t);
+		}else {
+			double t = price*TOLLP*(distance+50.0)/(375.0);
+			
+//			double tt = TOLL;
+//			double t = price*tt;
+//			t += amount * distance* tt;
+			return (int) Math.ceil(t);
+		}
+		
 	}
+	
+	public static int tollPlayer(FactionNPC to, int price, double distance) {
+		double d = (distance+50.0)/(500.0* RD.DIST().boostable.get(HCLASS.CITIZEN.get(null)));
+		d = CLAMP.d(d, 0, 1);
+		return (int) (price*d);
+	}
+
 	
 	public TradeManager(FACTIONS fs){
 		
+		IDebugPanel.add("Trade all", new ACTION() {
+			
+			@Override
+			public void exe() {
+				clear();
+				prime();
+			}
+		});
 		
-		
-		updater = new TileUpdater(FACTIONS.all().size(), FACTIONS.all().size()+1, TRADE_INTERVAL*TIME.days().bitSeconds()/World.SPEED) {
+		updater = new TileUpdater(FACTIONS.MAX, FACTIONS.MAX+1, TRADE_INTERVAL*TIME.days().bitSeconds()) {
 			
 			@Override
 			protected void update(int iteration, int factionI, int vv, double timeSinceLast) {
 				
-				if (factionI == FACTIONS.all().size()) {
+				if (factionI == FACTIONS.MAX) {
 					
 					if (iteration == 0) {
 						sellPlayer();
@@ -52,8 +89,8 @@ public class TradeManager extends FactionResource{
 					}
 					return;
 				}
-				Faction buyer = FACTIONS.all().get(factionI);
-				if (buyer.isActive()) {
+				Faction buyer = FACTIONS.getByIndex(factionI);
+				if (buyer.isActive() && buyer.capitolRegion() != null) {
 					if (iteration == 0) {
 						buy(buyer);
 					}
@@ -89,7 +126,7 @@ public class TradeManager extends FactionResource{
 	}
 
 	@Override
-	protected void update(double ds) {
+	protected void update(double ds, Faction f) {
 		updater.update(ds);
 	}
 	
@@ -126,16 +163,23 @@ public class TradeManager extends FactionResource{
 		
 		Shipment s = null;
 		if (shipping && seller.isActive()) {
-			s = World.ENTITIES().caravans.createTrade(seller.capitolRegion().cx(), seller.capitolRegion().cy(), buyer.capitolRegion());
-			if (s == null)
-				LOG.ln("here!");
+			boolean create = buyer == FACTIONS.player() || seller == FACTIONS.player();
+			if (!create)
+				create = WORLD.ENTITIES().all().size() < 200;
+			
+				if (create) {
+					s = WORLD.ENTITIES().caravans.create(seller.capitolRegion(), buyer.capitolRegion(), ITYPE.trade);
+					if (s == null)
+						LOG.ln("here!");
+				}
+			
+			
 		}
 		
 		if (s != null) {
 			for (RESOURCE r : RESOURCES.ALL()) {
 				int a = count.traded(r);
 				if (a > 0) {
-					buyer.buyer().reserveSpace(r, -a);
 					s.load(r, a);
 				}
 			}
@@ -143,10 +187,7 @@ public class TradeManager extends FactionResource{
 			for (RESOURCE r : RESOURCES.ALL()) {
 				int a = count.traded(r);
 				if (a > 0) {
-					buyer.buyer().reserveSpace(r, -a);
-					//LOG.ln(r + " " + a);
-					//buyer.buyer().reserveSpace(r, -a);
-					buyer.buyer().addImport(r, a);
+					buyer.buyer().deliverAndUnreserve(r, am, ITYPE.trade);
 				}
 			}
 		}
@@ -155,8 +196,8 @@ public class TradeManager extends FactionResource{
 	}
 	
 	public void prime() {
-		for (FactionNPC f : FACTIONS.NPCs()) {
-			
+		for (int i = 0; i < FACTIONS.NPCs().size(); i++) {
+			FactionNPC f = FACTIONS.NPCs().get(i);
 			if (!f.isActive())
 				continue;
 			buy(f);
@@ -167,5 +208,4 @@ public class TradeManager extends FactionResource{
 			
 		}
 	}
-	
 }

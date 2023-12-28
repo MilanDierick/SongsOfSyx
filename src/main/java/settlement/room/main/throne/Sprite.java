@@ -4,9 +4,8 @@ import java.io.IOException;
 
 import game.GAME;
 import init.C;
-import init.sprite.ICON;
-import settlement.main.RenderData;
-import settlement.main.RenderData.RenderIterator;
+import init.sprite.UI.Icon;
+import init.sprite.UI.UI;
 import settlement.main.SETT;
 import settlement.room.main.util.RoomInitData;
 import settlement.room.sprite.RoomSprite;
@@ -16,15 +15,15 @@ import snake2d.util.color.COLOR;
 import snake2d.util.color.ColorImp;
 import snake2d.util.file.Json;
 import snake2d.util.sprite.TILE_SHEET;
+import util.rendering.RenderData;
+import util.rendering.RenderData.RenderIterator;
 import util.rendering.ShadowBatch;
 import util.spritecomposer.*;
-import util.spritecomposer.ComposerThings.IIcon;
-import util.spritecomposer.ComposerThings.ISpriteData;
 
 final class Sprite {
 	
 	final COLOR miniC;
-	public final ICON.BIG icon;
+	public final Icon icon;
 	private final TILE_SHEET sfloor;
 	private final TILE_SHEET sthrone;
 	final static int WIDTH = 5;
@@ -35,24 +34,17 @@ final class Sprite {
 	
 	Sprite(RoomInitData init) throws IOException{
 		miniC = new ColorImp(init.data(), "MINI_COLOR");
-		icon = IIcon.LARGE.get(new ISpriteData(init.sp(), 264, 244) {
-			@Override
-			protected SpriteData init(ComposerUtil c, ComposerSources s, ComposerDests d) {
-				s.singles.init(0, 0, 2, 1, 1, 1, d.s32);
-				s.singles.setVar(0).paste(true);
-				return d.s32.saveSprite();
-			}
-		}.get());
+		icon = UI.icons().get(init.data());
 		
 		Json sp = init.data().json("SPRITES");
 		
 		candle = new RoomSprite1x1(sp, "TORCH_1X1");
 		
-		sfloor = new ComposerThings.ITileSheet() {
+		sfloor = new ComposerThings.ITileSheet(init.sp(), 264, 240) {
 			
 			@Override
 			protected TILE_SHEET init(ComposerUtil c, ComposerSources s, ComposerDests d) {
-				s.full.init(0, s.singles.body().y2(), 1, 4, 3, 3, d.s16);
+				s.full.init(0, 0, 1, 4, 3, 3, d.s16);
 				s.full.paste(true);
 				s.full.setVar(1).paste(true);
 				s.full.setVar(2).paste(true);

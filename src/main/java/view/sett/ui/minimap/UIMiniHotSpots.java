@@ -4,9 +4,8 @@ import java.io.IOException;
 
 import init.C;
 import init.D;
-import init.sprite.ICON;
-import init.sprite.ICON.MEDIUM;
 import init.sprite.SPRITES;
+import init.sprite.UI.Icon;
 import init.sprite.UI.UI;
 import snake2d.SPRITE_RENDERER;
 import snake2d.util.color.COLOR;
@@ -17,8 +16,10 @@ import snake2d.util.file.*;
 import snake2d.util.gui.GuiSection;
 import snake2d.util.gui.clickable.CLICKABLE;
 import snake2d.util.rnd.RND;
+import snake2d.util.sprite.SPRITE;
 import snake2d.util.sprite.text.Str;
 import snake2d.util.sprite.text.StringInputSprite;
+import util.colors.GCOLOR;
 import util.data.INT.INTE;
 import util.gui.misc.*;
 import util.gui.panel.GFrame;
@@ -32,7 +33,7 @@ final class UIMiniHotSpots extends Expansion{
 
 
 	private final int max = 32;
-	private final int width = (int) (ICON.MEDIUM.SIZE*1.5);
+	private final int width = (int) (Icon.M*1.5);
 	private final GText text = new GText(UI.FONT().S, 20);
 	private final ColorImp colorImp = new ColorImp();
 
@@ -80,7 +81,7 @@ final class UIMiniHotSpots extends Expansion{
 		}
 		
 		@Override
-		public MEDIUM getIcon() {
+		public SPRITE getIcon() {
 			return SPRITES.icons().m.crossair;
 		}; 
 	};
@@ -91,7 +92,7 @@ final class UIMiniHotSpots extends Expansion{
 		private HotspotData d;
 		
 		Button(){
-			body.setWidth(width).setHeight(ICON.BIG.SIZE);
+			body.setWidth(width).setHeight(Icon.L);
 		}
 		
 		@Override
@@ -257,7 +258,7 @@ final class UIMiniHotSpots extends Expansion{
 			for (int i = 0; i < max; i++)
 				buttons[i] = new Button();
 	
-			body().setWidth(ICON.MEDIUM.SIZE*1.5+GFrame.MARGIN*2).setHeight(C.HEIGHT()-y1);
+			body().setWidth(Icon.M*1.5+GFrame.MARGIN*2).setHeight(C.HEIGHT()-y1);
 			body().moveX2(C.WIDTH());
 			body().moveY1(y1);
 			
@@ -302,9 +303,9 @@ final class UIMiniHotSpots extends Expansion{
 				bi = state;
 			}
 			if (visableIs()) {
-				COLOR.WHITE20.render(r, body());
+				GCOLOR.UI().panBG.render(r, body());
 				super.render(r, ds);
-				GFrame.render(r, 0, body());
+				GCOLOR.UI().borderH(r, body(), 0);
 			}
 			
 		}

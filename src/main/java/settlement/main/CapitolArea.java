@@ -1,23 +1,25 @@
 package settlement.main;
 
-import static world.World.*;
-
 import java.io.IOException;
+import java.util.Arrays;
 
 import init.C;
 import init.biomes.CLIMATE;
 import init.biomes.CLIMATES;
+import init.resources.Minable;
+import init.resources.RESOURCES;
 import snake2d.util.datatypes.*;
 import snake2d.util.file.*;
 import snake2d.util.sets.ArrayList;
 import snake2d.util.sets.LIST;
-import world.World;
-import world.map.regions.CapitolPlacablity;
+import world.WORLD;
+import world.map.pathing.WTRAV;
 import world.map.terrain.WorldTerrainInfo;
+import world.regions.centre.WCentre;
 
 public final class CapitolArea{
 
-	private static int TILES = CapitolPlacablity.TILE_DIM;
+	private static int TILES = WCentre.TILE_DIM;
 
 	private final ArrayList<COORDINATE> tiles = new ArrayList<>(TILES*TILES);
 	private int arrivalTile = -1;
@@ -27,7 +29,9 @@ public final class CapitolArea{
 	
 	private CLIMATE climate;
 	public final WorldTerrainInfo info = new WorldTerrainInfo();
-	private SGenerationConfig config;
+	private int[] minable = new int[RESOURCES.minables().all().size()];
+	
+	public boolean isBattle;
 	
 	public final SAVABLE saver = new SAVABLE() {
 		
@@ -38,12 +42,8 @@ public final class CapitolArea{
 			worldPixels.save(file);
 			worldTiles.save(file);
 			file.i(climate.index());
-			if (config == null) {
-				config = new SGenerationConfig();
-				config.animals = true;
-				config.minables = true;
-			}
-			config.save(file);
+			file.bool(isBattle);
+			file.is(minable);
 		}
 		
 		@Override
@@ -53,8 +53,8 @@ public final class CapitolArea{
 			worldPixels.load(file);
 			worldTiles.load(file);
 			climate = CLIMATES.ALL().get(file.i());
-			config = new SGenerationConfig();
-			config.load(file);
+			isBattle = file.bool();
+			file.is(minable);
 		}
 		
 		@Override
@@ -64,12 +64,14 @@ public final class CapitolArea{
 		}
 	};
 	
-	void init(int worldtileX1, int worldtileY1, SGenerationConfig config) {
-		this.config = config;
+	void init(int worldtileX1, int worldtileY1, boolean isBattle) {
+
+		this.isBattle = isBattle;
 		worldTiles.moveX1Y1(worldtileX1, worldtileY1);
 		worldPixels.moveX1Y1(worldtileX1*C.TILE_SIZE, worldtileY1*C.TILE_SIZE);
 		
 		tiles.clear();
+		Arrays.fill(minable, 0);
 		info.initCity(worldtileX1, worldtileY1);
 		
 		for (int y = 0; y < TILES; y++) {
@@ -79,11 +81,14 @@ public final class CapitolArea{
 				int i = tiles.add(new ShortCoo(worldtileX1+x, worldtileY1+y));
 				
 				
-				if (arrivalTile == -1 && !WATER().has.is(tx, ty) && !MOUNTAIN().is(tx, ty)) {
+				if (arrivalTile == -1 && WTRAV.isGoodLandTile(tx, ty)) {
 					if (x == 0 || y == 0 || x == TILES-1 || y == TILES-1)
 						arrivalTile = i;
 				}
+				if (WORLD.MINERALS().get(tx, ty) != null)
+					minable[WORLD.MINERALS().get(tx, ty).index]++;
 			}
+			
 		}
 		
 		if (arrivalTile == -1) {
@@ -91,7 +96,7 @@ public final class CapitolArea{
 			arrivalTile = TILES*TILES/2;
 		}
 		
-		climate = World.CLIMATE().getter.get(worldTiles.cX(), worldTiles.cY());
+		climate = WORLD.CLIMATE().getter.get(worldTiles.cX(), worldTiles.cY());
 	}
 	
 	CapitolArea() {
@@ -102,7 +107,7 @@ public final class CapitolArea{
 	public float getWatertabe() {
 		double table = 0;
 		for (COORDINATE c : tiles) {
-			table+= World.GROUND().getter.get(c).fertility();
+			table+= WORLD.GROUND().getter.get(c).fertility();
 		}
 		
 		table /= (double) (TILES*TILES);
@@ -131,8 +136,8 @@ public final class CapitolArea{
 		return worldPixels;
 	}
 	
-	public SGenerationConfig config() {
-		return config;
+	public int minable(Minable m) {
+		return minable[m.index()];
 	}
 	
 }

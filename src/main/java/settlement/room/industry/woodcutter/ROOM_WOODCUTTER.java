@@ -2,20 +2,22 @@ package settlement.room.industry.woodcutter;
 
 import java.io.IOException;
 
-import init.boostable.BOOSTABLE;
-import init.boostable.BOOSTABLES;
+import init.biomes.TERRAINS;
 import settlement.path.finder.SFinderRoomService;
 import settlement.room.industry.module.INDUSTRY_HASER;
 import settlement.room.industry.module.Industry;
 import settlement.room.industry.module.Industry.RoomBoost;
+import settlement.room.main.BonusExp.RoomExperienceBonus;
 import settlement.room.main.RoomBlueprintIns;
 import settlement.room.main.category.RoomCategorySub;
 import settlement.room.main.furnisher.Furnisher;
 import settlement.room.main.util.RoomInitData;
 import snake2d.util.file.FileGetter;
 import snake2d.util.file.FilePutter;
+import snake2d.util.misc.CLAMP;
 import snake2d.util.sets.*;
 import view.sett.ui.room.UIRoomModule;
+import world.regions.Region;
 
 public class ROOM_WOODCUTTER extends RoomBlueprintIns<Instance> implements INDUSTRY_HASER{
 
@@ -29,13 +31,18 @@ public class ROOM_WOODCUTTER extends RoomBlueprintIns<Instance> implements INDUS
 		
 		
 		constructor = new Constructor(init, this);
-		BOOSTABLE skill = BOOSTABLES.ROOMS().pushRoom(this, init.data(), null);
-		productionData = new Industry(this, init.data(), new RoomBoost[] {constructor.efficiency}, skill);
+		pushBo(init.data(), null, true);
+		productionData = new Industry(this, init.data(), new RoomBoost[] {constructor.efficiency}, bonus()) {
+			@Override
+			public double getRegionBonus(Region reg) {
+				return CLAMP.d(0.2 + reg.info.terrain(TERRAINS.FOREST())*3, 0, 1);
+			}
+		};
 		
 		job = new Job(this);
 		indus = new ArrayList<>(productionData);
 		
-		
+		new RoomExperienceBonus(this, init.data(), bonus());
 	}
 	
 	@Override

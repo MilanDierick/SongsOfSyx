@@ -1,9 +1,8 @@
 package init.biomes;
 
 import init.paths.PATHS;
-import init.sprite.SPRITES;
 import settlement.main.SETT;
-import settlement.tilemap.TBuilding;
+import settlement.tilemap.terrain.TBuilding;
 import snake2d.util.sets.*;
 import snake2d.util.sprite.SPRITE;
 import util.keymap.RCollection;
@@ -33,11 +32,13 @@ public class BUILDING_PREFS {
 		OUTDOORS = new BUILDING_PREF("_OUTDOORS", all) {
 			@Override
 			public SPRITE icon() {
-				return SPRITES.icons().l.season_summer;
+				return CLIMATES.ALL().get(CLIMATES.ALL().size()/2).icon;
 			};
 		};
-		String[] keys = PATHS.INIT_SETTLEMENT().getFolder("structure").getFiles();
-		ArrayList<BUILDING_PREF> buildings = new ArrayList<BUILDING_PREF>(keys.length);
+		LinkedList<String> keys = new LinkedList<>();
+		keys.add("_MUD");
+		keys.add(PATHS.INIT_SETTLEMENT().getFolder("structure").getFiles());
+		ArrayList<BUILDING_PREF> buildings = new ArrayList<BUILDING_PREF>(keys.size());
 		int in = 0;
 		for (String k : keys) {
 			final int ind = in++;

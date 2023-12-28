@@ -2,9 +2,8 @@ package settlement.room.infra.admin;
 
 import java.io.IOException;
 
+import game.faction.FACTIONS;
 import game.time.TIME;
-import init.boostable.BOOSTABLE;
-import init.boostable.BOOSTABLES;
 import settlement.entity.humanoid.Humanoid;
 import settlement.path.finder.SFinderRoomService;
 import settlement.room.industry.module.INDUSTRY_HASER;
@@ -16,13 +15,12 @@ import settlement.room.main.category.RoomCategorySub;
 import settlement.room.main.furnisher.Furnisher;
 import settlement.room.main.util.RoomInitData;
 import snake2d.util.file.*;
-import snake2d.util.misc.ACTION;
 import snake2d.util.misc.CLAMP;
 import snake2d.util.sets.*;
 import util.info.INFO;
 import util.statistics.HistoryInt;
-import view.interrupter.IDebugPanel;
 import view.sett.ui.room.UIRoomModule;
+import world.regions.data.RD;
 
 public final class ROOM_ADMIN extends RoomBlueprintIns<AdminInstance> implements INDUSTRY_HASER {
 
@@ -32,7 +30,6 @@ public final class ROOM_ADMIN extends RoomBlueprintIns<AdminInstance> implements
 	private final int knowledgePerStation;
 	final double degradeValue;
 	final double workValue;
-	final BOOSTABLE bonus;
 	final Industry industry;
 	final Constructor constructor;
 	final double workSpeed;
@@ -56,14 +53,8 @@ public final class ROOM_ADMIN extends RoomBlueprintIns<AdminInstance> implements
 		workValue = work;
 		
 		constructor = new Constructor(this, init);
-		bonus = BOOSTABLES.ROOMS().pushRoom(this, init.data(), type);
-		IDebugPanel.add("admin + 1000", new ACTION() {
-			
-			@Override
-			public void exe() {
-				data.current += 1000;
-			}
-		});
+		pushBo(init.data(), type, true);
+		
 		
 
 		industry = new Industry(this, init.data(), new RoomBoost[] {
@@ -84,7 +75,7 @@ public final class ROOM_ADMIN extends RoomBlueprintIns<AdminInstance> implements
 				}
 			},
 			constructor.efficiency
-		}, bonus);
+		}, bonus());
 		
 		indus = new ArrayList<>(industry);
 	}
@@ -133,7 +124,10 @@ public final class ROOM_ADMIN extends RoomBlueprintIns<AdminInstance> implements
 		}
 		
 		void inc(double utilized){
+			
+			RD.ADMIN().factionSource.inc(FACTIONS.player(), -(int)current);
 			current += utilized;
+			RD.ADMIN().factionSource.inc(FACTIONS.player(), (int)current);
 			utilizedHistory.set((int)current);
 			setProgress();
 		}

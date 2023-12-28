@@ -4,16 +4,14 @@ import java.io.IOException;
 
 import game.time.TIME;
 import init.C;
-import settlement.entity.humanoid.ai.entertainment.AIModule_Entertainment;
 import settlement.misc.util.FSERVICE;
 import settlement.path.finder.SFinderRoomService;
 import settlement.room.main.RoomBlueprintIns;
 import settlement.room.main.category.RoomCategorySub;
 import settlement.room.main.furnisher.Furnisher;
 import settlement.room.main.util.RoomInitData;
-import settlement.room.service.module.ROOM_SPECTATOR;
-import settlement.room.service.module.RoomServiceDataAccess;
-import settlement.room.service.module.RoomServiceDataAccess.ROOM_SERVICE_ACCESS_HASER;
+import settlement.room.service.module.*;
+import settlement.room.service.module.RoomServiceNeed.ROOM_SERVICE_NEED_HASER;
 import snake2d.util.datatypes.COORDINATE;
 import snake2d.util.datatypes.Coo;
 import snake2d.util.file.FileGetter;
@@ -22,9 +20,9 @@ import snake2d.util.rnd.RND;
 import snake2d.util.sets.LISTE;
 import view.sett.ui.room.UIRoomModule;
 
-public final class ROOM_STAGE extends RoomBlueprintIns<StageInstance> implements ROOM_SERVICE_ACCESS_HASER, ROOM_SPECTATOR.ROOM_SPECTATOR_HASER{
+public final class ROOM_STAGE extends RoomBlueprintIns<StageInstance> implements ROOM_SERVICE_NEED_HASER, ROOM_SPECTATOR.ROOM_SPECTATOR_HASER{
 
-	final RoomServiceDataAccess data; 
+	final RoomServiceNeed data; 
 	
 	final StageConstructor constructor;
 	final Centre work;
@@ -32,17 +30,13 @@ public final class ROOM_STAGE extends RoomBlueprintIns<StageInstance> implements
 	public ROOM_STAGE(String key, int index, RoomInitData init, RoomCategorySub block) throws IOException {
 		super(index, init, key, block);
 		work = new Centre(this);
-		data = new RoomServiceDataAccess(this, init) {
+		data = new RoomServiceNeed(this, init) {
 			
 			@Override
 			public FSERVICE service(int tx, int ty) {
 				return work.service(tx, ty); 
 			}
-			
-			@Override
-			public double totalMultiplier() {
-				return AIModule_Entertainment.multiplier();
-			}
+
 		};
 		constructor = new StageConstructor(this, init);
 
@@ -84,7 +78,7 @@ public final class ROOM_STAGE extends RoomBlueprintIns<StageInstance> implements
 	}
 	
 	@Override
-	public RoomServiceDataAccess service() {
+	public RoomServiceNeed service() {
 		return data;
 	}
 
@@ -108,7 +102,7 @@ public final class ROOM_STAGE extends RoomBlueprintIns<StageInstance> implements
 		}
 		
 		@Override
-		public RoomServiceDataAccess service() {
+		public RoomServiceAccess service() {
 			return ROOM_STAGE.this.service();
 		}
 		

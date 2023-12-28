@@ -74,5 +74,5 @@ public final class ArmyMorale {
 
 	
 	public static final LIST<DOUBLE_O<Army>> factors = new ArrayList<DOUBLE_O<Army>>(CASULTIES, DESERTION, NUMBERS, SUPPLIES);
-	
+	public static final LIST<DOUBLE_OE<Army>> resetable = new ArrayList<DOUBLE_OE<Army>>(CASULTIES, DESERTION, SUPPLIES);
 }

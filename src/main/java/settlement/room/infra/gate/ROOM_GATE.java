@@ -7,7 +7,6 @@ import java.io.IOException;
 import init.C;
 import init.D;
 import init.sprite.SPRITES;
-import settlement.main.RenderData.RenderIterator;
 import settlement.main.SETT;
 import settlement.path.AVAILABILITY;
 import settlement.path.finder.SFinderRoomService;
@@ -25,8 +24,10 @@ import snake2d.util.file.FilePutter;
 import snake2d.util.sets.LISTE;
 import snake2d.util.sprite.TILE_SHEET;
 import util.gui.misc.GBox;
+import util.rendering.RenderData.RenderIterator;
 import util.rendering.ShadowBatch;
 import util.spritecomposer.*;
+import util.spritecomposer.ComposerThings.ITileSheet;
 import view.sett.ui.room.UIRoomModule;
 
 public final class ROOM_GATE extends RoomBlueprintImp{
@@ -37,6 +38,7 @@ public final class ROOM_GATE extends RoomBlueprintImp{
 	
 	private static CharSequence ¤¤Locked = "¤Locked. Subjects are unable to pass. Click to Unlock.";
 	private static CharSequence ¤¤Unlocked = "¤Unlocked. Subjects can pass, but not enemies. Click to lock gate for subjects.";
+
 	
 	static {
 		D.ts(ROOM_GATE.class);
@@ -186,7 +188,7 @@ public final class ROOM_GATE extends RoomBlueprintImp{
 	public static class MConstructor extends Furnisher {
 		
 		private final ROOM_GATE blue;
-		
+
 		MConstructor(ROOM_GATE blue, RoomInitData init)
 				throws IOException {
 			super(init, 1, 0, 144,104);
@@ -194,7 +196,24 @@ public final class ROOM_GATE extends RoomBlueprintImp{
 			makeItems(this, init);
 		}
 		
-		public void makeItems(Furnisher f, RoomInitData init) {
+		public void makeItems(Furnisher f, RoomInitData init) throws IOException {
+			
+			TILE_SHEET sheet = new ITileSheet(init.sp(), 144,120) {
+				
+				@Override
+				protected TILE_SHEET init(ComposerUtil c, ComposerSources s, ComposerDests d)  {
+					s.full.init(0, 0, 1, 1, 1, 3, d.s16);
+					for (int i = 0; i < 3; i++) {
+						s.full.setSkip(1, i).paste(3, true);
+					}
+					s.full.init(s.full.body().x2(), 0, 1, 1, 2, 3, d.s16);
+					for (int i = 0; i < 6; i++) {
+						s.full.setSkip(1, i).paste(3, true);
+					}
+					
+					return d.s16.saveGame();
+				}
+			}.get();
 			
 			Sprite s1 = new Sprite(sheet, 0);
 			Sprite s1b = new Sprite(sheet, 0, true);
@@ -274,20 +293,7 @@ public final class ROOM_GATE extends RoomBlueprintImp{
 			
 			f.flush(3);
 		}
-		
-		@Override
-		protected TILE_SHEET sheet(ComposerUtil c, ComposerSources s, ComposerDests d, int y1) {
-			s.full.init(0, y1, 1, 1, 1, 3, d.s16);
-			for (int i = 0; i < 3; i++) {
-				s.full.setSkip(1, i).paste(3, true);
-			}
-			s.full.init(s.full.body().x2(), y1, 1, 1, 2, 3, d.s16);
-			for (int i = 0; i < 6; i++) {
-				s.full.setSkip(1, i).paste(3, true);
-			}
-			
-			return d.s16.saveGame();
-		}
+
 
 		@Override
 		public boolean usesArea() {

@@ -4,7 +4,6 @@ import java.io.IOException;
 
 import init.C;
 import init.race.RACES;
-import settlement.main.RenderData.RenderIterator;
 import settlement.main.SETT;
 import settlement.path.AVAILABILITY;
 import settlement.room.main.*;
@@ -19,6 +18,7 @@ import snake2d.util.datatypes.DIR;
 import snake2d.util.file.Json;
 import util.gui.misc.GText;
 import util.info.GFORMAT;
+import util.rendering.RenderData.RenderIterator;
 import util.rendering.ShadowBatch;
 
 final class Constructor extends Furnisher{
@@ -50,7 +50,7 @@ final class Constructor extends Furnisher{
 		
 		Json sp = init.data().json("SPRITES");
 		
-		RoomSprite table = new RoomSpriteComboN(sp, "TABLE_COMBO") {
+		RoomSprite table = new RoomSpriteCombo(sp, "TABLE_COMBO") {
 			
 			@Override
 			public boolean render(SPRITE_RENDERER r, ShadowBatch s, int data, RenderIterator it, double degrade,
@@ -76,7 +76,7 @@ final class Constructor extends Furnisher{
 			}
 		};
 		
-		final RoomSprite table2 = new RoomSpriteComboN(table) {
+		final RoomSprite table2 = new RoomSpriteCombo(table) {
 			
 			final RoomSprite1x1 top = new RoomSprite1x1(sp, "ON_TABLE_1X1") {
 				@Override

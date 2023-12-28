@@ -15,8 +15,8 @@ import util.colors.GCOLORS_MAP;
 import util.rendering.ShadowBatch;
 import util.spritecomposer.*;
 import util.spritecomposer.ComposerThings.ITileSheet;
-import world.World;
-import world.army.WARMYD;
+import world.WORLD;
+import world.army.AD;
 
 class WArmySprite {
 
@@ -76,7 +76,7 @@ class WArmySprite {
 		if (a.path().moving(a.body()))
 			d = 8*GAME.intervals().get05() % 3;
 		d*= 8;
-		if (World.WATER().has.is(a.ctx(), a.cty()))
+		if (WORLD.WATER().has.is(a.ctx(), a.cty()))
 			d += OFF_BOAT;
 		else if(a.state() == WArmyState.fortified) {
 			d = 2*OFF_BOAT;
@@ -88,7 +88,7 @@ class WArmySprite {
 		
 		
 		
-		int size = (int) Math.ceil(32*(double)WARMYD.men(null).get(a)/Config.BATTLE.MEN_PER_ARMY);
+		int size = (int) Math.ceil(32*(double)AD.men(null).get(a)/Config.BATTLE.MEN_PER_ARMY);
 		
 		for (int yy = 0; yy < 4; yy++) {
 			for (int xx = 0; xx < 4; xx++) {

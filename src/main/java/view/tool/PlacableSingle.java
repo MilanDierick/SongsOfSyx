@@ -1,8 +1,8 @@
 package view.tool;
 
-import init.sprite.ICON.MEDIUM;
 import init.sprite.SPRITES;
 import snake2d.SPRITE_RENDERER;
+import snake2d.util.sprite.SPRITE;
 import util.gui.misc.GBox;
 
 public abstract class PlacableSingle implements PLACABLE{
@@ -27,7 +27,7 @@ public abstract class PlacableSingle implements PLACABLE{
 	}
 	
 	@Override
-	public MEDIUM getIcon() {
+	public SPRITE getIcon() {
 		return SPRITES.icons().m.cancel;
 	}
 

@@ -8,6 +8,7 @@ import snake2d.util.datatypes.COORDINATE;
 import snake2d.util.datatypes.DIR;
 import snake2d.util.gui.GUI_BOX;
 import snake2d.util.gui.GuiSection;
+import snake2d.util.gui.Hoverable.HOVERABLE;
 import snake2d.util.gui.clickable.CLICKABLE;
 import snake2d.util.gui.clickable.Scrollable;
 import snake2d.util.gui.clickable.Scrollable.ScrollRow;
@@ -22,7 +23,7 @@ import util.gui.misc.*;
 
 public abstract class GTableBuilder {
 
-	private final ArrayListResize<CharSequence> titles = new ArrayListResize<>(10, 20);
+	private final ArrayListResize<HOVERABLE> titles = new ArrayListResize<>(10, 20);
 	private final ArrayListShort widths = new ArrayListShort(20);
 	private final ArrayListResize<GRowBuilder> cells = new ArrayListResize<>(10, 20);
 	private final ArrayListResize<DIR> dirs = new ArrayListResize<>(10, 20);
@@ -34,8 +35,20 @@ public abstract class GTableBuilder {
 		column(title, width, ren, DIR.W);
 	}
 	
+	public void column(int width, GRowBuilder ren, DIR d) {
+		
+		column((HOVERABLE)null, width, ren, d);
+	}
+	
 	public void column(CharSequence title, int width, GRowBuilder ren, DIR d) {
-		titles.add(title);
+		
+		HOVERABLE t = title != null && title.length() > 0 ? new GText(UI.FONT().S, title).lablifySub().r(DIR.NW) : null;
+		column(t, width, ren, d);
+	}
+	
+	public void column(HOVERABLE t, int width, GRowBuilder ren, DIR d) {
+
+		titles.add(t);
 		widths.add(width);
 		cells.add(ren);
 		dirs.add(d);
@@ -51,23 +64,26 @@ public abstract class GTableBuilder {
 					height = o.body().height();
 			}
 		}
-		height += (decorate ? 2 : 0);
+		height += (decorate ? 6 : 0);
 		if (titles.size() > 0)
-			for (CharSequence s : titles)
-				if (s != null && s.length() > 0) {
+			for (RENDEROBJ s : titles)
+				if (s != null) {
 					heightt-= UI.FONT().M.height();
 					break;
 				}
 		
 		
 		int rows = heightt/height;
+		if (rows <= 0)
+			rows = 1;
 		return create(rows, decorate);
 		
 	}
 	
+	private static final int M = 3;
+	
 	public GuiSection create(int rows, boolean decorate) {
 		Scrollable.ScrollRow[] rs = new Scrollable.ScrollRow[rows];
-		
 		int width = 0;
 		int height = 0;
 		final GETTER_IMP<Integer> inin = new GETTER_IMP<Integer>();
@@ -77,11 +93,11 @@ public abstract class GTableBuilder {
 				if (o.body().height() > height)
 					height = o.body().height();
 			}
-			width += widths.get(k);
+			width += widths.get(k)+2*M;
 			
 		}
 		width += (decorate ? 8 : 0);
-		height += (decorate ? 2 : 0);
+		height += (decorate ? 6 : 0);
 		for (int i = 0; i < rows; i++) {
 
 			final GETTER_IMP<Integer> in = new GETTER_IMP<Integer>();
@@ -103,7 +119,7 @@ public abstract class GTableBuilder {
 						GButt.BSection.renderBG(r, body(), true, isHovered, isSelected);
 					}
 					if (clickT >= 0)
-					clickT -= ds;
+						clickT -= ds;
 					super.render(r, ds);
 					if (!GTableBuilder.this.activeIs(in.get())) {
 						OPACITY.O50.bind();
@@ -150,17 +166,20 @@ public abstract class GTableBuilder {
 			row.body().setWidth(width).setHeight(height);
 
 
-			int x = decorate ? 2 : 0;
+			int x = 0;
 			for (int k = 0; k < titles.size(); k++) {
 				if (cells.get(k) != null) {
 					RENDEROBJ o = cells.get(k).build(in);
 					DIR d = dirs.get(k);
+					
+					int x1 = x + M;
+					
 					if (d.x() < 0) {
-						o.body().moveX1(x);
+						o.body().moveX1(x1);
 					}else if (x > 0){
-						o.body().moveX2(x+widths.get(k));
+						o.body().moveX2(x1+widths.get(k));
 					}else {
-						o.body().moveCX(x+widths.get(k)/2);
+						o.body().moveCX(x1+widths.get(k)/2);
 					}
 					if (d.y() < 0) {
 						o.body().moveY1(0);
@@ -185,12 +204,12 @@ public abstract class GTableBuilder {
 								GCOLOR.UI().border().render(r, body);
 							}
 							
-						}, o.body().x1(), o.body().cY()-(height-4)/2);
-						o.body().incrX(8);
+						}, x, o.body().cY()-(height-4)/2);
 					}
 					row.add(o);
 				}
-				x += widths.get(k);
+				
+				x += widths.get(k)+2*M;
 				
 			}
 
@@ -214,6 +233,8 @@ public abstract class GTableBuilder {
 				return GTableBuilder.this.nrOFEntries();
 			}
 			
+			
+			
 		};
 		
 		CLICKABLE s = scroller.getView();
@@ -232,14 +253,16 @@ public abstract class GTableBuilder {
 					s.body().incrY(C.SG * 16);
 				}
 				
-				GText t = new GText(UI.FONT().S, titles.get(k));
-				t.setMaxWidth(widths.get(k) + ((k < widths.size()-1) ? widths.get(k+1) : 0));
+				int x1 = x;
+				int y1 = 0;
 				
-				RENDEROBJ o = new GText(UI.FONT().S, titles.get(k)).lablifySub().r(DIR.NW);
-				int dx = (widths.get(k)-o.body().width())/2;
-				o.body().moveY1(0);
+				RENDEROBJ o = titles.get(k);
+				
+				int dx = (widths.get(k)-o.body().width())-2*M;
+				o.body().moveY1(y1);
 				DIR d = dirs.get(k);
-				o.body().moveX1(x+dx*(d.x()+1)+3);
+				o.body().moveX1(x + M + dx*(d.x()+1)/2.0);
+				
 				if ((k&1) == 1 && (o.body().width() > widths.get(k)-10 ||(last != null && last.body().width() > widths.get(k-1)-10)))
 					o.body().moveY2(0);
 				if (decorate) {
@@ -250,17 +273,16 @@ public abstract class GTableBuilder {
 							GCOLOR.UI().border().render(r, body);
 						}
 						
-					}, o.body().x1(), o.body().y1()+2);
-					o.body().incrX(8);
+					}, x1, o.body().y1()+2);
+					
 					
 				}
-				
 				res.add(o);
 				last = o;
 			}else
 				last = null;
 			
-			x += widths.get(k);
+			x += widths.get(k) + M*2;
 		}
 
 		res.add(s);

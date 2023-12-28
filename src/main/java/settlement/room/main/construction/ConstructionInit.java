@@ -8,9 +8,9 @@ import settlement.room.main.Room;
 import settlement.room.main.furnisher.Furnisher;
 import settlement.room.main.util.RoomAreaWrapper;
 import settlement.room.main.util.RoomState;
-import settlement.tilemap.TBuilding;
-import settlement.tilemap.TBuilding.BuildingComponent;
-import settlement.tilemap.Terrain.TerrainTile;
+import settlement.tilemap.terrain.TBuilding;
+import settlement.tilemap.terrain.TBuilding.BuildingComponent;
+import settlement.tilemap.terrain.Terrain.TerrainTile;
 import snake2d.util.datatypes.COORDINATE;
 
 public class ConstructionInit {

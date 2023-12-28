@@ -2,10 +2,9 @@ package settlement.job;
 
 import static settlement.main.SETT.*;
 
-import init.resources.RESOURCE;
-import init.resources.RESOURCES;
+import init.resources.*;
 import snake2d.util.datatypes.AREA;
-import snake2d.util.misc.TOGGLEBLE;
+import util.data.BOOLEAN.BOOLEAN_MUTABLE;
 import view.sett.IDebugPanelSett;
 import view.tool.*;
 
@@ -24,7 +23,16 @@ class Debug {
 				Job j =  JOBS().getter.get(tx, ty);
 				if (j == null)
 					return;
-				RESOURCE res = j.jobResourceBitToFetch() != 0 ? RESOURCES.ALL().get(Long.numberOfTrailingZeros(j.jobResourceBitToFetch())) : null;
+				
+				RBIT bb = j.jobResourceBitToFetch();
+				RESOURCE res = null;
+				if (bb != null) {
+					for (RESOURCE r : RESOURCES.ALL())
+						if (bb.has(r)) {
+							res = r;
+							break;
+						}
+				}
 				
 				if (j.jobReserveCanBe()) {
 					j.jobReserve(res);
@@ -38,7 +46,17 @@ class Debug {
 			public CharSequence isPlacable(int tx, int ty, AREA a, PLACER_TYPE t) {
 				Job j =  JOBS().getter.get(tx, ty);
 				if (j != null) {
-					RESOURCE res = j.jobResourceBitToFetch() != 0 ? RESOURCES.ALL().get(Long.numberOfTrailingZeros(j.jobResourceBitToFetch())) : null;
+					
+					RBIT bb = j.jobResourceBitToFetch();
+					RESOURCE res = null;
+					if (bb != null) {
+						for (RESOURCE r : RESOURCES.ALL())
+							if (bb.has(r)) {
+								res = r;
+								break;
+							}
+					}
+					
 					if (j.jobReserveCanBe() || j.jobReservedIs(res)) {
 						return null;
 					}
@@ -53,17 +71,18 @@ class Debug {
 		
 		IDebugPanelSett.add("job", p);
 		
-		TOGGLEBLE roomJobs = new TOGGLEBLE() {
+		BOOLEAN_MUTABLE roomJobs = new BOOLEAN_MUTABLE() {
 			
 			@Override
-			public boolean isOn() {
+			public boolean is() {
 				// TODO Auto-generated method stub
 				return showRoom;
 			}
 
 			@Override
-			public void set(boolean bool) {
+			public BOOLEAN_MUTABLE set(boolean bool) {
 				showRoom = bool;
+				return this;
 			}
 		};
 		

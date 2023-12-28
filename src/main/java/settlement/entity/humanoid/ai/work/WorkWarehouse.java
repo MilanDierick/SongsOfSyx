@@ -42,7 +42,7 @@ final class WorkWarehouse extends PlanBlueprint{
 		
 		@Override
 		protected AISubActivation setAction(Humanoid a, AIManager d) {
-			final StockpileInstance i = (StockpileInstance) work(a);
+			StockpileInstance i = (StockpileInstance) work(a);
 			
 			TILE_STORAGE s = i.emptyJob(a.tc(), d.path);
 			if (s == null) {
@@ -59,7 +59,8 @@ final class WorkWarehouse extends PlanBlueprint{
 				r.findableReserve();
 			}
 			
-			s =  i.storage(d.planTile.x(), d.planTile.y());
+			i = i.blueprintI().get(d.planTile.x(), d.planTile.y());
+			s = i.storage(d.planTile.x(), d.planTile.y());
 			s.storageReserve(m);
 			
 			return AI.SUBS().walkTo.path(a, d);
@@ -105,7 +106,7 @@ final class WorkWarehouse extends PlanBlueprint{
 			i = SETT.ROOMS().STOCKPILE.getter.get(d.planTile);
 			if (i != null) {
 				TILE_STORAGE s = i.storage(d.planTile.x(), d.planTile.y());
-				if (s != null && s.resource().bIndex() == d.planByte2) {
+				if (s != null && s.resource() != null && s.resource().bIndex() == d.planByte2) {
 					s.storageUnreserve(d.planByte3);
 				}				
 			}

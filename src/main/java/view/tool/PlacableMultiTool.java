@@ -98,8 +98,9 @@ final class PlacableMultiTool extends placeFunc {
 	}
 	
 	@Override
-	void update(float ds, GameWindow window, boolean pressed) {
+	void updateHovered(float ds, GameWindow window, boolean pressed) {
 		
+
 		newTile |= hTile.set(window.tile());
 		if (MButt.RIGHT.isDown())
 			clear();
@@ -171,6 +172,12 @@ final class PlacableMultiTool extends placeFunc {
 		newTile = false;
 		
 		
+	}
+	
+	@Override
+	void update(float ds, GameWindow window, boolean pressed) {
+		placable.updateRegardless(window);
+		super.update(ds, window, pressed);
 	}
 	
 	private void specialFill(int x1, int y1, int x2, int y2, int size, MAP_SETTER area, PlacableMulti multi) {

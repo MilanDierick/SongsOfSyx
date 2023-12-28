@@ -1,114 +1,117 @@
 package view.ui.profile;
 
-import java.util.Arrays;
-import java.util.Comparator;
-
-import init.boostable.*;
+import game.boosting.*;
+import init.race.POP_CL;
+import init.race.RACES;
 import init.sprite.UI.UI;
 import snake2d.SPRITE_RENDERER;
 import snake2d.util.color.COLOR;
+import snake2d.util.datatypes.DIR;
 import snake2d.util.gui.GUI_BOX;
 import snake2d.util.gui.GuiSection;
 import snake2d.util.gui.renderable.RENDEROBJ;
-import snake2d.util.sets.LISTE;
 import snake2d.util.sets.LinkedList;
+import snake2d.util.sprite.SPRITE;
+import snake2d.util.sprite.text.Str;
+import snake2d.util.sprite.text.StringInputSprite;
 import util.colors.GCOLOR;
+import util.dic.DicMisc;
 import util.gui.misc.*;
 import util.gui.table.GScrollRows;
 import util.info.GFORMAT;
 
 final class Bonus extends GuiSection {
 	
-	public static int hW = 200;
-	private final static int ww = 90;
-
+	private final StringInputSprite in = new StringInputSprite(16, UI.FONT().M).placeHolder(DicMisc.¤¤Search);
 	
 	Bonus(int height){
 		
 		LinkedList<RENDEROBJ> rows = new LinkedList<>();
 		
-		GuiSection h = new GuiSection();
-		h.body().setWidth(150);
+		addRelBody(0, DIR.S, new GInput(in));
 		
-		for (BoostableCollection c : BOOSTABLES.colls()) {
-			cat(rows, c);
+		BoostableCat cat = null;
+		
+		Row rr = new Row(BOOSTING.ALL().get(0));
+		
+		for (Boostable b : BOOSTING.ALL()) {
+			if (b.name == null || b.name.length() == 0)
+				continue;
+			if ( b.cat != cat) {
+				cat = b.cat;
+				rows.add(new RENDEROBJ.RenderImp(rr.body().width(),rr.body().height()) {
+					GText h = new GText(UI.FONT().H2, b.cat.name).lablifySub();
+					@Override
+					public void render(SPRITE_RENDERER r, float ds) {
+						h.renderCY(r, body().x1()+20, body().cY());
+						GCOLOR.UI().border().render(r, body().x1(), body().x2(), body().y2()-1, body().y2());
+					}
+				});
+			}
+			rows.add(new Row(b));
+			
 		}
 		
-		addDown(8, new GScrollRows(rows, height-h.body().height()-8, 0).view());
+		
+		
+		addRelBody(8, DIR.S, new GScrollRows(rows, height-body().height()-16, 0) {
+			
+			@Override
+			protected boolean passesFilter(int i, RENDEROBJ o) {
+				if (in.text().length() == 0)
+					return true;
+				if (o instanceof Row) {
+					Row r = (Row) o;
+					if (Str.containsText(r.bo.name, in.text()) || Str.containsText(r.bo.desc, in.text()))
+						return true;
+					return false;
+				}else
+					return false;
+				
+				
+			};
+			
+		}.view());
 		
 		
 		
 	}
-	
-	private void cat(LISTE<RENDEROBJ> res, BoostableCollection cat) {
-		
-		res.add(new RENDEROBJ.RenderImp(100,24) {
-			GText h = new GText(UI.FONT().H2, cat.name).lablifySub();
-			@Override
-			public void render(SPRITE_RENDERER r, float ds) {
-				h.render(r, body().x1()+20, body().y1());
-			}
-		});
-		
-		BOOSTABLE[] indecies = new BOOSTABLE[cat.all().size()];
-		for (int i = 0; i < indecies.length; i++)
-			indecies[i] = cat.all().get(i);
-		
-		Arrays.sort(indecies, new Comparator<BOOSTABLE>() {
-
-			@Override
-			public int compare(BOOSTABLE o1, BOOSTABLE o2) {
-				String s1 = "" + o1.name;
-				String s2 = "" + o2.name;
-				return s1.compareToIgnoreCase(s2);
-			}
-		
-		});
-		
-		
-		
-		for (int i = 0; i < indecies.length; i++) {
-			res.add(new Row(indecies[i]));
-		}
-		
-		res.add(new RENDEROBJ.RenderImp(600,16) {
-			@Override
-			public void render(SPRITE_RENDERER r, float ds) {
-				GCOLOR.UI().border().render(r, body().x1(), body().x2(), body().y1()+4, body().y1()+5);
-			}
-		});
-		
-	}
-	
-	
 	
 	private static class Row extends GuiSection {
 		
-		private final BOOSTABLE bo;
-		Row(BOOSTABLE bo){
+		private final Boostable bo;
+		Row(Boostable bo){
 			this.bo = bo;
-			add(bo.icon(), 0,0);
+			add(bo.icon, 0,0);
 			GText l = new GText(UI.FONT().M, bo.name);
 			l.setMaxChars(20);
-			addRight(4, l);
+			addRightC(4, l);
 			
 		
 			
-			add(new Gauge(bo), 300, 0);
+			addRightCAbs(300, new Gauge(bo));
 			
 			addRightC(8, new GStat() {
 				
 				@Override
 				public void update(GText text) {
-					GFORMAT.percInc(text, BOOSTABLES.player().get(bo, null, null)/bo.defAdd-1.0);
+					double min = bo.min(POP_CL.class);
+					double max = bo.max(POP_CL.class);
+					if (min == bo.baseValue && max == bo.baseValue)
+						return;
+					if (bo.baseValue == 0)
+						GFORMAT.percInc(text, bo.get(RACES.clP(null, null)));
+					else
+						GFORMAT.percInc(text, bo.get(RACES.clP(null, null))/bo.baseValue-1.0);
 				}
 			});
 			
 			
 			
-			pad(0, 2);
+			pad(0, 4);
 			
-			body().incrW(ww);
+			body().incrW(130);
+			body().incrH(4);
 		}
 		
 		@Override
@@ -116,6 +119,7 @@ final class Bonus extends GuiSection {
 			if (hoveredIs()) {
 				COLOR.WHITE15.render(r, body());
 			}
+			GCOLOR.UI().border().render(r, body().x1(), body().x2(), body().y2()-1, body().y2());
 			super.render(r, ds);
 		}
 		
@@ -124,38 +128,33 @@ final class Bonus extends GuiSection {
 			text.title(bo.name);
 			text.text(bo.desc);
 			text.NL(8);
-			BoostHoverer.hover(text, bo, null, null);
+			bo.hoverDetailed(text, RACES.clP(null, null), null, true);
+		}
+		
+		private class Gauge extends SPRITE.Imp {
+			
+			Gauge(Boostable bo){
+				super(400, 24);
+			}
+
+			@Override
+			public void render(SPRITE_RENDERER r, int X1, int X2, int Y1, int Y2) {
+				double min = bo.min(POP_CL.class);
+				double max = bo.max(POP_CL.class);
+				if (min == bo.baseValue && max == bo.baseValue)
+					return;
+				
+				double d = bo.get(RACES.clP(null, null));
+				
+				GMeter.renderDelta(r, bo.baseValue/max, d/max, X1, X2, Y1, Y2, GMeter.C_GRAY);
+				
+			}
+			
+
 			
 		}
 		
 	}
-	
-	private static class Gauge extends RenderImp {
-		
-		private final BOOSTABLE bo;
-		
-		Gauge(BOOSTABLE bo){
-			super(300, 16);
-			this.bo = bo;
-		}
-
-		@Override
-		public void render(SPRITE_RENDERER r, float ds) {
-			
-			double min = BOOSTABLES.player().min(bo);
-			double max = BOOSTABLES.player().max(bo);
-			if (min == bo.defAdd && max == bo.defAdd)
-				return;
-			
-			double d = BOOSTABLES.player().get(bo, null, null);
-			GMeter.renderDelta(r, bo.defAdd/max, d/max, body);
-			
-		}
-		
-
-		
-	}
-
 	
 
 	

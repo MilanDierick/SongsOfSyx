@@ -3,6 +3,7 @@ package settlement.room.main.util;
 import static settlement.main.SETT.*;
 
 import game.GAME;
+import game.faction.FResources.RTYPE;
 import init.D;
 import init.sprite.SPRITES;
 import settlement.room.main.*;
@@ -120,7 +121,7 @@ public final class Deleter extends PlacableMulti{
 						
 						int a = CLAMP.i(amounts[ri], 0, (int) am);
 						THINGS().resources.create(c, furnisher.resource(ri), a);
-						GAME.player().res().inDemolition.inc(furnisher.resource(ri), a);
+						GAME.player().res().inc(furnisher.resource(ri), RTYPE.CONSTRUCTION, a);
 						am -= a;
 						amounts[ri] -= a;						
 					}

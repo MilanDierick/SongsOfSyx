@@ -3,6 +3,7 @@ package settlement.room.infra.inn;
 import static settlement.main.SETT.*;
 
 import game.time.TIME;
+import init.resources.RBIT;
 import init.resources.RESOURCE;
 import init.sound.SoundSettlement.Sound;
 import settlement.entity.humanoid.Humanoid;
@@ -142,8 +143,8 @@ final class ABed {
 		}
 		
 		@Override
-		public long jobResourceBitToFetch() {
-			return 0;
+		public RBIT jobResourceBitToFetch() {
+			return null;
 		}
 		
 		@Override

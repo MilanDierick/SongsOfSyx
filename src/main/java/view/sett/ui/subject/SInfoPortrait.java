@@ -3,10 +3,12 @@ package view.sett.ui.subject;
 import init.D;
 import init.race.appearence.RPortrait;
 import init.settings.S;
-import init.sprite.ICON;
+import init.sprite.UI.Icon;
 import init.sprite.UI.UI;
-import settlement.stats.*;
-import settlement.stats.StatsEquippables.EQUIPPABLE;
+import settlement.stats.STATS;
+import settlement.stats.equip.Equip;
+import settlement.stats.equip.StatsEquip;
+import settlement.stats.stat.STAT;
 import snake2d.SPRITE_RENDERER;
 import snake2d.util.color.COLOR;
 import snake2d.util.datatypes.DIR;
@@ -62,13 +64,13 @@ final class SInfoPortrait extends GuiSection{
 		
 		GuiSection s = new GuiSection();
 		
-		StatsEquippables pr = STATS.EQUIP();		
+		StatsEquip pr = STATS.EQUIP();		
 	
 		int ii = 0;
 		final int rrr = 4;
-		for (EQUIPPABLE pp : pr.allE()) {
+		for (Equip pp : pr.allE()) {
 			STAT p = pp.stat();
-			CLICKABLE c = new CLICKABLE.ClickableAbs(ICON.BIG.SIZE+8, ICON.BIG.SIZE+ICON.MEDIUM.SIZE/2) {
+			CLICKABLE c = new CLICKABLE.ClickableAbs(Icon.L+8, Icon.L+Icon.M/2) {
 				private final GText t = new GText(UI.FONT().S, 8); 
 				@Override
 				protected void render(SPRITE_RENDERER r, float ds, boolean isActive, boolean isSelected,
@@ -78,14 +80,14 @@ final class SInfoPortrait extends GuiSection{
 						COLOR.BLUEDARK.render(r, body());
 					}
 					
-					pp.resource().icon().renderC(r, body().cX(), body().y1()+ICON.BIG.SIZE/2);
+					pp.resource().icon().renderC(r, body().cX(), body().y1()+Icon.L/2);
 					t.clear();
 					int am = p.indu().get(a.a.indu());
 					int max = pp.max(a.a.indu());
 					GFORMAT.iofk(t, am, max);
 					t.lablify();
 					t.adjustWidth();
-					t.renderC(r, body().cX(), body().y1()+ICON.BIG.SIZE);
+					t.renderC(r, body().cX(), body().y1()+Icon.L);
 				}
 				
 				@Override
@@ -107,14 +109,14 @@ final class SInfoPortrait extends GuiSection{
 		}
 		
 		
-		s.addRelBody(8, DIR.N, new HoverableAbs(ICON.MEDIUM.SIZE*2, ICON.MEDIUM.SIZE) {
+		s.addRelBody(8, DIR.N, new HoverableAbs(Icon.M*2, Icon.M) {
 			private final GText t = new GText(UI.FONT().M, 4);
 			@Override
 			protected void render(SPRITE_RENDERER r, float ds, boolean isHovered) {
 				if (a.a.ai().resourceCarried() != null) {
 					t.clear().add(a.a.ai().resourceA());
 					t.renderCY(r, body().x1(), body().cY());
-					a.a.ai().resourceCarried().icon().render(r, body().x1()+ICON.MEDIUM.SIZE, body().y1());
+					a.a.ai().resourceCarried().icon().render(r, body().x1()+Icon.M, body().y1());
 				}
 			}
 			

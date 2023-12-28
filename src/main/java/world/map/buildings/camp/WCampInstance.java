@@ -2,24 +2,17 @@ package world.map.buildings.camp;
 
 import java.io.IOException;
 
-import game.faction.FACTIONS;
 import game.faction.Faction;
-import game.statistics.G_REQ;
 import init.race.Race;
 import snake2d.util.datatypes.COORDINATE;
 import snake2d.util.datatypes.ShortCoo;
 import snake2d.util.file.FileGetter;
 import snake2d.util.file.FilePutter;
-import snake2d.util.gui.GUI_BOX;
 import snake2d.util.rnd.RND;
 import snake2d.util.sets.INDEXED;
-import snake2d.util.sets.LIST;
 import snake2d.util.sprite.text.Str;
-import util.gui.misc.GBox;
-import util.gui.misc.GText;
-import util.info.GFORMAT;
-import world.World;
-import world.map.regions.Region;
+import world.WORLD;
+import world.regions.Region;
 
 public class WCampInstance implements INDEXED{
 
@@ -32,7 +25,6 @@ public class WCampInstance implements INDEXED{
 	public final Str name = new Str(16);
 	public final int max;
 	public final double replenishRateDay;
-	private int factionI = -1;
 	
 	WCampInstance(int index, int tx, int ty, WCampType t, double size, long ran){
 		this.index = index;
@@ -41,52 +33,39 @@ public class WCampInstance implements INDEXED{
 		this.ran = (int) ran;
 		name.clear().add(t.names.getC((int) this.ran));
 		name.insert(0, t.race.appearance().lastNamesNoble.getC(RND.rInt(0x0FFFF)));
-		max = (int) (t.min + (t.max-t.min)*size);
-		replenishRateDay = (t.reMin + (t.reMax-t.reMin)*size);
+		max = (int) (t.popFrom + (t.popTo-t.popFrom)*size);
+		replenishRateDay = (t.replenishMin + (t.replenishMax-t.replenishMin)*size);
 		coo = new ShortCoo(tx, ty);
-		
-		World.BUILDINGS().camp.factions.add(this, 1);
 	}
 	
-	WCampType type() {
-		return World.BUILDINGS().camp.types.get(ti);
+	public WCampType type() {
+		return WORLD.BUILDINGS().camp.types.get(ti);
 	}
 	
 	public Race race() {
 		return type().race;
 	}
 	
-	public Faction faction() {
-		if (factionI == -1)
-			return null;
-		return FACTIONS.getByIndex(factionI);
-	}
-	
-	public Faction regionFacton() {
-		Region r = World.REGIONS().getter.get(coo);
+	public Faction regionFaction() {
+		Region r = WORLD.REGIONS().map.get(coo);
 		if (r != null)
 			return r.faction();
 		return null;
 	}
 	
-	public void factionSet(Faction f) {
-		World.BUILDINGS().camp.factions.add(this, -1);
-		factionI = f == null ? -1 : f.index();
-		World.BUILDINGS().camp.factions.add(this, 1);
+	public Region region() {
+		return  WORLD.REGIONS().map.get(coo);
 	}
 	
 	
 	static WCampInstance load(FileGetter file) throws IOException {
 		int index = file.i();
-		WCampType t = World.BUILDINGS().camp.types.getC(file.i());
+		WCampType t = WORLD.BUILDINGS().camp.types.getC(file.i());
 		double size = file.d();
 		long ran = file.l();
-		int fi = file.i();
 		ShortCoo c = new ShortCoo();
 		c.load(file);
 		WCampInstance ins = new WCampInstance(index, c.x(), c.y(), t, size, ran);
-		ins.factionI = fi;
-		World.BUILDINGS().camp.factions.add(ins, 1);
 		ins.name.load(file);	
 		return ins;
 	}
@@ -97,7 +76,6 @@ public class WCampInstance implements INDEXED{
 		file.d(size);
 		file.l(ran);
 
-		file.i(factionI);
 		coo.save(file);
 		name.save(file);
 		
@@ -110,51 +88,6 @@ public class WCampInstance implements INDEXED{
 	
 	public COORDINATE coo() {
 		return coo;
-	}
-	
-	public LIST<G_REQ> reqs(){
-		return type().requiremets(size);
-		
-	}
-	public void hoverInfo(GUI_BOX text) {
-		GBox b = (GBox) text;
-		
-		b.title(name);
-		b.NL();
-		b.textL(race().info.names);
-		b.tab(5);
-		b.add(GFORMAT.i(b.text(), max));
-		b.NL(8);
-		
-		if (faction() == FACTIONS.player()) {
-			GText t = b.text();
-			t.add(WorldCamp.¤¤unlocked);
-			t.insert(0, race().info.names);
-			t.insert(1, race().info.names);
-			b.add(t);
-			
-			b.NL(8);
-			G_REQ.hover(type().requiremets(size), b);
-			
-		}else if (faction() == null) {
-			GText t = b.text();
-			t.add(WorldCamp.¤¤unlockableD);
-			t.insert(0, race().info.names);
-			b.add(t);
-			
-			b.NL(8);
-			G_REQ.hover(type().requiremets(size), b);
-		}else {
-			GText t = b.text();
-			t.add(WorldCamp.¤¤lockedD);
-			t.insert(0, race().info.names);
-			b.add(t);
-		}
-		
-		
-		
-		
-		
 	}
 	
 }

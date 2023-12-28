@@ -15,7 +15,7 @@ import util.spritecomposer.ComposerThings.*;
 public class UIConses{
 	
 	{
-		new IInit(PATHS.SPRITE_UI().get("Cons"), 1088, 155) {
+		new IInit(PATHS.SPRITE_UI().get("Cons"), 1008, 328) {
 			
 			@Override
 			protected void init(ComposerUtil c, ComposerSources s, ComposerDests d) throws IOException {
@@ -71,7 +71,7 @@ public class UIConses{
 		
 	}
 	
-	public final class Small {
+	public static final class Small {
 		
 		public final UICons high = new UICons(new ITileSheet() {
 			
@@ -115,7 +115,7 @@ public class UIConses{
 			@Override
 			protected TILE_SHEET init(ComposerUtil c, ComposerSources s, ComposerDests d) {
 				
-				s.house.init(0, s.house.body().y2(), 5, 2, d.s16);
+				s.house.init(0, s.house.body().y2(), 7, 2, d.s16);
 				s.singles.init(0, s.house.body().y2(), 1, 1, 16, 1, d.s16);
 				s.house.setVar(0).paste(true);
 				s.singles.setSkip(0, 1);
@@ -127,11 +127,12 @@ public class UIConses{
 		public final UICons dashedThick = getSmall(2, TINY.dashed);
 		public final UICons solid = getSmall(3, TINY.full);
 		public final UICons dots = getSmall(4, TINY.dashed);
-		public final UICons outline_dashed = getSmall(5, TINY.dashed);
-		public final UICons outline_dashed_small = getSmall(6, TINY.dashed);
-		public final UICons filled = getSmall(7, TINY.full);
-		public final UICons outline_thin = getSmall(8, TINY.outline);
-		public final UICons filled_striped = getSmall(9, TINY.full);
+		public final UICons line = getSmall(5, TINY.dashed);
+		public final UICons outline_dashed = getSmall(7, TINY.dashed);
+		public final UICons outline_dashed_small = getSmall(8, TINY.dashed);
+		public final UICons filled = getSmall(9, TINY.full);
+		public final UICons outline_thin = getSmall(10, TINY.outline);
+		public final UICons filled_striped = getSmall(11, TINY.full);
 		
 		private Big() throws IOException{
 			

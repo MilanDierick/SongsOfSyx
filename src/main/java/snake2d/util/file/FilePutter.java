@@ -90,7 +90,7 @@ public final class FilePutter implements Closeable{
 	}
 
 	public void mark(Object o) {
-		i(o.getClass().getName().hashCode());
+		i(o.getClass().getSimpleName().hashCode());
 	}
 
 	public void object(Object o) {
@@ -123,6 +123,11 @@ public final class FilePutter implements Closeable{
 		return this;
 	}
 	
+	public void lsE(long[] tiles) {
+		i(tiles.length);
+		ls(tiles);
+	}
+	
 	public FilePutter ls(long[][] ls) {
 		for (long[] l : ls)
 			ls(l);
@@ -141,6 +146,12 @@ public final class FilePutter implements Closeable{
 	}
 	
 	public void ss(short[] tiles) {
+		for (short s : tiles)
+			buffer.putShort(s);
+	}
+	
+	public void ssE(short[] tiles) {
+		i(tiles.length);
 		for (short s : tiles)
 			buffer.putShort(s);
 	}

@@ -1,6 +1,6 @@
 package init.race;
 
-import settlement.stats.STAT;
+import settlement.stats.stat.STAT;
 import snake2d.util.file.Json;
 import snake2d.util.sprite.text.Str;
 import util.dic.DicMisc;

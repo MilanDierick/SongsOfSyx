@@ -9,146 +9,123 @@ import snake2d.util.file.FileGetter;
 import snake2d.util.file.FilePutter;
 import snake2d.util.sets.ArrayList;
 import snake2d.util.sets.LIST;
-import util.info.INFO;
+import util.dic.DicArmy;
+import util.dic.DicMisc;
+import util.statistics.HISTORY_COLLECTION;
 import util.statistics.HistoryResource;
 
-public class FResources extends FactionResource{
-
+public abstract class FResources extends FactionResource{
 	
-
-	private static CharSequence ¤¤In = "in";
-	private static CharSequence ¤¤InDesc = "Yearly amount gained";
-	public final HistoryResource in;
-
-	private static CharSequence ¤¤InImported = "Imported";
-	private static CharSequence ¤¤InImportedD = "How much gained through imports.";	
-	public final HistoryResource inImported;
-	
-	private static CharSequence ¤¤InTaxes = "¤Taxes";
-	private static CharSequence ¤¤InTaxesD = "How much gained through taxed regions.";	
-	public final HistoryResource inTaxes;
-
-	private static CharSequence ¤¤Out = "Out";
-	private static CharSequence ¤¤OutDesc = "Yearly amount lost.";
-	public final HistoryResource out;
-	
-	private static CharSequence ¤¤OutExported = "Exported";
-	private static CharSequence ¤¤OutExportedD = "How much loss through exports.";	
-	public final HistoryResource outExported;
-	
-
-	private static CharSequence ¤¤OutTribute = "Tribute";
-	private static CharSequence ¤¤OutTributeD = "How much loss through paying tribute to warlords or other factions.";	
-	public final HistoryResource outTribute;
-
-	protected LIST<HistoryResource> ins;
-	protected LIST<HistoryResource> outs;
-
-	public final int saved;
-	public final TIMECYCLE time;
+	private static CharSequence ¤¤worn = "¤Furniture";
+	private static CharSequence ¤¤theft = "¤Theft";
 	
 	static {
-		D.t(FResources.class);
+		D.ts(FResources.class);
 	}
 	
-	public FResources(int saved, TIMECYCLE time) {
-		this.saved = saved;
+	private final HistoryResource[] all = new HistoryResource[RTYPE.all.size()*2+1];
+	public final TIMECYCLE time;
+	
+	public FResources(int saved, TIMECYCLE time){
+		for (int i = 0; i < all.length; i++)
+			all[i] = new HistoryResource(saved, time, false);
 		this.time = time;
-		in = new HistoryResource(new INFO(¤¤In, ¤¤InDesc), saved, time, false);
-		inImported = new InOut(new INFO(¤¤InImported, ¤¤InImportedD), in);
-		inTaxes = new InOut(new INFO(¤¤InTaxes, ¤¤InTaxesD), in);
-		out = new HistoryResource(new INFO(¤¤Out, ¤¤OutDesc), saved, time, false);
-		outExported = new InOut(new INFO(¤¤OutExported, ¤¤OutExportedD), out);
-		outTribute = new InOut(new INFO(¤¤OutTribute, ¤¤OutTributeD), out);
-		ins = new ArrayList<>(inImported, inTaxes);
-		outs = new ArrayList<>(outExported, outTribute);
-	}
-	
-	@Override
-	protected void save(FilePutter file) {
-		in.save(file);
-		for (HistoryResource r : ins)
-			r.save(file);
-		out.save(file);
-		for (HistoryResource r : outs)
-			r.save(file);
 	}
 
+	
+	
+	
+	public abstract int get(RESOURCE t);
+
+	public HISTORY_COLLECTION<RESOURCE> in(RTYPE t){
+		return all[t.ordinal()];
+	}
+	
+	public HISTORY_COLLECTION<RESOURCE> out(RTYPE t){
+		return all[RTYPE.all.size() + t.ordinal()];
+	}
+	
+	public HISTORY_COLLECTION<RESOURCE> total(){
+		return all[all.length-1];
+	}
+	
+	public void inc(RESOURCE res, RTYPE type, int am) {
+
+		if (am > 0)
+			all[type.ordinal()].inc(res, am);
+		else
+			all[RTYPE.all.size() + type.ordinal()].inc(res, -am);
+		all[all.length-1].inc(res, am);
+	}
+	
+	public void dec(RESOURCE res, RTYPE type, int am) {
+		inc(res, type, -am);
+	}
+
+	@Override
+	protected void save(FilePutter file) {
+		file.i(all.length);
+		for (HistoryResource i : all) {
+			i.save(file);
+		}
+		
+	}
 
 	@Override
 	protected void load(FileGetter file) throws IOException {
-		in.load(file);
-		for (HistoryResource r : ins)
-			r.load(file);
-		out.load(file);
-		for (HistoryResource r : outs)
-			r.load(file);
-	}
-
-
-	@Override
-	protected void clear() {
-		in.clear();
-		for (HistoryResource r : ins)
-			r.clear();
-		out.clear();
-		for (HistoryResource r : outs)
-			r.clear();
-	}
-
-	
-	public final LIST<HistoryResource> ins(){
-		return ins;
-	}
-	
-	public final LIST<HistoryResource> outs(){
-		return outs;
+		int am = file.i();
+		if (am != all.length) {
+			HistoryResource tmp = all[0];
+			for (int i = 0; i < am; i++) {
+				tmp.load(file);
+			}
+			clear();
+		}else {
+			for (HistoryResource i : all) {
+				i.load(file);
+			}
+		}
+		
 	}
 
 	@Override
-	protected void update(double ds) {
+	public void clear() {
+		for (HistoryResource i : all) {
+			i.clear();
+		}
+	}
+
+	@Override
+	protected void update(double ds, Faction f) {
 		// TODO Auto-generated method stub
 		
 	}
 	
-	
-	
-	protected class InOut extends HistoryResource{
-
-		private final HistoryResource master;
-		private final INFO info;
+	public static enum RTYPE {
 		
-		public InOut(INFO info, HistoryResource total) {
-			super(saved, time, false);
-			this.master = total;
-			this.info = info;
+		PRODUCED(DicMisc.¤¤Production),
+		CONSUMED(DicMisc.¤¤Consumed),
+		TRADE(DicMisc.¤¤Trade),
+		TAX(DicMisc.¤¤taxes),
+		CONSTRUCTION(DicMisc.¤¤construction),
+		FURNISH(¤¤worn),
+		EQUIPPED(DicMisc.¤¤Equipped),
+		MAINTENANCE(DicMisc.¤¤Maintenance),
+		SPOILAGE(DicMisc.¤¤Spoilage),
+		ARMY_SUPPLY(DicArmy.¤¤Supplies + ": " + DicArmy.¤¤Armies),
+		SPOILS(DicArmy.¤¤Battle + ": "+ DicArmy.¤¤Spoils),
+		DIPLOMACY(DicMisc.¤¤Diplomacy),
+		THEFT(¤¤theft),
+		
+		;
+		
+		public static final LIST<RTYPE> all = new ArrayList<FResources.RTYPE>(values());
+		
+		public final CharSequence name;
+		
+		private RTYPE(CharSequence name) {
+			this.name = name;
 		}
-		
-		public InOut(CharSequence name, CharSequence desc, HistoryResource total) {
-			super(saved, time, false);
-			this.master = total;
-			this.info = new INFO(name, desc);
-		}
-		
-		public InOut(HistoryResource total) {
-			super(saved, time, false);
-			this.master = total;
-			this.info = null;
-		}
-
-		@Override
-		protected void change(RESOURCE r, int old, int current) {
-			master.inc(r, -old);
-			master.inc(r, current);
-		}
-		
-		@Override
-		public INFO info() {
-			return info;
-		}
-		
-		
 	}
-	
 	
 }

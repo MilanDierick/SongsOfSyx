@@ -2,6 +2,7 @@ package settlement.environment;
 
 import java.io.IOException;
 
+import game.Profiler;
 import init.biomes.CLIMATE;
 import init.biomes.CLIMATES;
 import settlement.main.CapitolArea;
@@ -13,13 +14,11 @@ import snake2d.util.sets.ArrayList;
 public final class ENVIRONMENT extends SettResource{
 
 	private CLIMATE climate = CLIMATES.COLD();
-	public final SettSquareness squareness = new SettSquareness();
 	public final SettEnvMap environment = new SettEnvMap();
-	public final SettFish fish = new SettFish();
 	public final SEService service = new SEService();
 	
 	private final ArrayList<EnvResource> all = new ArrayList<EnvResource>(
-			environment, fish,
+			environment,
 			service
 			
 			);
@@ -40,10 +39,9 @@ public final class ENVIRONMENT extends SettResource{
 	}
 	
 	@Override
-	protected void update(float ds) {
+	protected void update(float ds, Profiler profiler) {
 		for (EnvResource r : all)
 			r.update(ds);
-		super.update(ds);
 	}
 	
 	@Override

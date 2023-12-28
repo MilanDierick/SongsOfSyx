@@ -12,6 +12,7 @@ import settlement.room.military.artillery.ROOM_ARTILLERY;
 import settlement.thing.projectiles.Trajectory;
 import snake2d.CircleCooIterator;
 import snake2d.util.datatypes.*;
+import snake2d.util.misc.CLAMP;
 import snake2d.util.sets.ArrayList;
 import snake2d.util.sets.ArrayListResize;
 
@@ -30,6 +31,7 @@ class UpdaterArtillery {
 		}
 		for (int i = 0; i < threadSafe.size(); i++) {
 			ArtilleryInstance ins = threadSafe.get(i);
+			
 			if (!ins.mustered())
 				continue;
 			if (!setCurrentTarget(ins))
@@ -109,9 +111,69 @@ class UpdaterArtillery {
 		return false;
 	}
 	
+	private final int[] dirs = new int[] {
+		0,1,-1
+	};
+	
 	void setTarget(ArtilleryInstance ins) {
+
+		if (!ins.fireAtWill()) {
+			ins.setTrajectory(null);
+			return;
+		}
 		
 
+
+		
+		ox = -1;
+		oy = -1;
+		
+		DIR dir = ins.dir();
+		int dimension = DivsQuadMap.size*C.TILE_SIZE;
+		int startX = ins.body().x1()*C.TILE_SIZE + ins.body().width()*C.TILE_SIZE/2 + ins.dir().x();
+		int startY = ins.body().y1()*C.TILE_SIZE + ins.body().height()*C.TILE_SIZE/2 + ins.dir().y();
+		
+		double minRange = ins.rangeMin()/C.SQR2;
+		double maxRange = ins.rangeMax();
+		double range = maxRange-minRange;
+		range = CLAMP.d(range, 0, SETT.PWIDTH);
+		double current = 0;
+		
+		while(current < range) {
+			
+			double cx = startX + (minRange + current)*dir.x(); 
+			double cy = startY + (minRange + current)*dir.y();
+			
+			if (cx >= SETT.PWIDTH || cy >= SETT.PHEIGHT) {
+				break;
+			}
+			
+			double sideAmount = 0;
+			while(sideAmount < current) {
+				for (int di : dirs) {
+					int tx = (int) (cx + dir.next(di).x()*sideAmount);
+					int ty = (int) (cy + dir.next(di).y()*sideAmount);
+					if (tx < 0 || ty < 0 || tx >= SETT.PWIDTH || ty >= SETT.PHEIGHT) {
+						continue;
+					}
+					tx = tx >> C.T_SCROLL;
+					ty = ty >> C.T_SCROLL;
+					
+					if (trySet(ins, tx, ty))
+						return;
+					
+				}
+				sideAmount += dimension;
+			}
+			
+			current += dimension;
+		}
+
+	}
+	
+	void setTarget2(ArtilleryInstance ins) {
+		
+	
 		
 		if (!ins.fireAtWill()) {
 			ins.setTrajectory(null);
@@ -131,19 +193,18 @@ class UpdaterArtillery {
 		
 		double min = ins.rangeMin()/C.SQR2;
 		double max = ins.rangeMax();
-		
+		double dist = max-min;
+		dist = CLAMP.d(dist, 0, SETT.PWIDTH);
 	
+		
+		
 		double wStart = min + dddd-1;
-		int steps = (int) Math.ceil((max-min)/(dddd));
-		double dStep = (max-min)/steps;
-		
-		
-		double dist = min;
-		
+		int steps = (int) Math.ceil((dist)/(dddd));
+		double dStep = (dist)/steps;
 		
 		while(steps > 0) {
-			double sx = fx+ins.dir().x()*dist;
-			double sy = fy+ins.dir().y()*dist;
+			double sx = fx+ins.dir().x()*min;
+			double sy = fy+ins.dir().y()*min;
 			
 			for (int s = 0; s < wStart; s+= dddd) {
 				for (int di = -2; di < 5; di+= 4) {
@@ -163,7 +224,6 @@ class UpdaterArtillery {
 			wStart += dStep;
 			steps--;
 		}
-		
 	}
 	
 	private int ox,oy;
@@ -172,7 +232,7 @@ class UpdaterArtillery {
 	private final Trajectory traj = new Trajectory();
 	
 	private boolean trySet(ArtilleryInstance ins, int tx, int ty) {
-		Army enemy = ins.army() == SETT.ARMIES().enemy() ? SETT.ARMIES().player() : SETT.ARMIES().enemy();
+		Army enemy = ins.army().enemy();
 		int qx = tx/DivsQuadMap.size;
 		int qy = ty/DivsQuadMap.size;
 		if (ox == qx && oy == qy)
@@ -180,10 +240,15 @@ class UpdaterArtillery {
 		ox = qx;
 		oy = qy;
 		
+		
+		
 		{
 			int fx = ins.body().x1()*C.TILE_SIZE + ins.body().width()*C.TILE_SIZE/2;
 			int fy = ins.body().y1()*C.TILE_SIZE + ins.body().height()*C.TILE_SIZE/2;
 			res.clearSloppy();
+			
+			
+			
 			ArmyAIUtil.quads().getInQuad(res, tx, ty, enemy);
 			Div best = null;
 			int bestDist = Integer.MAX_VALUE;

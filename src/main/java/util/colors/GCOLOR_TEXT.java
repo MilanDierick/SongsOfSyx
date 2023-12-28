@@ -4,6 +4,7 @@ import game.faction.Faction;
 import init.paths.PATHS;
 import snake2d.util.color.*;
 import snake2d.util.file.Json;
+import snake2d.util.misc.CLAMP;
 
 public final class GCOLOR_TEXT {
 
@@ -37,6 +38,18 @@ public final class GCOLOR_TEXT {
 			return COLOR.WHITE65;
 		return ColorImp.TMP.set(faction.banner().colorBG()).shadeSelf(1.5);
 		
+	}
+	
+	private final ColorImp tmp = new ColorImp();
+	
+	public COLOR bronzeGold(double d) {
+		d = CLAMP.d(d, 0, 1);
+		if (d < 0.5) {
+			tmp.interpolate(INACTIVE, H2, d*2);
+		}else {
+			tmp.interpolate(H2, H1, (d-0.5)*2);
+		}
+		return tmp;
 	}
 	
 	GCOLOR_TEXT () {

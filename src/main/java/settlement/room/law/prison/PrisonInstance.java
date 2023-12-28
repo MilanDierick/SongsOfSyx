@@ -4,7 +4,6 @@ import init.C;
 import settlement.entity.ENTITY;
 import settlement.entity.humanoid.HEvent;
 import settlement.entity.humanoid.Humanoid;
-import settlement.main.RenderData;
 import settlement.main.SETT;
 import settlement.misc.job.*;
 import settlement.room.main.RoomInstance;
@@ -15,6 +14,7 @@ import settlement.room.main.util.RoomInit;
 import snake2d.Renderer;
 import snake2d.util.bit.Bits;
 import snake2d.util.datatypes.*;
+import util.rendering.RenderData;
 import util.rendering.ShadowBatch;
 
 final class PrisonInstance extends RoomInstance implements JOBMANAGER_HASER {

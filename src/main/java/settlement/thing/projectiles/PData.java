@@ -5,6 +5,7 @@ import java.util.Arrays;
 
 import settlement.main.SETT;
 import snake2d.util.file.*;
+import snake2d.util.misc.CLAMP;
 
 final class PData {
 
@@ -13,8 +14,9 @@ final class PData {
 	
 	private float[] space;
 	private int[] next;
-	private byte[] type;
-	private byte[] level;
+	private short[] type;
+	private short[] ref;
+	
 	private final Data data = new Data();
 	private final Data dd = new Data();
 	private final Map map;
@@ -24,7 +26,7 @@ final class PData {
 		saver.clear();
 	}
 	
-	public int create(int x, int y, int height, double dx, double dy, double dz, Projectile t, int levell) {
+	public int create(int x, int y, int height, double dx, double dy, double dz, Projectile t, double reff) {
 		if (!SETT.PIXEL_IN_BOUNDS(x, y))
 			return -1;
 		if (activeLast >= next.length) {
@@ -35,16 +37,16 @@ final class PData {
 				space[i] = this.space[i];
 			this.space = space;
 			int[] next = new int[nz];
-			byte[] type = new byte[nz];
-			byte[] level = new byte[nz];
+			short[] type = new short[nz];
+			short[] ref = new short[nz];
 			for (int i = 0; i < this.next.length; i++) {
 				next[i] = this.next[i];
 				type[i] = this.type[i];
-				level[i] = this.level[i];
+				ref[i] = this.ref[i];
 			}
 			this.next = next;
 			this.type = type;
-			this.level = level;
+			this.ref = ref;
 		}
 		dd.sI = activeLast*6;
 		dd.xSet(x);
@@ -54,9 +56,9 @@ final class PData {
 		dd.dySet(dy);
 		dd.dzSet(dz);
 		type(activeLast, t.index);
-		level(activeLast, (byte)levell);
+		ref(activeLast, reff);
 		map.add(activeLast);
-		t.soundRelease.rnd(x, y, 1);
+		t.soundRelease().rnd(x, y, 1);
 		activeLast++;
 		return activeLast-1;
 	}
@@ -102,7 +104,7 @@ final class PData {
 		
 		type[toI] = type[fromI];
 		next[toI] = next[fromI];
-		level[toI] = level[fromI];
+		ref[toI] = ref[fromI];
 		toI *=6;
 		fromI *= 6;
 		
@@ -182,33 +184,36 @@ final class PData {
 		return Projectile.ALL.get(type[index]&0b01111111);
 	}
 	
-	public int level(int index) {
-		return level[index];
+	private static int refI = 0x0FFF;
+	private static double refII = 1.0/refI;
+	
+	public double ref(int index) {
+		return (ref[index]&0x0FFFF)*refII;
 	}
 	
-	public void level(int index, byte level) {
-		this.level[index] = level;
+	public void ref(int index, double ref) {
+		this.ref[index] = (short) CLAMP.d(ref*refI, 0, 0x0FFFF);
 	}
 	
 	public void nextSet(int index, int n) {
 		next[index] = n;
 	}
 	
-	public void type(int index, byte t) {
-		type[index] &= t & 0b10000000;
+	public void type(int index, short t) {
+		type[index] &= t & 0b1000_0000_0000_0000;
 		type[index] |= t;
 	}
 	
 	public void live(int index, boolean live) {
 		if (!live) {
-			type[index] |= 0b010000000;
+			type[index] |= 0b01000_0000_0000_0000;
 		}else {
-			type[index] &= ~0b010000000;
+			type[index] &= ~0b01000_0000_0000_0000;
 		}
 	}
 	
 	public boolean live(int index) {
-		return (type[index] & 0b010000000) == 0;
+		return (type[index] & 0b01000_0000_0000_0000) == 0;
 	}
 	
 	public final int last() {
@@ -221,8 +226,8 @@ final class PData {
 		public void save(FilePutter file) {
 			file.i(activeLast);
 			for (int i = 0; i < activeLast; i++) {
-				file.b(type[i]);
-				file.b(level[i]);
+				file.s(type[i]);
+				file.s(ref[i]);
 			}
 			int am = activeLast*6;
 			for (int i = 0; i < am; i++) {
@@ -237,11 +242,11 @@ final class PData {
 			int l = (int) Math.ceil((double)(activeLast+1)/CHUNK);
 			space = new float[l*CHUNK*6];
 			next = new int[l*CHUNK];
-			type = new byte[l*CHUNK];
-			level = new byte[l*CHUNK];
+			type = new short[l*CHUNK];
+			ref = new short[l*CHUNK];
 			for (int i = 0; i < activeLast; i++) {
-				type[i] = file.b();
-				level[i] = file.b();
+				type[i] = file.s();
+				ref[i] = file.s();
 			}
 			int am = activeLast*6;
 			for (int i = 0; i < am; i++) {
@@ -258,8 +263,8 @@ final class PData {
 			space = new float[CHUNK*6];
 			next = new int[CHUNK];
 			Arrays.fill(next, -1);
-			type = new byte[CHUNK];
-			level = new byte[CHUNK];
+			type = new short[CHUNK];
+			ref = new short[CHUNK];
 			activeLast = 0;
 			
 		}

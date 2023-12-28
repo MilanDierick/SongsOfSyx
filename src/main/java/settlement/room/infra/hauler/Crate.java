@@ -1,6 +1,7 @@
 package settlement.room.infra.hauler;
 
 import settlement.main.SETT;
+import settlement.room.main.RoomInstance;
 import settlement.room.main.job.StorageCrate;
 
 final class Crate extends StorageCrate{
@@ -10,7 +11,6 @@ final class Crate extends StorageCrate{
 	HaulerInstance ins;
 	
 	Crate(ROOM_HAULER b) {
-		super(size);
 		this.b = b;
 	}
 
@@ -33,6 +33,16 @@ final class Crate extends StorageCrate{
 	@Override
 	public boolean isfetching() {
 		return ins.fetch;
+	}
+
+	@Override
+	protected int max(RoomInstance ins) {
+		return size;
+	}
+
+	@Override
+	protected double spoilRate(RoomInstance ins) {
+		return 1.0;
 	}
 
 }

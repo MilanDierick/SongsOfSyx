@@ -2,7 +2,7 @@ package settlement.path.components;
 
 import static settlement.main.SETT.*;
 
-import init.C;
+import settlement.main.SETT;
 import snake2d.util.datatypes.*;
 import snake2d.util.map.MAP_BOOLEAN;
 import snake2d.util.sets.Bitmap1D;
@@ -21,7 +21,7 @@ final class SComp0Quads {
 	public SComp0Quads(int size) {
 		QuadrantSize = size;
 		QScroll = Integer.numberOfTrailingZeros(QuadrantSize);
-		quadsDim = C.SETTLE_TSIZE / QuadrantSize;
+		quadsDim = SETT.TWIDTH / QuadrantSize;
 		up = new Bitmap1D(quadsDim*quadsDim, false);
 		change = new Bitmap1D(quadsDim*quadsDim, false);
 		needsUpdate = new IntegerStack(quadsDim*quadsDim);
@@ -39,10 +39,10 @@ final class SComp0Quads {
 			if (x >= 0 && y >= 0 && x < quadsDim && y < quadsDim) {
 				int qi = x + y*quadsDim;
 				if (!change.get(qi)) {
-					if (!up.get(qi))
-						needsUpdate.push(qi);
+					needsUpdate.push(qi);
 					change.set(qi, true);
 				}
+				up.set(qi, true);
 			}
 		}
 	}
@@ -56,10 +56,10 @@ final class SComp0Quads {
 			int y = (ty + DIR.ALLC.get(i).y()) >> QScroll;
 			int qi = x + y*quadsDim;
 			if (x >= 0 && y >= 0 && x < quadsDim && y < quadsDim && !up.get(qi)) {
-				if (!up.get(qi) && !change.get(qi)) {
+				if (!change.get(qi)) {
 					needsUpdate.push(qi);
+					change.set(qi, true);
 				}
-				up.set(qi, true);
 			}
 			
 		}
@@ -67,6 +67,7 @@ final class SComp0Quads {
 	
 	public void changeAll() {
 		change.setAll(true);
+		up.setAll(true);
 		needsUpdate.clear();
 		for (int i = 0; !needsUpdate.isFull(); i++)
 			needsUpdate.push(i);
@@ -84,19 +85,41 @@ final class SComp0Quads {
 	
 	void update(SComp0Updater updater) {
 		
+		if (needsUpdate.size() > 0)
+			SETT.ENTRY().points.updateAvailability();
+		
+		for (int ii = 0; ii < needsUpdate.size(); ii++) {
+			int i = needsUpdate.get(ii);
+			int tx = i % quadsDim;
+			int ty = i / quadsDim;
+			grid.moveX1Y1(tx << QScroll, ty << QScroll);
+			if (up.get(i)) {
+				updater.removeSuperComp(grid, this);
+			}
+		}
+		
+		for (int ii = 0; ii < needsUpdate.size(); ii++) {
+			int i = needsUpdate.get(ii);
+			int tx = i % quadsDim;
+			int ty = i / quadsDim;
+			grid.moveX1Y1(tx << QScroll, ty << QScroll);
+			if (up.get(i)) {
+				updater.remove(grid, this);
+			}
+		}
+		
 		while(!needsUpdate.isEmpty()) {
 			int i = needsUpdate.pop();
 			int tx = i % quadsDim;
 			int ty = i / quadsDim;
+			grid.moveX1Y1(tx << QScroll, ty << QScroll);
 			boolean bup = up.get(i);
-			boolean bchange = change.get(i);
 			up.set(i, false);
 			change.set(i, false);
-			grid.moveX1Y1(tx << QScroll, ty << QScroll);
-			if (bchange) {
-				updater.update(grid, this);
-				
-			}else if(bup) {
+			
+			if (bup) {
+				updater.assign(grid, this);
+			}else {
 				updater.initData(grid);
 			}
 			

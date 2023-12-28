@@ -3,7 +3,7 @@ package settlement.misc.placers;
 import init.resources.RESOURCE;
 import init.sprite.SPRITES;
 import settlement.main.SETT;
-import settlement.tilemap.Terrain.TerrainTile;
+import settlement.tilemap.terrain.Terrain.TerrainTile;
 import snake2d.util.sprite.SPRITE;
 
 final class Tiles {
@@ -95,14 +95,14 @@ final class Tiles {
 	
 	static class Floor implements Tile {
 
-		final settlement.tilemap.Floors.Floor f;
+		final settlement.tilemap.floor.Floors.Floor f;
 		final double degrade;
 		
-		Floor(settlement.tilemap.Floors.Floor f){
+		Floor(settlement.tilemap.floor.Floors.Floor f){
 			this(f, 1);
 		}
 		
-		Floor(settlement.tilemap.Floors.Floor f, double degrade){
+		Floor(settlement.tilemap.floor.Floors.Floor f, double degrade){
 			this.f = f;
 			this.degrade = degrade;
 		}

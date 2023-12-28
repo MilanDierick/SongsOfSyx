@@ -5,10 +5,10 @@ import static settlement.main.SETT.*;
 import java.io.IOException;
 
 import game.GAME;
+import game.faction.FResources.RTYPE;
 import init.C;
 import init.RES;
-import init.resources.RESOURCE;
-import init.resources.RESOURCES;
+import init.resources.*;
 import init.settings.S;
 import init.sprite.SPRITES;
 import settlement.main.SETT;
@@ -22,7 +22,6 @@ import snake2d.util.datatypes.*;
 import snake2d.util.file.FileGetter;
 import snake2d.util.file.FilePutter;
 import snake2d.util.rnd.RND;
-import snake2d.util.sets.LIST;
 import snake2d.util.sets.LISTE;
 import util.gui.misc.GBox;
 import util.gui.misc.GText;
@@ -97,13 +96,19 @@ public final class ThingsResources extends ThingFactory<ScatteredResource>{
 	private int add(int tx, int ty, RESOURCE r, int amount) {
 		if (!has(tx, ty, r.bit))
 			return amount;
-		for (Thing t : THINGS().get(tx, ty)) {
+		
+		Thing t = THINGS().getFirst(tx, ty);
+		
+		while(t != null) {
 			if (t instanceof ScatteredResource) {
 				ScatteredResource res = (ScatteredResource) t;
 				if (res.resource() == r) {
-					return res.increaseAmount(amount);
+					amount = res.increaseAmount(amount);
+					if (amount <= 0)
+						return 0;
 				}
 			}
+			t = t.tileNext();
 		}
 		return amount;
 	}
@@ -113,7 +118,10 @@ public final class ThingsResources extends ThingFactory<ScatteredResource>{
 			GAME.Notify("");
 			return;
 		}
-		for (Thing t : THINGS().get(tx, ty)) {
+		
+		Thing t = THINGS().getFirst(tx, ty);
+		
+		while(t != null) {
 			if (t instanceof ScatteredResource) {
 				ScatteredResource res = (ScatteredResource) t;
 				if (res.resource() == r) {
@@ -125,6 +133,7 @@ public final class ThingsResources extends ThingFactory<ScatteredResource>{
 					
 				}
 			}
+			t = t.tileNext();
 		}
 		
 		while(amount > 0) {
@@ -134,7 +143,7 @@ public final class ThingsResources extends ThingFactory<ScatteredResource>{
 			amount -= ScatteredResource.MAX_AMOUNT;
 		}
 		if (amount > 0)
-			GAME.player().res().outSpoilt.inc(r, amount);
+			GAME.player().res().inc(r, RTYPE.SPOILAGE, -amount);
 		
 		evaluate(tx, ty);
 		
@@ -153,52 +162,72 @@ public final class ThingsResources extends ThingFactory<ScatteredResource>{
 		return all[index];
 	}
 	
-	public boolean has(int tx, int ty, long resMask) {
+	public boolean has(int tx, int ty, RBIT resMask) {
+
 		Thing t = THINGS().getFirst(tx, ty);
-		return t != null && (t.resourcemask & resMask) > 0l;
+		return t != null && t.resourcemask.has(resMask);
 	}
 	
 	public ScatteredResource get(int tx, int ty) {
-		for (Thing t : THINGS().get(tx, ty)) {
+		Thing t = THINGS().getFirst(tx, ty);
+		
+		while(t != null) {
 			if (t instanceof ScatteredResource) {
-				return (ScatteredResource) t;
+				if (t instanceof ScatteredResource) {
+					return (ScatteredResource) t;
+				}
 			}
+			t = t.tileNext();
 		}
+		
 		return null;
 	}
 	
-	public ScatteredResource getReservable(int tx, int ty, long resMask) {
+	public ScatteredResource getReservable(int tx, int ty, RBIT resMask) {
 		if (!has(tx, ty, resMask))
 			return null;
-		for (Thing t : THINGS().get(tx, ty)) {
+		
+		Thing t = THINGS().getFirst(tx, ty);
+		
+		while(t != null) {
 			if (t instanceof ScatteredResource) {
 				ScatteredResource s = (ScatteredResource) t;
-				if (s.findableReservedCanBe() && (s.resource().bit & resMask)> 0l)
+				if (s.findableReservedCanBe() && s.resource().bit.has(resMask))
 					return s;
 			}
+			t = t.tileNext();
 		}
-		GAME.Notify(tx + " " + ty + " " + Long.toBinaryString(resMask));
+
+		GAME.Notify(tx + " " + ty + " " + resMask.toString());
 		return null;
 	}
 	
 	private void evaluate(int tx, int ty) {
-		
-		long bit = 0;
-		
-		LIST<Thing> things = THINGS().get(tx, ty);
-		if (things.size() == 0)
-			return;	
-		
-		for (Thing t : things) {
-			if (t instanceof ScatteredResource) {
-				ScatteredResource s = (ScatteredResource) t;
-				if (s.findableReservedCanBe()) {
-					bit |= s.resource().bit;
+
+		Thing t = THINGS().getFirst(tx, ty);
+		if (t != null) {
+			Thing t2 = t;
+			t2.resourcemask.clear();
+			
+			while(t != null) {
+				if (t instanceof ScatteredResource) {
+					ScatteredResource s = (ScatteredResource) t;
+					if (s.findableReservedCanBe()) {
+						t2.resourcemask.or(s.resource());
+					}
+					
 				}
+				t = t.tileNext();
 			}
-		}
-		for (Thing t : things) {
-			t.resourcemask = bit;
+			
+			t = THINGS().getFirst(tx, ty).tileNext();
+			
+			while(t != null) {
+				t.resourcemask.clear();
+				t.resourcemask.or(t2.resourcemask);
+				t = t.tileNext();
+			}
+			
 		}
 		
 	}
@@ -262,6 +291,7 @@ public final class ThingsResources extends ThingFactory<ScatteredResource>{
 		}
 		
 		private int increaseAmount(int amount) {
+			
 			if (amount == 0)
 				return 0;
 			if (this.amount == MAX_AMOUNT)
@@ -402,7 +432,7 @@ public final class ThingsResources extends ThingFactory<ScatteredResource>{
 				hoverRes[r.bIndex()] = 0;
 				allclaimed[r.bIndex()] = 0;
 			}
-			
+
 			for (Thing t : THINGS().get(ctx(), ctx()+1, cty(), cty()+1)) {
 				if (t instanceof ScatteredResource) {
 					
@@ -411,7 +441,6 @@ public final class ThingsResources extends ThingFactory<ScatteredResource>{
 						continue;
 					hoverRes[r.resource().bIndex()] += r.amount();
 					allclaimed[r.resource().bIndex()] += r.claimed;
-					
 					
 				}
 			}

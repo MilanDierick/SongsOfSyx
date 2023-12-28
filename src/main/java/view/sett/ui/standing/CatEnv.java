@@ -3,7 +3,9 @@ package view.sett.ui.standing;
 import init.biomes.BUILDING_PREF;
 import init.biomes.BUILDING_PREFS;
 import settlement.entity.humanoid.HCLASS;
-import settlement.stats.*;
+import settlement.stats.STATS;
+import settlement.stats.stat.STAT;
+import settlement.stats.stat.StatCollection;
 import snake2d.util.gui.GUI_BOX;
 import snake2d.util.gui.renderable.RENDEROBJ;
 import snake2d.util.sets.LinkedList;
@@ -15,7 +17,7 @@ import view.sett.ui.standing.Cats.Cat;
 final class CatEnv extends Cat {
 	
 	CatEnv(HCLASS cl){
-		super(new StatCollection[] { STATS.ENV(), STATS.ACCESS(), STATS.ACCESS().MONUMENTS, STATS.BATTLE(), STATS.STORED()});
+		super(new StatCollection[] { STATS.ENV(), STATS.ACCESS(), STATS.ACCESS().ACCESS, STATS.ACCESS().MONUMENTS, STATS.BATTLE(), STATS.STORED()});
 		titleSet(cs[0].info.name);
 		
 		LinkedList<RENDEROBJ> rens = new LinkedList<>();
@@ -42,7 +44,7 @@ final class CatEnv extends Cat {
 							}
 							
 						});
-					}else {
+					}else if (s.info().matters()){
 						rens.add(new StatRow(s, cl));
 					}
 					

@@ -4,8 +4,11 @@ import java.io.IOException;
 
 import game.GAME;
 import game.time.TIME;
-import init.boostable.BOOSTABLES;
+import init.need.NEEDS;
+import init.race.RACES;
 import init.race.Race;
+import init.religion.Religion;
+import init.religion.Religions;
 import init.resources.RESOURCE;
 import init.resources.RESOURCES;
 import settlement.misc.util.FSERVICE;
@@ -14,11 +17,9 @@ import settlement.room.main.RoomBlueprintIns;
 import settlement.room.main.category.RoomCategorySub;
 import settlement.room.main.furnisher.Furnisher;
 import settlement.room.main.util.RoomInitData;
-import settlement.room.service.module.RoomServiceDataSimple;
-import settlement.room.service.module.RoomServiceDataSimple.ROOM_SERVICE_HASER;
+import settlement.room.service.module.RoomService;
+import settlement.room.service.module.RoomService.ROOM_SERVICE_HASER;
 import settlement.room.spirit.temple.TempleAltar.Prisoner;
-import settlement.stats.STATS;
-import settlement.stats.StatsReligion.Religion;
 import snake2d.util.datatypes.COORDINATE;
 import snake2d.util.file.FileGetter;
 import snake2d.util.file.FilePutter;
@@ -30,7 +31,7 @@ public class ROOM_TEMPLE extends RoomBlueprintIns<TempleInstance> implements ROO
 	int consumed = 0;
 	private int year = TIME.years().bitsSinceStart();
 	final TempleConstructor constructor;
-	final RoomServiceDataSimple service;
+	final RoomService service;
 	final Service serviceTile;
 	final TempleJob job;
 	final TempleAltar altar;
@@ -39,11 +40,13 @@ public class ROOM_TEMPLE extends RoomBlueprintIns<TempleInstance> implements ROO
 	private double searchCooloff = 0;
 	public static final String TYPE = "TEMPLE";
 	
+	public final Religion religion;
+	
 	public ROOM_TEMPLE(int typeIndex, RoomInitData data, String key, RoomCategorySub cat) throws IOException {
 		super(typeIndex, data, key, cat);
 		constructor = new TempleConstructor(this, data);
 		serviceTile = new Service(this);
-		service = new RoomServiceDataSimple(this, data) {
+		service = new RoomService(this, data) {
 			
 			@Override
 			public FSERVICE service(int tx, int ty) {
@@ -52,9 +55,10 @@ public class ROOM_TEMPLE extends RoomBlueprintIns<TempleInstance> implements ROO
 
 			@Override
 			public double totalMultiplier() {
-				return 1.0/BOOSTABLES.RATES().PIETY.get(null, null);
+				return 1.0/(NEEDS.TYPES().TEMPLE.rate.get(RACES.clP(null, null)));
 			}
 		};
+		religion = Religions.MAP().get(data.data());
 		switch(data.data().value("SACRIFICE_TYPE")) {
 			case "RESOURCE":
 				resource = RESOURCES.map().getByKey("SACRIFICE_RESOURCE", data.data());
@@ -129,7 +133,7 @@ public class ROOM_TEMPLE extends RoomBlueprintIns<TempleInstance> implements ROO
 	}
 
 	@Override
-	public RoomServiceDataSimple service() {
+	public RoomService service() {
 		return service;
 	}
 	
@@ -214,10 +218,6 @@ public class ROOM_TEMPLE extends RoomBlueprintIns<TempleInstance> implements ROO
 		}
 		TempleAltar.Prisoner p = (Prisoner) altar;
 		return p.sacrificeKillAmount();
-	}
-	
-	public Religion rel() {
-		return STATS.RELIGION().ALL.get(typeIndex());
 	}
 
 }

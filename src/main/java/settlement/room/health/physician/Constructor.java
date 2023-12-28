@@ -2,7 +2,6 @@ package settlement.room.health.physician;
 
 import java.io.IOException;
 
-import settlement.main.RenderData.RenderIterator;
 import settlement.main.SETT;
 import settlement.path.AVAILABILITY;
 import settlement.room.main.*;
@@ -13,9 +12,8 @@ import settlement.room.sprite.*;
 import snake2d.SPRITE_RENDERER;
 import snake2d.util.datatypes.DIR;
 import snake2d.util.file.Json;
-import snake2d.util.sprite.TILE_SHEET;
+import util.rendering.RenderData.RenderIterator;
 import util.rendering.ShadowBatch;
-import util.spritecomposer.*;
 
 final class Constructor extends Furnisher{
 
@@ -56,13 +54,13 @@ final class Constructor extends Furnisher{
 			
 			@Override
 			protected boolean joins(int tx, int ty, int rx, int ry, DIR d, FurnisherItem item) {
-				if (!(item.sprite(rx+d.perpendicular().x()*2, ry+d.perpendicular().y()*2) instanceof RoomSpriteComboN))
+				if (!(item.sprite(rx+d.perpendicular().x()*2, ry+d.perpendicular().y()*2) instanceof RoomSpriteCombo))
 					return true;
 				return false;
 			}
 		};
 		
-		RoomSprite sTable = new RoomSpriteComboN(js, "TABLE_COMBO") {
+		RoomSprite sTable = new RoomSpriteCombo(js, "TABLE_COMBO") {
 			
 			
 			
@@ -187,13 +185,6 @@ final class Constructor extends Furnisher{
 		
 		flush(1, 3);
 
-	}
-	
-
-	@Override
-	protected TILE_SHEET sheet(ComposerUtil c, ComposerSources s, ComposerDests d, int y1) {
-		
-		return null;
 	}
 
 	@Override

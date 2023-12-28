@@ -4,6 +4,7 @@ import init.D;
 import snake2d.util.datatypes.COORDINATE;
 import snake2d.util.gui.GUI_BOX;
 import snake2d.util.gui.clickable.CLICKABLE;
+import snake2d.util.gui.renderable.RENDEROBJ;
 import snake2d.util.misc.ACTION;
 
 public final class KeyButt{
@@ -19,7 +20,7 @@ public final class KeyButt{
 	}
 
 	public static CLICKABLE wrap(CLICKABLE base, Key key) {
-		return new CLICKABLE.Switcher(base) {
+		return new CLICKABLE.ClickWrap(base) {
 			
 			@Override
 			public void hoverInfoGet(GUI_BOX text) {
@@ -46,6 +47,11 @@ public final class KeyButt{
 					return true;
 				}
 				return false;
+			}
+
+			@Override
+			protected RENDEROBJ pget() {
+				return base;
 			}
 			
 		};

@@ -8,7 +8,7 @@ import settlement.room.industry.module.Industry;
 import settlement.room.industry.module.Industry.IndustryResource;
 import settlement.room.industry.module.IndustryUtil;
 import settlement.room.main.RoomInstance;
-import settlement.tilemap.Fertility;
+import settlement.tilemap.growth.Fertility;
 import snake2d.util.datatypes.COORDINATE;
 import snake2d.util.datatypes.DIR;
 import snake2d.util.gui.GUI_BOX;
@@ -94,7 +94,7 @@ class Gui extends UIRoomModuleImp<Instance, ROOM_ORCHARD> {
 				int i = res.history().historyRecords()-1-stapleI;
 				int am = res.history().get(i);
 				GText t = box.text();
-				DicTime.setYearsAgo(t, i);
+				DicTime.setDaysAgo(t, i);
 				box.add(t);
 				box.NL(2);
 				box.add(GFORMAT.i(box.text(), am));

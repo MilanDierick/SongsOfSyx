@@ -3,8 +3,6 @@ package settlement.room.food.farm;
 import java.io.IOException;
 
 import game.time.TIME;
-import init.boostable.BOOSTABLE;
-import init.boostable.BOOSTABLES;
 import init.resources.Growable;
 import init.resources.RESOURCES;
 import settlement.main.SETT;
@@ -12,6 +10,7 @@ import settlement.path.finder.SFinderRoomService;
 import settlement.room.industry.module.INDUSTRY_HASER;
 import settlement.room.industry.module.Industry;
 import settlement.room.industry.module.Industry.RoomBoost;
+import settlement.room.main.BonusExp.RoomExperienceBonus;
 import settlement.room.main.RoomBlueprintIns;
 import settlement.room.main.category.RoomCategorySub;
 import settlement.room.main.furnisher.Furnisher;
@@ -21,10 +20,11 @@ import snake2d.util.file.FilePutter;
 import snake2d.util.misc.CLAMP;
 import snake2d.util.sets.*;
 import view.sett.ui.room.UIRoomModule;
+import world.regions.Region;
 
 public class ROOM_FARM extends RoomBlueprintIns<FarmInstance> implements INDUSTRY_HASER{
 
-	final static double WORKERPERTILE = 64;
+	final static double WORKERPERTILE = TIME.workSeconds/(Tile.WORK_TIME+TIME.workSecondsWalkNext);
 	final static double WORKERPERTILEI = 1.0/WORKERPERTILE;
 	
 	
@@ -34,7 +34,6 @@ public class ROOM_FARM extends RoomBlueprintIns<FarmInstance> implements INDUSTR
 	final Constructor constructor;
 	
 	final Industry productionData;
-	public final BOOSTABLE bonus2;
 	
 	final LIST<Industry> indus;
 
@@ -51,14 +50,20 @@ public class ROOM_FARM extends RoomBlueprintIns<FarmInstance> implements INDUSTR
 		crop = RESOURCES.growable().get(data.data());
 		
 		constructor = new Constructor(this, data);
-		bonus2 = BOOSTABLES.ROOMS().pushRoom(this, data.data(), type);
-		productionData = new Industry(this, data.data(), new RoomBoost[] {constructor.fertility, }, bonus2);
+		pushBo(data.data(), type, true);
+		productionData = new Industry(this, data.data(), new RoomBoost[] {constructor.fertility, }, bonus()) {
+			@Override
+			public double getRegionBonus(Region reg) {
+				return CLAMP.d(0.25 + reg.info.fertility()*2.0, 0, 1);
+			}
+		};
 		
 		indus = new ArrayList<>(productionData);
+
 		
 		time = new Time(this);
 		tile = new Tile(this);
-		
+		new RoomExperienceBonus(this, data.data(), bonus());
 	}
 	
 	Tile tile(int tx, int ty) {

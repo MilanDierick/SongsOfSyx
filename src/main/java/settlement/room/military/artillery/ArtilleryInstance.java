@@ -3,19 +3,22 @@ package settlement.room.military.artillery;
 import init.C;
 import settlement.army.Army;
 import settlement.army.Div;
-import settlement.main.RenderData.RenderIterator;
+import settlement.entity.humanoid.Humanoid;
 import settlement.main.SETT;
 import settlement.path.finder.SFinderSoldierManning.FINDABLE_MANNING;
 import settlement.path.finder.SFinderSoldierManning.FINDABLE_MANNING_INSTANCE;
 import settlement.room.main.RoomInstance;
 import settlement.room.main.TmpArea;
 import settlement.room.main.util.RoomInit;
+import settlement.stats.Induvidual;
 import settlement.thing.projectiles.SProjectiles;
 import settlement.thing.projectiles.Trajectory;
 import snake2d.Renderer;
 import snake2d.util.datatypes.*;
 import snake2d.util.gui.GUI_BOX;
+import snake2d.util.misc.CLAMP;
 import util.gui.misc.GBox;
+import util.rendering.RenderData.RenderIterator;
 import util.rendering.ShadowBatch;
 
 public final class ArtilleryInstance extends RoomInstance implements FINDABLE_MANNING_INSTANCE{
@@ -40,6 +43,8 @@ public final class ArtilleryInstance extends RoomInstance implements FINDABLE_MA
 	private final Trajectory traj = new Trajectory();
 	volatile boolean hasTrajectory = false;
 	private float progress;
+	private float skill;
+	private float skillI;
 	boolean isLoaded;
 	private boolean targetIsUserSet = false;
 	private static final Trajectory trajTmp = new Trajectory();
@@ -56,19 +61,20 @@ public final class ArtilleryInstance extends RoomInstance implements FINDABLE_MA
 		return (ROOM_ARTILLERY) blueprint();
 	}
 
-	void work(double amount) {
+	void work(double amount, Humanoid hu) {
 		
 		invisible = false;
 		
 		if (!needsWork())
 			return;
 		
-		amount *= 0.1 + (1.0-getDegrade())*0.9;
+		double skill = (1.0 - 0.75*getDegrade())*blueprintI().bonus().get(hu.indu())/blueprintI().bonus().max(Induvidual.class);
+		amount /= 6.0*blueprintI().projectile.reloadSeconds(skill);
 		
 		if (hasTrajectory) {
 			DIR d = DIR.get(traj.vx(), traj.vy());
 			if (d != dirCurrent()) {
-				progress += amount;
+				progress += amount*8;
 				if (progress >= 1) {
 					progress -= 1;
 					if (d == dirCurrent().next(-2))
@@ -82,26 +88,28 @@ public final class ArtilleryInstance extends RoomInstance implements FINDABLE_MA
 			}
 			
 			if (isLoaded && (targetCooGet() != null || targetDivGet() != null)) {
-				progress += amount*2;
-				if (progress >= 1) {
-					progress -= 1;
-					isLoaded = false;
-					int h = SETT.TERRAIN().get(body().cX(), body().cY()).heightEnt(body().cX(), body().cY())*C.TILE_SIZE;
-					h+= Trajectory.RELEASE_HEIGHT;
-					getTrajectory(trajTmp);
-					int fx = body().x1()*C.TILE_SIZE + body().width()*C.TILE_SIZE/2;
-					int fy = body().y1()*C.TILE_SIZE + body().height()*C.TILE_SIZE/2;
-					fx += C.TILE_SIZE*dir().x();
-					fy += C.TILE_SIZE*dir().y();
-					SETT.PROJS().launch(fx, fy, h, trajTmp, blueprintI().projectile, 1.0-blueprintI().projectile.accuracy, 0);
-				}
+				
+				isLoaded = false;
+				int h = SETT.TERRAIN().get(body().cX(), body().cY()).heightEnt(body().cX(), body().cY())*C.TILE_SIZE;
+				h+= Trajectory.RELEASE_HEIGHT;
+				getTrajectory(trajTmp);
+				int fx = body().x1()*C.TILE_SIZE + body().width()*C.TILE_SIZE/2;
+				int fy = body().y1()*C.TILE_SIZE + body().height()*C.TILE_SIZE/2;
+				fx += C.TILE_SIZE*dir().x();
+				fy += C.TILE_SIZE*dir().y();
+				double ref = CLAMP.d(this.skill/skillI, 0, 1);
+				skillI = 0;
+				this.skill = 0;
+				SETT.PROJS().launch(fx, fy, h, trajTmp, blueprintI().projectile, 1.0-blueprintI().projectile.accuracy(ref), ref);
 				return;
 			}
 			
 		}
 		
 		if (!isLoaded) {
-			progress += amount*0.25;
+			progress += amount;
+			this.skill += skill;
+			skillI ++;
 			if (progress >= 1) {
 				progress -= 1;
 				isLoaded = true;
@@ -217,7 +225,7 @@ public final class ArtilleryInstance extends RoomInstance implements FINDABLE_MA
 	}
 	
 	public boolean isFiring() {
-		return mustered() && menMustering() > 0 && hasTrajectory;
+		return mustered() && menMustering() > 0 && hasTrajectory && (targetCooGet() != null || targetDivGet() != null);
 	}
 
 	public void clearTarget() {
@@ -301,11 +309,11 @@ public final class ArtilleryInstance extends RoomInstance implements FINDABLE_MA
 	}
 	
 	public int rangeMin() {
-		return (int) blueprintI().speed();
+		return (int) blueprintI().projectile.velocity(blueprintI().ref());
 	}
 	
 	public int rangeMax() {
-		return (int) Trajectory.range(0, blueprintI().speed());
+		return (int) Trajectory.range(0, blueprintI().projectile.maxAngle(Short.MAX_VALUE), blueprintI().projectile.velocity(blueprintI().ref()));
 	}
 	
 	public boolean targetIsUserSet() {
@@ -327,11 +335,9 @@ public final class ArtilleryInstance extends RoomInstance implements FINDABLE_MA
 			double min = rangeMin();
 			double max = rangeMax();
 			if (l < min) {
-				System.out.println("min");
 				return false;
 			}
 			if (l > max) {
-				System.out.println("max");
 				return false;
 			}
 			
@@ -384,14 +390,14 @@ public final class ArtilleryInstance extends RoomInstance implements FINDABLE_MA
 		
 		CharSequence problem = SProjectiles.¤¤OUT_OF_RANGE;
 		
-		if (traj.calcLow(h, fx, fy, px, py, blueprintI().speed())) {
+		if (traj.calcLow(h, fx, fy, px, py, blueprintI().projectile.maxAngle(Short.MAX_VALUE), blueprintI().projectile.velocity(blueprintI().ref()))) {
 			
 			problem = SProjectiles.trajectoryProblem(army(), traj, fx, fy);
 			if (problem == null)
 				return null;
 		}
 		
-		if (traj.calcHigh(h, fx, fy, px, py, blueprintI().speed())) {
+		if (traj.calcHigh(h, fx, fy, px, py, blueprintI().projectile.maxAngle(Short.MAX_VALUE), blueprintI().projectile.velocity(blueprintI().ref()))) {
 			problem = SProjectiles.trajectoryProblem(army(), traj, fx, fy);
 			if (problem == null)
 				return null;

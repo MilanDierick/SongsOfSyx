@@ -11,6 +11,7 @@ public final class DivTDataInfo implements Copyable<DivTDataInfo>{
 	public int men = 0;
 	public short unreachable;
 	public double projVel;
+	public double projAngle;
 	
 	public DivTDataInfo() {
 
@@ -20,7 +21,9 @@ public final class DivTDataInfo implements Copyable<DivTDataInfo>{
 		men = div.menNrOf();
 		unreachable = (short) div.reporter.unreachable();
 		if (div.settings.ammo() != null) {
-			projVel = div.settings.ammo().speed(div);
+			double ref = div.settings.ammo().ref(div);
+			projVel = div.settings.ammo().projectile.velocity(ref);
+			projAngle = div.settings.ammo().projectile.maxAngle(ref);
 		}else
 			projVel = 0;
 	}
@@ -30,6 +33,7 @@ public final class DivTDataInfo implements Copyable<DivTDataInfo>{
 		men = tmp.men;
 		unreachable = tmp.unreachable;
 		projVel = tmp.projVel;
+		projAngle = tmp.projAngle;
 	}
 	
 	@Override
@@ -37,6 +41,7 @@ public final class DivTDataInfo implements Copyable<DivTDataInfo>{
 		file.i(men);
 		file.s(unreachable);
 		file.d(projVel);
+		file.d(projAngle);
 	}
 	
 	@Override
@@ -44,6 +49,7 @@ public final class DivTDataInfo implements Copyable<DivTDataInfo>{
 		men = file.i();
 		unreachable = file.s();
 		projVel = file.d();
+		projAngle = file.d();
 	}
 	
 	@Override
@@ -51,6 +57,7 @@ public final class DivTDataInfo implements Copyable<DivTDataInfo>{
 		men = 0;
 		unreachable = 0;
 		projVel = 0;
+		projAngle = 0;
 	}
 	
 }

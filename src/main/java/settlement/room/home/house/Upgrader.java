@@ -3,15 +3,20 @@ package settlement.room.home.house;
 import java.util.Arrays;
 
 import game.faction.FACTIONS;
+import game.faction.FResources.RTYPE;
+import game.faction.Faction;
+import game.values.Lock;
+import game.values.Lockable;
 import init.D;
 import init.resources.RES_AMOUNT;
-import init.sprite.ICON;
 import init.sprite.SPRITES;
 import settlement.main.SETT;
 import settlement.room.main.Room;
 import settlement.room.main.util.RoomInitData;
 import snake2d.util.datatypes.AREA;
 import snake2d.util.sets.LIST;
+import snake2d.util.sprite.SPRITE;
+import snake2d.util.sprite.text.Str;
 import util.gui.misc.GBox;
 import util.info.GFORMAT;
 import view.tool.PLACER_TYPE;
@@ -26,7 +31,7 @@ class Upgrader extends PlacableMulti{
 	private static CharSequence ¤¤probUpgrade = "¤House is already upgraded to current maximum.";
 	private static CharSequence ¤¤residents = "¤Residents";
 	private static CharSequence ¤¤noResources = "¤Not enough resources";
-	
+	private static CharSequence ¤¤unlocksWith = "¤Next upgrade unlocks with: ";
 	private final LIST<RES_AMOUNT> costs;
 	private final int[] resAcc;
 	
@@ -35,7 +40,7 @@ class Upgrader extends PlacableMulti{
 	}
 	
 	public Upgrader(ROOM_HOME room_HOME, RoomInitData init) {
-		super(¤¤name, ¤¤desc, new ICON.BIG.Twin(room_HOME.iconBig(), SPRITES.icons().m.plus));
+		super(¤¤name, ¤¤desc, new SPRITE.Twin(room_HOME.iconBig(), SPRITES.icons().m.plus));
 		
 		this.costs = RES_AMOUNT.make(init.data().json("RESOURCE_UPGRADE"));
 		resAcc = new int[costs.size()];
@@ -43,19 +48,19 @@ class Upgrader extends PlacableMulti{
 
 	private int extra;
 	private int tiles;
-	private int maxU;
 	private CharSequence prevProblem = ¤¤probHouse;
 	
 	@Override
 	public CharSequence isPlacable(AREA area, PLACER_TYPE type) {
 		extra = 0;
 		tiles = 0;
-		maxU = FACTIONS.player().locks.maxUpgrade(SETT.ROOMS().HOMES.HOME);
 		Arrays.fill(resAcc, 0);
 		prevProblem = ¤¤probHouse;
 		
 		return super.isPlacable(area, type);
 	}
+	
+	Str tmp = new Str(128);
 	
 	@Override
 	public CharSequence isPlacable(int tx, int ty, AREA area, PLACER_TYPE type) {
@@ -67,9 +72,24 @@ class Upgrader extends PlacableMulti{
 		Room r = SETT.ROOMS().map.get(tx, ty);
 		
 		int up = r.upgrade(tx, ty);
-		if (r.upgrade(tx, ty) >= maxU) {
+		
+		if (r.upgrade(tx, ty) >=  SETT.ROOMS().HOMES.HOME.upgrades().max()) {
 			prevProblem = ¤¤probUpgrade;
 			return ¤¤probUpgrade;
+		}
+		
+		if (!SETT.ROOMS().HOMES.HOME.upgrades().reqs.get(r.upgrade(tx, ty)).passes(FACTIONS.player())) {
+			tmp.clear().add(¤¤unlocksWith);
+			tmp.s();
+			prevProblem = ¤¤unlocksWith;
+			Lockable<Faction> l = SETT.ROOMS().HOMES.HOME.upgrades().reqs.get(r.upgrade(tx, ty));
+			for (Lock<Faction> lo : l.all()) {
+				if (!lo.unlocker.inUnlocked(FACTIONS.player())) {
+					tmp.add(lo.unlocker.name);
+					break;
+				}
+			}
+			return tmp;
 		}
 		
 		if (r.mX(tx, ty) == tx && r.mY(tx, ty) == ty) {
@@ -105,7 +125,7 @@ class Upgrader extends PlacableMulti{
 			
 			for (RES_AMOUNT am : costs) {
 				int a = am.amount()*t;
-				SETT.ROOMS().STOCKPILE.remove(am.resource(), a, FACTIONS.player().res().outConstruction);
+				SETT.ROOMS().STOCKPILE.remove(am.resource(), a, RTYPE.CONSTRUCTION);
 			}
 			r.upgradeSet(tx, ty, r.upgrade(tx, ty)+1);
 		}

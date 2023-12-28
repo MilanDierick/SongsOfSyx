@@ -1,6 +1,7 @@
 package settlement.room.knowledge.school;
 
 import game.time.TIME;
+import init.resources.RBIT;
 import init.resources.RESOURCE;
 import init.sound.SoundSettlement.Sound;
 import settlement.entity.humanoid.Humanoid;
@@ -134,10 +135,10 @@ final class SchoolStation {
 		}
 
 		@Override
-		public long jobResourceBitToFetch() {
+		public RBIT jobResourceBitToFetch() {
 			if (paper.get(data) < 1)
 				return b.industry.ins().get(0).resource.bit;
-			return 0;
+			return null;
 		}
 
 		@Override

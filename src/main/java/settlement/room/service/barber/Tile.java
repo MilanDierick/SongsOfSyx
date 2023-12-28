@@ -1,5 +1,6 @@
 package settlement.room.service.barber;
 
+import init.resources.RBIT;
 import init.resources.RESOURCE;
 import init.sound.SoundSettlement;
 import settlement.entity.humanoid.Humanoid;
@@ -20,7 +21,7 @@ final class Tile{
 	private final int workTime;
 
 	final RoomBits bWorked 		= new RoomBits(coo, 0b0000_0000_1111);
-	final RoomBits bUses 		= new RoomBits(coo, 0b0000_0011_0000) {
+	final RoomBits bUses 		= new RoomBits(coo, 0b0000_0111_0000) {
 
 		@Override
 		protected void remove() {
@@ -101,8 +102,8 @@ final class Tile{
 		}
 
 		@Override
-		public long jobResourceBitToFetch() {
-			return 0;
+		public RBIT jobResourceBitToFetch() {
+			return null;
 		}
 
 		@Override

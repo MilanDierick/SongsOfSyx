@@ -2,36 +2,34 @@ package world;
 
 import java.io.IOException;
 
-import game.GAME;
 import game.GAME.GameResource;
-import game.time.TIME;
+import game.Profiler;
 import init.C;
 import init.RES;
-import init.settings.S;
-import settlement.main.RenderData;
-import settlement.main.RenderData.RenderIterator;
-import snake2d.CORE;
 import snake2d.Renderer;
-import snake2d.util.color.RGB;
 import snake2d.util.datatypes.*;
 import snake2d.util.file.FileGetter;
 import snake2d.util.file.FilePutter;
 import snake2d.util.sets.ArrayList;
-import util.rendering.ShadowBatch;
-import world.ai.WorldAI;
-import world.army.WArmies;
+import world.army.WARMIES;
+import world.battle.WBattles;
 import world.entity.WEntities;
+import world.fow.FOW;
+import world.log.WorldLog;
 import world.map.buildings.WorldBuildings;
 import world.map.buildings.camp.WorldCamp;
 import world.map.landmark.WorldLandmarks;
-import world.map.regions.Regions;
+import world.map.pathing.WPATHING;
+import world.map.road.WorldRoads;
 import world.map.terrain.*;
 import world.overlay.WorldOverlays;
+import world.regions.WREGIONS;
+import world.regions.centre.WCentre;
+import world.regions.data.RD;
 
-public class World extends GameResource{
+public class WORLD extends GameResource{
 
 	private static Data w;
-	public final static double SPEED = 1;//TIME.days().bitSeconds()/60;
 	
 	public static int TWIDTH() {
 		return w.tWidth;
@@ -101,11 +99,11 @@ public class World extends GameResource{
 		return w.fertility;
 	}
 	
-	public static Regions REGIONS() {
+	public static WREGIONS REGIONS() {
 		return w.areas;
 	}
 	
-	public static WArmies ARMIES() {
+	public static WARMIES ARMIES() {
 		return w.armies;
 	}
 	
@@ -133,20 +131,36 @@ public class World extends GameResource{
 		return w.sprites;
 	}
 	
-	public static WorldAI ai() {
-		return w.ai;
-	}
-	
 	public static WorldCamp camps() {
 		return w.buildings.camp;
 	}
 	
-	public static void addTopRender(WorldTopRenderable r) {
-		w.top = r;
-	}
-	
 	public static WorldGen GEN() {
 		return w.stage;
+	}
+	
+	public static WorldRoads ROADS() {
+		return w.roads;
+	}
+	
+	public static WPATHING PATH() {
+		return w.pathing;
+	}
+	
+	public static WCentre CENTRE() {
+		return w.centre;
+	}
+	
+	public static FOW FOW() {
+		return w.fow;
+	}
+	
+	public static WorldLog LOG() {
+		return w.log;
+	}
+	
+	public static WBattles BATTLES() {
+		return w.battles;
 	}
 	
 	private final class Data {
@@ -169,20 +183,20 @@ public class World extends GameResource{
 		private final WorldMinerals MINABLES;
 		private final WorldClimate climate;
 		private final WorldFertility fertility;
-		private final Regions areas;
-		private final WArmies armies;
+		private final WorldRoads roads;
+		private final WREGIONS areas;
+		private final WARMIES armies;
 		private final WorldBuildings buildings;
-		private final RenderData renData;
 		private final WorldLandmarks landmarks;
 		private final WorldMinimap minimap;
 		private final WorldOverlays overlay;
-		private final WorldAI ai;
+		private final WPATHING pathing;
 		private final WorldGen stage;
-		private WorldTopRenderable top;
-		
-		
-		private final ShadowBatch.Real shadowBatch = new ShadowBatch.Real();
-		private final ShadowBatch shadowDummy = new ShadowBatch.Dummy();
+		private final WCentre centre;
+		private final Render render;
+		private final FOW fow;
+		private final WorldLog log;
+		private final WBattles battles;
 		
 		private Data(int tileSizeX, int tileSizeY) throws IOException{
 			w = this;
@@ -198,24 +212,31 @@ public class World extends GameResource{
 			dim = new Rec(0, width, 0, height);
 			
 			sprites = new Sprites();
+			render = new Render(tileSizeX, tileSizeY);
+			
 			
 			mountain = new WorldMountain();
 			MINABLES = new WorldMinerals();
 			climate = new WorldClimate();
 			fertility = new WorldFertility();
+			roads = new WorldRoads();
 			water = new WorldWater();
 			GROUND = new WorldGround();
-			FOREST = new WorldForest(World.this);
+			FOREST = new WorldForest(WORLD.this);
 			landmarks = new WorldLandmarks();
-			areas = new Regions();
-			armies = new WArmies();
+			areas = new WREGIONS();
+			centre = new WCentre();
+			new RD(null);
+			armies = new WARMIES();
 			buildings = new WorldBuildings();
-			ENTITIES = new WEntities(World.this);
-			ai = new WorldAI();
-			renData = new RenderData(tWidth, tHeight);
+			pathing = new WPATHING();
+			ENTITIES = new WEntities(WORLD.this);
+			fow = new FOW();
 			minimap = new WorldMinimap();
+			log = new WorldLog();
 			overlay = new WorldOverlays();
-			stage = new WorldGen(World.this);
+			stage = new WorldGen(WORLD.this);
+			battles = new WBattles();
 		}
 	
 		protected void save(FilePutter file) {
@@ -241,118 +262,19 @@ public class World extends GameResource{
 				r.load(file);
 				file.check(r);
 			}
-		}
-		
-		public void render(Renderer r, float ds, int zoomout,
-				RECTANGLE renWindow, int offX, int offY) {
-
-			ds *= GAME.SPEED.speedTarget();
-
-			renData.init(renWindow, offX, offY);
-			
-			ShadowBatch s = shadowDummy;
-			if (S.get().shadows.get() > 0){
-				shadowBatch.init(zoomout, TIME.light().shadow.sx(), TIME.light().shadow.sy());
-				s = shadowBatch;
+			for (int i = 0; i < resources.size(); i++) {
+				WorldResource r = resources.get(i);
+				r.initBeforePlay();
+				w.minimap.setDirty();
 			}
-
-			double seasonValue = 0;
-			{
-				double am = 0;
-				RenderIterator it = renData.onScreenTiles();
-				while(it.has()) {
-					am++;
-					seasonValue += climate.getter.get(it.tile()).seasonChange;
-					it.next();
-				}
-				seasonValue/=am;
-			}
-			
-			if (top != null) {
-				r.newLayer(false, zoomout);
-				TIME.light().applyGuiLight(ds, offX, offX + renWindow.width(), offY,
-						offY + renWindow.height());
-				top.render(r, s, renData);
-				top = null;
-			}
-			
-			r.newLayer(false, zoomout);
-			TIME.light().applyGuiLight(ds, offX, offX + renWindow.width(), offY,
-					offY + renWindow.height());
-			overlay.render(r, s, renData, zoomout);
-			
-			r.newFinalLightWithShadows(zoomout);
-			TIME.light().apply(offX, offX + renWindow.width(), offY,
-					offY + renWindow.height(), RGB.WHITE);
-			
-			
-			ENTITIES.renderAboveTerrain(r, s, ds, renWindow, offX, offY);
-			if (zoomout <= 1)
-				BUILDINGS().renderAboveTerrain(r, s, renData);
-			r.newLayer(false, zoomout);
-			
-			MINABLES.render(r, renData, seasonValue);
-			r.newLayer(false, zoomout);
-			
-			water.render(r, renData, seasonValue);
-			r.newLayer(false, zoomout);
-			
-			
-			FOREST.render(r, s, renData);
-			r.newLayer(false, zoomout);
-			
-			mountain.render(r, s, renData);
-			r.newLayer(false, zoomout);
-
-			water.renderMid(r, renData, seasonValue);
-			r.newLayer(false, zoomout);
-			
-			ENTITIES.renderBelowTerrain(r, s, ds, renWindow, offX, offY);
-			r.newLayer(false, zoomout);
-			
-			buildings.renderAbove(r, s, renData);
-			r.newLayer(false, zoomout);
-			
-			GROUND.render(r, renData, seasonValue);
-			buildings.renderAboveGround(r, s, renData);
-			water.renderShorelines(r, renData, seasonValue);
-			
-			REGIONS().renderBorders(r, s, renData, zoomout);
-			
-			r.newLayer(false, zoomout);
-			
-			CORE.getSoundCore().set(renWindow.cX()+offX, renWindow.cY()+offY);
 		}
 	}
 	
-	public World(int tileSizeX, int tileSizeY) throws IOException {
+	public WORLD(int tileSizeX, int tileSizeY) throws IOException {
 		super(false);
 		new Data(tileSizeX, tileSizeY);
 	}
-
-	static void clear() {
-		for (WorldResource r : w.resources) {
-			r.clear();
-		}
-	}
 	
-//	public void generate(GameConRandom random) {
-//		RND.setSeed(RND.rInt(999999999));
-//		w.generate(random);
-//	}
-//	
-//	public void regenerate() {
-//		w.generate(w.random);
-//	}
-//	
-//	public void generateInit() {
-//		w.initGenerated();
-//	}
-//	
-//	public static GameConRandom conRandom() {
-//		return w.random;
-//	}
-
 	@Override
 	protected void save(FilePutter saveFile) {
 		w.save(saveFile);
@@ -366,28 +288,38 @@ public class World extends GameResource{
 	}
 	
 	@Override
-	protected void update(float ds) {
-		
+	protected void update(float ds, Profiler prof) {
+		prof.logStart(WORLD.class);
 		for (WorldResource r : w.resources) {
-			r.update(ds);
+			r.update(ds, prof);
 		}
-		w.minimap.update(ds);
+		w.minimap.update();
+		prof.logEnd(WORLD.class);
 	}
 	
 	@Override
 	protected void afterTick() {
-		for (WorldResource r : w.resources) {
-			r.afterTick();
-		}
-		w.overlay.clear();
-//		if (RegionPathing.paths > 0)
-
+		w.battles.poll();
+		
 
 	};
-
+	
+	@Override
+	protected void initAfterGameIsSetUp() {
+		for (WorldResource r : w.resources)
+			r.initAfterGameSetup();
+	}
+	
+	public static void initBeforePlay() {
+		for (int i = 0; i < w.resources.size(); i++) {
+			WorldResource r = w.resources.get(i);
+			r.initBeforePlay();
+		}
+	}
+	
 	public void render(Renderer r, float ds, int zoomout,
 			RECTANGLE renWindow, int offX, int offY) {
-		w.render(r, ds, zoomout, renWindow, offX, offY);
+		w.render.render(r, ds, zoomout, renWindow, offX, offY);
 	}
 
 	public static abstract class WorldResource {
@@ -402,23 +334,24 @@ public class World extends GameResource{
 
 		protected abstract void load(FileGetter file) throws IOException;
 
+
+		
 		protected void clear() {
 			
 		}
 		
-		protected void update(float ds) {
+		protected void update(float ds, Profiler prof) {
 
 		}
 		
-		protected void afterTick() {
+		
+		protected void initAfterGameSetup() {
 			
 		}
-	}
-	
-	public interface WorldTopRenderable {
 		
-		public abstract void render(Renderer r, ShadowBatch shadowBatch, RenderData data);
-		
+		protected void initBeforePlay() {
+			
+		}
 	}
 
 

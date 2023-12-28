@@ -159,7 +159,7 @@ final class ManPlan extends AIPLAN.PLANRES{
 		
 		@Override
 		protected AISubActivation setAction(Humanoid a, AIManager d) {
-			return AI.SUBS().WORK_HANDS.activate(a, d, 1+RND.rFloat()*2);
+			return AI.SUBS().WORK_HANDS.activate(a, d, 1);
 		}
 		
 		@Override
@@ -167,7 +167,7 @@ final class ManPlan extends AIPLAN.PLANRES{
 			FINDABLE_MANNING f = SETT.PATH().finders.manning(a.indu().army()).getReserved(d.path.destX(), d.path.destY());
 			if (f == null)
 				return null;
-			f.work(5);
+			f.work(5, a);
 			if (!AI.modules().battle.moduleCanContinue(a, d)) {
 				can(a, d);
 				return null;
@@ -211,6 +211,10 @@ final class ManPlan extends AIPLAN.PLANRES{
 		return super.resume(a, d);
 	}
 	
+	@Override
+	public boolean notifyIfSubFails() {
+		return false;
+	}
 
 	
 }

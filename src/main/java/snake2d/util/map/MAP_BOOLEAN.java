@@ -29,6 +29,11 @@ public interface MAP_BOOLEAN{
 			this.width = width;
 			this.body = new Rec(width, height);
 		}
+		
+		public BooleanMap(DIMENSION dim) {
+			this.width = dim.width();
+			this.body = new Rec(dim.width(), dim.height());
+		}
 
 		@Override
 		public boolean is(int tx, int ty) {

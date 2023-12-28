@@ -3,8 +3,8 @@ package settlement.room.military.artillery;
 import java.io.IOException;
 
 import init.D;
-import init.boostable.BOOSTABLE;
-import init.boostable.BOOSTABLES;
+import init.race.POP_CL;
+import init.race.RACES;
 import init.resources.RESOURCE;
 import init.resources.RESOURCES;
 import settlement.main.SETT;
@@ -15,13 +15,12 @@ import settlement.room.main.furnisher.Furnisher;
 import settlement.room.main.util.RoomInit;
 import settlement.room.main.util.RoomInitData;
 import settlement.thing.projectiles.Projectile;
-import snake2d.Renderer;
+import settlement.thing.projectiles.Projectile.ProjectileImp;
 import snake2d.util.file.FileGetter;
 import snake2d.util.file.FilePutter;
 import snake2d.util.sets.ArrayListResize;
 import snake2d.util.sets.LISTE;
 import util.gui.misc.GBox;
-import util.rendering.ShadowBatch;
 import view.sett.ui.room.UIRoomModule;
 import view.tool.PlacableFixed;
 
@@ -29,16 +28,15 @@ public final class ROOM_ARTILLERY extends RoomBlueprintIns<ArtilleryInstance> {
 
 	public static final String type = "ARTILLERY";
 	final Constructor constructor;
-	public final BOOSTABLE bonus;
 	
 	public final RESOURCE PROJECTILE;
-	public final double RELOAD_TIME;
 	
 	private volatile boolean threadLock;
 	private final ArrayListResize<ArtilleryInstance> threadSafe = new ArrayListResize<>(256, ROOMS.ROOM_MAX);
 	public final Projectile projectile;
+	
 	final Service service = new Service(this);
-	private double bonusB = 1;
+	private double ref = 0;
 	
 	private static CharSequence ¤¤control = "¤Control artillery piece in the battle view.";
 	
@@ -61,18 +59,9 @@ public final class ROOM_ARTILLERY extends RoomBlueprintIns<ArtilleryInstance> {
 			}
 			
 		};
-		bonus = BOOSTABLES.ROOMS().pushRoom(this, data.data(), null); 
+		pushBo(data.data(), type, true); 
 		PROJECTILE = RESOURCES.map().getByKey("PROJECTILE_RESOURCE", data.data());
-		projectile = new Projectile(data.data().json("PROJECTILE")) {
-			
-			@Override
-			public void render(Renderer r, ShadowBatch s, double x, double y, int h, int ran, double dx, double dy, double dz,
-					float ds, int zoomout) {
-				constructor.renderProj(r, s, x, y, h, ran, dx, dy, dz, ds, zoomout);
-				
-			}
-		};
-		RELOAD_TIME = 60.0/projectile.reloadSpeed;
+		projectile = new ProjectileImp(data.data());
 		eplacer = new Placer(this, data.m);
 	}
 
@@ -99,7 +88,7 @@ public final class ROOM_ARTILLERY extends RoomBlueprintIns<ArtilleryInstance> {
 		for (int k = 0; k < instancesSize(); k++)
 			threadSafe.add(getInstance(k));
 		threadLock = false;
-		bonusB = bonus.get(null, null);
+		ref = bonus().get(RACES.clP(null, null))/bonus().max(POP_CL.class);
 	}
 
 	@Override
@@ -131,8 +120,8 @@ public final class ROOM_ARTILLERY extends RoomBlueprintIns<ArtilleryInstance> {
 		});
 	}
 	
-	public double speed() {
-		return projectile.velocity*bonusB;
+	public double ref() {
+		return ref;
 	}
 
 	private synchronized void lock() {

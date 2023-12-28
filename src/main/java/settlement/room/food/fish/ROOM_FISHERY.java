@@ -2,23 +2,29 @@ package settlement.room.food.fish;
 
 import java.io.IOException;
 
-import init.boostable.BOOSTABLE;
-import init.boostable.BOOSTABLES;
+import init.biomes.TERRAINS;
+import settlement.entity.humanoid.Humanoid;
+import settlement.main.SETT;
+import settlement.misc.job.SETT_JOB;
 import settlement.path.finder.SFinderRoomService;
 import settlement.room.industry.module.INDUSTRY_HASER;
 import settlement.room.industry.module.Industry;
 import settlement.room.industry.module.Industry.RoomBoost;
+import settlement.room.main.BonusExp.RoomExperienceBonus;
 import settlement.room.main.RoomBlueprintIns;
 import settlement.room.main.RoomInstance;
 import settlement.room.main.category.RoomCategorySub;
 import settlement.room.main.furnisher.Furnisher;
 import settlement.room.main.util.RoomInitData;
+import snake2d.util.datatypes.DIR;
 import snake2d.util.file.FileGetter;
 import snake2d.util.file.FilePutter;
+import snake2d.util.misc.CLAMP;
 import snake2d.util.sets.*;
 import util.dic.DicMisc;
 import util.info.INFO;
 import view.sett.ui.room.UIRoomModule;
+import world.regions.Region;
 
 public class ROOM_FISHERY extends RoomBlueprintIns<FishInstance> implements INDUSTRY_HASER{
 
@@ -36,13 +42,12 @@ public class ROOM_FISHERY extends RoomBlueprintIns<FishInstance> implements INDU
 		
 		
 		constructor = new Constructor(init, this);
-		BOOSTABLE skill = BOOSTABLES.ROOMS().pushRoom(this, init.data(), type);
-		
+		pushBo(init.data(), type, true);
 		
 		
 		productionData = new Industry(
 				this, init.data(), 
-				new RoomBoost[] {constructor.efficiency, constructor.fish, new RoomBoost() {
+				new RoomBoost[] {constructor.efficiency, new RoomBoost() {
 					
 					INFO info = new INFO(DicMisc.¤¤Event , "");
 					
@@ -56,11 +61,16 @@ public class ROOM_FISHERY extends RoomBlueprintIns<FishInstance> implements INDU
 						return event;
 					}
 				}}, 
-				skill);
+				bonus()) {
+			@Override
+			public double getRegionBonus(Region reg) {
+				return CLAMP.d(0.25 + (reg.info.terrain(TERRAINS.OCEAN()) + reg.info.terrain(TERRAINS.WET()))*2, 0, 1);
+			}
+		};
 		
 		job = new Job(this);
 		indus = new ArrayList<>(productionData);
-		
+		new RoomExperienceBonus(this, init.data(), bonus());
 		
 	}
 	
@@ -107,7 +117,7 @@ public class ROOM_FISHERY extends RoomBlueprintIns<FishInstance> implements INDU
 	
 	@Override
 	public void appendView(LISTE<UIRoomModule> mm) {
-		mm.add(constructor.fish.applier(this));
+		
 	}
 	
 	@Override
@@ -121,6 +131,26 @@ public class ROOM_FISHERY extends RoomBlueprintIns<FishInstance> implements INDU
 	
 	public void eventSet(double event) {
 		this.event = event;
+	}
+	
+	public void performFishingTrip(Humanoid h, int tx, int ty, double time) {
+		if (is(tx, ty)){
+			
+			SETT_JOB s = job.init(tx, ty, get(tx, ty));
+			if (s != null)
+				job.secretPerform(h, time);
+		}
+	}
+	
+	public boolean launchFishingExpedition(Humanoid h, int tx, int ty) {
+		if (is(tx, ty)){
+			if (Job.isShip.is(SETT.ROOMS().data.get(tx,ty))) {
+				job.init(tx, ty, get(tx, ty)).jobStartPerforming();
+				if (SETT.HALFENTS().dingy.make(h, tx, ty, industries().get(0).outs().get(0).resource, get(tx, ty).upgrade(), DIR.ALL.get(Job.shipDir.get(SETT.ROOMS().data.get(tx,ty)))))
+					return true;
+			}
+		}
+		return false;
 	}
 	
 }

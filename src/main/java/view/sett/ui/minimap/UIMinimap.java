@@ -3,12 +3,9 @@ package view.sett.ui.minimap;
 import java.io.IOException;
 
 import init.C;
-import init.sprite.ICON;
-import init.sprite.UI.UI;
 import snake2d.MButt;
 import snake2d.Renderer;
 import snake2d.util.datatypes.COORDINATE;
-import snake2d.util.datatypes.DIR;
 import snake2d.util.file.*;
 import snake2d.util.gui.GuiSection;
 import snake2d.util.gui.renderable.RENDEROBJ;
@@ -17,14 +14,13 @@ import view.interrupter.InterManager;
 import view.interrupter.Interrupter;
 import view.keyboard.KEYS;
 import view.subview.GameWindow;
-import view.ui.UIPanelTop;
+import view.ui.top.UIPanelTop;
 
 public class UIMinimap extends Interrupter implements SAVABLE{
 
 	final UIMinimapMapPanel map;
 	
 	final UIMiniResources resources;
-	final UIMiniNobles nobles;
 	final UIMiniHotSpots hs;
 	final UIMiniRaces species;
 
@@ -54,29 +50,22 @@ public class UIMinimap extends Interrupter implements SAVABLE{
 		map.body().moveX2(C.WIDTH());
 		map.body().moveY1(y1);
 		
-		this.nobles = new UIMiniNobles(0, map.body().y2()+32);
-		this.resources = new UIMiniResources(1,map.body().y2()+32);
-		this.hs = new UIMiniHotSpots(2, map.body().y2()+32, w);
-		this.species = new UIMiniRaces(3, map.body().y2()+32);
-		
-		buttons = new UIMinimapButtons(0, this, w, resources, hotspots, nobility, races, env);
-		buttons.body().moveX2(C.WIDTH()-4);
-		GuiSection bg = new GuiSection();
-		bg.add(UI.PANEL().panelL.get(DIR.E, DIR.N, null, null), 0, 0);
-		while(bg.body().width()+ ICON.MEDIUM.SIZE <= UIMinimapMapPanel.WIDTH ) {
-			bg.addRight(0, UI.PANEL().panelL.get(DIR.E, DIR.N, DIR.W, null));
+		{
+			int y = map.body().y2() + UIMinimapButtons.height;
+			this.resources = new UIMiniResources(1,y);
+			this.hs = new UIMiniHotSpots(2, y, w);
+			this.species = new UIMiniRaces(3, y);
 		}
-		bg.body().moveX2(C.WIDTH());
-		bg.body().incrY(-2);
-		buttons.add(bg);
-		buttons.moveLastToBack();
+		
+		
+		buttons = new UIMinimapButtons(0, map.body().width(), this, w, resources, hotspots, nobility, races, env);
+		buttons.body().moveX2(C.WIDTH());
 		buttons.body().moveY1(map.body().y2());
 		
 		
 		
 		all = new Expansion[] {
 			this.species,
-			this.nobles,
 			this.resources,
 			this.hs,
 		};
@@ -88,7 +77,6 @@ public class UIMinimap extends Interrupter implements SAVABLE{
 		};
 		this.hs.visableSet(hotspots);
 		this.resources.visableSet(resources);
-		this.nobles.visableSet(false);
 		this.species.visableSet(races);
 		
 		update(0);

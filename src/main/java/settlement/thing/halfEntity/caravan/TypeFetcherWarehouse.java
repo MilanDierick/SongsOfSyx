@@ -4,9 +4,10 @@ import static settlement.main.SETT.*;
 
 import game.faction.FACTIONS;
 import game.faction.Faction;
+import game.faction.trade.ITYPE;
 import settlement.main.SETT;
 import util.gui.misc.GBox;
-import world.World;
+import world.WORLD;
 import world.entity.caravan.Shipment;
 
 class TypeFetcherWarehouse extends Type{
@@ -32,8 +33,7 @@ class TypeFetcherWarehouse extends Type{
 	private boolean fetch(Caravan c) {
 		c.path.clear();
 		
-		long bit = c.res().bit;
-		if (SETT.PATH().finders.resource.find(bit, bit, bit, c.ctx(), c.cty(), c.path, Integer.MAX_VALUE) != null) {
+		if (SETT.PATH().finders.resource.find(c.res().bit, c.res().bit, c.res().bit, c.ctx(), c.cty(), c.path, Integer.MAX_VALUE) != null) {
 			int am = 1;
 			am += SETT.PATH().finders.resource.reserveExtra(true, true, c.res, c.path.destX(), c.path.destY(), c.reservedGlobally-1);
 			c.reservedGlobally -= am;
@@ -67,17 +67,14 @@ class TypeFetcherWarehouse extends Type{
 			if (buyer == null || !buyer.isActive()) {
 				cancel(c);
 			}else {
-				buyer.buyer().buy(c.res(), c.amountCarried, c.tmp*c.amountCarried);
+				buyer.buyer().buy(c.res(), c.amountCarried, c.tmp*c.amountCarried, FACTIONS.player());
 				SETT.ROOMS().EXPORT.tally.sellFake(c.res(), c.amountCarried, c.tmp*c.amountCarried);
-				FACTIONS.tradeUtil().clear();
-				Shipment ss = World.ENTITIES().caravans.createTrade(FACTIONS.player().capitolRegion().cx(), FACTIONS.player().capitolRegion().cy(), buyer.capitolRegion());
+				Shipment ss = WORLD.ENTITIES().caravans.create(FACTIONS.player().capitolRegion().cx(), FACTIONS.player().capitolRegion().cy(), buyer.capitolRegion(), ITYPE.trade);
 				if (ss != null) {
-					buyer.buyer().reserveSpace(c.res(), -c.amountCarried);
 					ss.load(c.res(), c.amountCarried);
 					
 				}else {
-					buyer.buyer().reserveSpace(c.res(), -c.amountCarried);
-					buyer.buyer().addImport(c.res(), c.amountCarried);
+					buyer.buyer().deliverAndUnreserve(c.res(), c.amountCarried, ITYPE.trade);
 				}
 				c.reserved = 0;
 				c.reservedGlobally = 0;

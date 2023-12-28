@@ -2,7 +2,6 @@ package settlement.room.spirit.temple;
 
 import java.io.IOException;
 
-import settlement.main.RenderData.RenderIterator;
 import settlement.main.SETT;
 import settlement.path.AVAILABILITY;
 import settlement.room.main.*;
@@ -10,13 +9,14 @@ import settlement.room.main.furnisher.*;
 import settlement.room.main.util.RoomInit;
 import settlement.room.main.util.RoomInitData;
 import settlement.room.sprite.*;
-import settlement.tilemap.Floors.Floor;
+import settlement.tilemap.floor.Floors.Floor;
 import snake2d.SPRITE_RENDERER;
 import snake2d.util.datatypes.*;
 import snake2d.util.file.Json;
 import snake2d.util.misc.CLAMP;
 import util.gui.misc.GText;
 import util.info.GFORMAT;
+import util.rendering.RenderData.RenderIterator;
 import util.rendering.ShadowBatch;
 
 final class TempleConstructor extends Furnisher{
@@ -82,7 +82,7 @@ final class TempleConstructor extends Furnisher{
 			}
 		};
 		
-		Floor path = SETT.FLOOR().getByKey("FLOOR_PATH", init.data());
+		Floor path = SETT.FLOOR().map.getByKey("FLOOR_PATH", init.data());
 		
 		Json sj = init.data().json("SPRITES");
 		
@@ -112,8 +112,8 @@ final class TempleConstructor extends Furnisher{
 		};
 		sAltar.sData(1);
 		
-		RoomSpriteNew sEmblemS = new RoomSpriteBoxN(sAltar) {
-			RoomSpriteNew sEmblem = new RoomSprite1x1(sj, "EMBLEM_1X1");
+		RoomSpriteImp sEmblemS = new RoomSpriteBoxN(sAltar) {
+			RoomSpriteImp sEmblem = new RoomSprite1x1(sj, "EMBLEM_1X1");
 			@Override
 			protected boolean joins(int tx, int ty, int rx, int ry, DIR d, FurnisherItem item) {
 				return item.get(rx, ry) != null && item.sprite(rx, ry).sData() == 1;
@@ -134,17 +134,17 @@ final class TempleConstructor extends Furnisher{
 		};
 		sEmblemS.sData(1);
 		
-		RoomSpriteNew sEmblemL = new RoomSpriteXxX(sj, "EMBLEM_2X2", 2);
+		RoomSpriteImp sEmblemL = new RoomSpriteXxX(sj, "EMBLEM_2X2", 2);
 		
 		
-		RoomSpriteNew sB0 = new RoomSprite1xN(sj, "NICHE_A_1X1", true);
-		RoomSpriteNew sB1 = new RoomSprite1xN(sj, "NICHE_B_1X1", false);
-		RoomSpriteNew sB2 = new RoomSprite1xN(sj, "NICHE_C_1X1", false);
-		RoomSpriteNew sB3 = new RoomSprite1xN(sj, "NICHE_D_1X1", false);
+		RoomSpriteImp sB0 = new RoomSprite1xN(sj, "NICHE_A_1X1", true);
+		RoomSpriteImp sB1 = new RoomSprite1xN(sj, "NICHE_B_1X1", false);
+		RoomSpriteImp sB2 = new RoomSprite1xN(sj, "NICHE_C_1X1", false);
+		RoomSpriteImp sB3 = new RoomSprite1xN(sj, "NICHE_D_1X1", false);
 		
-		RoomSpriteNew sCS = new RoomSprite1x1(sj, "TORCH_1X1");
+		RoomSpriteImp sCS = new RoomSprite1x1(sj, "TORCH_1X1");
 		
-		RoomSpriteNew sCa = new RoomSpriteBoxN(sPedistal) {
+		RoomSpriteImp sCa = new RoomSpriteBoxN(sPedistal) {
 
 			@Override
 			public void renderBelow(SPRITE_RENDERER r, ShadowBatch s, int data, RenderIterator it, double degrade) {
@@ -164,9 +164,9 @@ final class TempleConstructor extends Furnisher{
 			}
 		};
 		
-		RoomSpriteNew sSA = new RoomSprite1xN(sj, "COFFIN_A_1X1", false);
-		RoomSpriteNew sSB = new RoomSprite1xN(sSA, true);
-		RoomSpriteNew sSC = new RoomSprite1xN(sSA, false);
+		RoomSpriteImp sSA = new RoomSprite1xN(sj, "COFFIN_A_1X1", false);
+		RoomSpriteImp sSB = new RoomSprite1xN(sSA, true);
+		RoomSpriteImp sSC = new RoomSprite1xN(sSA, false);
 		
 		wo = new FurnisherItemTile(
 				this,

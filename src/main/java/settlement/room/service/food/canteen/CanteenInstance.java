@@ -1,8 +1,7 @@
 package settlement.room.service.food.canteen;
 
-import init.resources.Edible;
-import init.resources.RESOURCES;
-import settlement.main.RenderData;
+import init.resources.*;
+import init.resources.RBIT.RBITImp;
 import settlement.main.SETT;
 import settlement.misc.job.*;
 import settlement.misc.util.RESOURCE_TILE;
@@ -17,6 +16,7 @@ import settlement.room.service.module.ROOM_SERVICER;
 import settlement.room.service.module.RoomServiceInstance;
 import snake2d.Renderer;
 import snake2d.util.datatypes.COORDINATE;
+import util.rendering.RenderData;
 import util.rendering.ShadowBatch;
 
 final class CanteenInstance extends RoomInstance implements JOBMANAGER_HASER, ROOM_PRODUCER, ROOM_SERVICER{
@@ -33,8 +33,8 @@ final class CanteenInstance extends RoomInstance implements JOBMANAGER_HASER, RO
 
 	
 	private final JobIterator jobs;
-	private long fetchMask = RESOURCES.EDI().mask;
-	private long useMask = 0;
+	private final RBITImp fetchMask = new RBITImp().or(RESOURCES.EDI().mask);
+	private final RBITImp useMask = new RBITImp();
 	final RoomServiceInstance service;
 	short tableX = -1;
 	short tableY = -1;
@@ -64,17 +64,19 @@ final class CanteenInstance extends RoomInstance implements JOBMANAGER_HASER, RO
 		}
 		pdata = blueprintI().industryFuel.makeData();
 		service = new RoomServiceInstance(m*SService.MAX, blueprintI().service);
-		maxAmount = (int) m*RESOURCES.EDI().all().size();
+		maxAmount = (int) m*2*RESOURCES.EDI().all().size();
 		
 		employees().maxSet((int) Math.ceil(blueprintI().constructor.workers.get(this)*2));
 		employees().neededSet((int) Math.ceil(blueprintI().constructor.workers.get(this)));
 		activate();
 		
-		for (Edible e : RESOURCES.EDI().all()) {
+		for (ResG e : RESOURCES.EDI().all()) {
 			if (e.resource.edibleServe) {
-				useMask |= e.resource.bit;
+				useMask.or(e.resource);
 			}
 		}
+		
+		fetchMask.and(useMask);
 	}
 
 	@Override
@@ -99,11 +101,11 @@ final class CanteenInstance extends RoomInstance implements JOBMANAGER_HASER, RO
 		
 	}
 	
-	public int amount(Edible e) {
+	public int amount(ResG e) {
 		return amounts[e.index()];
 	}
 	
-	public int amountReserved(Edible e) {
+	public int amountReserved(ResG e) {
 		return amountIncoming[e.index()];
 	}
 	
@@ -115,20 +117,20 @@ final class CanteenInstance extends RoomInstance implements JOBMANAGER_HASER, RO
 		return serviceReserved;
 	}
 	
-	public long fetchMask() {
-		return fetchMask & useMask;
+	public RBIT fetchMask() {
+		return fetchMask;
 	}
 	
-	public boolean uses(Edible e) {
-		return (useMask & e.resource.bit) != 0;
+	public boolean uses(ResG e) {
+		return useMask.has(e.resource.bit);
 	}
 	
-	public void usesToggle(Edible e) {
-		useMask ^= e.resource.bit;
+	public void usesToggle(ResG e) {
+		useMask.toggle(e.resource);
 		setMask(e);
 	}
 	
-	void tally(Edible e, int dAmount, int amountReserved) {
+	void tally(ResG e, int dAmount, int amountReserved) {
 		amounts[e.index()] += dAmount;
 		this.amountIncoming[e.index()] += amountReserved;
 		amountTotal += dAmount;
@@ -141,20 +143,24 @@ final class CanteenInstance extends RoomInstance implements JOBMANAGER_HASER, RO
 		serviceReserved += dReserved;
 	}
 	
-	void consume(Edible e, int amount, int tx, int ty) {
+	void consume(ResG e, int amount, int tx, int ty) {
 		tally(e, -amount, 0);
 		blueprintI().food.get(tx, ty).check();
 	}
 	
-	private void setMask(Edible e) {
+	private void setMask(ResG e) {
 		if (amounts[e.index()] + amountIncoming[e.index()] < maxAmount) {
-			fetchMask |= e.resource.bit;
-			jobs.searchAgainWithoutResources();
+			fetchMask.or(e.resource);
+			
 		}else {
-			fetchMask &= ~e.resource.bit;
-			if (fetchMask == 0) {
-				jobs.dontSearch();
-			}
+			fetchMask.clear(e.resource);
+			
+		}
+		fetchMask.and(useMask);
+		if (fetchMask.isClear()) {
+			jobs.dontSearch();
+		}else {
+			jobs.searchAgainWithoutResources();
 		}
 	}
 	
@@ -173,7 +179,7 @@ final class CanteenInstance extends RoomInstance implements JOBMANAGER_HASER, RO
 			}
 		}
 		
-		for (Edible e : RESOURCES.EDI().all())
+		for (ResG e : RESOURCES.EDI().all())
 			tally(e, -amounts[amI], -amountIncoming[amI]);
 		
 		for (COORDINATE c : body()) {

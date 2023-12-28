@@ -100,6 +100,7 @@ class Plans {
 		public static final DivTrajectory traj = new DivTrajectory();
 		public static boolean shouldFire;
 		public static boolean charging;
+		public static boolean shouldBreak;
 		
 		public static Army a;
 		private final INT_OE<AIManager> stateI;

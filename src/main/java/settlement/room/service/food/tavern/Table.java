@@ -2,8 +2,7 @@ package settlement.room.service.food.tavern;
 
 import static settlement.main.SETT.*;
 
-import init.resources.RESOURCE;
-import init.resources.RESOURCES;
+import init.resources.*;
 import init.sound.SoundSettlement;
 import settlement.entity.humanoid.Humanoid;
 import settlement.main.SETT;
@@ -232,7 +231,7 @@ final class Table implements FSERVICE{
 		}
 
 		@Override
-		public long jobResourceBitToFetch() {
+		public RBIT jobResourceBitToFetch() {
 			return RESOURCES.ALCOHOL().bit;
 		}
 		

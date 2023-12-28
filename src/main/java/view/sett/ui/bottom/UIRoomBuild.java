@@ -1,11 +1,11 @@
 package view.sett.ui.bottom;
 
-import game.GAME;
+import game.boosting.BOOSTABLES;
 import game.faction.FACTIONS;
 import init.D;
-import init.boostable.BOOSTABLES;
 import init.race.RACES;
 import init.race.Race;
+import init.religion.Religion;
 import init.sprite.SPRITES;
 import settlement.entity.humanoid.HCLASS;
 import settlement.environment.SettEnvMap.SettEnv;
@@ -17,10 +17,13 @@ import settlement.room.infra.monument.ROOM_MONUMENT;
 import settlement.room.main.RoomBlueprintImp;
 import settlement.room.main.RoomBlueprintIns;
 import settlement.room.main.furnisher.*;
-import settlement.room.service.module.RoomServiceDataAccess.ROOM_SERVICE_ACCESS_HASER;
-import settlement.stats.*;
+import settlement.room.service.module.RoomServiceAccess.ROOM_SERVICE_ACCESS_HASER;
+import settlement.room.spirit.shrine.ROOM_SHRINE;
+import settlement.room.spirit.temple.ROOM_TEMPLE;
+import settlement.stats.STATS;
 import settlement.stats.standing.STANDINGS;
-import snake2d.SPRITE_RENDERER;
+import settlement.stats.standing.StatStanding;
+import settlement.stats.stat.STAT;
 import snake2d.util.color.COLOR;
 import snake2d.util.color.ColorImp;
 import snake2d.util.gui.GUI_BOX;
@@ -29,7 +32,6 @@ import snake2d.util.sprite.SPRITE;
 import util.colors.GCOLOR;
 import util.dic.DicMisc;
 import util.gui.misc.GBox;
-import util.gui.misc.GText;
 import util.gui.slider.GGaugeMutable;
 import util.info.GFORMAT;
 
@@ -41,6 +43,7 @@ public final class UIRoomBuild{
 	private static CharSequence ¤¤optional = "¤(Optional)";
 	private static CharSequence ¤¤Emits = "¤Emits";
 	private static CharSequence ¤¤CurrentRooms = "¤Current Rooms";
+	private static CharSequence ¤¤CurrentBelievers = "¤Current Worshippers";
 	
 	static {
 		D.ts(UIRoomBuild.class);
@@ -50,31 +53,33 @@ public final class UIRoomBuild{
 		
 	}
 	
-	private static SPRITE sep = new SPRITE.Imp(260, 2) {
-		
-		@Override
-		public void render(SPRITE_RENDERER r, int X1, int X2, int Y1, int Y2) {
-			GCOLOR.UI().border().render(r, X1+32, X2, Y1, Y2);
-		}
-	};
-	
 	public static void hoverRoomBuild(RoomBlueprintImp b, GUI_BOX text) {
 		
 		
 		GBox box = (GBox) text;
 		box.title(b.info.name);
 		box.text(b.info.desc);
+		box.NL();
 		
-		CharSequence p = GAME.player().locks.unlockText(b);
+		if (b instanceof ROOM_TEMPLE || b instanceof ROOM_SHRINE) {
+			Religion rel = null;
+			if (b instanceof ROOM_TEMPLE) {
+				rel = ((ROOM_TEMPLE) b).religion;
+			}else {
+				rel = ((ROOM_SHRINE) b).religion;
+			}	
+			
+			box.textLL(¤¤CurrentBelievers);
+			box.add(GFORMAT.perc(box.text(), STATS.RELIGION().ALL.get(rel.index()).followers.data().getD(null)));
+			box.NL();
+			
+		}
 		
-		if (p != null) {
-			box.NL();
-			GText t = box.text();
-			t.add(p);
-			t.errorify();
-			box.add(t);
-			box.NL();
-		}else if (b instanceof RoomBlueprintIns<?>) {
+		b.reqs.hover(text, FACTIONS.player());
+		
+		box.sep();
+		
+		if (b instanceof RoomBlueprintIns<?>) {
 			RoomBlueprintIns<?> ins = (RoomBlueprintIns<?>) b;
 			box.NL(2);
 			box.textLL(¤¤CurrentRooms);
@@ -98,7 +103,7 @@ public final class UIRoomBuild{
 		
 		if (b.employment() != null) {
 			box.textLL(DicMisc.¤¤AccidentRate);
-			box.add(GFORMAT.perc(box.text(), b.employment().accidentsPerYear*100 / (1+BOOSTABLES.CIVICS().ACCIDENT.get(null, null))));
+			box.add(GFORMAT.perc(box.text(), b.employment().accidentsPerYear*100 / (1+BOOSTABLES.CIVICS().ACCIDENT.get(RACES.clP(null, null)))));
 			box.NL();
 		}
 		
@@ -153,13 +158,9 @@ public final class UIRoomBuild{
 					
 					box.add(SPRITES.icons().s.arrow_right);
 					
-					double add = FACTIONS.player().bonus().add(i.bonus());;
-					double mul = FACTIONS.player().bonus().mul(i.bonus());
-					
 					for (int ri = 0; ri < i.outs().size(); ri++) {
 						IndustryResource r = i.outs().get(ri);
-						
-						box.add(r.resource.icon()).add(GFORMAT.fRel(box.text(), (r.rate+add)*mul, r.rate));
+						box.add(r.resource.icon()).add(GFORMAT.fRel(box.text(), (r.rate*i.bonus().get(FACTIONS.player())), r.rate));
 						if (ri < i.outs().size()-1)
 							box.add(SPRITES.icons().s.plus);
 					}
@@ -167,28 +168,21 @@ public final class UIRoomBuild{
 					
 				}
 				
-				p = GAME.player().locks.unlockText(i);
-				
-				if (p != null) {
+				if (!i.lockable().passes(FACTIONS.player())) {
 					box.add(SPRITES.icons().m.lock);
 					box.NL();
-					GText t = box.text();
-					t.add(p);
-					t.errorify();
-					box.add(t);
+					i.lockable().hover(text, FACTIONS.player());
 				}
 				
-				box.NL(2);
-				box.add(sep);
-				box.NL(8);
+				box.sep();
 			}
 			
-			if (BOOSTABLES.ROOMS().boosts(b).size() > 0) {
+			if (b.bonus() != null) {
 				int tab = 0;
 				for (Race r : RACES.all()) {
 					box.tab(tab*2);
 					box.add(r.appearance().icon);
-					double d = RACES.bonus().priorityCapped(r, b.employment());
+					double d = RACES.boosts().getNorSkill(r, b.employment());
 					GGaugeMutable.bad2Good(ColorImp.TMP, d);
 					int am = (int) Math.ceil(0.1 + d*3);
 					am = CLAMP.i(am, 0, 3);
@@ -225,14 +219,14 @@ public final class UIRoomBuild{
 			double min = 0;
 			double max = 0;
 			for (Race r : RACES.all()) {
-				STANDING d =  stat.standing();
+				StatStanding d =  stat.standing();
 				if (d.definition(r).inverted)
 					min = Math.max(min, d.definition(r).get(HCLASS.CITIZEN).max);
 				else
 					max = Math.max(max, d.definition(r).get(HCLASS.CITIZEN).max);
 			}
 			for (Race r : RACES.all()) {
-				STANDING d =  stat.standing();
+				StatStanding d =  stat.standing();
 				COLOR c = GCOLOR.UI().GOOD.hovered;
 				SPRITE sp = SPRITES.icons().s.arrowUp;
 				int am = (int) (3*Math.ceil(CLAMP.d(d.definition(r).get(HCLASS.CITIZEN).max/max, 0, max)));
@@ -259,6 +253,8 @@ public final class UIRoomBuild{
 			
 			
 		}
+		
+
 		
 	}
 	

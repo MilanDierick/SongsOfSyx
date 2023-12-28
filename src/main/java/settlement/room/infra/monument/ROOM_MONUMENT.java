@@ -6,7 +6,6 @@ import java.io.IOException;
 
 import settlement.environment.SettEnvMap.SettEnv;
 import settlement.environment.SettEnvMap.SettEnvValue;
-import settlement.main.RenderData.RenderIterator;
 import settlement.main.SETT;
 import settlement.path.AVAILABILITY;
 import settlement.path.finder.SFinderRoomService;
@@ -16,7 +15,7 @@ import settlement.room.main.furnisher.*;
 import settlement.room.main.util.RoomInit;
 import settlement.room.main.util.RoomInitData;
 import settlement.room.sprite.*;
-import settlement.stats.STANDING.StandingDef;
+import settlement.stats.standing.StatStanding.StandingDef;
 import snake2d.SPRITE_RENDERER;
 import snake2d.util.datatypes.AREA;
 import snake2d.util.datatypes.DIR;
@@ -24,6 +23,7 @@ import snake2d.util.file.*;
 import snake2d.util.misc.CLAMP;
 import snake2d.util.sets.LISTE;
 import util.gui.misc.GBox;
+import util.rendering.RenderData.RenderIterator;
 import util.rendering.ShadowBatch;
 import view.sett.ui.room.UIRoomModule;
 
@@ -166,7 +166,7 @@ public final class ROOM_MONUMENT extends RoomBlueprintImp{
 			this.env = env;
 			
 			Json sData = init.data().json("SPRITES");
-			floor = new RoomSpriteComboN(sData, "FLOOR_COMBO") {
+			floor = new RoomSpriteCombo(sData, "FLOOR_COMBO") {
 				@Override
 				protected boolean joins(int tx, int ty, int rx, int ry, DIR d, FurnisherItem item) {
 					return item.get(rx, ry) != null;

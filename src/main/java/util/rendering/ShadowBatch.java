@@ -8,6 +8,7 @@ import snake2d.util.sprite.TextureCoords;
 public abstract class ShadowBatch implements SPRITE_RENDERER{
 
 	public abstract ShadowBatch setHeight(int height);
+	public abstract ShadowBatch setHeightUI(double height);
 	public abstract ShadowBatch setDistance2Ground(double height);
 	public abstract ShadowBatch setDistance2GroundUI(double height);
 	
@@ -18,23 +19,29 @@ public abstract class ShadowBatch implements SPRITE_RENDERER{
 	
 	public static class Real extends ShadowBatch{
 		
-		private double dD = 127;
-		private int iterations;
+		protected double dD = 127;
+		protected int iterations;
 		
 		
-		private int startX;
-		private int startY;
-		private double x;
-		private double y;
-		private double dx;
-		private double dy;
-		private boolean bx;
-		private int lastHeight = -1;
-		private final byte SoftShadow = 127;
-		private final byte fullShadow = -1;
-		private byte streangth = SoftShadow;
-		private byte prev = streangth;
-		private int zoomout;
+		protected int startX;
+		protected int startY;
+		protected double x;
+		protected double y;
+		protected double dx;
+		protected double dy;
+		protected boolean bx;
+		protected int lastHeight = -1;
+		protected final byte SoftShadow = 127;
+		protected final byte fullShadow = -1;
+		protected byte streangth = SoftShadow;
+		protected byte prev = streangth;
+		protected int zoomout;
+		
+		protected double[] xs = new double[32];
+		protected double[] ys = new double[32];
+		protected double[] dds = new double[32];
+		protected int[] iis = new int[32];
+		
 		
 		public void init(int zoomout, double dx, double dy){
 			
@@ -43,13 +50,17 @@ public abstract class ShadowBatch implements SPRITE_RENDERER{
 			
 			bx = Math.abs(x) > Math.abs(y);
 			this.zoomout = zoomout;
+			
+			for (int i = 0; i < iis.length; i++) {
+				psetHeight(i);
+				xs[i] = this.dx;
+				ys[i] = this.dy;
+				iis[i] = iterations;
+				dds[i] = dD;
+			}
 		}
 		
-		@Override
-		public ShadowBatch setHeight(int height){
-			
-			if (height == lastHeight)
-				return this;
+		private void psetHeight(int height){
 			
 			lastHeight = height;
 			
@@ -72,7 +83,54 @@ public abstract class ShadowBatch implements SPRITE_RENDERER{
 			dy/=iterations;
 			
 			dD = (127.0/iterations);
+
+		}
+		
+		@Override
+		public ShadowBatch setHeight(int height){
+			
+			if (height == lastHeight)
+				return this;
+			
+
+			lastHeight = height;
+			
+			if (height < iis.length) {
+				dx = xs[height];
+				dy = ys[height];
+				iterations = iis[height];
+				dD = dds[height];
+				return this;
+
+			}
+			
+			psetHeight(height);
+
 			return this;
+		}
+		
+		@Override
+		public ShadowBatch setHeightUI(double height) {
+		
+			dx = 0.5*height;
+			dy = 0.5*height;
+			
+			if (bx){
+				iterations = (int) Math.abs(dx);
+			}else{
+				iterations = (int) Math.abs(dy);
+			}
+			
+			iterations = (int) Math.ceil((double)height);
+			//iterations/= C.SCALE;
+			iterations = 1 + (iterations >> (zoomout));
+			
+			
+			dx/=iterations;
+			dy/=iterations;
+			
+			dD = (127.0/iterations);
+			return null;
 		}
 		
 		@Override
@@ -137,8 +195,12 @@ public abstract class ShadowBatch implements SPRITE_RENDERER{
 			CORE.renderer().shadowDepthSet(streangth);
 			return this;
 		}
+
+
 		
 	}
+	
+
 	
 	public static final ShadowBatch DUMMY = new Dummy();
 	
@@ -189,6 +251,12 @@ public abstract class ShadowBatch implements SPRITE_RENDERER{
 
 		@Override
 		public ShadowBatch setPrev() {
+			// TODO Auto-generated method stub
+			return null;
+		}
+
+		@Override
+		public ShadowBatch setHeightUI(double height) {
 			// TODO Auto-generated method stub
 			return null;
 		}

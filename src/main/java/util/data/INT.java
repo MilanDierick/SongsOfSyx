@@ -54,8 +54,8 @@ public interface INT extends DOUBLE{
 	
 	public static class IntImp implements INTE, SAVABLE {
 
-		private int i;
-		private final int min,max;
+		public int i;
+		public int min,max;
 		
 		public IntImp() {
 			this(Integer.MIN_VALUE, Integer.MAX_VALUE);

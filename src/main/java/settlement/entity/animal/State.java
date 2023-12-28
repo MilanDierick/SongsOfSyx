@@ -354,8 +354,10 @@ enum State {
 			return;
 		otherSet(a, other);
 		
-		boolean shouldFlee = flee || other instanceof Animal || a.cub || a.ran > a.species().danger;
-		shouldFlee = true;
+		boolean shouldFlee = flee || other instanceof Animal || a.cub;
+		
+		if (!shouldFlee)
+			shouldFlee = !ANIMALS().spawn.isTimeForAKill(a.species());
 		
 		if (shouldFlee) {
 			a.speed.turn2(other.body().cX()+RND.rInt0(C.TILE_SIZEH), other.body().cY()+RND.rInt0(C.TILE_SIZEH), a.body().cX(), a.body().cY());
@@ -406,13 +408,15 @@ enum State {
 		int tx = a.tc().x();
 		int ty = a.tc().y();
 		DIR d = a.speed.dir();
-		for (int i = 0; i < DIR.ORTHO.size(); i++) {
+		for (int i = 0; i < DIR.ALL.size(); i++) {
 			if (!SETT.PATH().solidity.is(tx, ty, d)) {
+				a.speed.setRaw(d, 1.0);
 				break;
 			}
-			a.speed.turn90();
-			d = d.next(2);
+			d = d.next(1);
 		}
+		
+		
 	}
 
 	void meet(Animal a, ENTITY other) {

@@ -2,7 +2,8 @@ package view.sett.ui.room;
 
 import init.D;
 import init.sprite.SPRITES;
-import settlement.main.*;
+import settlement.main.ON_TOP_RENDERABLE;
+import settlement.main.SETT;
 import settlement.path.components.SCompFinder.SCompPath;
 import settlement.room.main.*;
 import settlement.room.main.job.ROOM_RADIUS;
@@ -21,6 +22,7 @@ import util.data.INT.INTE;
 import util.gui.misc.GBox;
 import util.gui.misc.GHeader;
 import util.gui.slider.GGaugeMutable;
+import util.rendering.RenderData;
 import util.rendering.ShadowBatch;
 import view.sett.ui.room.Modules.ModuleMaker;
 

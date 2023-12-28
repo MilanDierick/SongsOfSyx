@@ -5,7 +5,6 @@ import init.RES;
 import settlement.army.*;
 import settlement.army.formation.DivDeployer.DivDeployB;
 import settlement.army.order.DivTDataTask;
-import settlement.main.RenderData;
 import settlement.main.SETT;
 import snake2d.SPRITE_RENDERER;
 import snake2d.util.datatypes.RECTANGLE;
@@ -13,6 +12,7 @@ import snake2d.util.datatypes.VectorImp;
 import snake2d.util.map.MAP_BOOLEAN;
 import snake2d.util.sets.ArrayList;
 import snake2d.util.sets.LIST;
+import util.rendering.RenderData;
 
 public class DivDeployerUser {
 

@@ -4,7 +4,9 @@ import init.race.RACES;
 import init.race.Race;
 import init.race.appearence.RAddon;
 import settlement.entity.humanoid.spirte.HSpriteConst.CLAY;
-import settlement.stats.*;
+import settlement.stats.Induvidual;
+import settlement.stats.STATS;
+import settlement.stats.colls.StatsAppearance;
 import snake2d.Renderer;
 import snake2d.util.color.*;
 import snake2d.util.sprite.TILE_SHEET;
@@ -129,7 +131,7 @@ public final class HCorpseRenderer {
 			double decay, 
 			Renderer r, ShadowBatch s, int x, int y) {
 		
-		int ran = (int) ((indu.randomness2() >> 16) & 7);
+		int ran = (int) ((STATS.RAN().get(indu, 16)) & 7);
 		
 		x += CLAY.off;
 		y += CLAY.off;

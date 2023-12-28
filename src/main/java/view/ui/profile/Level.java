@@ -1,15 +1,14 @@
 package view.ui.profile;
 
 import game.GAME;
+import game.boosting.BoostSpec;
 import game.faction.FACTIONS;
 import game.faction.player.PLevels;
 import game.faction.player.PTitles.PTitle;
+import game.values.Lock;
 import init.D;
-import init.boostable.BBoost;
-import init.sprite.SPRITES;
+import init.sprite.UI.UI;
 import settlement.entity.humanoid.HCLASS;
-import settlement.entity.humanoid.HTYPE;
-import settlement.room.main.RoomBlueprintImp;
 import settlement.stats.STATS;
 import snake2d.SPRITE_RENDERER;
 import snake2d.util.color.COLOR;
@@ -17,13 +16,15 @@ import snake2d.util.color.OPACITY;
 import snake2d.util.datatypes.DIR;
 import snake2d.util.gui.GUI_BOX;
 import snake2d.util.gui.GuiSection;
-import snake2d.util.gui.Hoverable.HOVERABLE;
 import snake2d.util.gui.renderable.RENDEROBJ;
+import snake2d.util.sprite.SPRITE;
 import util.colors.GCOLOR;
+import util.dic.DicMisc;
 import util.gui.misc.*;
 import util.gui.table.GScrollRows;
 import util.info.GFORMAT;
-import world.World;
+import world.WORLD;
+import world.regions.data.RD;
 
 
 final class Level extends GuiSection{
@@ -40,7 +41,7 @@ final class Level extends GuiSection{
 				text().add(¤¤Title);
 				text().insert(0, FACTIONS.player().level().current().name());
 				text().insert(1, FACTIONS.player().ruler().name);
-				text().insert(2, FACTIONS.player().appearence().name());
+				text().insert(2, FACTIONS.player().name);
 				text().adjustWidth();
 				super.render(r, ds, isHovered);
 			};
@@ -96,7 +97,15 @@ final class Level extends GuiSection{
 			
 			@Override
 			public void update(GText text) {
-				GFORMAT.i(text, STATS.POP().POP.data(HCLASS.CITIZEN).get(null) + World.ARMIES().cityDivs().total());
+				GFORMAT.i(text, STATS.POP().POP.data(null).get(null) + WORLD.ARMIES().cityDivs().total());
+			}
+		}.hv(DicMisc.¤¤Population));
+		
+		stats.addRightCAbs(120, new GStat() {
+			
+			@Override
+			public void update(GText text) {
+				GFORMAT.i(text, STATS.POP().POP.data(HCLASS.CITIZEN).get(null) + WORLD.ARMIES().cityDivs().total());
 			}
 		}.hv(HCLASS.CITIZEN.names));
 		
@@ -104,17 +113,9 @@ final class Level extends GuiSection{
 			
 			@Override
 			public void update(GText text) {
-				GFORMAT.i(text, STATS.POP().POP.data(HCLASS.NOBLE).get(null));
+				GFORMAT.i(text, STATS.POP().POP.data(null).get(null) + WORLD.ARMIES().cityDivs().total() + RD.RACES().population.faction().get(FACTIONS.player()) -RD.RACES().population.get(FACTIONS.player().realm().capitol()));
 			}
-		}.hv(HCLASS.NOBLE.names));
-		
-		stats.addRightCAbs(120, new GStat() {
-			
-			@Override
-			public void update(GText text) {
-				GFORMAT.i(text,  FACTIONS.player().kingdom().realm().population().get(null));
-			}
-		}.hv(HTYPE.SUBJECT.names));
+		}.hv(DicMisc.¤¤Subjects));
 		
 		addRelBody(0, DIR.S, stats);
 		
@@ -124,7 +125,11 @@ final class Level extends GuiSection{
 			rens[i] = new TRow(GAME.player().level().all().get(i));
 		}
 		
-		RENDEROBJ r = new GScrollRows(rens, height-getLastY2()-16, 0).view();
+		int h = height-getLastY2()-16;
+		int am = h /rens[0].body().height();
+		h = am *rens[0].body().height();
+		
+		RENDEROBJ r = new GScrollRows(rens, h, 0).view();
 		
 		addDownC(8, r);
 	}
@@ -135,42 +140,40 @@ final class Level extends GuiSection{
 		
 		TRow(PLevels.Level l){
 			this.l = l;
+
+			int w = 500;
+
 			add(new GHeader(l.name()));
-			HOVERABLE h = new GStat() {
-				
-				@Override
-				public void update(GText text) {
-					text.add(l.popNeeded());
-				}
-			}.hh(SPRITES.icons().s.human);
-			h.body().moveX1(250).moveCY(this.body().cY());
-			add(h);
-			body().incrW(100);
 			
-			body().incrH(18);
+			body().setWidth(w);
 			
 			GuiSection s = new GuiSection();
 			
-			int m = 0;
-			for (BBoost b : l.boosts()) {
-				s.addRightC(80, b.boostable.icon());
-				if (m++ > 4)
+			for (BoostSpec b : l.boosters.all()) {
+				s.addRightC(2, b.boostable.icon);
+				if (s.body().width() + s.getLast().width() >= w-body().width())
+					break;
+			}
+			s.body().moveX2(w);
+			s.body().moveCY(body().cY());
+			absorb(s);
+			
+			
+			s = new GuiSection();
+			s.body().setHeight(32);
+			for (Lock<?> b : l.lockers.all()) {
+				s.addRightC(8, b.lockable.icon);
+				if (s.body().width() + s.getLast().width() >= w)
 					break;
 			}
 			s.body().moveX1(body().x1());
-			s.body().moveY2(body().y2());
-			merge(s);
+			s.body().moveY1(body().y2()+8);
+			absorb(s);
+
+			SPRITE nn = new GText(UI.FONT().H2, GFORMAT.toNumeral(l.index()+1));
+			add(nn, -16*4, 0);
 			
-			body().incrH(32);
-			s = new GuiSection();
-			for (RoomBlueprintImp b : l.roomsUnlocks()) {
-				s.addRightC(8, b.iconBig());
-				
-			}
-			s.body().moveX1(body().x1());
-			s.body().moveY2(body().y2());
-			merge(s);
-			pad(4);
+			pad(8);
 		}
 		
 		@Override
@@ -179,7 +182,7 @@ final class Level extends GuiSection{
 			GCOLOR.UI().bg().render(r, body(), -1);
 			super.render(r, ds);
 			if (l.index() > GAME.player().level().current().index()) {
-				OPACITY.O75.bind();
+				OPACITY.O50.bind();
 				COLOR.BLACK.render(r, body(), -1);
 				OPACITY.unbind();
 			}

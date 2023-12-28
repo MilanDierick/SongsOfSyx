@@ -14,6 +14,8 @@ public abstract class Tool {
 	
 	protected abstract void click(GameWindow window);
 	
+	
+	
 	protected ToolConfig defaultConfig() {
 		return normal;
 	}

@@ -2,7 +2,12 @@ package snake2d.util.sprite;
 
 import snake2d.CORE;
 import snake2d.SPRITE_RENDERER;
-import snake2d.util.datatypes.*;
+import snake2d.util.color.COLOR;
+import snake2d.util.color.OPACITY;
+import snake2d.util.datatypes.COORDINATE;
+import snake2d.util.datatypes.DIMENSION;
+import snake2d.util.datatypes.DIR;
+import snake2d.util.datatypes.RECTANGLE;
 
 public abstract interface SPRITE extends DIMENSION{
 
@@ -39,6 +44,14 @@ public abstract interface SPRITE extends DIMENSION{
 		render(r, x1, x1+width(), cy-height()/2, cy-height()/2+height());
 	}
 	
+	public default void renderCX(SPRITE_RENDERER r, int cx, int y1){
+		render(r, cx-width()/2, cx-width()/2+width(), y1, y1+height());
+	}
+	
+	public default void renderCXY2(SPRITE_RENDERER r, int cx, int y2){
+		render(r, cx-width()/2, cx-width()/2+width(), y2-height(), y2);
+	}
+	
 	public default void renderC(SPRITE_RENDERER r, RECTANGLE c){
 		renderC(r, c.cX(), c.cY());
 	}
@@ -63,6 +76,107 @@ public abstract interface SPRITE extends DIMENSION{
 	
 	public default TextureCoords texture() {
 		return null;
+	}
+	
+	public default SPRITE twin(SPRITE b, DIR align, int shadow) {
+		SPRITE s = new SPRITE.Imp(width(), height()) {
+			
+			@Override
+			public void render(SPRITE_RENDERER r, int X1, int X2, int Y1, int Y2) {
+				SPRITE.this.render(r, X1, X2, Y1, Y2);
+				int w = X2-X1;
+				int h = Y2-Y1;
+				
+				double scaleX = (double)w/width();
+				double scaleY = (double)h/height();
+				
+				int sw = (int) (b.width()*scaleX);
+				int sh = (int) (b.height()*scaleY);
+				
+				int dx = (w-sw)/2;
+				int dy = (h-sh)/2;
+				
+				int x1 = X1+dx + align.x()*dx;
+				int y1 = Y1+dy + align.y()*dy;
+				
+				if (shadow > 0) {
+					OPACITY.O75.bind();
+					COLOR.BLACK.bind();
+					int sx = (int) (shadow*scaleX);
+					int sy = (int) (shadow*scaleY);
+					b.render(r, x1+sx, x1+sw+sx, y1+sy, y1+sh+sy);
+					OPACITY.unbind();
+					COLOR.unbind();
+				}
+				
+				b.render(r, x1, x1+sw, y1, y1+sh);
+				
+				
+			}
+		};
+		
+		return s;
+	}
+	
+	public default SPRITE scaled(double scale) {
+		return new SPRITE.Scaled(this, scale);
+	}
+	
+	public default SPRITE resized(int size) {
+		SPRITE o = this;
+		return new SPRITE.Imp(size) {
+			
+			@Override
+			public void render(SPRITE_RENDERER r, int X1, int X2, int Y1, int Y2) {
+				o.renderC(r, X1+(X2-X1)/2, Y1+(Y2-Y1)/2);
+			}
+		};
+	}
+	
+	public default SPRITE createColored(COLOR color) {
+		return new SPRITE() {
+			
+			@Override
+			public int width() {
+				return SPRITE.this.width();
+			}
+			
+			@Override
+			public int height() {
+				return SPRITE.this.height();
+			}
+			
+			@Override
+			public void renderTextured(TextureCoords texture, int X1, int X2, int Y1, int Y2) {
+				// TODO Auto-generated method stub
+				
+			}
+			
+			@Override
+			public void render(SPRITE_RENDERER r, int X1, int X2, int Y1, int Y2) {
+				color.bind();
+				SPRITE.this.render(r, X1, X2, Y1, Y2);
+				COLOR.unbind();
+				
+			}
+		};
+		
+	}
+	
+	public class Resized extends Imp{
+		
+		private final SPRITE other;
+		
+		public Resized(SPRITE other, int dim){
+			super(dim);
+			this.other = other;
+		}
+
+		@Override
+		public void render(SPRITE_RENDERER r, int X1, int X2, int Y1, int Y2) {
+			other.render(r, X1, X2, Y1, Y2);
+		}
+		
 	}
 	
 	public abstract class Imp implements SPRITE {
@@ -104,6 +218,56 @@ public abstract interface SPRITE extends DIMENSION{
 		
 	}
 	
+	public class Wrap implements SPRITE {
+		
+		protected int width,height;
+		private final DIR align;
+		private final SPRITE other;
+		
+		public Wrap(SPRITE other, int width, int height, DIR align){
+			this.width = width;
+			this.height = height;
+			this.align = align;
+			this.other = other;
+		}
+		
+		public Wrap(SPRITE other, int width, int height){
+			this(other, width, height, DIR.C);
+		}
+
+		@Override
+		public int width() {
+			return width;
+		}
+
+		@Override
+		public int height() {
+			return height;
+		}
+		
+		@Override
+		public void render(SPRITE_RENDERER r, int X1, int X2, int Y1, int Y2) {
+			int w = X2-X1;
+			int h = Y2-Y1;
+			int dh = (h-other.height())/2;
+			int dw = (h-other.width())/2;
+			
+			int cx = X1+w/2;
+			int cy = Y1+h/2;
+			cx += dw*align.x();
+			cy += dh*align.y();
+			other.renderC(r, cx, cy);
+			
+		}
+
+		@Override
+		public void renderTextured(TextureCoords texture, int X1, int X2, int Y1, int Y2) {
+			// TODO Auto-generated method stub
+			
+		}
+		
+	}
+	
 	public class Twin implements SPRITE {
 		
 		private final int w,h;
@@ -113,7 +277,7 @@ public abstract interface SPRITE extends DIMENSION{
 			this.a = a;
 			this.b = b;
 			w = a.width();
-			h =a.height();
+			h = a.height();
 		}
 
 		@Override
@@ -134,17 +298,61 @@ public abstract interface SPRITE extends DIMENSION{
 		@Override
 		public void render(SPRITE_RENDERER r, int X1, int X2, int Y1, int Y2) {
 			a.render(r, X1, X2, Y1, Y2);
-			b.render(r, X1, X2, Y1, Y2);
+			int dx = (X2-X1)/2;
+			int CX = X1+dx;
+			dx *= (double)a.width()/b.width();
+			
+			int dy = (Y2-Y1)/2;
+			int CY = Y1+dy;
+			dy *= (double)a.height()/b.height();
+			
+			b.render(r, CX-dx, CX+dx, CY-dy, CY+dy);
 		}
 		
 	}
 	
-	public class SpriteImp implements SPRITE, TextureCoords{
+	public class Scaled implements SPRITE {
 		
-		public final short x1;
-		public final short x2;
-		public final short y1;
-		public final short y2;
+		private final int w,h;
+		private final SPRITE a;
+		
+		public Scaled(SPRITE a, double scale){
+			this.a = a;
+			w = (int) (a.width()*scale);
+			h = (int) (a.height()*scale);
+		}
+		
+		public Scaled(SPRITE a, int w, int h){
+			this.a = a;
+			this.w = w;
+			this.h = h;
+		}
+
+		@Override
+		public int width() {
+			return w;
+		}
+
+		@Override
+		public int height() {
+			return h;
+		}
+
+		@Override
+		public void renderTextured(TextureCoords texture, int X1, int X2, int Y1, int Y2) {
+
+		}
+
+		@Override
+		public void render(SPRITE_RENDERER r, int X1, int X2, int Y1, int Y2) {
+			a.render(r, X1, X2, Y1, Y2);
+		}
+		
+	}
+	
+	public class SpriteImp extends TextureCoords implements SPRITE{
+		
+
 		
 		protected final int gameWidth;
 		protected final int gameHeight;
@@ -156,6 +364,12 @@ public abstract interface SPRITE extends DIMENSION{
 			this.y2 = (short) y2;
 			this.gameWidth = gameWidth;
 			this.gameHeight = gameHeight;
+		}
+		
+		public SpriteImp(TextureCoords other, int w, int h){
+			get(other);
+			this.gameWidth = w;
+			this.gameHeight = h;
 		}
 
 		@Override
@@ -178,26 +392,6 @@ public abstract interface SPRITE extends DIMENSION{
 		public void renderTextured(TextureCoords other, int X1, int X2, int Y1, int Y2) {
 			CORE.renderer().renderTextured(X1, X2, Y1, Y2, 
 					other, this);
-		}
-
-		@Override
-		public short x1() {
-			return x1;
-		}
-
-		@Override
-		public short x2() {
-			return x2;
-		}
-
-		@Override
-		public short y1() {
-			return y1;
-		}
-
-		@Override
-		public short y2() {
-			return y2;
 		}
 
 		@Override

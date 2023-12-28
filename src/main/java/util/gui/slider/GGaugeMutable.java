@@ -1,7 +1,7 @@
 package util.gui.slider;
 
-import init.sprite.ICON;
 import init.sprite.SPRITES;
+import init.sprite.UI.Icon;
 import init.sprite.UI.UI;
 import snake2d.MButt;
 import snake2d.SPRITE_RENDERER;
@@ -36,7 +36,7 @@ public class GGaugeMutable extends CLICKABLE.ClickableAbs{
 		if (f != UI.FONT().M )
 			text = new GText(UI.FONT().S, 100);
 		this.d = d;
-		body.setDim(width, ICON.MEDIUM.SIZE);
+		body.setDim(width, Icon.M);
 		repetativeSet(true);
 	}
 	
@@ -97,16 +97,16 @@ public class GGaugeMutable extends CLICKABLE.ClickableAbs{
 		
 
 		if (isActive && !big && leftHovered(rTmp)) {
-			renderColor(r, GCOLOR.UI().bgHov().hovered, rTmp.x1(), buttonX1(rTmp)+ICON.MEDIUM.SIZE/2);
+			renderColor(r, GCOLOR.UI().bgHov().hovered, rTmp.x1(), buttonX1(rTmp)+Icon.M/2);
 			SPRITES.icons().s.minus.render(r, rTmp.x1(), rTmp.y1()+4);
 		}else {
 			bad2Good(col, d.getD());
-			renderColor(r, col, rTmp.x1(), buttonX1(rTmp)+ICON.MEDIUM.SIZE/2);
+			renderColor(r, col, rTmp.x1(), buttonX1(rTmp)+Icon.M/2);
 		}
 		
 		if (isActive && !big && rightHovered(rTmp)) {
-			renderColor(r, GCOLOR.UI().bgHov().hovered, buttonX1(rTmp)+ICON.MEDIUM.SIZE/2, rTmp.x2()-3);
-			SPRITES.icons().s.plus.render(r, rTmp.x2()-ICON.SMALL.SIZE, rTmp.y1()+4);
+			renderColor(r, GCOLOR.UI().bgHov().hovered, buttonX1(rTmp)+Icon.M/2, rTmp.x2()-3);
+			SPRITES.icons().s.plus.render(r, rTmp.x2()-Icon.S, rTmp.y1()+4);
 		}else {
 			
 		}
@@ -157,7 +157,7 @@ public class GGaugeMutable extends CLICKABLE.ClickableAbs{
 	}
 	
 	int adjustWidth(int width, DOUBLE d){
-		return (int) (ICON.MEDIUM.SIZE/2 + (width-ICON.MEDIUM.SIZE)*d.getD());
+		return (int) (Icon.M/2 + (width-Icon.M)*d.getD());
 	}
 	
 	protected void setColor(DOUBLE d, ColorImp imp, boolean hovered) {
@@ -172,7 +172,7 @@ public class GGaugeMutable extends CLICKABLE.ClickableAbs{
 	}
 	
 	private int buttonX1(RECTANGLE body) {
-		int w = body.width()-ICON.MEDIUM.SIZE;
+		int w = body.width()-Icon.M;
 		return (int) (body.x1() + d.getD()*w);
 	}
 	
@@ -187,7 +187,7 @@ public class GGaugeMutable extends CLICKABLE.ClickableAbs{
 	private boolean rightHovered(RECTANGLE body) {
 		COORDINATE c = VIEW.mouse();
 		if (c.isWithinRec(body)) {
-			return c.x() > buttonX1(body)+ICON.MEDIUM.SIZE;
+			return c.x() > buttonX1(body)+Icon.M;
 		}
 		return false;
 	}
@@ -196,7 +196,7 @@ public class GGaugeMutable extends CLICKABLE.ClickableAbs{
 		COORDINATE c = VIEW.mouse();
 		if (c.isWithinRec(body)) {
 			int x1 =  buttonX1(body);
-			return c.x() > x1 && c.x() < x1+ICON.MEDIUM.SIZE;
+			return c.x() > x1 && c.x() < x1+Icon.M;
 		}
 		return false;
 	}
@@ -229,8 +229,8 @@ public class GGaugeMutable extends CLICKABLE.ClickableAbs{
 	
 	private void set(RECTANGLE body) {
 		COORDINATE c = VIEW.mouse();
-		double w = body.width()-ICON.MEDIUM.SIZE;
-		double de = c.x()-body.x1()-ICON.MEDIUM.SIZE/2;
+		double w = body.width()-Icon.M;
+		double de = c.x()-body.x1()-Icon.M/2;
 		de = CLAMP.d(de/w, 0, 1);
 		d.setD(de);
 	}

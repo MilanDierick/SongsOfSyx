@@ -3,7 +3,6 @@ package settlement.room.infra.inn;
 import java.io.IOException;
 
 import init.sprite.SPRITES;
-import settlement.main.RenderData.RenderIterator;
 import settlement.main.SETT;
 import settlement.path.AVAILABILITY;
 import settlement.room.main.*;
@@ -11,11 +10,12 @@ import settlement.room.main.furnisher.*;
 import settlement.room.main.util.RoomInit;
 import settlement.room.main.util.RoomInitData;
 import settlement.room.sprite.*;
-import settlement.tilemap.Floors.Floor;
+import settlement.tilemap.floor.Floors.Floor;
 import snake2d.SPRITE_RENDERER;
 import snake2d.util.datatypes.AREA;
 import snake2d.util.datatypes.DIR;
 import snake2d.util.file.Json;
+import util.rendering.RenderData.RenderIterator;
 import util.rendering.ShadowBatch;
 
 final class Constructor extends Furnisher{
@@ -31,7 +31,7 @@ final class Constructor extends Furnisher{
 	public static final int IHEAD = 1;
 	public static final int ITAIL = 2;
 	private static final int IWALL = 3;
-	private final RoomSpriteComboN walls;
+	private final RoomSpriteCombo walls;
 	
 	FurnisherItemGroup mgroup;
 
@@ -39,7 +39,7 @@ final class Constructor extends Furnisher{
 			throws IOException {
 		super(init, 3, 3, 88, 44);
 		this.blue = blue;
-		floor2 = SETT.FLOOR().get(init.data().value("FLOOR2"), init.data());
+		floor2 = SETT.FLOOR().map.get(init.data().value("FLOOR2"), init.data());
 		
 		Json sp = init.data().json("SPRITES");
 		
@@ -88,7 +88,7 @@ final class Constructor extends Furnisher{
 		
 		final RoomSprite stop = new RoomSprite1x1(sp, "TABLE_TOP_1X1");
 		
-		RoomSprite sTable = new RoomSpriteComboN(sp, "TABLE_COMBO") {
+		RoomSprite sTable = new RoomSpriteCombo(sp, "TABLE_COMBO") {
 			
 			
 			
@@ -158,7 +158,7 @@ final class Constructor extends Furnisher{
 
 		};
 		
-		walls = new RoomSpriteComboN(sp, "WALLS_COMBO");
+		walls = new RoomSpriteCombo(sp, "WALLS_COMBO");
 		
 		RoomSprite sNick = new RoomSprite1x1(sp, "NICKNACK_1X1");	
 		

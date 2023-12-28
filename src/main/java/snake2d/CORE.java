@@ -5,6 +5,7 @@ import java.nio.charset.Charset;
 import java.util.List;
 
 import snake2d.util.misc.ERROR_HANDLER;
+import snake2d.util.misc.OS;
 import snake2d.util.sets.ArrayList;
 import snake2d.util.sets.LIST;
 
@@ -34,9 +35,7 @@ public class CORE {
 	public static void init(ERROR_HANDLER error) {
 
 		glThread = Thread.currentThread();
-
 		Errors.init(error);
-
 		Thread.currentThread().setUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
 			@Override
 			public void uncaughtException(Thread t, Throwable e) {
@@ -67,7 +66,7 @@ public class CORE {
 
 		List<String> JREargs = ManagementFactory.getRuntimeMXBean().getInputArguments();
 		Printer.ln("SYSTEM INFO");
-		Printer.ln("---Running on a: " + platform);
+		Printer.ln("---Running on a: " + platform + " " + OS.get());
 		String bits = System.getProperty("sun.arch.data.model");
 		Printer.ln("---jre: " + jre + " bits: " + bits);
 		Printer.ln("---charset: " + Charset.defaultCharset());
@@ -81,6 +80,10 @@ public class CORE {
 		Printer.ln("      Used: " + (run.totalMemory() - run.freeMemory()) / mb);
 		Printer.ln("      Max: " + run.maxMemory() / mb);
 		Printer.ln("---JRE Input Arguments : ", JREargs);
+		Printer.ln("---JRE cp : ", System.getProperty("java.class.path"));
+		
+		
+		
 		Printer.fin();
 
 		if (created) {
@@ -257,6 +260,13 @@ public class CORE {
 									+ s.getLineNumber() + ")");
 						}
 					}
+					StackTraceElement[] elements = updater.getStackTrace();
+					for (int i = 0; i < elements.length; i++) {
+						StackTraceElement s = elements[i];
+						Printer.ln("\tat " + s.getClassName() + "." + s.getMethodName() + "(" + s.getFileName() + ":"
+								+ s.getLineNumber() + ")");
+					}
+					Printer.ln();
 					killSwitch = System.currentTimeMillis();
 				}
 			}

@@ -1,6 +1,6 @@
 package view.world;
 
-import static world.World.*;
+import static world.WORLD.*;
 
 import java.io.IOException;
 
@@ -18,8 +18,10 @@ import view.keyboard.KEYS;
 import view.main.VIEW;
 import view.subview.GameWindow;
 import view.tool.ToolManager;
-import view.ui.UIPanelTop;
-import world.World;
+import view.ui.top.UIPanelTop;
+import view.world.panel.IDebugPanelWorld;
+import view.world.panel.WorldViewPanel;
+import world.WORLD;
 
 public class WorldView extends VIEW.ViewSub{
 	
@@ -35,22 +37,26 @@ public class WorldView extends VIEW.ViewSub{
 	
 	
 	public final ToolManager tools;
-	public final WorldUI  UI  = new WorldUI(uiManager);
+	public final WorldUI  UI;
 	public final ISidePanels panels = new ISidePanels(uiManager, 0);
-	final IDebugPanelWorld debug = new IDebugPanelWorld(uiManager);
+	public final IDebugPanelWorld debug = new IDebugPanelWorld(uiManager);
 	
 	public WorldView(){
 		
 		UIPanelTop p = new UIPanelTop(uiManager);
-		p.addNoti();
-		new WorldViewPanel(p);
-		new WorldIIMinimap(p, uiManager, window);
+		//p.addNoti();
+		new WorldViewPanel(this, p);
+		
+		
 		tools = new ToolManager(uiManager, window);
+		UI  = new WorldUI(uiManager, panels, tools);
 		tools.setDefault(new ToolDefault(tools));
 	}
 
 	@Override
 	public void activate() {
+		if (VIEW.current() == this)
+			return;
 		super.activate();
 		
 		window.stop();
@@ -100,7 +106,7 @@ public class WorldView extends VIEW.ViewSub{
 	@Override
 	protected void load(FileGetter file) throws IOException {
 		window.saver.load(file);
-		World.MINIMAP().repaint();
+		WORLD.MINIMAP().repaint();
 //		for (Region r : World.REGIONS().all()) {
 //			
 //		}

@@ -2,6 +2,7 @@ package settlement.room.knowledge.library;
 
 import static settlement.main.SETT.*;
 
+import init.resources.RBIT;
 import init.resources.RESOURCE;
 import init.sound.SoundSettlement.Sound;
 import settlement.entity.humanoid.Humanoid;
@@ -72,10 +73,10 @@ class Job implements SETT_JOB{
 	}
 
 	@Override
-	public long jobResourceBitToFetch() {
+	public RBIT jobResourceBitToFetch() {
 		if (paper.get(data) < 1)
 			return ins.blueprintI().industry.ins().get(0).resource.bit;
-		return 0;
+		return null;
 	}
 	
 	@Override

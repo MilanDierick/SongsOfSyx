@@ -12,10 +12,10 @@ import settlement.entity.ENTITY;
 import settlement.entity.humanoid.*;
 import settlement.entity.humanoid.ai.types.prisoner.AIModule_Prisoner;
 import settlement.main.SETT;
-import settlement.stats.CAUSE_LEAVE;
 import settlement.stats.STATS;
 import settlement.stats.law.LAW;
 import settlement.stats.law.PRISONER_TYPE;
+import settlement.stats.util.CAUSE_LEAVE;
 import settlement.thing.ThingsCorpses.Corpse;
 import snake2d.util.file.*;
 import snake2d.util.misc.ACTION;
@@ -135,8 +135,13 @@ public final class EventKiller extends EVENTS.EventResource{
 		if (timer.getD() > 0) {
 			if (ds > 0)
 				timer.incD(-ds);
-			if (timer.getD() < 0)
-				init();
+			if (timer.getD() < 0) {
+				if (SETT.ROOMS().PRISON.instancesSize() > 0) {
+					init();
+				}else
+					reset();
+				
+			}
 			
 			if (rate > 0) {
 				rate -= ds*rateSpeed;

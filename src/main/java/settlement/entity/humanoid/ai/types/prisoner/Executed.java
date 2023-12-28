@@ -9,9 +9,9 @@ import settlement.entity.humanoid.ai.main.*;
 import settlement.entity.humanoid.ai.main.AISUB.AISubActivation;
 import settlement.main.SETT;
 import settlement.room.law.execution.ExecutionStation;
-import settlement.stats.CAUSE_LEAVE;
 import settlement.stats.STATS;
 import settlement.stats.law.LAW;
+import settlement.stats.util.CAUSE_LEAVE;
 import snake2d.util.rnd.RND;
 
 class Executed extends AIPLAN.PLANRES{
@@ -120,7 +120,7 @@ class Executed extends AIPLAN.PLANRES{
 					s.clientClear();
 				LAW.process().execution.inc(a.race());
 				PrisonerData.self.reportedPunish.set(d, 1);
-				GAME.stats().EXECUTIONS.inc(1);
+				GAME.count().EXECUTIONS.inc(1);
 				STATS.NEEDS().INJURIES.count.setD(a.indu(), 1.0);
 				a.kill(false, CAUSE_LEAVE.EXECUTED);
 				
@@ -143,7 +143,7 @@ class Executed extends AIPLAN.PLANRES{
 		protected AISubActivation res(Humanoid a, AIManager d) {
 			LAW.process().execution.inc(a.race());
 			PrisonerData.self.reportedPunish.set(d, 1);
-			GAME.stats().EXECUTIONS.inc(1);
+			GAME.count().EXECUTIONS.inc(1);
 			AIManager.dead = CAUSE_LEAVE.EXECUTED;
 			cancel(a, d);
 			return null;

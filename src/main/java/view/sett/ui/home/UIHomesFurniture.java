@@ -40,7 +40,7 @@ final class UIHomesFurniture extends GuiSection{
 		
 		
 		
-		LinkedList<RES_AMOUNT> all = new LinkedList<RES_AMOUNT>(RACES.homeResMax(null));
+		LinkedList<RES_AMOUNT> all = new LinkedList<RES_AMOUNT>(RACES.res().homeResMax(null));
 		LinkedList<RENDEROBJ> rows = new LinkedList<>();
 		
 		while(!all.isEmpty()) {

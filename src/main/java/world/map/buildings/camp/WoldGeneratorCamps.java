@@ -1,6 +1,6 @@
 package world.map.buildings.camp;
 
-import static world.World.*;
+import static world.WORLD.*;
 
 import init.biomes.*;
 import snake2d.util.datatypes.COORDINATE;
@@ -8,13 +8,13 @@ import snake2d.util.datatypes.DIR;
 import snake2d.util.rnd.RND;
 import snake2d.util.sets.ArrayList;
 import snake2d.util.sets.Tree;
-import world.World;
+import world.WORLD;
 
 public final class WoldGeneratorCamps {
 	
 	public WoldGeneratorCamps() {
 		
-		WorldCamp cc = World.camps();
+		WorldCamp cc = WORLD.camps();
 		
 		ArrayList<WW> spots = new ArrayList<>(cc.types.size());
 		for (int i = 0; i < cc.types.size(); i++)
@@ -23,15 +23,15 @@ public final class WoldGeneratorCamps {
 		
 		for (COORDINATE c : TBOUNDS()) {
 			
-			if (!REGIONS().haser.is(c))
+			if (!REGIONS().map.is(c))
 				continue;
-			if (World.REGIONS().isCentre.is(c))
+			if (WORLD.REGIONS().map.isCentre.is(c))
 				continue;
-			if (World.MOUNTAIN().haser.is(c.x(), c.y()))
+			if (WORLD.MOUNTAIN().haser.is(c.x(), c.y()))
 				continue;
-			if (World.WATER().has.is(c))
+			if (WORLD.WATER().has.is(c))
 				continue;
-			if (World.FOREST().amount.get(c) > 0.25)
+			if (WORLD.FOREST().amount.get(c) > 0.25)
 				continue;
 			
 			CLIMATE cl = CLIMATE().getter.get(c);
@@ -52,12 +52,12 @@ public final class WoldGeneratorCamps {
 			Coovalue c = w.spots.pollGreatest();
 			
 			for (DIR d : DIR.ALLC) {
-				if (World.BUILDINGS().camp.map.get(c.tx, c.ty, d) != null) {
+				if (WORLD.BUILDINGS().camp.map.get(c.tx, c.ty, d) != null) {
 					continue other;
 				}
 			}
 			
-			World.camps().create(c.tx, c.ty, w.w, RND.rFloat());
+			WORLD.camps().create(c.tx, c.ty, w.w, RND.rFloat());
 			w.am--;
 			
 			

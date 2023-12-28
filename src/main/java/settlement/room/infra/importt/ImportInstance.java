@@ -4,7 +4,6 @@ import static settlement.main.SETT.*;
 
 import init.resources.RESOURCE;
 import init.resources.RESOURCES;
-import settlement.main.RenderData;
 import settlement.misc.util.RESOURCE_TILE;
 import settlement.room.main.RoomInstance;
 import settlement.room.main.TmpArea;
@@ -13,6 +12,7 @@ import settlement.room.main.util.RoomState;
 import settlement.room.main.util.RoomState.RoomStateInstance;
 import snake2d.Renderer;
 import snake2d.util.datatypes.COORDINATE;
+import util.rendering.RenderData;
 import util.rendering.ShadowBatch;
 
 public final class ImportInstance extends RoomInstance {

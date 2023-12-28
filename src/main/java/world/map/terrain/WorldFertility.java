@@ -1,6 +1,6 @@
 package world.map.terrain;
 
-import static world.World.*;
+import static world.WORLD.*;
 
 import java.io.IOException;
 
@@ -9,7 +9,7 @@ import snake2d.util.file.FilePutter;
 import snake2d.util.map.MAP_DOUBLE;
 import snake2d.util.map.MAP_DOUBLEE;
 import snake2d.util.misc.CLAMP;
-import world.World.WorldResource;
+import world.WORLD.WorldResource;
 
 public final class WorldFertility extends WorldResource{
 

@@ -7,8 +7,18 @@ public final class PreLoader {
 	private static Process preloader;
 	
 	public static void load(String version, String pathToImage, String pathToIcon) {
+		
+
 		exit();
-		preloader = Proccesser.exec(PreLoaderSwing.class, new String[] {}, new String[] {version, pathToImage, pathToIcon});
+		try {
+			preloader = Proccesser.exec(PreLoaderSwing.class, new String[] {}, new String[] {version, pathToImage, pathToIcon}, new String[] {});
+		}catch(Exception e) {
+			PreLoader.exit();
+			e.printStackTrace();
+			return;
+		}
+		
+		
 	}
 	
 	public static void exit() {
@@ -24,7 +34,11 @@ public final class PreLoader {
 		if (p.isAlive()) {
 			try {
 				p.getOutputStream().write('s');
-				p.destroy();
+				p.getOutputStream().write('s');
+				p.getOutputStream().write('s');
+				p.getOutputStream().write('s');
+				p.getOutputStream().flush();
+				//p.destroy();
 				//p.waitFor();
 			} catch (Exception e) {
 				e.printStackTrace();

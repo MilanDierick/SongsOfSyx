@@ -3,6 +3,8 @@ package menu;
 import init.C;
 import snake2d.CORE;
 import snake2d.SPRITE_RENDERER;
+import snake2d.util.color.COLOR;
+import snake2d.util.color.OPACITY;
 import snake2d.util.datatypes.*;
 import snake2d.util.light.AmbientLight;
 import snake2d.util.light.Fire;
@@ -24,6 +26,8 @@ final class Background {
 	Fire torch2 = new Fire(7);
 	Fire torch3 = new Fire(0.2);
 	private final TILE_SHEET tiles;
+	
+	static RECTANGLE shadow;
 	
 	Background(RECTANGLE bounds2){
 		
@@ -99,6 +103,14 @@ final class Background {
 		//pillsmall2.render(ds);
 		//pillbig.render(ds);
 		//Sprites.foreground.render(0, bounds.getY2()-Sprites.foreground.getGameHeight(), forBounds);
+		
+		if (shadow != null) {
+			OPACITY.O50.bind();
+			COLOR.BLACK.render(r, shadow);
+			shadow = null;
+			OPACITY.unbind();
+		}
+		
 	}
 	
 	public void renderFame(SPRITE_RENDERER r, float ds, COORDINATE mCoo, int ran){

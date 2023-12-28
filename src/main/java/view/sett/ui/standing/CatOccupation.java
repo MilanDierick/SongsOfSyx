@@ -1,17 +1,18 @@
 package view.sett.ui.standing;
 
 import init.D;
-import init.boostable.BOOSTABLES;
-import init.sprite.ICON;
+import init.sprite.UI.Icon;
 import init.sprite.UI.UI;
 import settlement.entity.humanoid.HCLASS;
 import settlement.entity.humanoid.HTYPE;
 import settlement.main.SETT;
 import settlement.room.infra.elderly.ROOM_RESTHOME;
 import settlement.room.knowledge.university.ROOM_UNIVERSITY;
-import settlement.room.main.RoomEmploymentSimple;
-import settlement.stats.*;
+import settlement.room.main.employment.RoomEmploymentSimple;
+import settlement.stats.STATS;
 import settlement.stats.standing.STANDINGS;
+import settlement.stats.stat.STAT;
+import settlement.stats.stat.StatCollection;
 import snake2d.SPRITE_RENDERER;
 import snake2d.util.color.COLOR;
 import snake2d.util.color.OPACITY;
@@ -70,13 +71,22 @@ class CatOccupation extends Cat {
 				s.hoverInfoSet(u.info.desc);
 				s.addRightC(0, new RENDEROBJ.Sprite(u.iconBig()));
 				s.addRightC(8, new GText(UI.FONT().S, u.info.names));
-				s.addRightC(8, new GStat() {
+				s.add(new GStat() {
 					
 					@Override
 					public void update(GText text) {
 						GFORMAT.iofk(text, u.employment().employed(), u.employment().neededWorkers());
 					}
-				});
+				}.hh(UI.icons().s.citizen), 0, s.body().y2()+2);
+				
+				s.add(new GStat() {
+					
+					@Override
+					public void update(GText text) {
+						GFORMAT.f(text, u.bonus().get(HCLASS.CITIZEN.get(CitizenMain.current)));
+					}
+				}.hh(UI.icons().s.clock), 0, s.body().y2()+2);
+				
 				
 				
 				INTE in = new INTE() {
@@ -102,7 +112,7 @@ class CatOccupation extends Cat {
 					}
 				
 				};
-				s.addRightC(64, new GGaugeMutable(in, 120).hoverTitleSet(u.limit.info().name).hoverInfoSet(u.limit.info().desc));
+				s.addRightC(128, new GGaugeMutable(in, 120).hoverTitleSet(u.limit.info().name).hoverInfoSet(u.limit.info().desc));
 				
 				rens.add(s);
 			}
@@ -129,11 +139,11 @@ class CatOccupation extends Cat {
 						b.text(STATS.EDUCATION().EDUCATION.info().desc);
 						
 						b.NL(8);
-						b.textLL(BOOSTABLES.INFO().names);
+						b.textLL(DicMisc.¤¤Boosts);
 						b.NL();
 						for (RoomEmploymentSimple e : SETT.ROOMS().employment.ALLS()) {
 							if (e.educationFactor > 0) {
-								b.add(e.blueprint().iconBig().nomal);
+								b.add(e.blueprint().iconBig().small);
 								b.text(e.blueprint().info.names);
 								b.tab(6);
 								b.add(GFORMAT.f0(b.text(), e.educationFactor));
@@ -166,11 +176,11 @@ class CatOccupation extends Cat {
 						b.text(STATS.EDUCATION().policyIndoctor.info().desc);
 						
 						b.NL(8);
-						b.textLL(BOOSTABLES.INFO().names);
+						b.textLL(DicMisc.¤¤Boosts);
 						b.NL();
 						for (RoomEmploymentSimple e : SETT.ROOMS().employment.ALLS()) {
 							if (e.indoctorFactor > 0) {
-								b.add(e.blueprint().iconBig().nomal);
+								b.add(e.blueprint().iconBig().small);
 								b.text(e.blueprint().info.names);
 								b.tab(6);
 								b.add(GFORMAT.f0(b.text(), e.indoctorFactor));
@@ -191,14 +201,6 @@ class CatOccupation extends Cat {
 			
 			{
 				GuiSection s = new GuiSection();
-				
-				s.addRightCAbs(180, new GStat() {
-					
-					@Override
-					public void update(GText text) {
-						GFORMAT.f(text, BOOSTABLES.RATES().LEARNING_SKILL.get(HCLASS.CITIZEN, CitizenMain.current));
-					}
-				}.hv(BOOSTABLES.RATES().LEARNING_SKILL));
 				
 				s.addRightCAbs(180, new GStat() {
 					
@@ -239,7 +241,7 @@ class CatOccupation extends Cat {
 			final ROOM_RESTHOME h = hh;
 			
 			
-			SPRITE icon = new SPRITE.Imp(ICON.BIG.SIZE) {
+			SPRITE icon = new SPRITE.Imp(Icon.L) {
 				
 				@Override
 				public void render(SPRITE_RENDERER r, int X1, int X2, int Y1, int Y2) {

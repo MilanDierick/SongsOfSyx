@@ -3,7 +3,6 @@ package settlement.room.home.chamber;
 import java.io.IOException;
 
 import init.sprite.game.Sheets;
-import settlement.main.RenderData.RenderIterator;
 import settlement.path.AVAILABILITY;
 import settlement.room.main.*;
 import settlement.room.main.furnisher.*;
@@ -13,6 +12,7 @@ import settlement.room.sprite.*;
 import snake2d.SPRITE_RENDERER;
 import snake2d.util.datatypes.DIR;
 import snake2d.util.file.Json;
+import util.rendering.RenderData.RenderIterator;
 import util.rendering.ShadowBatch;
 
 final class Constructor extends Furnisher{
@@ -99,7 +99,7 @@ final class Constructor extends Furnisher{
 			}
 		};
 		
-		RoomSprite sCarpets = new RoomSpriteComboN(sp, "CARPET_COMBO") {
+		RoomSprite sCarpets = new RoomSpriteCombo(sp, "CARPET_COMBO") {
 			@Override
 			protected boolean joins(int tx, int ty, int rx, int ry, DIR d, FurnisherItem item) {
 				return item.sprite(rx, ry) == this;

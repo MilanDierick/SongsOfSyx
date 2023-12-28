@@ -12,7 +12,7 @@ import snake2d.util.sprite.TextureCoords;
 
 public class Font {
 
-	private static final short[] map = new short[0x0FFFF];
+	public static final short[] map = new short[0x0FFFF];
 	private static int renderableChars;
 	public static CharSequence set;
 	private final static int space = 32;
@@ -67,7 +67,10 @@ public class Font {
 	private final int height;
 	private double scale = 1.0;
 	private final Texture texture = new Texture();
+	public final int maxCWidth;
 
+	private final int DY;
+	
 	public Font(Font m, double scale) {
 		this(m.glyphs, m.height, m.scale*scale);
 	}
@@ -79,7 +82,14 @@ public class Font {
 		this.height = height;
 		this.scale = scale;
 		this.glyphs = glyphs;
-
+		int m = 0;
+		int dmi = Integer.MAX_VALUE;
+		for (FontGlyph g : glyphs) {
+			m = Math.max(m, g.width+g.trail);
+			dmi = Math.min(dmi, g.descent);
+		}
+		DY = -dmi/2;
+		maxCWidth = m;
 	}
 
 	public String getName() {
@@ -143,7 +153,8 @@ public class Font {
 
 		while (end < c.length()) {
 			end = getEndIndex(c, start, width);
-			rows[h] = c.subSequence(start, end);
+			if (h < rows.length)
+				rows[h] = c.subSequence(start, end);
 			h += 1;
 			start = getStartIndex(c, end);
 		}
@@ -223,7 +234,7 @@ public class Font {
 	}
 	
 	public int renderCX(SPRITE_RENDERER r, int cx, int y1, CharSequence s, double scale) {
-		COORDINATE c = getDim(s);
+		COORDINATE c = getDim(s, Integer.MAX_VALUE, scale);
 		int w = c.x();
 		int h = c.y();
 		cx -= w/2;
@@ -430,7 +441,7 @@ public class Font {
 		return size(glyphs[i].width+glyphs[i].trail, scale);
 	}
 	
-	private int getBack(char prev, char next, double scale) {
+	public int getBack(char prev, char next, double scale) {
 		int pi = map(prev);
 		if (pi < 0)
 			return 0;
@@ -464,7 +475,7 @@ public class Font {
 		int y2 = y+height(scalee);
 		
 		
-		int dy = size(glyphs[i].descent, scalee);
+		int dy = size(glyphs[i].descent + DY, scalee);
 		r.renderSprite(x, x2, y+dy, y2+dy, texture.set(i));
 
 	}
@@ -481,9 +492,7 @@ public class Font {
 		return new Text(this, width);
 	}
 	
-	private final class Texture implements TextureCoords {
-
-		private short x1, x2, y1, y2;
+	private final class Texture extends TextureCoords {
 
 		private Texture set(int ascii) {
 			x1 = glyphs[ascii].tx1;
@@ -493,25 +502,6 @@ public class Font {
 			return this;
 		}
 
-		@Override
-		public short y2() {
-			return y2;
-		}
-
-		@Override
-		public short y1() {
-			return y1;
-		}
-
-		@Override
-		public short x2() {
-			return x2;
-		}
-
-		@Override
-		public short x1() {
-			return x1;
-		}
 	};
 	
 	public static class FontGlyph implements SAVABLE {

@@ -17,7 +17,6 @@ public interface MapRoomData extends MAP_INT{
 
 		private final int[] dataI = new int[TAREA];
 		
-		
 		@Override
 		public void save(FilePutter file) {
 			file.is(dataI);
@@ -80,7 +79,6 @@ public interface MapRoomData extends MAP_INT{
 	public default void inc(ROOMA r, int tile, int value) {
 		set(r, tile, get(tile)+value);
 	}
-	
 	
 	public default void set(ROOMA r, COORDINATE c, int value) {
 		set(r, c.x(), c.y(), value);

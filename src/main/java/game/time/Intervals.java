@@ -4,6 +4,7 @@ import java.io.IOException;
 
 import game.GAME;
 import game.GAME.GameResource;
+import game.Profiler;
 import snake2d.util.file.FileGetter;
 import snake2d.util.file.FilePutter;
 import snake2d.util.rnd.RND;
@@ -30,7 +31,7 @@ public final class Intervals extends GameResource{
 	}
 	
 	@Override
-	protected void update(float ds){
+	protected void update(float ds, Profiler prof){
 		i20 += ds*20.0;
 		i15 += ds*15;
 		i10 += ds*10;

@@ -5,6 +5,8 @@ import static settlement.main.SETT.*;
 import java.io.Serializable;
 
 import init.RES;
+import init.resources.RBIT;
+import init.resources.RBIT.RBITImp;
 import init.resources.RESOURCE;
 import settlement.misc.job.JOB_MANAGER;
 import settlement.misc.job.SETT_JOB;
@@ -18,8 +20,8 @@ public abstract class JobIterator implements JOB_MANAGER, Serializable{
 	private final RoomInstance ins;
 	private final Coo search = new Coo();
 	private boolean hasSearchedAll;
-	private long resSearch;
-	private long resNotFound;
+	private final RBITImp resSearch = new RBITImp();
+	private final RBITImp resNotFound = new RBITImp();
 	private boolean alwaysNew = false;
 	private boolean randomize = false;
 	
@@ -41,42 +43,39 @@ public abstract class JobIterator implements JOB_MANAGER, Serializable{
 	}
 	
 	@Override
-	public SETT_JOB reportResourceMissing(long resMask, int jx, int jy) {
-		resSearch |= resMask;
-		resNotFound |= resMask;
+	public SETT_JOB reportResourceMissing(RBIT resMask, int jx, int jy) {
+		resSearch.or(resMask);
+		resNotFound.or(resMask);
 		return getReservableJob();
 	}
 	
 	@Override
-	public void reportResourceFound(long res) {
-		resSearch &= ~res;
-		resNotFound &= ~res;
+	public void reportResourceFound(RESOURCE res) {
+		resSearch.clear(res);
+		resNotFound.clear(res);
 		return;
 	}
 	
 	private boolean resourceCheck(SETT_JOB j) {
-		if (j.jobResourceBitToFetch() == 0) {
+		if (j.jobResourceBitToFetch() == null) {
 			return true;
 		}
 		if (!PATH().finders.resource.normal.has(j.jobCoo().x(), j.jobCoo().y(), j.jobResourceBitToFetch())) {
-			resSearch |= j.jobResourceBitToFetch();
+			resSearch.or(j.jobResourceBitToFetch());
 			return false;
 		}
-		if ((j.jobResourceBitToFetch() & resSearch) != 0)
-			return false;
-
-		return (j.jobResourceBitToFetch() & resSearch) == 0;
-
+		return !resSearch.hasAll(j.jobResourceBitToFetch());
+			
 	}
 	
 	@Override
 	public boolean resourceReachable(RESOURCE res) {
-		return (resNotFound & res.bit) == 0;
+		return !resNotFound.has(res.bit);
 	}
 	
 	@Override
 	public boolean resourceShouldSearch(RESOURCE res) {
-		return (resSearch & res.bit) == 0;
+		return !resSearch.has(res.bit);
 	}
 	
 	private SETT_JOB getReservableJob() {
@@ -163,14 +162,14 @@ public abstract class JobIterator implements JOB_MANAGER, Serializable{
 	protected abstract SETT_JOB init(int tx, int ty);
 	
 	public void searchAgain() {
-		resSearch = 0;
+		resSearch.clear();
 		this.hasSearchedAll = false;
 	}
 	
 	@Override
 	public void resetResourceSearch() {
-		resSearch = 0;
-		resNotFound = 0;
+		resSearch.clear();
+		resNotFound.clear();
 		
 	}
 	

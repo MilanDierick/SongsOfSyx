@@ -1,10 +1,11 @@
 package view.sett.ui.subject;
 
 import game.GAME;
+import game.boosting.BoostSpec;
+import game.faction.FACTIONS;
 import game.nobility.Nobility;
 import init.C;
 import init.D;
-import init.boostable.BBoost;
 import init.resources.RES_AMOUNT;
 import init.settings.S;
 import init.sprite.SPRITES;
@@ -12,9 +13,8 @@ import settlement.main.SETT;
 import settlement.room.home.HOME;
 import settlement.room.main.RoomInstance;
 import settlement.stats.STATS;
-import settlement.stats.StatsMultipliers.StatMultiplier;
-import settlement.stats.StatsMultipliers.StatMultiplierAction;
-import settlement.stats.standing.STANDINGS;
+import settlement.stats.muls.StatsMultipliers.StatMultiplier;
+import settlement.stats.muls.StatsMultipliers.StatMultiplierAction;
 import snake2d.util.datatypes.COORDINATE;
 import snake2d.util.datatypes.DIR;
 import snake2d.util.gui.GUI_BOX;
@@ -90,7 +90,7 @@ final class SInfoActions extends GuiSection{
 			
 			@Override
 			protected void clickA() {
-				if (GAME.NOBLE().active() < GAME.player().level().current().noblesAllowed() && a.a.office() == null) {
+				if (GAME.NOBLE().active() < GAME.NOBLE().MAX.get(FACTIONS.player()) && a.a.office() == null && !a.a.isRemoved()) {
 					VIEW.inters().popup.show(popup, this);
 				}
 			}
@@ -101,7 +101,7 @@ final class SInfoActions extends GuiSection{
 				text.title(¤¤Elevate);
 				if (a.a.office() != null)
 					text.text(¤¤NobleAlready);
-				if (GAME.NOBLE().active() < GAME.player().level().current().noblesAllowed())
+				if (GAME.NOBLE().active() < GAME.NOBLE().MAX.get(FACTIONS.player()))
 					text.text(¤¤NobleOk);
 				else
 					((GBox)text).error(¤¤NobleNo);
@@ -267,7 +267,7 @@ final class SInfoActions extends GuiSection{
 			
 			@Override
 			protected void renAction() {
-				activeSet(m.available(a.a.indu().clas()) && !m.consumeIs(a.a) && (m.markIs(a.a) || m.canBeMarked(a.a.indu())));
+				activeSet(m.available(a.a.indu()) && !m.consumeIs(a.a) && (m.markIs(a.a) || m.canBeMarked(a.a.indu())));
 				selectedSet(m.markIs(a.a) || m.consumeIs(a.a));
 			};
 			
@@ -278,14 +278,12 @@ final class SInfoActions extends GuiSection{
 				b.text(m.desc);
 				b.NL(8);
 				
-				if (!m.available(a.a.indu().clas())){
+				if (!m.available(a.a.indu())){
 					b.add(b.text().errorify().add(¤¤ActionNotFor).s().add(a.a.indu().clas().names));
 				}else if (m.consumeIs(a.a)){
 					b.textL(¤¤ActionConsumed);
-					b.NL(4);
-					b.textLL(STANDINGS.get(a.a.indu().clas()).info().name);
-					b.tab(5);
-					b.add(GFORMAT.percInc(b.text(), m.multiplier(a.a)-1));
+					m.boosters.hover(text, 1.0, -1);
+
 				}else if(m.markIs(a.a)) {
 					b.textL(¤¤ActionMarked);
 				}else if(!m.canBeMarked(a.a.indu())) {
@@ -293,12 +291,7 @@ final class SInfoActions extends GuiSection{
 					b.NL(4);
 					m.info(b, 1);
 				}else {
-					b.NL(4);
-					b.textLL(STANDINGS.get(a.a.indu().clas()).info().name);
-					b.tab(5);
-					b.add(GFORMAT.percInc(b.text(), m.max(a.a.indu().clas(), a.a.indu().race())-1));
-					b.NL(8);
-					m.info(b, 1);
+					m.boosters.hover(text, 1.0, -1);
 				}
 				
 				
@@ -327,8 +320,7 @@ final class SInfoActions extends GuiSection{
 					text.title(n.info().name);
 					text.text(n.info().desc);
 					text.NL(8);
-					
-					n.BOOSTER.hover(text);
+					n.boosters.hover(text, 1.0, -1);
 				}
 				
 				@Override
@@ -338,7 +330,7 @@ final class SInfoActions extends GuiSection{
 				
 				@Override
 				protected void clickA() {
-					if (n.subject() == null) {
+					if (n.subject() == null && !a.a.isRemoved()) {
 						a.a.officeSet(n);
 						VIEW.inters().popup.close();
 					}
@@ -349,10 +341,10 @@ final class SInfoActions extends GuiSection{
 			GuiSection boo = new GuiSection();
 			
 			int am = 0;
-			for (BBoost bo : n.BOOSTER.boosts()) {
+			for (BoostSpec bo : n.boosters.all()) {
 				if (am++ > 14)
 					break;
-				boo.addRightC(8, bo.boostable.icon());
+				boo.addRightC(8, bo.boostable.icon);
 			}
 			
 			

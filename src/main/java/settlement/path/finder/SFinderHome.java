@@ -5,7 +5,8 @@ import settlement.entity.humanoid.Humanoid;
 import settlement.main.SETT;
 import settlement.path.components.SComponent;
 import settlement.room.home.HOME;
-import settlement.room.home.HOME_TYPE;
+import settlement.room.home.HOMET;
+import settlement.room.home.HomeSettings.HomeSetting;
 import settlement.room.main.RoomInstance;
 import settlement.room.main.throne.THRONE;
 import settlement.stats.STATS;
@@ -15,10 +16,7 @@ import snake2d.util.datatypes.Coo;
 public final class SFinderHome implements SFINDER {
 
 	private Coo current = new Coo();
-	private HOME_TYPE type1;
-	private HOME_TYPE type2;
-	private HOME_TYPE type3;
-	
+	private HOMET type;
 
 	public SFinderHome() {
 		
@@ -69,11 +67,7 @@ public final class SFinderHome implements SFINDER {
 		
 
 		
-		type1 = HOME_TYPE.getGeneral(h);
-		type2 = HOME_TYPE.getSpecific(h);
-		type3 = HOME_TYPE.getSpecific2(h);
-		
-		
+		type = HOMET.get(h);
 		
 		if (findP(h, path)) {
 			HOME old = STATS.HOME().GETTER.get(h, this);
@@ -118,7 +112,7 @@ public final class SFinderHome implements SFINDER {
 
 	@Override
 	public boolean isInComponent(SComponent c, double distance) {
-		if (SETT.PATH().comps.data.home.has(c, type1) || SETT.PATH().comps.data.home.has(c, type2) || SETT.PATH().comps.data.home.has(c, type3))
+		if (SETT.PATH().comps.data.home.has(c, type))
 			return true;
 		if (c.is(current))
 			return true;
@@ -133,9 +127,9 @@ public final class SFinderHome implements SFINDER {
 		HOME home = HOME.getS(tx, ty, this);
 		if (home == null)
 			return false;
-		HOME_TYPE t = home.availability();
+		HomeSetting s = home.availability();
 		home.done();
-		if ((t == type1 || t == type2 || t == type3))
+		if (s != null && s.is(type))
 			return true;
 		return false;
 	}

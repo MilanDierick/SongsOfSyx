@@ -111,6 +111,16 @@ public class UIDecor{
 		}
 	}.get());
 	
+	public final SPRITE mouseHov = ISprite.gui(new ISpriteData() {
+
+		@Override
+		protected SpriteData init(ComposerUtil c, ComposerSources s, ComposerDests d) {
+			s.full.init(s.full.body().x2(), s.full.body().y1(), 1, 1, 1, 1, d.s24);
+			s.full.setSkip(1, 0).paste(true);
+			return d.s24.saveSprite();
+		}
+	}.get());
+	
 	public final SPRITE up = new ITileSprite(32,16,C.SG) {
 
 		@Override

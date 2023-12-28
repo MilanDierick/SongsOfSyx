@@ -15,7 +15,7 @@ public class ThingsGore{
 	static{
 		for (int i = 0; i < colRan.length; i++) {
 			for (int k = 0; k < colRan[i].length; k++)
-				colRan[i][k] = RND.rFloat1(0.1);
+				colRan[i][k] = (float) (0.5 + 0.5*RND.rFloat());
 		}
 	}
 
@@ -45,10 +45,10 @@ public class ThingsGore{
 			clouds[i] = new Gore_BloodCloud(i);
 		}
 		
-		this.flesh = new GoreHolder(all, flesht);
-		this.drop = new GoreHolder(all, dropst);
-		this.clouds = new GoreHolder(all, clouds);
-		this.drops = new GoreHolder(all, dropss);
+		this.flesh = new GoreHolder(all, flesht, false);
+		this.drop = new GoreHolder(all, dropst, true);
+		this.clouds = new GoreHolder(all, clouds, false);
+		this.drops = new GoreHolder(all, dropss, true);
 	}
 	
 	void update(float ds) {
@@ -60,7 +60,7 @@ public class ThingsGore{
 	}
 	
 	public void explode(ENTITY e, COLOR col){
-		for (int i = 0; i < 5; i++){
+		for (int i = 0; i < 15; i++){
 			flesh(e, col);
 		}
 //		for (int i = 0; i < 5; i++){
@@ -130,10 +130,13 @@ public class ThingsGore{
 	public final static class GoreHolder extends ThingFactory<Gore>{
 		
 		private final Gore[] gore;
+		private final boolean slow;
+		private double t = 10;
 		
-		GoreHolder(LISTE<ThingFactory<?>> all, Gore[] gore){
+		GoreHolder(LISTE<ThingFactory<?>> all, Gore[] gore, boolean slow){
 			super(all, gore.length);
 			this.gore = gore;
+			this.slow = slow;
 		}
 		
 		public void make(ENTITY e, COLOR col){
@@ -151,17 +154,28 @@ public class ThingsGore{
 		
 		@Override
 		void update(float ds) {
+			if (slow) {
+				t -= ds;
+				if (t > 0)
+					return;
+				t = 10;
+				ds = 10;
+			}
+			
 			
 			Gore g = first();
+			//System.out.println(this + " " + ds + " " + g);
 			Gore drop = null;
 			while (g != null) {
-				if (drop == g)
+				
+				if (drop == null)
+					drop = g;
+				else if (drop == g)
 					break;
+				
 				Gore next = next(g);
-				if (g.update(ds)) {
-					if (drop != null)
-						drop = g;
-				}else {
+				
+				if (!g.update(ds)) {
 					g.remove();
 				}
 				g = next;

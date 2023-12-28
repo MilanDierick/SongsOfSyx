@@ -1,26 +1,27 @@
 package view.world.generator;
 
-import static world.World.*;
-
 import game.GAME;
 import game.faction.FACTIONS;
 import init.*;
-import init.sprite.ICON;
 import init.sprite.SPRITES;
-import settlement.main.SGenerationConfig;
 import snake2d.CORE;
 import snake2d.SPRITE_RENDERER;
+import snake2d.util.datatypes.Coo;
 import snake2d.util.gui.clickable.CLICKABLE;
 import snake2d.util.gui.renderable.RENDEROBJ;
 import snake2d.util.sets.*;
+import snake2d.util.sprite.SPRITE;
 import util.dic.DicMisc;
 import util.gui.misc.GBox;
 import util.gui.misc.GButt;
+import view.main.VIEW;
 import view.tool.PlacableSimple;
 import view.tool.ToolConfig;
-import view.world.ui.WorldHoverer;
-import world.World;
-import world.map.regions.WorldGeneratorRegions;
+import world.WORLD;
+import world.map.landmark.WorldLandmark;
+import world.map.pathing.WTREATY;
+import world.regions.Region;
+import world.regions.data.RD;
 
 class StageFinish{
 
@@ -30,17 +31,19 @@ class StageFinish{
 	}
 	
 	
-	public StageFinish(Stages stages) {
+	public StageFinish(WorldViewGenerator stages) {
 		
-		stages.reset();
+		stages.minimap.show();
 		LinkedList<CLICKABLE> butts = new LinkedList<>();
+		
+		final Coo start = new Coo(-1,-1);
 		
 		final PlacableSimple simp = new PlacableSimple(¤¤inspectRegions) {
 			
+
 			@Override
 			public void place(int x, int y) {
-				// TODO Auto-generated method stub
-				
+
 			}
 			
 			@Override
@@ -62,30 +65,55 @@ class StageFinish{
 			
 			@Override
 			public void renderAction(int cx, int cy) {
+				if (start.x() >= 0) {
+					int tx = cx/C.TILE_SIZE;
+					int ty = cy/C.TILE_SIZE;
+					WORLD.OVERLAY().path.add(start.x(), start.y(), tx, ty, WTREATY.DUMMY());
+					
+				}
+				
 				//World.OVERLAY().landmarks().add();
-				World.OVERLAY().regions().add();
+				//World.OVERLAY().regions().add();
 				super.renderAction(cx, cy);
 			}
 			
 			@Override
-			public void placeInfo(GBox hoverBox, int cx, int cy) {
+			public void placeInfo(GBox b, int cx, int cy) {
 				int tx = cx/C.TILE_SIZE;
 				int ty = cy/C.TILE_SIZE;
-				if (World.REGIONS().getter.get(tx, ty) == FACTIONS.player().capitolRegion())
-					;
-				else if (World.REGIONS().getter.get(tx, ty) != null) {
-					WorldHoverer.hover(hoverBox, World.REGIONS().getter.get(tx, ty));
-					World.OVERLAY().hoverRegion(World.REGIONS().getter.get(tx, ty));
-				}else if (World.LANDMARKS().setter.get(tx, ty) != null) {
-					World.OVERLAY().hoverLandmark(World.LANDMARKS().setter.get(tx, ty));
+				Region reg = WORLD.REGIONS().map.get(tx, ty);
+				
+				WORLD.OVERLAY().landmarks.add();
+				
+				if (reg != null) {
+					WORLD.OVERLAY().hoverBox(reg);
+					
+					WORLD.OVERLAY().regionOutline.add(reg);
+					if (WORLD.REGIONS().map.isCentre.is(tx, ty)) {
+						VIEW.world().UI.regions.hover(reg, b);
+					}
+					
+					
+				}else if (WORLD.LANDMARKS().setter.get(tx, ty) != null) {
+					WorldLandmark m = WORLD.LANDMARKS().setter.get(tx, ty);
+					b.title(m.name);
+					b.text(m.description);
+					WORLD.OVERLAY().landmarks.hover(WORLD.LANDMARKS().setter.get(tx, ty));
 				}
 				
+				b.NL(8);
+				b.add(b.text().add(tx).add(':').add(ty));
+				b.NL();
+				
+				
 			}
+			
+			
 		
 			
 		};
 		
-
+		
 		
 		butts.add(new GButt.ButtPanel(SPRITES.icons().m.arrow_left) {
 			
@@ -100,26 +128,40 @@ class StageFinish{
 			}
 			
 		}.hoverInfoSet(DicMisc.¤¤Back));
-		butts.add(new GButt.ButtPanel(new ICON.MEDIUM.Twin(SPRITES.icons().m.terrain, SPRITES.icons().m.rotate)){
+		butts.add(new GButt.ButtPanel(new SPRITE.Twin(SPRITES.icons().m.terrain, SPRITES.icons().m.rotate)){
 			@Override
 			protected void clickA() {
+//				ACTION a = new ACTION() {
+//					
+//					@Override
+//					public void exe() {
+//						RES.loader().print(null);
+//					}
+//				};
+//				new WGenRoads().generateAll(WORLD.GEN().playerX, WORLD.GEN().playerY, a);
+//				new WorldGenTerrain().connect();
+//				new WorldGenRegionDists().generateAll(WORLD.GEN().playerX, WORLD.GEN().playerY);
 				StageCapitol.regenerate();
 			};
-		}.hoverInfoSet(Stages.¤¤regenerate));
+		}.hoverInfoSet(WorldViewGenerator.¤¤regenerate));
 
 		butts.add(new GButt.ButtPanel(SPRITES.icons().m.crossair){
 			@Override
 			protected void clickA() {
-				stages.v.window.centerAtTile(World.GEN().playerX, World.GEN().playerY);
+				stages.window.centerAtTile(WORLD.GEN().playerX, WORLD.GEN().playerY);
 			};
-		}.hoverInfoSet(Stages.¤¤home));
+		}.hoverInfoSet(WorldViewGenerator.¤¤home));
 		
 		butts.add(new GButt.ButtPanel(SPRITES.icons().m.arrow_right){
 			@Override
 			protected void clickA() {
 				RES.loader().minify(false, DicMisc.¤¤Generating);
-				new WorldGeneratorRegions().finish(GEN());
-				GAME.s().CreateFromWorldMap(GEN().playerX-1, GEN().playerY-1, new SGenerationConfig());
+				RD.generator().finish(WORLD.GEN());
+				WORLD.GEN().isDone = true;
+				WORLD.FOW().toggled.set(true);
+				VIEW.world().activate();
+				VIEW.world().window.centererTile.set(FACTIONS.player().capitolRegion().cx(), FACTIONS.player().capitolRegion().cy());
+				GAME.s().CreateFromWorldMap(WORLD.GEN().playerX-1, WORLD.GEN().playerY-1, false);
 				GAME.saveNew();
 				CORE.getInput().clearAllInput();
 			};
@@ -129,16 +171,17 @@ class StageFinish{
 			
 			@Override
 			public boolean back() {
+				
 				return false;
 			};
 			
 			@Override
 			public void addUI(LISTE<RENDEROBJ> uis) {
-				stages.v.tools.placer.addStandardButtons(uis, false);
+				stages.tools.placer.addStandardButtons(uis, false);
 			}
 			
 		};
-		stages.v.tools.place(simp,fixed);
+		stages.tools.place(simp,fixed);
 		
 	}
 	

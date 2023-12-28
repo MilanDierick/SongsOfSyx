@@ -1,9 +1,5 @@
 package settlement.entity.humanoid.ai.types.student;
 
-import java.util.Arrays;
-import java.util.Comparator;
-
-import init.boostable.BOOSTABLES;
 import settlement.entity.humanoid.Humanoid;
 import settlement.entity.humanoid.ai.main.AIManager;
 import settlement.entity.humanoid.ai.main.AIModule;
@@ -16,21 +12,9 @@ import settlement.stats.STATS;
 public final class AIModule_Student extends AIModule{
 
 	private final Plan plan = new Plan(this);
-	private final ROOM_UNIVERSITY[] best = new ROOM_UNIVERSITY[SETT.ROOMS().SCHOOLS.size()];
-	
-	{
-		for (ROOM_UNIVERSITY s : SETT.ROOMS().UNIVERSITIES)
-			best[s.typeIndex()] = s;
-		Arrays.sort(best, new Comparator<ROOM_UNIVERSITY>() {
 
-			@Override
-			public int compare(ROOM_UNIVERSITY o1, ROOM_UNIVERSITY o2) {
-				if (o1.learningSpeed > o2.learningSpeed)
-					return 1;
-				return -1;
-			}
+	{
 		
-		});
 	}
 	
 	public AIModule_Student(){
@@ -40,29 +24,44 @@ public final class AIModule_Student extends AIModule{
 	}
 	
 	public boolean tryInit(Humanoid h, AIManager d) {
-		return BOOSTABLES.RATES().LEARNING_SKILL.get(h) > 0 && getFirstUni(h, d) != null;
+		return getFirstUni(h, d) != null;
 	}
 	
 	public static boolean shouldContinue(Humanoid h, AIManager d) {
+		ROOM_UNIVERSITY uu = uni(h);
+		if (uu == null)
+			return false;
 		
-		if (BOOSTABLES.RATES().LEARNING_SKILL.get(h) <= 0)
-			return false;
-		if (STATS.WORK().EMPLOYED.get(h) == null || !(STATS.WORK().EMPLOYED.get(h).blueprintI() instanceof ROOM_UNIVERSITY))
-			return false;
-		if (!checkUni(h, d, (ROOM_UNIVERSITY) STATS.WORK().EMPLOYED.get(h).blueprintI()))
+		if (!checkUni(h, d, uu))
 			return false;
 		if (STATS.WORK().EMPLOYED.get(h).employees().isOverstaffed())
+			return false;
+		if (uu.bonus().get(h.indu()) <= 0)
 			return false;
 		return true;
 	}
 	
+	static ROOM_UNIVERSITY uni(Humanoid h) {
+		RoomInstance ii = STATS.WORK().EMPLOYED.get(h);
+		if (ii != null && ii.blueprintI() instanceof ROOM_UNIVERSITY)
+			return (ROOM_UNIVERSITY) ii.blueprintI();
+		return null;
+	}
+	
 	private ROOM_UNIVERSITY getFirstUni(Humanoid h, AIManager d) {
-		for (ROOM_UNIVERSITY u : best) {
+		
+		ROOM_UNIVERSITY best = null;
+		double bv = 0;
+		for (ROOM_UNIVERSITY u : SETT.ROOMS().UNIVERSITIES) {
 			if (u.emp.employable() > 0 && checkUni(h, d, u)) {
-				return u;
+				double r = u.learningSpeed*u.bonus().get(h.indu());
+				if (r > bv) {
+					bv = r;
+					best = u;
+				}
 			}
 		}
-		return null;
+		return best;
 	}
 	
 	static boolean checkUni(Humanoid h, AIManager d, ROOM_UNIVERSITY u) {
@@ -70,7 +69,7 @@ public final class AIModule_Student extends AIModule{
 	}
 	
 	@Override
-	protected AiPlanActivation getPlan(Humanoid a, AIManager d) {
+	public AiPlanActivation getPlan(Humanoid a, AIManager d) {
 		return plan.activate(a, d);
 	}
 
@@ -87,7 +86,7 @@ public final class AIModule_Student extends AIModule{
 		RoomInstance in = STATS.WORK().EMPLOYED.get(a);
 		if (in != null && in.blueprintI() instanceof ROOM_UNIVERSITY) {
 			ROOM_UNIVERSITY u = (ROOM_UNIVERSITY) in.blueprintI();
-			double ls = u.learningSpeed(in);
+			double ls = u.learningSpeed(in, a.indu());
 			STATS.EDUCATION().educate(a.indu(), ls*lls);
 		}
 	}

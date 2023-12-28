@@ -13,11 +13,13 @@ public final class ArmySupply implements INDEXED{
 	public final int minimum;
 	private final int index;
 	final String key;
+	public final boolean mandatory;
 	
 	ArmySupply(String key, Json json, ArrayList<ArmySupply> all){
 		this.key = key;
 		this.index = all.add(this);
 		resource = RESOURCES.map().get(json);
+		mandatory = json.bool("MANDATORY", false);
 		morale = json.d("MORALE_EFFECT", 0, 1);
 		health = json.d("HEALTH_EFFECT", 0, 1);
 		consumption_day = json.d("CONSUMPTION_RATE_DAILY", 0, 1000);

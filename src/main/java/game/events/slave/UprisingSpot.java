@@ -4,8 +4,10 @@ import static settlement.main.SETT.*;
 
 import java.io.IOException;
 
+import game.VERSION;
 import init.C;
 import init.config.Config;
+import init.race.Race;
 import settlement.army.Div;
 import settlement.entity.ENTITY;
 import settlement.entity.humanoid.*;
@@ -24,15 +26,17 @@ final class UprisingSpot extends Coo{
 	private static final long serialVersionUID = 1L;
 	int signedUp;
 	int amountTotal;
+	int race;
 
 
 	private UprisingSpot(){
 		
 	}
 	
-	static UprisingSpot make(int mx, int my, int amountTotal) {
+	static UprisingSpot make(int mx, int my, int amountTotal, Race race) {
 		UprisingSpot s = new UprisingSpot();
 		s.amountTotal = amountTotal;
+		s.race = race.index;
 		if (setStart(s, mx, my, 32))
 			return s;
 		return null;
@@ -63,7 +67,7 @@ final class UprisingSpot extends Coo{
 				break;
 			if (e instanceof Humanoid) {
 				Humanoid a = (Humanoid) e;
-				if (HPoll.Handler.isSlaveReadyForUprising(a) == id) {
+				if (a.race().index == race && HPoll.Handler.isSlaveReadyForUprising(a) == id) {
 					a.HTypeSet(HTYPE.ENEMY, null, null);
 					a.setDivision(d);
 					am--;
@@ -72,7 +76,6 @@ final class UprisingSpot extends Coo{
 				}
 			}
 		}
-		
 		DIR dir = DIR.NW;
 		
 		int x1 = (x()+dir.x()*w) *C.TILE_SIZE+C.TILE_SIZEH;
@@ -83,6 +86,7 @@ final class UprisingSpot extends Coo{
 		
 		ARMIES().placer.deploy(d, x1, x2, y1, y2);
 		
+		
 
 	}
 	
@@ -90,6 +94,7 @@ final class UprisingSpot extends Coo{
 	public void save(FilePutter file) {
 		file.i(signedUp);
 		file.i(amountTotal);
+		file.i(race);
 		super.save(file);
 	}
 	
@@ -97,6 +102,8 @@ final class UprisingSpot extends Coo{
 	public void load(FileGetter file) throws IOException {
 		signedUp = file.i();
 		amountTotal = file.i();
+		if (!VERSION.versionIsBefore(64, 27))
+			race = file.i();
 		super.load(file);
 	}
 	

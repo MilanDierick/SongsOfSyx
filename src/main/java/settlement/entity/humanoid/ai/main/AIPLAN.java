@@ -41,10 +41,18 @@ public abstract class AIPLAN extends AIElement implements HEventListener{
 	
 	public abstract AiPlanActivation activate(Humanoid a, AIManager d);
 	abstract void cancel(Humanoid a, AIManager d);
+	protected void remove(Humanoid a, AIManager d) {
+		
+	}
+	
 	abstract AISubActivation resume(Humanoid a, AIManager d);
 	abstract boolean shouldContinue(Humanoid a, AIManager d);
 	abstract void name(Humanoid a, AIManager d, Str string);
 	abstract AISubActivation resumeFailed(Humanoid a, AIManager d, HEvent event);
+	
+	public boolean notifyIfSubFails() {
+		return true;
+	}
 	
 	@Override
 	public boolean event(Humanoid a, AIManager d, HEventData e) {
@@ -72,7 +80,7 @@ public abstract class AIPLAN extends AIElement implements HEventListener{
 	
 	public static abstract class PLANRES extends AIPLAN {
 		
-		final ArrayListResize<Resumer> resumers = new ArrayListResize<>(10, 100);
+		final ArrayListResize<ResumerRaw> resumers = new ArrayListResize<>(10, 100);
 
 		protected final Resumer WAIT_AND_EXIT = new Resumer("waiting") {
 
@@ -146,7 +154,7 @@ public abstract class AIPLAN extends AIElement implements HEventListener{
 			return this.getClass().getSimpleName() + " " + d.planResumerByte + " " + resumers.get(d.planResumerByte).name + " " + resumers.get(d.planResumerByte);
 		}
 		
-		protected final Resumer getResumer(AIManager d) {
+		protected final ResumerRaw getResumer(AIManager d) {
 			if (d.planResumerByte < 0 || d.planResumerByte >= resumers.size())
 				return null;
 			return resumers.get(d.planResumerByte);
@@ -165,19 +173,18 @@ public abstract class AIPLAN extends AIElement implements HEventListener{
 		
 		protected abstract AISubActivation init(Humanoid a, AIManager d);
 		
-		public abstract class Resumer implements HEventListener{
-			
+		public static abstract class ResumerRaw implements HEventListener{
 			public final CharSequence name;
 			final byte index;
 			
-			public Resumer(CharSequence verb){
+			public ResumerRaw(AIPLAN.PLANRES daddy, CharSequence verb){
 				this.name = verb;
-				this.index = (byte) resumers.add(this);
+				this.index = (byte) daddy.resumers.add(this);
 			}
 			
-			public Resumer(){
+			public ResumerRaw(AIPLAN.PLANRES daddy){
 				this.name = "";
-				this.index = (byte) resumers.add(this);
+				this.index = (byte) daddy.resumers.add(this);
 			}
 			
 			public AISubActivation resFailed(Humanoid a, AIManager d, HEvent event) {
@@ -224,11 +231,17 @@ public abstract class AIPLAN extends AIElement implements HEventListener{
 					System.err.println(d.plan().className + " " + d.planResumerByte);
 				return d.plansub().poll(a, d, e);
 			}
+		}
+		
+		public abstract class Resumer extends ResumerRaw {
 			
+			public Resumer(CharSequence verb){
+				super(AIPLAN.PLANRES.this, verb);
+			}
 			
-
-			
-			
+			public Resumer(){
+				super(AIPLAN.PLANRES.this);
+			}
 
 		}
 		

@@ -1,10 +1,9 @@
 package settlement.entity.humanoid;
 
 import init.D;
-import init.sprite.ICON;
-import init.sprite.ICON.MEDIUM;
-import init.sprite.ICON.SMALL;
+import init.race.*;
 import init.sprite.SPRITES;
+import init.sprite.UI.Icon;
 import snake2d.util.color.COLOR;
 import snake2d.util.color.ColorImp;
 import snake2d.util.sets.*;
@@ -23,34 +22,34 @@ public abstract class HCLASS extends INFO implements INDEXED {
 	private final static KeyMap<HCLASS> map = new KeyMap<>();
 	public final static HCLASS NOBLE = new HCLASS(
 			"NOBLE",
-			D.g("Noble"), D.g("Nobility"), 
+			D.g("Noble"), D.g("Nobilities"), 
 			D.g("NobilityD", "The Nobility are the top social layer of your kingdom. They do not work traditionally and demand a salary amongst high tier services. The rewards for having nobles around can be great however."),
 			true, new ColorImp(3,1,19)) {
 		
 		@Override
-		public MEDIUM icon() {
+		public Icon icon() {
 			return SPRITES.icons().m.noble;
 		}
 
 		@Override
-		public SMALL iconSmall() {
+		public Icon iconSmall() {
 			return SPRITES.icons().s.noble;
 		}
 		
 	};
 	public final static HCLASS CITIZEN = new HCLASS(
 			"CITIZEN",
-			D.g("Citizen"), D.g("Citizens"), 
-			D.g("CitizenD", "Citizens are the bulk of your population and will carry out your wishes."),
+			D.g("Plebeian"), D.g("Plebeians"), 
+			D.g("PlebeianD", "Plebeians are the bulk of your population and will carry out your wishes."),
 			true, new ColorImp(3,1,19)) {
 		
 		@Override
-		public MEDIUM icon() {
+		public Icon icon() {
 			return SPRITES.icons().m.citizen;
 		}
 
 		@Override
-		public SMALL iconSmall() {
+		public Icon iconSmall() {
 			return SPRITES.icons().s.citizen;
 		}
 		
@@ -62,12 +61,12 @@ public abstract class HCLASS extends INFO implements INDEXED {
 			true, new ColorImp(20,20,8)) {
 		
 		@Override
-		public MEDIUM icon() {
+		public Icon icon() {
 			return SPRITES.icons().m.slave;
 		}
 
 		@Override
-		public SMALL iconSmall() {
+		public Icon iconSmall() {
 			return SPRITES.icons().s.slave;
 		}
 		
@@ -79,12 +78,12 @@ public abstract class HCLASS extends INFO implements INDEXED {
 			true, new ColorImp(3,1,19)) {
 		
 		@Override
-		public MEDIUM icon() {
+		public Icon icon() {
 			return SPRITES.icons().m.citizen;
 		}
 
 		@Override
-		public SMALL iconSmall() {
+		public Icon iconSmall() {
 			return SPRITES.icons().s.citizen;
 		}
 		
@@ -97,12 +96,12 @@ public abstract class HCLASS extends INFO implements INDEXED {
 			false, new ColorImp(20,20,8)) {
 		
 		@Override
-		public MEDIUM icon() {
+		public Icon icon() {
 			return SPRITES.icons().m.citizen;
 		}
 
 		@Override
-		public SMALL iconSmall() {
+		public Icon iconSmall() {
 			// TODO Auto-generated method stub
 			return null;
 		}
@@ -142,8 +141,8 @@ public abstract class HCLASS extends INFO implements INDEXED {
 		map.put(key, this);
 	}
 	
-	public abstract ICON.MEDIUM icon();
-	public abstract ICON.SMALL iconSmall();
+	public abstract Icon icon();
+	public abstract Icon iconSmall();
 	
 	private final int index;
 	public final boolean player;
@@ -160,4 +159,8 @@ public abstract class HCLASS extends INFO implements INDEXED {
 	public int index() {
 		return index;
 	};
+	
+	public POP_CL get(Race race) {
+		return RACES.clP(race, this);
+	}
 }

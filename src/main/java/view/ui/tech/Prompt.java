@@ -28,7 +28,7 @@ final class Prompt {
 		if (FACTIONS.player().tech().level(tech) == tech.levelMax)
 			return;
 		int costR = FACTIONS.player().tech().costOfNextWithRequired(tech);
-		if (costR > FACTIONS.player().tech().available().get())
+		if (costR > FACTIONS.player().tech().available().get() || !tech.lockable.passes(FACTIONS.player()))
 			return;
 		
 		if (costR > FACTIONS.player().tech().costLevelNext(tech) || VIEW.renderSecond()>renderS) {
@@ -88,7 +88,8 @@ final class Prompt {
 		s.NL();
 		for (int ti = 0; ti < TECHS.ALL().size(); ti++) {
 			TECH t = TECHS.ALL().get(ti);
-			if (t != tech && t.requires(tech, l-1) && FACTIONS.player().tech().level(tech) > 0) {
+			if (t != tech && t.requires(tech, l-1) && FACTIONS.player().tech().level(t) > 0) {
+				
 				s.add(t.info.name);
 				s.NL();
 				am++;

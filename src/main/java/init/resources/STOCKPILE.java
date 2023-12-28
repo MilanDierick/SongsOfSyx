@@ -1,14 +1,17 @@
 package init.resources;
 
-import java.io.Serializable;
+import java.io.IOException;
+import java.util.Arrays;
 
-public interface STOCKPILE extends Serializable{
+import snake2d.util.file.*;
+
+public interface STOCKPILE {
 
 	public int get(RESOURCE res);
+	public int get(int ri);
 	
-	public class StockpileImp implements STOCKPILE{
+	public class StockpileImp implements STOCKPILE, SAVABLE{
 		
-		private static final long serialVersionUID = 1L;
 		private int[] amounts = new int[RESOURCES.ALL().size()];
 
 		@Override
@@ -22,6 +25,26 @@ public interface STOCKPILE extends Serializable{
 		
 		public void add(RESOURCE res, int inc) {
 			amounts[res.bIndex()] += inc;
+		}
+
+		@Override
+		public void save(FilePutter file) {
+			file.isE(amounts);
+		}
+
+		@Override
+		public void load(FileGetter file) throws IOException {
+			file.isE(amounts);
+		}
+
+		@Override
+		public void clear() {
+			Arrays.fill(amounts, 0);
+		}
+
+		@Override
+		public int get(int ri) {
+			return amounts[ri];
 		}
 		
 		

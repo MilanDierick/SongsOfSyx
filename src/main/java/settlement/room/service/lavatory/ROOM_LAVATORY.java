@@ -12,31 +12,26 @@ import settlement.room.main.category.RoomCategorySub;
 import settlement.room.main.furnisher.Furnisher;
 import settlement.room.main.job.ROOM_EMPLOY_AUTO;
 import settlement.room.main.util.RoomInitData;
-import settlement.room.service.module.RoomServiceDataAccess;
-import settlement.room.service.module.RoomServiceDataAccess.ROOM_SERVICE_ACCESS_HASER;
-import settlement.stats.STATS;
+import settlement.room.service.module.RoomServiceNeed;
+import settlement.room.service.module.RoomServiceNeed.ROOM_SERVICE_NEED_HASER;
 import snake2d.util.file.FileGetter;
 import snake2d.util.file.FilePutter;
 
-public final class ROOM_LAVATORY extends RoomBlueprintIns<LavatoryInstance> implements ROOM_SERVICE_ACCESS_HASER, ROOM_EMPLOY_AUTO{
+public final class ROOM_LAVATORY extends RoomBlueprintIns<LavatoryInstance> implements ROOM_SERVICE_NEED_HASER, ROOM_EMPLOY_AUTO{
 
-	final RoomServiceDataAccess data;
+	final RoomServiceNeed data;
 	
 	final Constructor constructor;
 
 	public ROOM_LAVATORY(RoomInitData init, int typeIndex, String key, RoomCategorySub block) throws IOException {
 		super(typeIndex, init, key, block);
-		data = new RoomServiceDataAccess(this, init) {
+		data = new RoomServiceNeed(this, init) {
 			
 			@Override
 			public FSERVICE service(int tx, int ty) {
 				return Lavatory.get(tx, ty);
 			}
 			
-			@Override
-			public double totalMultiplier() {
-				return 1.0/STATS.NEEDS().CONSTIPATION.rate.get(null, null);
-			}
 		};
 		constructor = new Constructor(this, init);
 	}
@@ -89,7 +84,7 @@ public final class ROOM_LAVATORY extends RoomBlueprintIns<LavatoryInstance> impl
 	}
 
 	@Override
-	public RoomServiceDataAccess service() {
+	public RoomServiceNeed service() {
 		return data;
 	}
 	

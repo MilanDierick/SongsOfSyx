@@ -11,7 +11,7 @@ import snake2d.util.sets.LIST;
 
 
 
-public class PathUtilOnline {
+public final class PathUtilOnline {
 
 	private final PathTile[][] tiles;
 	int id = 0;
@@ -26,7 +26,6 @@ public class PathUtilOnline {
 	public PathUtilOnline(int size){
 		tiles = new PathTile[size][size];
 		bounds = new Rec(0, size, 0, size);
-		
 		for (int y = 0; y < tiles.length; y++)
 			for (int x = 0; x < tiles.length; x++)
 				tiles[y][x] = new PathTile((short)x, (short)y);
@@ -288,10 +287,13 @@ public class PathUtilOnline {
 		 * @return the tile that has the highest value
 		 */
 		public PathTile pollGreatest(){
-			
 			PathTile t = tree.pollGreatest();
 			t.closed = true;
 			return t;
+		}
+		
+		public int pushed() {
+			return tree.size();
 		}
 		
 		/**
@@ -395,6 +397,10 @@ public class PathUtilOnline {
 			return t.getValue2();
 		}
 		
+		public float getValue2(int x, int y, DIR d) {
+			PathTile t = getTile(x+d.x(), y+d.y());
+			return t.getValue2();
+		}
 		
 		public void setValue2(COORDINATE c, double f) {
 			setValue2(c.x(), c.y(), f);
@@ -420,6 +426,28 @@ public class PathUtilOnline {
 			t.closed = true;
 			t.pathParent = parent;
 			return t;
+		}
+
+		public PathTile reverse(PathTile t) {
+			init(this);
+			
+			PathTile p = t.pathParent;
+			t.pathParent = null;
+			t = reverse(p, t);
+			
+			done();
+
+
+			return t;
+		}
+
+		private PathTile reverse(PathTile t, PathTile newparent) {
+			if (t == null)
+				return newparent;
+			PathTile parent = t.pathParent;
+			t.pathParent = newparent;
+			return reverse(parent, t);
+			
 		}
 		
 	}
@@ -734,40 +762,67 @@ public class PathUtilOnline {
 			t.closed = true;
 		}
 		
-		public final boolean getShortest(Path.PathSync p, COST cost, int startX, int startY, int endX, int endY){
+		public final boolean getShortest(Path.PathFancy p, COST cost, int startX, int startY, int endX, int endY){
 			return getShortest(p, cost, startX, startY, endX, endY, false);
 		}
 		
-		public final boolean getShortest(Path.PathSync p, COST cost, int startX, int startY, int endX, int endY, boolean includeLast){
+		public final boolean getShortest(Path.PathFancy p, COST cost, int startX, int startY, int endX, int endY, boolean includeLast){
 			return getShortest(p, cost, startX, startY, endX, endY, includeLast, northo);
 		}
 		
-		public final boolean getShortestNoDiagonal(Path.PathSync p, COST cost, int startX, int startY, int endX, int endY){
+		public final boolean getShortestNoDiagonal(Path.PathFancy p, COST cost, int startX, int startY, int endX, int endY){
 			return getShortest(p, cost, startX, startY, endX, endY, true, ortho);
 		}
 		
-		private final boolean getShortest(Path.PathSync p, COST cost, int startX, int startY, int endX, int endY, boolean includeLast, LIST<DIR> dirs){
+		public final PathTile getShortest(COST cost, int startX, int startY, int endX, int endY){
+			return getShortest(cost, startX, startY, endX, endY, false);
+		}
+		
+		public final PathTile getShortest(COST cost, int startX, int startY, int endX, int endY, boolean includeLast){
+			return getShortest(cost, startX, startY, endX, endY, includeLast, northo);
+		}
+		
+		public final PathTile getShortestNoDiagonal(COST cost, int startX, int startY, int endX, int endY){
+			return getShortest(cost, startX, startY, endX, endY, true, ortho);
+		}
+		
+		private final boolean getShortest(Path.PathFancy p, COST cost, int startX, int startY, int endX, int endY, boolean includeLast, LIST<DIR> dirs){
 			if (startX == endX && startY == endY) {
 				p.setOne(startX, startY);
 				return true;
 			}
+			PathTile t = getShortest(cost, startX, startY, endX, endY, includeLast, dirs);
+			if (t != null) {
+				p.set(t);
+				return true;
+			}
+			return false;
+			
+		}
+		
+		private final PathTile getShortest(COST cost, int startX, int startY, int endX, int endY, boolean includeLast, LIST<DIR> dirs){
 			if (!bounds.holdsPoint(endX, endY))
-				return false;
+				return null;
 			if (!bounds.holdsPoint(startX, startY))
-				return false;
+				return null;
 			
 			SHORTEST dest = s;
 			dest.set(endX, endY);
-			return find(p, cost, dest, startX, startY, includeLast, dirs);
+			return find(cost, dest, startX, startY, includeLast, dirs);
 			
 		}
 		
-		public final boolean getNearest(Path.PathSync p, COST cost, DEST dest, int startX, int startY){
-			return find(p, cost, dest, startX, startY, true, northo);
+		public final boolean getNearest(Path.PathFancy p, COST cost, DEST dest, int startX, int startY){
+			PathTile t = find(cost, dest, startX, startY, true, northo);
+			if (t != null) {
+				p.set(t);
+				return true;
+			}
+			return false;
 		}
 		
 		
-		public boolean find(Path.PathSync p, COST cost, DEST dest, int startX, int startY, boolean includeLast, LIST<DIR> dirs){
+		public PathTile find(COST cost, DEST dest, int startX, int startY, boolean includeLast, LIST<DIR> dirs){
 			lock(null);
 			tree.clear();
 			PathTile t = getTile(startX, startY);
@@ -780,8 +835,7 @@ public class PathUtilOnline {
 				t.closed = true;
 				
 				if (includeLast && dest.isDest(x, y)){
-					p.set(t);
-					return true;
+					return t;
 				}
 				
 				for (DIR dir : dirs){
@@ -793,8 +847,7 @@ public class PathUtilOnline {
 						continue;
 					
 					if (!includeLast && dest.isDest(xtemp, ytemp)){
-						p.set(t);
-						return true;
+						return t;
 					}
 					
 					PathTile next = getTile(xtemp, ytemp);
@@ -821,7 +874,7 @@ public class PathUtilOnline {
 			}
 			
 			
-			return false;
+			return null;
 		}
 		
 		private PathTile add2OpenSet(PathTile t, PathTile parent, double accCost, DEST method){

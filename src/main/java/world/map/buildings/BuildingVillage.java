@@ -6,15 +6,15 @@ import game.GAME;
 import game.time.TIME;
 import init.C;
 import init.D;
-import init.paths.PATH;
-import settlement.main.RenderData.RenderIterator;
 import snake2d.CORE;
 import snake2d.SPRITE_RENDERER;
 import snake2d.util.sets.LISTE;
+import util.rendering.RenderData.RenderIterator;
 import util.rendering.ShadowBatch;
-import world.World;
-import world.map.regions.REGIOND;
-import world.map.regions.Region;
+import world.WORLD;
+import world.regions.Region;
+import world.regions.centre.WorldRaceSheet;
+import world.regions.data.RD;
 
 final class BuildingVillage extends WorldBuildingSimple{
 	
@@ -23,7 +23,7 @@ final class BuildingVillage extends WorldBuildingSimple{
 		D.ts(BuildingVillage.class);
 	}
 	
-	BuildingVillage(PATH p, LISTE<WorldBuilding> all) throws IOException {
+	BuildingVillage(LISTE<WorldBuilding> all) throws IOException {
 		super(all, ¤¤name);
 	}
 
@@ -40,7 +40,7 @@ final class BuildingVillage extends WorldBuildingSimple{
 			int x = it.x();
 			int y = it.y();
 			int t = it.ran()&0x07;
-			World.BUILDINGS().sprites.farms.render(r, 8*3+t, x, y);
+			WORLD.BUILDINGS().sprites.farms.render(r, t, x, y);
 		}
 		
 	}
@@ -56,9 +56,9 @@ final class BuildingVillage extends WorldBuildingSimple{
 			int x = it.x() + (((it.ran() >> 4)&0x07))*C.SCALE;
 			int y = it.y() + (((it.ran() >> 8)&0x07))*C.SCALE;
 			
-			World.BUILDINGS().sprites.village.render(r, ran, x, y);
-			s.setHeight(1).setDistance2Ground(0);
-			World.BUILDINGS().sprites.village.render(s, ran, x, y);
+			WorldRaceSheet.Village sh = RD.RACES().visuals.vRace(WORLD.REGIONS().map.get(it.tile()), ran).appearance().world.village;
+			
+			sh.render(r, s, ran>>10, x, y);
 			
 			if (TIME.light().nightIs() && (TIME.light().partOfCircular()*16 > (it.ran()&0x07))) {
 				x += C.TILE_SIZEH/2+(GAME.intervals().get05()+it.ran() & 0b11);
@@ -72,9 +72,14 @@ final class BuildingVillage extends WorldBuildingSimple{
 	@Override
 	public boolean isVisible(int ran, int tile) {
 	
-		Region r = World.REGIONS().getter.get(tile);
+		if (WORLD.FOREST().amount.get(tile) == 1)
+			return false;
+		if (WORLD.WATER().isBig.is(tile))
+			return false;
+		
+		Region r = WORLD.REGIONS().map.get(tile);
 		if (r != null) {
-			int v = (int) (0x0FFFF*REGIOND.POP().popValue(r));
+			int v = (int) (0x0FFFF*RD.RACES().popSize(r));
 			return (ran & 0x0FFFF) <= v;
 		}
 		

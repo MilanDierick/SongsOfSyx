@@ -2,12 +2,13 @@ package game.events;
 
 import java.io.IOException;
 
+import game.boosting.BOOSTABLES;
 import game.events.EVENTS.EventResource;
 import game.time.TIME;
 import init.D;
-import init.boostable.BOOSTABLES;
 import init.disease.DISEASE;
 import init.disease.DISEASES;
+import init.race.RACES;
 import settlement.entity.ENTITY;
 import settlement.entity.humanoid.Humanoid;
 import settlement.main.SETT;
@@ -18,8 +19,8 @@ import snake2d.util.file.FilePutter;
 import snake2d.util.misc.ACTION;
 import snake2d.util.rnd.RND;
 import snake2d.util.sprite.text.Str;
-import view.main.MessageText;
 import view.sett.IDebugPanelSett;
+import view.ui.message.MessageText;
 
 public final class EventDisease extends EventResource{
 
@@ -101,7 +102,7 @@ public final class EventDisease extends EventResource{
 	
 	public void outbreak(double spread, DISEASE strain) {
 		int am = 0;
-		double aveHealth = BOOSTABLES.PHYSICS().HEALTH.get(null, null);
+		double aveHealth = BOOSTABLES.PHYSICS().HEALTH.get(RACES.clP(null, null));
 		Humanoid patienZero = null;;
 		
 		ENTITY[] ee = SETT.ENTITIES().getAllEnts();
@@ -109,7 +110,7 @@ public final class EventDisease extends EventResource{
 			if (ee[i] != null && ee[i] instanceof Humanoid) {
 				Humanoid a = (Humanoid) ee[i];
 				if (a.indu().player()) {
-					double c = spread*(BOOSTABLES.PHYSICS().HEALTH.get(a)/aveHealth);
+					double c = spread*(BOOSTABLES.PHYSICS().HEALTH.get(a.indu())/aveHealth);
 					if (RND.rFloat() < c) {
 						STATS.NEEDS().disease.incubate(a, strain);
 						am ++;

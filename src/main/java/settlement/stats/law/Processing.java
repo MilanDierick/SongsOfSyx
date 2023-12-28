@@ -19,7 +19,7 @@ import snake2d.util.misc.CLAMP;
 import snake2d.util.rnd.RND;
 import snake2d.util.sets.*;
 import snake2d.util.sprite.SPRITE;
-import util.data.BOOLEAN_OBJECT.BOOLEAN_OBJECTE;
+import util.data.BOOLEANO.BOOLEAN_OBJECTE;
 import util.info.INFO;
 import util.statistics.*;
 
@@ -37,7 +37,8 @@ public final class Processing {
 	public final PunishmentDec prison = new PunishmentDec(al, json, "PRISON", SETT.ROOMS().PRISON, 1.5);
 	public final PunishmentDec execution = new PunishmentDec(al, json, "EXECUTION", SETT.ROOMS().EXECUTION, 2.0);
 	public final PunishmentDec enslaved = new PunishmentDec(al, json, "ENSLAVED", SETT.ROOMS().SLAVER, 1.0);
-
+	public final PunishmentDec arena = new PunishmentDec(al, json, "ARENA", SETT.ROOMS().ARENAS.get(0), 1.5);
+	
 	public final Extra stocks = new ExtraImp(json, "STOCKS", SETT.ROOMS().STOCKS);
 	public final Extra judgement = new ExtraImp(json, "JUDGEMENT", SETT.ROOMS().COURT);
 	public final Extra arrests = new ExtraImp(json, "ARRESTS", SETT.ROOMS().GUARD.iconBig());
@@ -53,7 +54,7 @@ public final class Processing {
 
 	public final LIST<Punishment> punishments = new ArrayList<Punishment>(al);
 	{al = null;};
-	public final LIST<PunishmentDec> punishmentsdec = new ArrayList<PunishmentDec>(prison,execution,enslaved);
+	public final LIST<PunishmentDec> punishmentsdec = new ArrayList<PunishmentDec>(prison,execution,enslaved,arena);
 	public final LIST<Extra> extras = new ArrayList<Extra>(judgement,stocks);
 	public final LIST<Extra> other = new ArrayList<Extra>(arrests,prosecute);
 	
@@ -84,6 +85,7 @@ public final class Processing {
 			for (SAVABLE s : savers)
 				s.load(file);
 			upD = file.d();
+			upD = 0;
 		}
 		
 		@Override
@@ -107,17 +109,13 @@ public final class Processing {
 	
 	void update(double ds) {
 		
+		upD++;
 		
-		if (upD < 0)
-			return;
+		if (upD >= RACES.all().size())
+			upD -= RACES.all().size();
 		
 		int ri = (int) upD;
-		upD -= ds;
-		
-		if (ri == (int) upD)
-			return;
-		
-		Race r = RACES.all().get(ri);
+		Race r = RACES.all().getC(ri);
 		
 		prosecute.rate.setD(r, prate(prosecute, r));
 		prosecute.rate.total().setD(prate(prosecute, null));
@@ -136,7 +134,19 @@ public final class Processing {
 			p.rate.setD(r, prate(p, r, tot));
 			p.rate.total().setD(prate(p, null, ttot));
 		}
-		
+//		
+//		
+//		if (upD >= RACES.all().size())
+//			upD -= RACES.all().size();
+//		
+//		int ri = (int) upD;
+//		upD += ds;
+//		System.out.println(upD + " " + ds);
+//		if (ri == (int) upD)
+//			return;
+//		
+//		
+//		
 		
 		
 	}
@@ -188,9 +198,10 @@ public final class Processing {
 		public final PUNISHMENT_SERVICE ser;
 		public final SPRITE icon;
 		public final double multiplier;
-		
+		public final String key;
 		private PunishmentImp(Json json, String key, PUNISHMENT_SERVICE room, SPRITE icon, double mul) {
 			super(json.json(key));
+			this.key = key;
 			this.multiplier = mul;
 			verb = json.json(key).text("VERB");
 			action = json.json(key).text("ACTION");

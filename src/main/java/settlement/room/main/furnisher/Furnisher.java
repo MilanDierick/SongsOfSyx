@@ -3,22 +3,18 @@ package settlement.room.main.furnisher;
 import static settlement.main.SETT.*;
 
 import java.io.IOException;
-import java.nio.file.Path;
 
 import init.resources.RESOURCE;
 import init.resources.RESOURCES;
-import init.sprite.ICON;
 import init.sprite.SPRITES;
 import settlement.environment.SettEnvMap.SettEnv;
 import settlement.environment.SettEnvMap.SettEnvValue;
-import settlement.main.RenderData.RenderIterator;
 import settlement.main.SETT;
-import settlement.path.AVAILABILITY;
 import settlement.room.main.*;
 import settlement.room.main.util.RoomInit;
 import settlement.room.main.util.RoomInitData;
-import settlement.room.sprite.RoomSprite;
-import settlement.tilemap.Floors.Floor;
+import settlement.tilemap.floor.Floors.Floor;
+import settlement.tilemap.terrain.TerrainDiagonal.Diagonalizer;
 import snake2d.SPRITE_RENDERER;
 import snake2d.util.color.COLOR;
 import snake2d.util.color.ColorImp;
@@ -26,13 +22,11 @@ import snake2d.util.datatypes.AREA;
 import snake2d.util.datatypes.DIR;
 import snake2d.util.file.Json;
 import snake2d.util.misc.CLAMP;
-import snake2d.util.sets.ArrayList;
-import snake2d.util.sets.LIST;
-import snake2d.util.sprite.TILE_SHEET;
+import snake2d.util.sets.*;
+import util.gui.misc.GBox;
 import util.info.INFO;
+import util.rendering.RenderData.RenderIterator;
 import util.rendering.ShadowBatch;
-import util.spritecomposer.*;
-import util.spritecomposer.ComposerThings.*;
 
 public abstract class Furnisher{
 	
@@ -40,13 +34,12 @@ public abstract class Furnisher{
 	
 	final ArrayList<FurnisherItemTile> tiles = new ArrayList<>(255);
 	final ArrayList<FurnisherItem> allItems = new ArrayList<>(255);
-	final ArrayList<FurnisherItemGroup> groups;
+	final ArrayListGrower<FurnisherItemGroup> pgroups = new ArrayListGrower<>();
+	final ArrayListGrower<FurnisherItemGroup> ggroups = new ArrayListGrower<>();
 	final ArrayList<FurnisherStat> stats;
 	private final LIST<RESOURCE> resources;
 	private final double[] areaCost;
 	protected final LIST<Floor> floor;
-	protected ICON.BIG icon;
-	public final TILE_SHEET sheet;
 
 	public final COLOR miniColor;
 	private final FurnisherMinimapColor colorPimp;
@@ -59,33 +52,27 @@ public abstract class Furnisher{
 	private final double[] envRadius = new double[SETT.ENV().environment.all().size()];
 	
 
-	
-	protected Furnisher(RoomInitData init, int items, int stats, int sheetWidth, int sheetHeight) throws IOException {
-		this(init.data(), init.text(), init.sp(), items, stats, sheetWidth, sheetHeight);
-	}
-	
 	protected Furnisher(RoomInitData init, int items, int stats) throws IOException {
-		this(init.data(), init.text(), null, items, stats, 0, 0);
-	}
-	
-	private Furnisher(Json data, Json text, Path sp, int items, int stats, int sheetWidth, int sheetHeight) throws IOException {
 		
 		tiles.add((FurnisherItemTile)null);
 		allItems.add((FurnisherItem)null);
 		if (FurnisherItem.itemsTmp.size() != 0)
 			throw new RuntimeException("someone forgot to flush...");
 		
+		Json data = init.data();
+		Json text = init.text();
+		
 		resources = RESOURCES.map().getMany(data);
 		if (resources.size() > MAX_RESOURCES)
 			data.error("Too many resources declared. Max is 4", "RESOURCES");
 		areaCost = data.ds("AREA_COSTS", resources.size());
-		if (data.has(SETT.FLOOR().key)) {
-			if (data.arrayIs(SETT.FLOOR().key)) {
-				floor = SETT.FLOOR().getManyByKeyWarn(SETT.FLOOR().key, data);
+		if (data.has(SETT.FLOOR().map.key)) {
+			if (data.arrayIs(SETT.FLOOR().map.key)) {
+				floor = SETT.FLOOR().map.getManyByKeyWarn(SETT.FLOOR().map.key, data);
 			}else {
-				Floor f = SETT.FLOOR().tryGet(data);
+				Floor f = SETT.FLOOR().map.tryGet(data);
 				if (f == null)
-					data.error("no floor named: ", SETT.FLOOR().key);
+					data.error("no floor named: ", SETT.FLOOR().map.key);
 				floor = new ArrayList<>(f);
 			}
 			
@@ -111,7 +98,7 @@ public abstract class Furnisher{
 		}
 		if (items == 0)
 			items = 1;
-		this.groups = new ArrayList<>(items);
+		
 		
 		
 
@@ -131,28 +118,11 @@ public abstract class Furnisher{
 			}
 		}
 		
-		if (sp != null) {
-		
-			icon = IIcon.LARGE.get(new ISpriteData(sp, sheetWidth, sheetHeight) {
-				@Override
-				protected SpriteData init(ComposerUtil c, ComposerSources s, ComposerDests d) {
-					s.singles.init(0, 0, 2, 1, 1, 1, d.s32);
-					s.singles.setVar(0).paste(true);
-					return d.s32.saveSprite();
-				}
-			}.get());
-			
-			sheet = new ITileSheet() {
+	}
+	
+	protected Furnisher(RoomInitData init, int items, int stats, int nopA, int nopB) throws IOException {
+		this(init, items, stats);
 				
-				@Override
-				protected TILE_SHEET init(ComposerUtil c, ComposerSources s, ComposerDests d)  {
-					return sheet(c,s,d,s.singles.body().y2());
-				}
-			}.get();
-		}else {
-			icon = SPRITES.icons().l.dop_realms;
-			sheet = null;
-		}
 	}
 	
 	public boolean envValue(SettEnv e, SettEnvValue v, int tx, int ty) {
@@ -186,18 +156,8 @@ public abstract class Furnisher{
 	public final double areaCostFlat(int index) {
 		return areaCost[index];
 	}
-	
-	public ICON.BIG icon() {
-		return icon;
-	}
-	
-	protected TILE_SHEET sheet(ComposerUtil c, ComposerSources s, ComposerDests d, int y1) {
-		return null;
-	}
 
 	public abstract boolean usesArea();
-	
-
 
 	public CharSequence placable(int tx, int ty) {
 		
@@ -208,38 +168,22 @@ public abstract class Furnisher{
 		
 		if (rots != 0 && rots != 1 && rots != 3)
 			throw new RuntimeException("" + rots);
-		return new FurnisherItemGroup(
+		FurnisherItemGroup f = new FurnisherItemGroup(
 				this, rots, 
-				jsonGroupText[groups.size()].text("NAME"), 
-				jsonGroupText[groups.size()].text("DESC"),
+				jsonGroupText[ggroups.size()].text("NAME"), 
+				jsonGroupText[ggroups.size()].text("DESC"),
 				min,
 				max, 
-				jsonGroupData[groups.size()].ds("COSTS", resources.size()),
-				jsonGroupData[groups.size()].ds("STATS", stats.size())
+				jsonGroupData[ggroups.size()].ds("COSTS", resources.size()),
+				jsonGroupData[ggroups.size()].ds("STATS", stats.size())
 				);
-		
+		ggroups.add(f);
+		return f;
 	}
 	
 	protected final void flushSingle(INFO info) {
 		if (jsonGroupText != null)
 			throw new RuntimeException(""+jsonGroupText.length);
-		FurnisherItemTile t = new FurnisherItemTile(this, new RoomSprite.Dummy() {
-			@Override
-			public boolean render(SPRITE_RENDERER r, ShadowBatch shadowBatch, int data, RenderIterator it,
-					double degrade, boolean isCandle) {
-				sheet.render(r, 0, it.x(), it.y());
-				return false;
-			}
-			
-			@Override
-			public void renderPlaceholder(SPRITE_RENDERER r, int x, int y, int data, int tx, int ty, int rx, int ry,
-					FurnisherItem item) {
-				SPRITES.cons().BIG.filled.render(r, 0, x, y);
-			}
-		}, AVAILABILITY.PENALTY4, false);
-		new FurnisherItem(new FurnisherItemTile[][] {
-			{t,},
-		}, 0);
 		new FurnisherItemGroup(
 				this, 0, 
 				info.name, 
@@ -266,8 +210,12 @@ public abstract class Furnisher{
 		}
 	}
 	
+	public final LIST<FurnisherItemGroup> pgroups() {
+		return pgroups;
+	}
+	
 	public final LIST<FurnisherItemGroup> groups() {
-		return groups;
+		return ggroups;
 	}
 	
 	public final FurnisherItem item(int index) {
@@ -294,9 +242,7 @@ public abstract class Furnisher{
 	}
 	
 	public void renderTileBelow(SPRITE_RENDERER r, ShadowBatch s, RenderIterator it, boolean floored) {
-		if (floored) {
-			
-		}
+
 	}
 	
 	public void renderExtra(SPRITE_RENDERER r, int x, int y, int tx, int ty, int rx, int ry, FurnisherItem item) {
@@ -358,6 +304,10 @@ public abstract class Furnisher{
 		return true;
 	}
 
+	public void doAfterConstructionInited() {
+		
+	}
+	
 	public FurnisherItem secretReplacementItem(int rot, FurnisherItem origional) {
 		return null;
 	}
@@ -370,9 +320,23 @@ public abstract class Furnisher{
 		
 		return null;
 	}
+
+	public void placeInfo(GBox box, FurnisherItem item, int x1, int y1) {
 	
-	public boolean hasShape() {
-		return usesArea();
+		
+	}
+
+	public boolean joinsWithFloor() {
+		// TODO Auto-generated method stub
+		return false;
 	}
 	
+	public boolean isAreaPlacable() {
+		return false;
+	}
+	
+	
+	public Diagonalizer dia(int tx, int ty) {
+		return null;
+	}
 }

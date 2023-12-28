@@ -4,7 +4,9 @@ import init.race.RACES;
 import init.race.Race;
 import init.sprite.UI.UI;
 import settlement.entity.humanoid.HCLASS;
-import settlement.stats.*;
+import settlement.stats.STATS;
+import settlement.stats.stat.STAT;
+import settlement.stats.stat.StatCollection;
 import snake2d.SPRITE_RENDERER;
 import snake2d.util.color.COLOR;
 import snake2d.util.datatypes.DIR;
@@ -34,8 +36,9 @@ final class SStats {
 		
 		GText work = new GText(UI.FONT().S, 32);
 
-		
+
 		for (StatCollection h : STATS.COLLECTIONS()) {
+
 			LinkedList<STAT> stats = new LinkedList<>();
 			for (STAT s : h.all()) {
 				if (s.key() == null)

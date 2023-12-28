@@ -4,7 +4,6 @@ import java.io.IOException;
 
 import init.D;
 import init.RES;
-import settlement.main.RenderData.RenderIterator;
 import settlement.main.SETT;
 import settlement.room.main.*;
 import settlement.room.main.furnisher.Furnisher;
@@ -16,12 +15,15 @@ import snake2d.util.datatypes.*;
 import snake2d.util.sprite.TILE_SHEET;
 import util.gui.misc.GText;
 import util.info.GFORMAT;
+import util.rendering.RenderData.RenderIterator;
 import util.rendering.ShadowBatch;
 import util.spritecomposer.*;
+import util.spritecomposer.ComposerThings.ITileSheet;
 
 final class Constructor extends Furnisher{
 
 	private final ROOM_DUMP p;
+	private final TILE_SHEET sheet;
 	
 	final FurnisherStat total = new FurnisherStat(this, 1) {
 		
@@ -47,14 +49,18 @@ final class Constructor extends Furnisher{
 	protected Constructor(ROOM_DUMP p, RoomInitData init) throws IOException {
 		super(init, 0, 1, 384, 108);
 		this.p = p;
-	}
+		
+		sheet = new ITileSheet(init.sp(), 384, 64) {
+			
+			@Override
+			protected TILE_SHEET init(ComposerUtil c, ComposerSources s, ComposerDests d)  {
+				s.house2.init(0, 0, 2, 1, d.s16);
+				s.house2.setVar(0).paste(1, true);
+				s.house2.setVar(1).paste(1, true);
+				return d.s16.saveGame();
+			}
+		}.get();
 
-	@Override
-	protected TILE_SHEET sheet(ComposerUtil c, ComposerSources s, ComposerDests d, int y1) {
-		s.house2.init(0, y1, 2, 1, d.s16);
-		s.house2.setVar(0).paste(1, true);
-		s.house2.setVar(1).paste(1, true);
-		return d.s16.saveGame();
 	}
 
 	@Override
@@ -63,6 +69,11 @@ final class Constructor extends Furnisher{
 	}
 	
 	private static CharSequence ¤¤TooThin = "¤Area is too thin at places. Expand the area to at least 3x3";
+	
+	@Override
+	public boolean joinsWithFloor() {
+		return true;
+	}
 	
 	static {
 		D.ts(Constructor.class);

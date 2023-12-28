@@ -7,7 +7,7 @@ import settlement.room.main.*;
 import settlement.room.main.construction.ConstructionInit;
 import settlement.room.main.furnisher.FurnisherItem;
 import settlement.room.main.placement.UtilWallPlacability;
-import settlement.tilemap.TBuilding;
+import settlement.tilemap.terrain.TBuilding;
 import snake2d.util.datatypes.DIR;
 import snake2d.util.file.Json;
 import snake2d.util.file.JsonE;
@@ -24,8 +24,7 @@ public final class SavedPrints {
 			versions.put(p.key, 4);
 			
 		}
-		versions.put(rooms.HUNTER.key, 4);
-
+		
 		
 		try {
 			Json[] jsons = new Json(PATHS.local().PROFILE.get("SavedPrints")).jsons("BLUEPRINTS");

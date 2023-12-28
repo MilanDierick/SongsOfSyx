@@ -8,20 +8,21 @@ import init.race.*;
 import settlement.entity.humanoid.HTYPE;
 import settlement.entity.humanoid.Humanoid;
 import settlement.main.SETT;
-import settlement.room.main.RoomEmployment;
+import settlement.room.main.employment.RoomEmployment;
 import settlement.stats.STATS;
-import snake2d.util.file.*;
+import snake2d.util.file.FileGetter;
+import snake2d.util.file.FilePutter;
 import snake2d.util.misc.ACTION;
 import snake2d.util.rnd.RND;
 import snake2d.util.sprite.text.Str;
 import snake2d.util.sprite.text.StrInserter;
-import view.main.MessageText;
 import view.sett.IDebugPanelSett;
+import view.ui.message.MessageText;
 
-final class EventCitizenStrike implements SAVABLE{
+final class EventCitizenStrike implements EventCitizen.SMALL_EVENT{
 
 	private static CharSequence ¤¤strike = "¤Worker Strike!";
-	private static CharSequence ¤¤strikeD = "¤Your {RACE} has managed to halt all work in our {WORKPLACES} in protest of what they call to be your bad judgement. Take measures to increase their loyalty so that it doesn't happen again.";
+	private static CharSequence ¤¤strikeD = "¤Your {RACE} workers have halted all work in our {WORKPLACES}, in protest of what they call to be your bad judgement. Take measures to increase their loyalty so that it doesn't happen again.";
 	private static CharSequence ¤¤strikeOver = "¤Strike Over";
 	private static CharSequence ¤¤strikeOverD = "¤Your {WORKPLACES} has resumed work and the strike is over.";
 	
@@ -53,7 +54,7 @@ final class EventCitizenStrike implements SAVABLE{
 				int ri = RND.rInt(RACES.all().size());
 				for (int i = 0; i < RACES.all().size(); i++) {
 					Race r = RACES.all().getC(ri+i);
-					if (strike(r))
+					if (event(0, r))
 						return;
 				}
 			}
@@ -82,7 +83,8 @@ final class EventCitizenStrike implements SAVABLE{
 		strikeTimer = 0;
 	}
 	
-	boolean strike(Race hr) {
+	@Override
+	public boolean event(int am, Race hr) {
 		
 		RoomEmployment strike = null;
 		int most = 0;
@@ -109,7 +111,8 @@ final class EventCitizenStrike implements SAVABLE{
 		
 	}
 	
-	void update(double ds) {
+	@Override
+	public void update(double ds) {
 		if (strikeTimer <= 0)
 			return;
 		

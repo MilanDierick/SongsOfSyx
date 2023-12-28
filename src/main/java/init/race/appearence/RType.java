@@ -1,12 +1,9 @@
 package init.race.appearence;
 
 import java.io.IOException;
-import java.util.Arrays;
 
 import init.race.ExpandInit;
 import init.race.appearence.RColors.ColorCollection;
-import settlement.stats.STAT;
-import settlement.stats.STATS;
 import snake2d.util.file.Json;
 import snake2d.util.sets.*;
 import snake2d.util.sprite.TILE_SHEET;
@@ -25,13 +22,14 @@ public final class RType {
 	public final LIST<RAddon> addonsAbove;
 
 	RType(RColors colors, Json json, RExtras extra, ExpandInit init) throws IOException{
+		String ssprite = json.value("SPRITE_FILE");
 		{
-			String sprite = json.value("SPRITE_FILE");
-			if (init.map.containsKey(sprite)) {
-				sheet = init.map.get(sprite);
+			
+			if (init.map.containsKey(ssprite)) {
+				sheet = init.map.get(ssprite);
 			}else {
-				sheet = new RaceSheet(init.sg.get(sprite));
-				init.map.put(sprite, sheet);
+				sheet = new RaceSheet(init.sg.get(ssprite));
+				init.map.put(ssprite, sheet);
 			}
 		}
 		
@@ -64,13 +62,19 @@ public final class RType {
 		LinkedList<RAddon> below = new LinkedList<>();
 		LinkedList<RAddon> above = new LinkedList<>();
 		
-		if (json.has("ADDONS"))
+		if (json.has("ADDONS")) {
+			
+			new ComposerThings.IInit(init.sg.get(ssprite), 448, 546);
+			RAddon[] done = new RAddon[8];
+			
+			
 			for (Json j : json.jsons("ADDONS")) {
 				if (j.bool("BELOW_HEAD"))
-					below.add(new RAddon(j, colors, init));
+					below.add(new RAddon(j, colors, done));
 				else
-					above.add(new RAddon(j, colors, init));
+					above.add(new RAddon(j, colors, done));
 			}
+		}
 		
 		this.addonsAbove = new ArrayList<RAddon>(above);
 		this.addonsBelow = new ArrayList<RAddon>(below);
@@ -78,32 +82,13 @@ public final class RType {
 	
 	public static class RTypeSpec {
 		public final double occurrence;
-		public final double occurrenceTop1;
-		public final double occurrenceTop2;
-		public final double[] extraOccurence = new double[STATS.APPEARANCE().extraBits.size()];
-		
-		
 		public final ColorCollection skin;
 		public final ColorCollection leg;
 		
 		
 		RTypeSpec(RColors colors, Json json){
 			
-			Arrays.fill(extraOccurence, 0);
-			if (json.has("SET_APPEARANCE_STATS")) {
-				Json j = json.json("SET_APPEARANCE_STATS");
-				for (int si = 0; si < STATS.APPEARANCE().extraBits.size(); si++) {
-					STAT ss = STATS.APPEARANCE().extraBits.get(si);
-					if (j.has(ss.key())) {
-						extraOccurence[si] = j.d(ss.key(), 0, 1);
-					}
-				}
-			}
-			
-			
 			occurrence = json.has("OCCURRENCE") ? json.d("OCCURRENCE") : 0.5;
-			occurrenceTop1 = json.has("OCCURRENCE_EXTRA1") ? json.d("OCCURRENCE_EXTRA1") : 0.5;
-			occurrenceTop2 = json.has("OCCURRENCE_EXTRA2") ? json.d("OCCURRENCE_EXTRA2") : 0.5;
 			skin = colors.collection.getByKey("COLOR_SKIN", json);
 			leg = colors.collection.getByKey("COLOR_LEG", json);
 		}

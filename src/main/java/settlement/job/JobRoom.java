@@ -3,19 +3,21 @@ package settlement.job;
 import static settlement.main.SETT.*;
 
 import game.GAME;
+import game.faction.FResources.RTYPE;
+import init.resources.RBIT;
 import init.resources.RESOURCE;
 import init.sound.SOUND;
 import init.sound.SoundSettlement.Sound;
 import init.sprite.SPRITES;
 import settlement.entity.humanoid.Humanoid;
 import settlement.job.StateManager.State;
-import settlement.main.RenderData.RenderIterator;
 import settlement.main.SETT;
 import settlement.thing.ThingsResources.ScatteredResource;
-import settlement.tilemap.Terrain.TerrainTile;
+import settlement.tilemap.terrain.Terrain.TerrainTile;
 import snake2d.Renderer;
 import snake2d.SPRITE_RENDERER;
 import snake2d.util.datatypes.DIR;
+import util.rendering.RenderData.RenderIterator;
 import util.rendering.ShadowBatch;
 import view.tool.PlacableMulti;
 
@@ -63,18 +65,26 @@ class JobRoom extends Job {
 	}
 	
 	private PSTATE getState(int tx, int ty) {
+//		if (SETT.TERRAIN().MOUNTAIN.is(tx, ty)) {
+//			System.out.println(((ROOM_JOBBER) ROOMS().map.get(tx, ty)).needsTerrainToBeCleared(tx, ty) + " " + terrainNeedsClear(tx, ty));
+//			System.out.println(TERRAIN().get(tx, ty).clearing().needs());
+//			System.out.println(!TERRAIN().get(tx, ty).roofIs());
+//			System.out.println(TERRAIN().get(tx, ty).clearing().can());
+//		}
 		if (((ROOM_JOBBER) ROOMS().map.get(tx, ty)).needsTerrainToBeCleared(tx, ty) && terrainNeedsClear(tx, ty))
 			return PSTATE.CLEAR_TERRAIN;
 		else if (((ROOM_JOBBER) ROOMS().map.get(tx, ty)).needsFertilityToBeCleared(tx, ty) && !GRASS().current.is(tx, ty, 0))
 			return PSTATE.CLEAR_VEG;
 		else if (res != null)
 			return PSTATE.FETCHING;
+		else if (((ROOM_JOBBER) ROOMS().map.get(tx, ty)).becomesSolid(tx, ty) && THINGS().resources.has(tx, ty, RBIT.ALL))
+			return PSTATE.REMOVING;
 		else
 			return PSTATE.DOING;
 	}
 
 	boolean terrainNeedsClear(int tx, int ty) {
-		return TERRAIN().get(tx, ty).clearing().needs() && !TERRAIN().get(tx, ty).roofIs();
+		return TERRAIN().get(tx, ty).clearing().needs() && !TERRAIN().get(tx, ty).roofIs() && TERRAIN().get(tx, ty).clearing().can();
 	}
 
 //	@Override
@@ -130,20 +140,11 @@ class JobRoom extends Job {
 		RESOURCE res = null;
 		switch (state) {
 		case CLEAR_TERRAIN:
-			if (SETT.TERRAIN().MOUNTAIN.is(coo))
-				return JOBS().clearss.tunnelPerform(coo);
-			else {
+			if (SETT.TERRAIN().MOUNTAIN.is(coo)) {
+				res = JOBS().clearss.tunnelPerform(coo);
+			}else {
 				TerrainTile t = TERRAIN().get(tile);
-				boolean w = TERRAIN().WATER.is(tile);
-				res = t.clearing().resource();
-				for (int i = 0; i < 5; i++) {
-					t.clearing().clear1(coo.x(), coo.y());
-					if (t != TERRAIN().get(coo))
-						break;
-				}
-				if (TERRAIN().NADA.is(coo) && w) {
-					JOBS().waterTable++;
-				}
+				res = t.clearing().clear1(coo.x(), coo.y());
 			}
 			
 			break;
@@ -183,7 +184,7 @@ class JobRoom extends Job {
 		get(coo.x(), coo.y());
 		jobReserveCancel(r);
 		if (res != null)
-			GAME.player().res().inProduced.inc(res, 1);
+			GAME.player().res().inc(res, RTYPE.PRODUCED, 1);
 		return res;
 
 	}

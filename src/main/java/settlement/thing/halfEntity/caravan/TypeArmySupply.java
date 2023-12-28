@@ -4,6 +4,7 @@ import static settlement.main.SETT.*;
 
 import game.GAME;
 import game.faction.FACTIONS;
+import game.faction.FResources.RTYPE;
 import snake2d.util.misc.CLAMP;
 import util.gui.misc.GBox;
 
@@ -59,7 +60,7 @@ class TypeArmySupply extends Type{
 		c.reserved --;
 		c.amountCarried ++;
 		coo.pickup(1);
-		FACTIONS.player().res().outMilitary.inc(c.res, 1);
+		FACTIONS.player().res().inc(c.res, RTYPE.ARMY_SUPPLY, -1);
 
 		return true;
 	}

@@ -118,6 +118,10 @@ public class ROOM_HOME extends RoomBlueprintImp{
 		}
 		return null;
 	}
+	
+	public boolean isService(int tile) {
+		return is(tile) && SETT.ROOMS().extraBit.is(tile);
+	}
 
 	public PlacableMulti upgrader() {
 		return uper.get();

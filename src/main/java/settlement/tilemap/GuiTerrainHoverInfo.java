@@ -6,6 +6,7 @@ import init.C;
 import init.D;
 import init.sprite.SPRITES;
 import settlement.main.SETT;
+import settlement.tilemap.growth.Fertility;
 import util.gui.misc.GBox;
 import util.gui.misc.GText;
 import util.info.GFORMAT;
@@ -14,7 +15,7 @@ public final class GuiTerrainHoverInfo{
 
 	private static CharSequence ¤¤Degrade= "¤Degrade:";
 	private static CharSequence ¤¤Strength= "¤Strength:";
-	private static CharSequence ¤¤Border= "¤This is a static entry point to your city. Invasions will be launched here. One can build on it, but should someone invade it will be instantly cleared of obstructions.";
+	private static CharSequence ¤¤Border= "¤This is a static entry point to your city. Keep this clear and reachable.";
 	private static CharSequence ¤¤Fertility = "Fertility: {0}% (base: {1}%";
 	
 	static {
@@ -82,7 +83,7 @@ public final class GuiTerrainHoverInfo{
 		
 		
 		
-		if (SETT.BORDERS().is.is(tx, ty)) {
+		if (SETT.ENTRY().points.map.is(tx, ty)) {
 			box.NL(8);
 			box.add(box.text().normalify2().add(¤¤Border));
 			box.NL();

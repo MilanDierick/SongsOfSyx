@@ -9,7 +9,7 @@ import init.RES;
 import settlement.entity.animal.Animal;
 import settlement.entity.animal.AnimalSpecies;
 import settlement.main.SETT;
-import settlement.tilemap.TBuilding.BuildingComponent;
+import settlement.tilemap.terrain.TBuilding.BuildingComponent;
 import snake2d.util.datatypes.COORDINATE;
 import snake2d.util.file.FileGetter;
 import snake2d.util.file.FilePutter;

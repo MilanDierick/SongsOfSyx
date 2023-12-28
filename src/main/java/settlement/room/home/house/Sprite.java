@@ -2,7 +2,6 @@ package settlement.room.home.house;
 
 import init.race.home.RaceHomeClass;
 import init.sprite.game.Sheets;
-import settlement.main.RenderData.RenderIterator;
 import settlement.main.SETT;
 import settlement.room.main.Room;
 import settlement.room.main.furnisher.FurnisherItem;
@@ -10,6 +9,7 @@ import settlement.room.sprite.RoomSprite;
 import snake2d.SPRITE_RENDERER;
 import snake2d.util.datatypes.DIR;
 import snake2d.util.rnd.RND;
+import util.rendering.RenderData.RenderIterator;
 import util.rendering.ShadowBatch;
 
 abstract class Sprite extends RoomSprite.Imp{

@@ -3,7 +3,6 @@ package settlement.room.service.lavatory;
 import static settlement.main.SETT.*;
 
 import game.GAME;
-import settlement.main.RenderData;
 import settlement.misc.job.*;
 import settlement.room.main.RoomInstance;
 import settlement.room.main.TmpArea;
@@ -15,6 +14,7 @@ import settlement.room.service.module.RoomServiceInstance;
 import snake2d.Renderer;
 import snake2d.util.datatypes.COORDINATE;
 import snake2d.util.sets.ArrayCooShort;
+import util.rendering.RenderData;
 import util.rendering.ShadowBatch;
 
 public final class LavatoryInstance extends RoomInstance implements JOBMANAGER_HASER, ROOM_SERVICER{

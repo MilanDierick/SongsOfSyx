@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.Arrays;
 
 import game.GAME;
+import game.boosting.BOOSTABLES;
 import game.faction.FACTIONS;
 import game.time.TIME;
 import init.D;
@@ -12,20 +13,17 @@ import init.race.RACES;
 import init.race.Race;
 import settlement.entity.humanoid.HCLASS;
 import settlement.entry.Immigration;
-import settlement.main.SETT;
-import settlement.stats.*;
-import settlement.stats.StatsMultipliers.StatMultiplier;
+import settlement.stats.Induvidual;
+import settlement.stats.STATS;
+import settlement.stats.stat.STAT;
 import snake2d.util.file.*;
 import snake2d.util.misc.ACTION;
 import snake2d.util.misc.CLAMP;
-import snake2d.util.sets.ArrayList;
-import snake2d.util.sets.LIST;
 import util.info.INFO;
 import util.statistics.HistoryInt;
 import util.updating.IUpdater;
 import view.sett.IDebugPanelSett;
-import world.World;
-import world.army.WARMYD;
+import world.WORLD;
 
 public final class StandingCitizen extends Standing{
 
@@ -38,8 +36,8 @@ public final class StandingCitizen extends Standing{
 	public final CitizenThing expectation = new Expectation();
 	public final CitizenThing fullfillment = new Fulfillment();
 	public final CitizenThing happiness = new Happiness();
-	public final CitizenThing mainTarget = new MainTarget();
-	public final CitizenThing main = new Main();
+	public final CitizenThing loyaltyTarget = new MainTarget();
+	public final CitizenThing loyalty = new Main();
 	private double fullPows[] = new double[RACES.all().size()];
 	private double defs[] = new double[RACES.all().size()];
 	private double maxes[] = new double[RACES.all().size()];
@@ -48,47 +46,7 @@ public final class StandingCitizen extends Standing{
 	
 	private final double POW = new Json(PATHS.CONFIG().get("Sett")).d("HAPPINESS_EXPONENT");
 	
-	public final LIST<CitizenThing> factors = new ArrayList<CitizenThing>(
-			new CitizenThing(STATS.EDUCATION().INDOCTRINATION.info()) {
-				
-				@Override
-				double update(Race race, double ds) {
-					return 1.0 + STATS.EDUCATION().INDOCTRINATION.data(cl).getD(race)*2;
-				}
-			},
-			new CitizenThing(STATS.EDUCATION().EDUCATION.info()) {
-				
-				@Override
-				double update(Race race, double ds) {
-					return 1.0-0.1*STATS.EDUCATION().EDUCATION.data(cl).getD(race);
-				}
-			},
-			new CitizenThing(D.g("Soldiers"), D.g("SoldiersD", "The amount of soldiers in the city")) {
-				
-				@Override
-				double update(Race race, double ds) {
-					return 1.0 + 0.5*SETT.ARMIES().player().men()/(STATS.POP().POP.data(cl).get(null)+1.0);
-				}
-			},
-			new CitizenThing(D.g("Armies"), D.g("ArmiesD", "The amount of soldiers stationed on the world map")) {
-				
-				@Override
-				double update(Race race, double ds) {
-					return 1.0 + 0.05*WARMYD.men(null).total().get(FACTIONS.player())/(STATS.POP().POP.data(cl).get(null)+1);
-				}
-			},
-			new CitizenThing(D.g("Royalrace", "Royal Race"), D.g("RoyalD", "A constant buff to your starting race")) {
-				
-				@Override
-				double update(Race race, double ds) {
-					if (race == FACTIONS.player().race())
-						return 1.1;
-					return 1;
-				}
-			}
-		);
-
-
+	
 	
 	
 	@Override
@@ -96,10 +54,8 @@ public final class StandingCitizen extends Standing{
 		happiness.save(file);
 		fullfillment.save(file);
 		expectation.save(file);
-		main.save(file);
-		mainTarget.save(file);
-		for (CitizenThing t : factors)
-			t.save(file);
+		loyalty.save(file);
+		loyaltyTarget.save(file);
 		file.ds(mains);
 	}
 	
@@ -108,10 +64,8 @@ public final class StandingCitizen extends Standing{
 		happiness.load(file);
 		fullfillment.load(file);
 		expectation.load(file);
-		main.load(file);
-		mainTarget.load(file);
-		for (CitizenThing t : factors)
-			t.load(file);
+		loyalty.load(file);
+		loyaltyTarget.load(file);
 		file.ds(mains);
 		setAll();
 	}
@@ -121,10 +75,8 @@ public final class StandingCitizen extends Standing{
 		happiness.clear();
 		fullfillment.clear();
 		expectation.clear();
-		main.clear();
-		mainTarget.clear();
-		for (CitizenThing t : factors)
-			t.clear();
+		loyalty.clear();
+		loyaltyTarget.clear();
 		Arrays.fill(mains, 0);
 	}
 	
@@ -174,8 +126,8 @@ public final class StandingCitizen extends Standing{
 		for (int ri = 0; ri < RACES.all().size(); ri++) {
 			Race r = RACES.all().get(ri);
 			update(r, 0);
-			mains[ri] = mainTarget.getD(r);
-			main.set(r, mains[ri]);
+			mains[ri] = loyaltyTarget.getD(r);
+			loyalty.set(r, mains[ri]);
 		}
 	}
 	
@@ -194,10 +146,8 @@ public final class StandingCitizen extends Standing{
 		fullfillment.up(race, ds);
 		expectation.up(race, ds);
 		happiness.up(race, ds);
-		for (CitizenThing t : factors)
-			t.up(race, ds);
-		mainTarget.up(race, ds);
-		main.up(race, ds);
+		loyaltyTarget.up(race, ds);
+		loyalty.up(race, ds);
 	}
 
 	
@@ -221,18 +171,17 @@ public final class StandingCitizen extends Standing{
 			
 			double now = mains[race.index];
 			
-			int t = (int) (mainTarget.getD(race)*100);
+			int t = (int) (loyaltyTarget.getD(race)*100);
 			int c = (int) (now*100);
 			double d = t-c;
 			double mul = 1 + Math.abs(d)/25.0;
 			d *= ds*inter*mul;
 			double cur = now+d;
-			if (d < 0 && cur < mainTarget.getD(race))
-				cur = mainTarget.getD(race);
-			else if(d > 0 && cur > mainTarget.getD(race))
-				cur = mainTarget.getD(race);
+			if (d < 0 && cur < loyaltyTarget.getD(race))
+				cur = loyaltyTarget.getD(race);
+			else if(d > 0 && cur > loyaltyTarget.getD(race))
+				cur = loyaltyTarget.getD(race);
 			
-			cur = CLAMP.d(cur, 0, 1);
 			mains[race.index] = cur;
 			return cur;
 		}
@@ -251,28 +200,10 @@ public final class StandingCitizen extends Standing{
 		@Override
 		double update(Race race, double ds) {
 			
-			double h = happiness.getD(race);
-			for (CitizenThing t : factors) {
-				h*= t.getD(race);
-			}
+			double h = happiness.getD(race)*BOOSTABLES.BEHAVIOUR().LOYALTY.get(RACES.clP(race, cl));
 			return h;
 		}
 		
-	}
-	
-	private double hap(Race r) {
-		double sup = fullfillment.getD(r);
-		double exp = expectation.getD(r);
-		if (sup <= 0)
-			return 0;
-		if (exp == 0)
-			return 1;
-		sup/=exp;
-		
-		for (StatMultiplier m : STATS.MULTIPLIERS().get(cl))
-			sup *= m.multiplier(cl, r, 0);
-		
-		return sup;
 	}
 	
 	final class Happiness extends CitizenThing {
@@ -290,6 +221,31 @@ public final class StandingCitizen extends Standing{
 			
 			double sup = hap(r);
 			return (int)(100*CLAMP.d(sup, 0, 1))/100.0;
+		}
+		
+		public double hap(Race r) {
+			if (STATS.POP().POP.data(cl).get(r, 0) + WORLD.ARMIES().cityDivs().total(r) == 0) {
+				if (r == FACTIONS.player().race())
+					return BOOSTABLES.BEHAVIOUR().HAPPI.get(RACES.clP(r, cl));
+				else if (STATS.POP().POP.data(cl).get(FACTIONS.player().race(), 0) <= 0)
+					return 0.5;
+				return hap(FACTIONS.player().race())*BOOSTABLES.BEHAVIOUR().HAPPI.get(RACES.clP(r, cl));
+					
+			}
+			
+			double sup = fullfillment.getD(r);
+			double exp = expectation.getD(r);
+			if (sup <= 0)
+				return 0;
+			if (exp == 0)
+				return 1;
+			sup/=exp;
+
+			
+			sup *= BOOSTABLES.BEHAVIOUR().HAPPI.get(RACES.clP(r, cl));
+			
+			
+			return sup;
 		}
 		
 	}
@@ -312,6 +268,43 @@ public final class StandingCitizen extends Standing{
 			
 		}
 		
+		public double fullfillment(Race r) {
+			
+			double current = 0;
+			double max = maxes[r.index];
+			double def = defs[r.index];
+			for (STAT ss : r.stats().standings(cl)) {
+				current += ss.standing().get(cl, r);
+			}
+			
+			
+			if (max <= 0)
+				return 1;
+			
+			double d = 0;
+			if (current < def) {
+				d = -current/def;
+			}else {
+				current -= def;
+				max -= def;
+				d = Math.pow(current/max, fullPow(r));
+			}
+			
+			if (GAME.player().race() == r) {
+				double min = expectation(r, 6, 0);
+				if (d < 0)
+					return min*-d;
+				return CLAMP.d(min + d, 0, 1);
+				
+			}else {
+				double min = expectation(r, 2, 0);
+				if (d < 0)
+					return min*-d;
+				return CLAMP.d(min + d, 0, 1);
+			}
+		
+		}
+		
 	}
 	
 
@@ -320,42 +313,7 @@ public final class StandingCitizen extends Standing{
 		return fullPows[r.index];
 	}
 	
-	public double fullfillment(Race r) {
-		
-		double current = 0;
-		double max = maxes[r.index];
-		double def = defs[r.index];
-		for (STAT ss : r.stats().standings(cl)) {
-			current += ss.standing().get(cl, r);
-		}
-		
-		
-		if (max <= 0)
-			return 1;
-		
-		double d = 0;
-		if (current < def) {
-			d = -current/def;
-		}else {
-			current -= def;
-			max -= def;
-			d = Math.pow(current/max, fullPow(r));
-		}
-		
-		if (GAME.player().race() == r) {
-			double min = expectation(r, 10, 0);
-			if (d < 0)
-				return min*-d;
-			return CLAMP.d(min + d, 0, 1);
-			
-		}else {
-			double min = expectation(r, 2, 0);
-			if (d < 0)
-				return min*-d;
-			return CLAMP.d(min + d, 0, 1);
-		}
-	
-	}
+
 	
 	static final class Expectation extends CitizenThing {
 		
@@ -374,8 +332,8 @@ public final class StandingCitizen extends Standing{
 		}
 		
 		private double c(Race race) {
-			double pop = STATS.POP().POP.data(cl).get(race, 0)+1 + World.ARMIES().cityDivs().total(race);
-			double popOther = STATS.POP().POP.data(cl).get(null, 0)+1+World.ARMIES().cityDivs().total() -pop;
+			double pop = STATS.POP().POP.data(cl).get(race, 0)+1 + WORLD.ARMIES().cityDivs().total(race);
+			double popOther = STATS.POP().POP.data(cl).get(null, 0)+1+WORLD.ARMIES().cityDivs().total() -pop;
 			return expectation(race, pop, popOther);
 		}
 		
@@ -387,7 +345,9 @@ public final class StandingCitizen extends Standing{
 		
 		double bo = Math.sqrt(amount/(amount+other));
 		double exp = (amount+other)/MAX;
-		double pe = 1.0/race.population().maxCity;
+		double pe = 1.0/race.population().max;
+		if (race != FACTIONS.player().race())
+			bo*= 2.0;
 		return bo*exp*pe;
 	}
 	
@@ -401,10 +361,7 @@ public final class StandingCitizen extends Standing{
 			current += ss.standing().get(a);
 		}
 		
-		double h = 1;
-		for (CitizenThing t : factors) {
-			h*= t.getD(r);
-		}
+		double h = BOOSTABLES.BEHAVIOUR().HAPPI.get(a);
 		
 		if (max <= 0)
 			return h;
@@ -433,29 +390,26 @@ public final class StandingCitizen extends Standing{
 				h = CLAMP.d(h*(min + d), 0, 1);
 		}
 		
-		double pop = STATS.POP().POP.data(cl).get(r, 0)+1 + World.ARMIES().cityDivs().total(r);
-		double popOther = STATS.POP().POP.data(cl).get(null, 0)+1+World.ARMIES().cityDivs().total() -pop;
+		double pop = STATS.POP().POP.data(cl).get(r, 0)+1 + WORLD.ARMIES().cityDivs().total(r);
+		double popOther = STATS.POP().POP.data(cl).get(null, 0)+1+WORLD.ARMIES().cityDivs().total() -pop;
 		h/= expectation(r, pop, popOther);
 		
-		for (CitizenThing t : factors) {
-			h*= t.getD(r);
-		}
 		return h;
 	}
 	
 	@Override
 	public double current() {
-		return main.getD(null);
+		return loyalty.getD(null);
 	}
 
 	@Override
 	public double target() {
-		return mainTarget.getD(null);
+		return loyaltyTarget.getD(null);
 	}
 	
 	@Override
 	public INFO info() {
-		return main.info();
+		return loyalty.info();
 	}
 	
 	

@@ -4,13 +4,14 @@ import static settlement.main.SETT.*;
 
 import java.io.IOException;
 
+import game.Profiler;
 import init.resources.RESOURCE;
 import init.resources.RESOURCES;
 import init.sprite.SPRITES;
 import settlement.main.*;
 import settlement.main.SETT.SettResource;
 import settlement.misc.util.TileGetter;
-import settlement.tilemap.TGrowable;
+import settlement.tilemap.terrain.TGrowable;
 import snake2d.CORE;
 import snake2d.Renderer;
 import snake2d.util.color.COLOR;
@@ -22,12 +23,14 @@ import snake2d.util.map.*;
 import snake2d.util.sets.*;
 import util.data.BOOLEAN.BOOLEAN_MUTABLE;
 import util.gui.misc.GBox;
+import util.rendering.RenderData;
 import util.rendering.ShadowBatch;
 import view.tool.PLACABLE;
+import view.tool.PlacableMulti;
 
 public final class JOBS extends SettResource {
 
-	final static COLOR CRESERVED = new ColorImp(0, 127, 255);
+	public final static COLOR CRESERVED = new ColorImp(0, 127, 255);
 
 	private final byte[] map = new byte[TAREA];
 	private final Bitsmap1D statei = new Bitsmap1D(-1, 2, TAREA);
@@ -52,7 +55,6 @@ public final class JOBS extends SettResource {
 	final Bitsmap1D progress = new Bitsmap1D(0, 3, TAREA);
 	final Bitmap1D wantsRes = new Bitmap1D(TAREA, false);
 	final StateManager state = new StateManager(statei);
-	int waterTable;
 
 	public final TileGetter<Job> getter;
 	public final MAP_INT indexMap = new MAP_INT() {
@@ -69,11 +71,11 @@ public final class JOBS extends SettResource {
 			return map[tile];
 		}
 	};
-	public final PLACABLE tool_clear = new PlacerDelete();
-	public final PLACABLE tool_activate = new PlacerActivate();
-	public final PLACABLE tool_dormant = new PlacerDormant();
-	public final PLACABLE tool_remove_all = new PlacerRemoveAll();
-	public final PLACABLE tool_remove_smartl = new PlacerRemoveSmart();
+	public final PlacableMulti tool_clear = new PlacerDelete();
+	public final PlacableMulti tool_activate = new PlacerActivate();
+	public final PlacableMulti tool_dormant = new PlacerDormant();
+	public final PlacableMulti tool_remove_all = new PlacerRemoveAll();
+	public final PlacableMulti tool_remove_smartl = new PlacerRemoveSmart();
 	public final MAP_OBJECT<Job> jobGetter = new JobGetter();
 	final JobRoom room = new JobRoom(null);
 	final JobRoom[] rooms = new JobRoom[RESOURCES.ALL().size()];
@@ -82,7 +84,7 @@ public final class JOBS extends SettResource {
 			rooms[i] = new JobRoom(RESOURCES.ALL().get(i));
 	}
 
-	public final PLACABLE tool_repair = new PlacerRepair();
+	public final PlacableMulti tool_repair = new PlacerRepair();
 
 	public final LIST<JobBuildRoad> roads = JobBuildRoad.make();
 	public final LIST<JobBuildStructure> build_structure = JobBuildStructure.make();
@@ -262,7 +264,6 @@ public final class JOBS extends SettResource {
 		statei.save(saveFile);
 		progress.save(saveFile);
 		wantsRes.save(saveFile);
-		saveFile.i(waterTable);
 	}
 
 	@Override
@@ -271,19 +272,14 @@ public final class JOBS extends SettResource {
 		statei.load(saveFile);
 		progress.load(saveFile);
 		wantsRes.load(saveFile);
-		waterTable = saveFile.i();
 
 	}
 
 	@Override
 	protected void generate(CapitolArea area) {
-		int wa = 0;
 		for (int i = 0; i < TAREA; i++) {
-			if (TERRAIN().WATER.is(i) || TERRAIN().WATER.DEEP.is(i))
-				wa++;
 			map[i] = Job.NOTHING;
 		}
-		this.waterTable = wa / 10;
 		statei.clear();
 		progress.clear();
 		wantsRes.clear();
@@ -295,7 +291,7 @@ public final class JOBS extends SettResource {
 	}
 
 	@Override
-	protected void update(float ds) {
+	protected void update(float ds, Profiler profiler) {
 		hoverI = -1;
 	}
 

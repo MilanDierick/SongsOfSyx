@@ -6,11 +6,14 @@ import game.GAME;
 import settlement.entity.humanoid.HTYPE;
 import settlement.entity.humanoid.Humanoid;
 import settlement.entity.humanoid.ai.main.*;
-import settlement.entity.humanoid.ai.main.AIData.AIDataSuspender;
 import settlement.entity.humanoid.ai.main.AIPLAN.AiPlanActivation;
 import settlement.entity.humanoid.ai.work.WorkAbs.Works;
 import settlement.main.SETT;
+import settlement.room.food.fish.ROOM_FISHERY;
+import settlement.room.food.hunter2.ROOM_HUNTER;
 import settlement.room.main.*;
+import settlement.room.service.arena.grand.ROOM_ARENA;
+import settlement.room.service.arena.pit.ROOM_FIGHTPIT;
 import settlement.room.spirit.grave.GraveData;
 import settlement.room.spirit.temple.ROOM_TEMPLE;
 import settlement.stats.STATS;
@@ -19,12 +22,11 @@ public final class AIModule_Work extends AIModule{
 
 
 	private final PlanBlueprint[] map = new PlanBlueprint[ROOMS().all().size()];
-	public final AIDataSuspender suspender = AI.suspender();
-	public final AIDataSuspender oddSearch = AI.suspender();
 	
 	private final AIPLAN hangArround = new PlanHangArround();
 	
 	final PlanOddjobber oddjobber = new PlanOddjobber();
+	private final PlanFetchEquip equip = new PlanFetchEquip();
 	
 	public AIModule_Work(){
 
@@ -37,11 +39,10 @@ public final class AIModule_Work extends AIModule{
 			new WorkAbs(this,b, map, w);
 		for (RoomBlueprintIns<?> b : ROOMS().PASTURES)
 			new WorkAbs(this,b, map, w);
-		for (RoomBlueprintIns<?> b : ROOMS().FISHERIES)
-			new WorkAbs(this,b, map, w);
+		for (ROOM_FISHERY b : ROOMS().FISHERIES)
+			new WorkFisherman(this,b, map, w);
 		new WorkAbs(this, ROOMS().PRISON, map, w);
 		new WorkAbs(this, ROOMS().ASYLUM, map, w);
-		new WorkAbs(this, ROOMS().PHYSICIAN, map, w);
 		new WorkAbs(this, ROOMS().HOSPITAL, map, w);
 		new WorkAbs(this, ROOMS().INN, map, w);
 		new WorkWarehouse(this, map);
@@ -51,7 +52,8 @@ public final class AIModule_Work extends AIModule{
 			new WorkGraveDigger(this, map, h);
 		new WorkAbs(this, ROOMS().JANITOR, map, w);
 		new WorkExporter(this, map);
-		new WorkHunter(this, map);
+		for (ROOM_HUNTER h : SETT.ROOMS().HUNTERS)
+			new WorkHunter(h, this, map);
 		new WorkCannibal(this, map);
 		new WorkGuard(this, map);
 		new WorkExecutioner(this, map);
@@ -59,8 +61,11 @@ public final class AIModule_Work extends AIModule{
 		new WorkBuilder(this, map);
 		new WorkSlaver(this, map);
 		new WorkTransporter(this, map, w);
+		new WorkEmissary(this, map);
 		new WorkAbs(this, SETT.ROOMS().HOMES.CHAMBER, map, w);
 		{
+			for (RoomBlueprintIns<?> p : ROOMS().PHYSICIANS)
+				new WorkAbs(this, p, map, w);
 			for (RoomBlueprintIns<?> p : ROOMS().EATERIES)
 				new WorkAbs(this, p, map, w);
 			for (RoomBlueprintIns<?> p : ROOMS().CANTEENS)
@@ -85,7 +90,7 @@ public final class AIModule_Work extends AIModule{
 				new WorkAbs(this, p, map, w);
 			for (RoomBlueprintIns<?> p : ROOMS().SCHOOLS)
 				new WorkAbs(this, p, map, w);
-			for (ROOM_TEMPLE p : ROOMS().TEMPLES)
+			for (ROOM_TEMPLE p : ROOMS().TEMPLES.ALL)
 				new WorkTemple(this, p, map);
 		}
 
@@ -95,6 +100,14 @@ public final class AIModule_Work extends AIModule{
 		for (RoomBlueprintIns<?> p : ROOMS().STAGES)
 			WorkOrator.getDancer(this, p, map);
 	
+		for (ROOM_FIGHTPIT b : SETT.ROOMS().ARENAS) {
+			new WorkGladiator(b.work, b, this, map);
+		}
+		
+		for (ROOM_ARENA b : SETT.ROOMS().GARENAS) {
+			new WorkGladiator(b.work, b, this, map);
+		}
+		
 		for (RoomBlueprint b : SETT.ROOMS().all()) {
 			if ( b instanceof RoomBlueprintIns<?>) {
 				RoomBlueprintIns<?> p = (RoomBlueprintIns<?>) b;
@@ -103,6 +116,8 @@ public final class AIModule_Work extends AIModule{
 			}
 		}
 		
+
+		
 //		new RoomWorker(ROOMS().CONSTRUCTION.jobTitle, ROOMS().CONSTRUCTION);
 
 		
@@ -110,36 +125,14 @@ public final class AIModule_Work extends AIModule{
 	
 	
 	@Override
-	protected AiPlanActivation getPlan(Humanoid a, AIManager d) {
+	public AiPlanActivation getPlan(Humanoid a, AIManager d) {
 		
 		if (!validateEmployment(a, d)) {
-			if (!PlanOddjobber.hasOddjob(a))
-				return null;
-			if (suspender.is(d))
+			if (!PlanOddjobber.hasOddjob(a, true))
 				return null;
 			if (SETT.ARMIES().enemy().men() > 0)
 				return null;
-			if (STATS.POP().POP.data().get(null)-STATS.WORK().workforce() > 100) {
-				int dist = oddSearch.get(d);
-				if (dist == oddSearch.max(d)) {
-					dist = Integer.MAX_VALUE;
-				}else {
-					dist = (dist + 1)*200;
-				}
-				AiPlanActivation p = oddjobber.activateOddjobber(a, d, dist);
-				if (p == null) {
-					oddSearch.inc(d, 1);
-					suspender.suspend(d);
-				}else {
-					oddSearch.set(d, 0);
-				}
-				return p;
-			}
-			
-			AiPlanActivation p = oddjobber.activateOddjobber(a, d, Integer.MAX_VALUE);
-			if (p == null) {
-				suspender.suspend(d);
-			}
+			AiPlanActivation p = oddjobber.activateOddjobber(a, d);
 			return p;
 		}
 		
@@ -148,31 +141,47 @@ public final class AIModule_Work extends AIModule{
 			throw new RuntimeException(""+work(a).blueprintI().info.name);
 		}
 		
+		{
+			AiPlanActivation p = equip.activate(a, d);
+			if (p != null)
+				return p;
+		}
+		
 		
 		AiPlanActivation p = b.activate(a, d);
 		if (p == null) {
-			if (b.shouldReportWorkFailure(a, d))
-				work(a).reportWorkSuccess(false);
-			if (!suspender.is(d) && SETT.ARMIES().enemy().men() == 0) {
+			if (PlanOddjobber.hasOddjob(a, false) && SETT.ARMIES().enemy().men() == 0) {
 				p = oddjobber.activateHelpOut(a, d);
 				if (p != null)
 					return p;
-				suspender.suspend(d);
+				
 			}
 			
 			if (p == null) {
 				return hangArround.activate(a, d);
 			}
 		}
-
-		work(a).reportWorkSuccess(true);
 		return p;
 	}
 	
 	@Override
 	protected void update(Humanoid a, AIManager d, boolean newDay, int byteDelta, int upI) {
-		
-		suspender.update(d);
+		if (AIModules.current(d) == this) {
+			RoomInstance w = work(a);
+			if (w != null) {
+				PlanBlueprint b = map[w.blueprint().index()];
+				if (b.shouldReportWorkFailure(a, d)) {
+					if (d.plan() == hangArround || d.plan() == oddjobber) {
+						w.reportWorkSuccess(false);
+					}else {
+						w.reportWorkSuccess(true);
+					}
+				}
+				
+				
+			}
+			
+		}
 		
 	}
 
@@ -180,17 +189,16 @@ public final class AIModule_Work extends AIModule{
 	public int getPriority(Humanoid a, AIManager d) {
 		
 		if (work(a) == null && !ROOMS().employment.hasWork(a)) {
-			if (suspender.is(d))
-				return 0;
 			if (SETT.ARMIES().enemy().men() > 0)
 				return 0;
-			if (!PlanOddjobber.hasOddjob(a))
+			if (!PlanOddjobber.hasOddjob(a, true))
 				return 0;
 			
 		}
 		if (GAME.events().riot.onStrike(a))
 			return 0;
-		return STATS.WORK().WORK_TIME.indu().getD(a.indu()) < 1 ? 4 : 0;
+		
+		return (int) (STATS.WORK().getWorkPriority(a)*4.0);
 	}
 	
 	private static RoomInstance work(Humanoid a) {

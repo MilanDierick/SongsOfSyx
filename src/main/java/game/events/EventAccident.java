@@ -3,19 +3,20 @@ package game.events;
 import java.io.IOException;
 import java.util.Arrays;
 
+import game.boosting.BOOSTABLES;
 import game.events.EVENTS.EventResource;
+import game.faction.FACTIONS;
 import game.time.TIME;
 import init.C;
 import init.D;
-import init.boostable.BOOSTABLES;
 import settlement.entity.ENTITY;
 import settlement.entity.ENTITY.ECollision;
 import settlement.entity.EPHYSICS;
 import settlement.entity.humanoid.Humanoid;
 import settlement.main.SETT;
 import settlement.room.main.*;
-import settlement.stats.CAUSE_LEAVE;
 import settlement.stats.STATS;
+import settlement.stats.util.CAUSE_LEAVE;
 import snake2d.util.MATH;
 import snake2d.util.datatypes.*;
 import snake2d.util.file.FileGetter;
@@ -25,10 +26,10 @@ import snake2d.util.misc.CLAMP;
 import snake2d.util.rnd.RND;
 import snake2d.util.sprite.text.Str;
 import util.gui.misc.GButt;
-import view.main.MessageSection;
 import view.main.VIEW;
 import view.sett.IDebugPanelSett;
 import view.tool.PlacableSimple;
+import view.ui.message.MessageSection;
 
 public class EventAccident extends EventResource{
 	
@@ -45,7 +46,7 @@ public class EventAccident extends EventResource{
 	
 	private double[] timers = new double[SETT.ROOMS().all().size()];
 	private double timer = 0;
-	private final double acI = (timers.length/(TIME.secondsPerDay*16));
+	private final double acI = (timers.length/(TIME.secondsPerDay*16.0));
 	
 	static {
 		D.ts(EventAccident.class);
@@ -85,9 +86,10 @@ public class EventAccident extends EventResource{
 				RoomBlueprintIns<?> ins = (RoomBlueprintIns<?>) b;
 				if (b != null && b.employment() != null) {
 					double c = acI*b.employment().accidentsPerYear*b.employment().employed();
-					c /= BOOSTABLES.CIVICS().ACCIDENT.get(null, null);
+					c /= 1.0 + BOOSTABLES.CIVICS().ACCIDENT.get(FACTIONS.player());
 					c = CLAMP.d(c, 0, 1);
 					timers[i] -= c;
+					
 					if (timers[i] <= 0) {
 						create(ins);
 					}
@@ -169,7 +171,7 @@ public class EventAccident extends EventResource{
 		Room r = STATS.WORK().EMPLOYED.get(h);
 		if (r != null && r.blueprint().employment() != null && r == SETT.ROOMS().map.get(h.tc())) {
 			double ra = r.blueprint().employment().accidentsPerYear;
-			double ch = CLAMP.d(ra*acI/(BOOSTABLES.CIVICS().ACCIDENT.get(h)), 0, 1);
+			double ch = CLAMP.d(ra*acI/(BOOSTABLES.CIVICS().ACCIDENT.get(h.indu())), 0, 1);
 			if (ch > RND.rFloat()) {
 				create(h);
 			}
@@ -185,7 +187,7 @@ public class EventAccident extends EventResource{
 		
 		double mom = EPHYSICS.MOM_TRESHOLDI + RND.rFloat()*2*EPHYSICS.MOM_TRESHOLDI;
 
-		h.inflictDamage(0.5, 0.5, CAUSE_LEAVE.ACCIDENT);
+		h.inflictDamage(1.0, CAUSE_LEAVE.ACCIDENT);
 		
 		
 		
@@ -207,16 +209,17 @@ public class EventAccident extends EventResource{
 				continue;
 			l = 1.0 - (l / RADIUS);
 			e.speed.setRaw(e.speed.x()+tVec.nX()*C.TILE_SIZE*3*l, e.speed.y()+tVec.nY()*C.TILE_SIZE*3*l);
-			coll.pierceDamage = 0;
+			
 			coll.dirDot = 1.0;
 			coll.momentum = mom*e.physics.getMass();
+			coll.damageStrength = 0;
 			coll.norX = tVec.nX();
 			coll.norY = tVec.nY();
 			coll.leave = CAUSE_LEAVE.ACCIDENT;
 			coll.other = null;
 			if (e instanceof Humanoid) {
 				Humanoid h2 = (Humanoid) e;
-				h2.inflictDamage(RND.rFloat(), RND.rFloat(), CAUSE_LEAVE.ACCIDENT);
+				h2.inflictDamage(l*RND.rFloat()*2.0,  CAUSE_LEAVE.ACCIDENT);
 				if (e.isRemoved()) {
 					deaths ++;
 					continue;

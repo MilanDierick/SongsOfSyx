@@ -15,7 +15,6 @@ public final class UIFonts{
 	
 	public final Font H2;
 	public final Font H1;
-	public final Font H1S;
 	public final Font S;
 	public final Font M;
 	public final LIST<Font> all;
@@ -31,36 +30,24 @@ public final class UIFonts{
 			map.put(s, true);
 		}
 		
-		S = new IFont(g.get("Small")) {
-			@Override
-			protected Font init(ComposerUtil c, ComposerFonter f) {
-				return f.save(0, 0);
-			}
-		}.get();
+		S = get(g, "Small"); 
+		M = get(g, "Medium"); 
 		
 		if (map.containsKey("Header1")) {
 			H1 = get(g, "Header1"); 
 		}else {
-			H1 = new Font(S, 2);
+			H1 = M;
 		}
-		
-		if (map.containsKey("Medium")) {
-			M = get(g, "Medium"); 
-		}else {
-			M = new Font(H1, 0.75);
-		}
-		
+
 		if (map.containsKey("Header2")) {
 			H2 = get(g, "Header2"); 
 		}else {
 			H2 = M; 
 		}
-		
-		H1S = new Font(H1, 0.75);
+
 				
-		all = new ArrayList<Font>(H2,H1,H1S,M,
+		all = new ArrayList<Font>(H2,H1,M,
 				S);
-		
 		
 	}
 	

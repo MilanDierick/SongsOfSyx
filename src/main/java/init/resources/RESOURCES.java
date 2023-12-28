@@ -5,6 +5,7 @@ import java.util.Set;
 
 import init.paths.PATH;
 import init.paths.PATHS;
+import snake2d.Errors;
 import snake2d.util.file.Json;
 import snake2d.util.sets.*;
 import snake2d.util.sprite.TILE_SHEET;
@@ -25,7 +26,7 @@ public final class RESOURCES {
 		private final RCollection<Minable> minable;
 		private final ResGroup drinks;
 		private final RCollection<Growable> growable;
-		private final Edibles edibles;
+		private final ResGroup edibles;
 		private final RESOURCE STONE,WOOD,LIFESTOCK,ALCOHOL;
 		private final int catAmount;
 		private final ArmySupplies supplies;
@@ -118,7 +119,6 @@ public final class RESOURCES {
 				STONE = map.get("_STONE");
 				WOOD = map.get("_WOOD");
 				LIFESTOCK = map.get("_LIVESTOCK");
-				ALCOHOL = map.get("_ALCOHOL");
 				
 				//map.debug();
 			}
@@ -128,8 +128,27 @@ public final class RESOURCES {
 				growable = Growable.make(gInit, gSprite);
 			}
 			
-			edibles = new Edibles(all);
-			drinks = new ResGroup("DRINKABLE", ALCOHOL);
+			{
+				ArrayListGrower<RESOURCE> edi = new ArrayListGrower<>();
+				ArrayListGrower<RESOURCE> drinki = new ArrayListGrower<>();
+				for (RESOURCE res : all) {
+					if (res.isEdible())
+						edi.add(res);
+					if (res.drinkable)
+						drinki.add(res);
+				}
+				if (edi.size() == 0)
+					throw new Errors.DataError("not enough edible resources have been declared");
+				
+				if (drinki.size() == 0)
+					throw new Errors.DataError("not enough drinkable resources have been declared");
+				
+				edibles = new ResGroup("EDIBLE_RESOURCE", edi);
+				drinks = new ResGroup("DRINKABLE", drinki);
+			}
+
+			ALCOHOL = drinks.all().get(0).resource;
+			
 			supplies = new ArmySupplies();
 		}
 
@@ -191,7 +210,7 @@ public final class RESOURCES {
 		return data.drinks;
 	}
 	
-	public static Edibles EDI() {
+	public static ResGroup EDI() {
 		return data.edibles;
 	}
 	

@@ -1,43 +1,41 @@
 
 package settlement.room.infra.importt;
 
-import game.GAME;
 import game.faction.FACTIONS;
-import game.faction.trade.PlayerPrices.TradeHolder;
-import game.faction.trade.TradeManager;
+import game.faction.npc.FactionNPC;
 import init.D;
 import init.resources.RESOURCE;
 import init.resources.RESOURCES;
 import init.settings.S;
-import init.sprite.ICON;
 import init.sprite.SPRITES;
-import settlement.main.SETT;
+import init.sprite.UI.Icon;
 import settlement.room.main.RoomInstance;
 import snake2d.SPRITE_RENDERER;
 import snake2d.util.datatypes.COORDINATE;
 import snake2d.util.datatypes.DIR;
 import snake2d.util.gui.GuiSection;
+import snake2d.util.gui.clickable.CLICKABLE.ClickWrap;
 import snake2d.util.gui.renderable.RENDEROBJ;
 import snake2d.util.misc.Dictionary;
 import snake2d.util.sets.LISTE;
 import snake2d.util.sprite.SPRITE;
 import util.data.GETTER;
-import util.dic.DicGeo;
 import util.dic.DicRes;
-import util.gui.common.GResSelector;
+import util.gui.common.UIPickerRes;
 import util.gui.misc.*;
 import util.gui.table.GTableSorter.GTFilter;
 import util.gui.table.GTableSorter.GTSort;
 import util.info.GFORMAT;
+import view.main.VIEW;
 import view.sett.ui.room.UIRoomBulkApplier;
 import view.sett.ui.room.UIRoomModule.UIRoomModuleImp;
-import view.ui.UIGoodsTrade;
-import world.World;
+import view.ui.goods.UIGoodsImport;
+import world.WORLD;
 import world.entity.WEntity;
 import world.entity.caravan.Shipment;
-import world.map.regions.REGIOND;
-import world.map.regions.Region;
-import world.map.regions.RegionTaxes.RegionResource;
+import world.regions.Region;
+import world.regions.data.RD;
+import world.regions.data.RDOutput.RDResource;
 
 class Gui extends UIRoomModuleImp<ImportInstance, ROOM_IMPORT> {
 
@@ -159,32 +157,32 @@ class Gui extends UIRoomModuleImp<ImportInstance, ROOM_IMPORT> {
 			}.hh("t incoming");
 			grid.add(r);
 
-			r = new GStat() {
-
-				@Override
-				public void update(GText text) {
-					ImportInstance i = g.get();
-					RESOURCE r = i.resource();
-					if (r != null) {
-						GFORMAT.iBig(text, blueprint.tally.onItsWay.get(r));
-					}
-				}
-			}.hh("t on way");
-			grid.add(r);
-
-			r = new GStat() {
-
-				@Override
-				public void update(GText text) {
-					ImportInstance i = g.get();
-					RESOURCE r = i.resource();
-					if (r != null) {
-						GFORMAT.iBig(text, blueprint.tally.toBeImport.get(r) + blueprint.tally.toBeSpoils.get(r)
-								+ blueprint.tally.toBeTaxes.get(r));
-					}
-				}
-			}.hh("to be delivered");
-			grid.add(r);
+//			r = new GStat() {
+//
+//				@Override
+//				public void update(GText text) {
+//					ImportInstance i = g.get();
+//					RESOURCE r = i.resource();
+//					if (r != null) {
+//						GFORMAT.iBig(text, blueprint.tally.onItsWay.get(r));
+//					}
+//				}
+//			}.hh("t on way");
+//			grid.add(r);
+//
+//			r = new GStat() {
+//
+//				@Override
+//				public void update(GText text) {
+//					ImportInstance i = g.get();
+//					RESOURCE r = i.resource();
+//					if (r != null) {
+//						GFORMAT.iBig(text, blueprint.tally.toBeImport.get(r) + blueprint.tally.toBeSpoils.get(r)
+//								+ blueprint.tally.toBeTaxes.get(r));
+//					}
+//				}
+//			}.hh("to be delivered");
+//			grid.add(r);
 
 			r = new GStat() {
 
@@ -194,7 +192,7 @@ class Gui extends UIRoomModuleImp<ImportInstance, ROOM_IMPORT> {
 					RESOURCE r = i.resource();
 					int a = 0;
 					if (r != null) {
-						for (WEntity e : World.ENTITIES().all()) {
+						for (WEntity e : WORLD.ENTITIES().all()) {
 							if (e instanceof world.entity.caravan.Shipment) {
 								Shipment s = (Shipment) e;
 								if (s.destination() == FACTIONS.player().capitolRegion()) {
@@ -214,34 +212,50 @@ class Gui extends UIRoomModuleImp<ImportInstance, ROOM_IMPORT> {
 
 		section.addRelBody(8, DIR.S, new GHeader(¤¤Accepting));
 
-		section.addRelBody(2, DIR.S, new GResSelector(true) {
-
+		final UIPickerRes pop = new UIPickerRes(true) {
+			
 			@Override
 			protected void select(RESOURCE r, int li) {
 				g.get().allocate(r);
+				VIEW.inters().popup.close();
 			}
-
+			
 			@Override
 			protected RESOURCE getResource() {
 				return g.get().resource();
 			}
-
+			
 			@Override
 			protected void hoverResource(RESOURCE res, GBox b) {
 				b.title(res.name);
 
+				CharSequence p = blueprint.tally.problem(res, false);
+				if (p != null) {
+					b.error(p);
+					return;
+				}
+				p = blueprint.tally.warning(res);
+				if (p != null) {
+					b.add(b.text().warnify().add(p));
+					return;
+				}
+				
+				b.NL(4);
+				
 				b.textL(DicRes.¤¤Sellers);
 				b.tab(6);
 				b.textL(DicRes.¤¤sellPrice);
 				b.tab(9);
 				b.textL(DicRes.¤¤Stored);
 				b.NL();
-				for (TradeHolder h : FACTIONS.tradeUtil().getSellers(FACTIONS.player(), res)) {
-					b.add(b.text().lablify().add(h.faction().appearence().name()));
+				for (FactionNPC h : FACTIONS.pRel().traders()) {
+					
+					
+					b.add(b.text().lablify().add(h.name));
 					b.tab(6);
-					b.add(GFORMAT.f(b.text(), h.price()));
+					b.add(GFORMAT.f(b.text(), h.buyer().priceSellP(res)));
 					b.tab(9);
-					b.add(GFORMAT.i(b.text(), h.stored()));
+					b.add(GFORMAT.i(b.text(), h.stockpile.amount(res)));
 					b.NL();
 				}
 
@@ -249,85 +263,56 @@ class Gui extends UIRoomModuleImp<ImportInstance, ROOM_IMPORT> {
 
 				b.textL(DicRes.¤¤Taxes);
 
-				for (Region reg : FACTIONS.player().kingdom().realm().regions()) {
-					for (RegionResource r : REGIOND.RES().res) {
-						if (r.resource == res && r.current_output.get(reg) > 0) {
+				for (Region reg : FACTIONS.player().realm().all()) {
+					for (RDResource r : RD.OUTPUT().all) {
+						if (r.res == res && r.boost.get(reg) > 1) {
 							b.add(SPRITES.icons().s.arrow_left);
-							b.add(b.text().lablify().add(reg.name()));
-							b.add(GFORMAT.i(b.text(), r.current_output.get(reg)));
+							b.add(b.text().lablify().add(reg.info.name()));
+							b.add(GFORMAT.i(b.text(), (int)r.boost.get(reg)));
 							b.NL();
 						}
 					}
 
 				}
-				b.NL(6);
-				int p = FACTIONS.tradeUtil().getSellPriceBest(FACTIONS.player(), res) * TradeManager.MIN_LOAD;
-				if (p > GAME.player().credits().credits()) {
-					GText t = b.text();
-					t.errorify().add(DicRes.¤¤cantAfford).insert(0, p);
-					b.add(t);
-
-				}
 			}
+		};
+		
+		SPRITE la = new SPRITE.Imp(Icon.M) {
+			
+			@Override
+			public void render(SPRITE_RENDERER r, int X1, int X2, int Y1, int Y2) {
+				if (g.get().resource() != null)
+					g.get().resource().icon().render(r, X1, X2, Y1, Y2);
+				else
+					SPRITES.icons().m.cancel.render(r, X1, X2, Y1, Y2);
+			}
+		};
+		
+		section.addRelBody(2, DIR.S, new GButt.ButtPanel(la) {
+			
+			@Override
+			protected void clickA() {
+				VIEW.inters().popup.show(pop, this, true);
+			}
+			
 		});
+		
+
 
 		{
-			GuiSection s = new GuiSection() {
-
-				@Override
-				public void render(SPRITE_RENDERER r, float ds) {
-					visableSet(g.get().resource() != null);
-					if (visableIs())
-						super.render(r, ds);
-				}
-
-			};
-			s.add(new RENDEROBJ.Sprite(ICON.MEDIUM.SIZE*2) {
-
-				@Override
-				public void render(SPRITE_RENDERER r, float ds) {
-					setSprite(g.get().resource().icon().huge);
-					super.render(r, ds);
-				}
-
-			});
-			s.addRightC(32, new GHeader(DicGeo.¤¤Global));
 			
-			s.add(new GHeader(DicRes.¤¤ImportLevel), 0, s.getLastY2()+4);
-			
-			s.addDown(2, UIGoodsTrade.sliderImport(new GETTER<RESOURCE>() {
-
-				@Override
-				public RESOURCE get() {
-					return g.get().resource();
-				}
+			UIGoodsImport ex = new UIGoodsImport();
+			ClickWrap s = new ClickWrap(ex) {
 				
-			}, 180));
-
-			s.add(new GStat() {
-
 				@Override
-				public void update(GText text) {
-					GFORMAT.i(text, SETT.ROOMS().STOCKPILE.tally().amountTotal(g.get().resource()));
-					text.s();
-					GFORMAT.perc(text, SETT.ROOMS().STOCKPILE.tally().load(g.get().resource()));
+				protected RENDEROBJ pget() {
+					if (g.get().resource() == null)
+						return null;
+					ex.res.set(g.get().resource());
+					return ex;
 				}
-			}.hh(SETT.ROOMS().STOCKPILE.info.names, 120), 0, s.getLastY2() + 2);
-
-			s.addDown(8, new GStat() {
-				@Override
-				public void update(GText text) {
-					GFORMAT.i(text, blueprint.tally.incoming.get(g.get().resource()));
-				}
-			}.hh(DicRes.¤¤Inbound, 120));
-
-			s.addDown(8, new GStat() {
-				@Override
-				public void update(GText text) {
-					GFORMAT.i(text, FACTIONS.tradeUtil().getSellPriceBest(FACTIONS.player(), g.get().resource()));
-				}
-			}.hh(DicRes.¤¤buyPrice, 120));
-
+			};
+			
 			section.addRelBody(8, DIR.S, s);
 
 		}
@@ -382,7 +367,7 @@ class Gui extends UIRoomModuleImp<ImportInstance, ROOM_IMPORT> {
 	@Override
 	protected void appendTableButt(GuiSection s, GETTER<RoomInstance> ins) {
 
-		s.add(new SPRITE.Imp(ICON.SMALL.SIZE) {
+		s.add(new SPRITE.Imp(Icon.S) {
 
 			@Override
 			public void render(SPRITE_RENDERER r, int X1, int X2, int Y1, int Y2) {

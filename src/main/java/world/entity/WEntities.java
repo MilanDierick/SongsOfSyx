@@ -2,6 +2,7 @@ package world.entity;
 
 import java.io.IOException;
 
+import game.Profiler;
 import init.C;
 import snake2d.Renderer;
 import snake2d.util.datatypes.*;
@@ -9,11 +10,12 @@ import snake2d.util.file.FileGetter;
 import snake2d.util.file.FilePutter;
 import snake2d.util.sets.*;
 import util.rendering.ShadowBatch;
-import world.World;
+import world.WORLD;
 import world.entity.army.WArmyConstructor;
 import world.entity.caravan.Shipments;
+import world.regions.Region;
 
-public class WEntities extends World.WorldResource {
+public class WEntities extends WORLD.WorldResource {
 
 	private final ArrayListResize<WEntity> ents;
 	private final _WEntityMap map;
@@ -33,10 +35,10 @@ public class WEntities extends World.WorldResource {
 		
 	};
 
-	public WEntities(World world) throws IOException{
+	public WEntities(WORLD world) throws IOException{
 
 		ents = new ArrayListResize<WEntity>(1024, 64000);
-		map = new _WEntityMap(World.PWIDTH(), World.PHEIGHT());
+		map = new _WEntityMap(WORLD.PWIDTH(), WORLD.PHEIGHT());
 
 	}
 
@@ -56,6 +58,8 @@ public class WEntities extends World.WorldResource {
 			clear(e);
 			e.index = ents.add(e);
 			e.renderNext = null;
+			e.regionNext = null;
+			e.regionI = -1;
 			map.add(e);
 		}
 	}
@@ -71,6 +75,8 @@ public class WEntities extends World.WorldResource {
 	private void clear(WEntity e) {
 		e.index = -1;
 		e.renderNext = null;
+		e.regionNext = null;
+		e.regionI = -1;
 		e.gridX = -1;
 		e.gridY = -1;
 	}
@@ -98,6 +104,10 @@ public class WEntities extends World.WorldResource {
 		map.add(e);
 
 	}
+	
+	WEntity regFirst(Region reg) {
+		return map.regFirst(reg);
+	}
 
 	void remove(WEntity e) {
 		if (e.index == -1)
@@ -115,7 +125,8 @@ public class WEntities extends World.WorldResource {
 
 
 	@Override
-	public void update(float ds) {
+	public void update(float ds, Profiler prof) {
+		prof.logStart(this);
 		for (int i = 0; i < ents.size(); i++) {
 			WEntity e = ents.get(i);
 			e.update(ds);
@@ -124,11 +135,7 @@ public class WEntities extends World.WorldResource {
 			else
 				map.move(e);
 		}
-	}
-
-	@Override
-	protected void afterTick() {
-
+		prof.logEnd(this);
 	}
 
 	public void fill(RECTANGLE area, LISTE<WEntity> result) {
@@ -221,13 +228,16 @@ public class WEntities extends World.WorldResource {
 		offY = offY - renWindow.y1();
 		tmp.clear();
 		
-		WEntity e;
+		
 		while (renderables.hasMore()) {
-			e = renderables.pollGreatest();
+			WEntity e = renderables.pollGreatest();
+			e.handleFow();
 			tmp.add(e);
+			
+		}
+		for (WEntity e : tmp) {
 			e.renderAboveTerrain(r, s, ds, e.body().x1() + offX, e.body().y1() + offY);
 		}
-
 	}
 	
 	public LIST<WEntity> all(){

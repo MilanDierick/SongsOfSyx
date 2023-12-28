@@ -1,6 +1,7 @@
 package settlement.room.service.food.canteen;
 
 import init.resources.*;
+import init.resources.RBIT.RBITImp;
 import init.sound.SoundSettlement.Sound;
 import settlement.entity.humanoid.Humanoid;
 import settlement.main.SETT;
@@ -157,7 +158,7 @@ class SOven implements SETT_JOB{
 		}else if (r == null) {
 			if (!workReserved.is())
 				workReserved.set(true);
-		}else if (r != null && edible.canReserve() && (edible.resMask() & r.bit) != 0) {
+		}else if (r != null && edible.canReserve() && edible.resMask().has(r)) {
 			edible.reserve(r);
 		}else
 			throw new RuntimeException("" + r + " " + edible.get().resource);
@@ -203,18 +204,21 @@ class SOven implements SETT_JOB{
 		return COLOR.BLACK;
 	}
 
+	private final RBITImp btmp = new RBITImp();
+	
 	@Override
-	public long jobResourceBitToFetch() {
+	public RBIT jobResourceBitToFetch() {
 		
 		if (isReadyToWork())
-			return 0;
+			return null;
 		
-		long bits = 0;
+		btmp.clear();
+		
 		if (coalReserved.get() == 0 && coal.get() == 0)
-			bits |= b.industryFuel.ins().get(0).resource.bit;
+			btmp.or(b.industryFuel.ins().get(0).resource);
 		if (edible.canReserve())
-			bits |= edible.resMask();
-		return bits;
+			btmp.or(edible.resMask());
+		return btmp;
 		
 	}
 	
@@ -235,7 +239,7 @@ class SOven implements SETT_JOB{
 
 	@Override
 	public double jobPerformTime(Humanoid skill) {
-		return 8;
+		return 16;
 	}
 
 	@Override
@@ -286,14 +290,14 @@ class SOven implements SETT_JOB{
 		return b.employment().sound();
 	}
 	
-	class Edibi implements GETTER<Edible>{
+	class Edibi implements GETTER<ResG>{
 		
 		private final Bits bits = 			new Bits(0x000000FF);
 		private final Bits amount = 		new Bits(0x00000F00);
 		private final Bits amountReserved = new Bits(0x0000F000);
 		
 		@Override
-		public Edible get() {
+		public ResG get() {
 			if (amount.get(data) > 0)
 				return RESOURCES.EDI().all().get(bits.get(data));
 			return null;
@@ -306,10 +310,10 @@ class SOven implements SETT_JOB{
 		}
 
 		boolean canReserve() {
-			return amountReserved.get(data) == 0 && amount.get(data) == 0 && ins.fetchMask() != 0;
+			return amountReserved.get(data) == 0 && amount.get(data) == 0 && !ins.fetchMask().isClear();
 		}
 		
-		long resMask() {
+		RBIT resMask() {
 			if (amount.get(data) > 0 || amountReserved.get(data) > 0) {
 				return RESOURCES.EDI().all().get(bits.get(data)).resource.bit;
 			}
@@ -361,7 +365,7 @@ class SOven implements SETT_JOB{
 		
 		void reserve(RESOURCE res) {
 			if (total() == 0) {
-				data = bits.set(data, RESOURCES.EDI().toEdible(res).index());
+				data = bits.set(data, RESOURCES.EDI().get(res).index());
 			}
 			data = amountReserved.inc(data, 1);
 			save();

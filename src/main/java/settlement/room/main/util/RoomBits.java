@@ -26,6 +26,10 @@ public class RoomBits implements INT{
 	public int get() {
 		return bits.get(SETT.ROOMS().data.get(coo));
 	}
+	
+	public int get(int rawData) {
+		return bits.get(rawData);
+	}
 
 	@Override
 	public int min() {

@@ -15,7 +15,7 @@ public class Trajectory implements Serializable{
 	static final double G = 10*C.TILE_SIZE;
 	public static final double FRICTION = C.TILE_SIZE*0.25;
 	static final double ANGLE45 = 45.0/360.0;
-	static final double ANGLE75 = 75.0/360;
+	private static final double ANGLE75 = 75.0/360;
 	static final double ANGLEMIN60 = -60.0/360.0;
 	static final double EMARGIN2 = C.TILE_SIZEH*C.TILE_SIZEH;	
 	
@@ -42,8 +42,17 @@ public class Trajectory implements Serializable{
 		return vz;
 	}
 	
-	public static double range(int h, double velocity) {
-		return length(h, ANGLE45, velocity);
+	public static double range(int h, double maxAngle, double velocity) {
+		
+		if (maxAngle > 45) {
+			maxAngle = ANGLE45;
+		}else if (maxAngle <= 0){
+			return 0;
+		}else {
+			maxAngle = maxAngle/360;
+		}
+		
+		return length(h, maxAngle, velocity);
 	}
 	
 	public void set(double vx, double vy, double vz) {
@@ -52,29 +61,38 @@ public class Trajectory implements Serializable{
 		this.vz = vz;
 	}
 	
-	public boolean testRange(int height, int startX, int startY, int destX, int destY, double velocity) {
-		final double dx = destX-startX;
-		final double dy = destY-startY;
-		final double L2 = dx*dx + dy*dy;
+//	public boolean testRange(int height, int startX, int startY, int destX, int destY, double maxAngle, double velocity) {
+//		final double dx = destX-startX;
+//		final double dy = destY-startY;
+//		final double L2 = dx*dx + dy*dy;
+//	
+//		return test(L2, height, ANGLE45, velocity) != TSHORT && test(L2, height, ANGLEMIN60, velocity) != TFAR;
+//	}
 	
-		return test(L2, height, ANGLE45, velocity) != TSHORT && test(L2, height, ANGLEMIN60, velocity) != TFAR;
-	}
-	
-	public boolean calcLow(int height, int startX, int startY, int destX, int destY, double velocity) {
+	public boolean calcLow(int height, int startX, int startY, int destX, int destY, double maxAngle, double velocity) {
+		
+		
+		double minAngle = ANGLEMIN60;
+		if (maxAngle > 45) {
+			maxAngle = ANGLE45;
+		}else if (maxAngle <= 0){
+			return false;
+		}else {
+			maxAngle = maxAngle/360;
+		}
 		
 		final double dx = destX-startX;
 		final double dy = destY-startY;
 		final double L2 = dx*dx + dy*dy;
 	
-		int direction = test(L2, height, ANGLE45, velocity);
+		int direction = test(L2, height, maxAngle, velocity);
 		switch (direction) {
-			case THIT: set(dx, dy, ANGLE45, velocity); return true; // direct hit, lets go
+			case THIT: set(dx, dy, maxAngle, velocity); return true; // direct hit, lets go
 			case TFAR: break; // too far, this is good
 			case TSHORT: return false; //too short, can't reach
 		}
 		
-		double minAngle = ANGLEMIN60;
-		double maxAngle = ANGLE45;
+
 		
 		double delta = maxAngle-minAngle;
 		delta /= 2;
@@ -125,7 +143,17 @@ public class Trajectory implements Serializable{
 		return false;
 	}
 	
-	public boolean calcHigh(int height, int startX, int startY, int destX, int destY, double velocity) {
+	public boolean calcHigh(int height, int startX, int startY, int destX, int destY, double maxAngle, double velocity) {
+		
+		if (maxAngle <= 45) {
+			return false;
+		}else if (maxAngle > 75){
+			maxAngle = ANGLE75;
+			
+		}else {
+			maxAngle = maxAngle/360;
+		}
+		double minAngle = ANGLE45;
 		
 		final double dx = destX-startX;
 		final double dy = destY-startY;
@@ -137,15 +165,11 @@ public class Trajectory implements Serializable{
 			case TSHORT: return false; //too short, can't go high
 		}
 		
-		switch (test(L2, height, ANGLE75, velocity)) {
-			case THIT: set(dx, dy, ANGLE75, velocity); return true; // direct hit, lets go
+		switch (test(L2, height, maxAngle, velocity)) {
+			case THIT: set(dx, dy, maxAngle, velocity); return true; // direct hit, lets go
 			case TFAR: return false; // too far, this is bad
 			case TSHORT: break; //too short, good
 		}
-		
-		
-		double minAngle = ANGLE45;
-		double maxAngle = ANGLE75;
 		
 		double delta = maxAngle-minAngle;
 		delta /= 2;

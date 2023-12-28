@@ -2,7 +2,7 @@ package settlement.entity.humanoid.ai.work;
 
 import static settlement.main.SETT.*;
 
-import init.boostable.BOOSTABLE;
+import game.boosting.Boostable;
 import init.resources.RESOURCE;
 import settlement.entity.humanoid.Humanoid;
 import settlement.entity.humanoid.ai.main.AI;
@@ -35,12 +35,14 @@ final class WorkDeliveryman extends PlanBlueprint {
 		RESOURCE res = c.resource();
 		
 		int max = carryCap(i, a, d); 
+		
 		d.planByte1 = (byte) CLAMP.i(max, 0, c.storageReservable());
+
 		c.storageReserve(d.planByte1);
 		
 		d.planTile.set(c.x(), c.y());
 		
-		AISubActivation s = fetch.activateFound(a, d, res, d.planByte1, Integer.MAX_VALUE, st.getsMaximum(res), false);
+		AISubActivation s = fetch.activateFound(a, d, res, d.planByte1, st.getsMaximum(res), st.fetchesFromEveryone(res));
 		if (s == null) {
 			unreserve(a, d);
 		}
@@ -50,7 +52,7 @@ final class WorkDeliveryman extends PlanBlueprint {
 	
 	static int carryCap(RoomInstance i, Humanoid a, AIManager d) {
 		STORAGE_CRATE_HASSER st = (STORAGE_CRATE_HASSER) i;
-		BOOSTABLE b = st.carryBonus();
+		Boostable b = st.carryBonus();
 		double am = carryInit*(1+b.get(a.indu()));
 		return CLAMP.i((int)(Math.ceil(am)), 1, 48);
 	}

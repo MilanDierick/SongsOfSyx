@@ -4,14 +4,16 @@ import java.io.IOException;
 import java.util.Iterator;
 
 import game.faction.FACTIONS;
+import game.faction.FCredits.CTYPE;
 import game.time.TIME;
 import init.D;
 import snake2d.util.file.FileGetter;
 import snake2d.util.file.FilePutter;
+import snake2d.util.misc.CLAMP;
 import snake2d.util.rnd.RND;
 import snake2d.util.sets.ArrayList;
 import snake2d.util.sets.LIST;
-import view.main.MessageText;
+import view.ui.message.MessageText;
 import world.entity.army.WArmy;
 
 public final class WDivMercenaries implements LIST<WDivMercenary>{
@@ -35,7 +37,7 @@ public final class WDivMercenaries implements LIST<WDivMercenary>{
 		
 	}
 	
-	public void randmoize() {
+	void randmoize() {
 		for (int i = 0; i < all.max(); i++) {
 			WDivMercenary d = all.get(i);
 			d.randomize();
@@ -56,24 +58,22 @@ public final class WDivMercenaries implements LIST<WDivMercenary>{
 		di = file.i();
 	}
 	
-	void clear() {
-		for (WDivMercenary d : all)
-			d.clear();
-		timer = 0;
-		di = 0;
+	public void debug() {
+		debug = true;
+		update(TIME.secondsPerDay*all.size());
 	}
 	
 	void update(double ds) {
 		
 		timer += ds;
-		if (timer >= TIME.secondsPerDay/all.size()) {
+		while (timer >= TIME.secondsPerDay/all.size()) {
 			di = (di+1)%all.size();
 			if (di == 0)
 				hasSent = false;
 			WDivMercenary d = all.get(di);
 			
 			if (d.army() == null || d.army().acceptsSupplies()) {
-				d.menSet(d.men() + d.amountOfMenThatWillArrive());
+				d.menSet(CLAMP.i(d.men() + 10, 0, d.menTarget()));
 			}
 			
 			
@@ -88,19 +88,29 @@ public final class WDivMercenaries implements LIST<WDivMercenary>{
 
 				int cost = d.costPerMan()*d.men();
 				if (cost > FACTIONS.player().credits().credits()) {
-					d.armySet(null);
+					d.reassign(null);
 					if (!hasSent) {
 						new MessageText(¤¤mTitle, ¤¤mBody).send();
 						hasSent = true;
 					}
 				}else {
-					FACTIONS.player().credits().mercinaries.OUT.inc(cost);
+					
+					FACTIONS.player().credits().inc(-cost, CTYPE.MERCINARIES);
 				}
 				
 			}
 			
 			timer -= TIME.secondsPerDay/all.size();
 		}
+	}
+	
+	private boolean debug = false;
+	
+	public int max() {
+		if (debug)
+			return size();
+		else
+			return (int) (size()*CLAMP.i(FACTIONS.player().realm().all().size(), 1, 10)/10.0);
 	}
 	
 	public int upkeepCost(int index) {
@@ -112,12 +122,12 @@ public final class WDivMercenaries implements LIST<WDivMercenary>{
 	}
 	
 
-	WDIV get(long l) {
+	ADDiv get(long l) {
 		return all.get((int) (l & 0x00000FFFF));
 	}
 	
 	public void hire(WArmy a, WDivMercenary div) {
-		div.armySet(a);
+		div.reassign(a);
 	}
 
 

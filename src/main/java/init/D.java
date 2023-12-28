@@ -51,8 +51,17 @@ public final class D {
 		if (dd == null)
 			return defKey;
 		if (currentJson == null || !currentJson.has(defKey)) {
-			if (S.get().debug|| S.get().developer)
-				LOG.err("No mapping " + currentClass + " " + defKey);
+			if (S.get().debug|| S.get().developer) {
+				
+				String ss = "";
+				for (StackTraceElement e : Thread.currentThread().getStackTrace()) {
+					if (!e.getClassName().equals(D.class.getName()) && e.getClassName().indexOf(".Thread") < 0) {
+						ss = "("+e.getClassName()+".java:" + e.getLineNumber() + ")";
+						break;
+					}
+				}
+				LOG.err("No mapping " + currentClass + " " + defKey + " " + ss);
+			}
 			return defKey;
 		}
 		return currentJson.text(defKey);
@@ -107,6 +116,7 @@ public final class D {
 					f.setAccessible(true);
 					s = s.substring(2, s.length());
 					CharSequence v = g(s);
+					
 					try {
 						f.set(o, v);
 					} catch (IllegalArgumentException e) {

@@ -2,7 +2,6 @@ package settlement.room.infra.elderly;
 
 import java.io.IOException;
 
-import settlement.main.RenderData.RenderIterator;
 import settlement.main.SETT;
 import settlement.path.AVAILABILITY;
 import settlement.room.main.*;
@@ -13,9 +12,8 @@ import settlement.room.sprite.*;
 import snake2d.SPRITE_RENDERER;
 import snake2d.util.datatypes.DIR;
 import snake2d.util.file.Json;
-import snake2d.util.sprite.TILE_SHEET;
+import util.rendering.RenderData.RenderIterator;
 import util.rendering.ShadowBatch;
-import util.spritecomposer.*;
 
 final class ResthomeConstructor extends Furnisher{
 
@@ -36,7 +34,7 @@ final class ResthomeConstructor extends Furnisher{
 		this.blue = blue;
 		
 		Json js = init.data().json("SPRITES");
-		final RoomSpriteNew sChair_wall = new RoomSprite1x1(js, "CHAIR_1X1") {
+		final RoomSpriteImp sChair_wall = new RoomSprite1x1(js, "CHAIR_1X1") {
 			@Override
 			protected boolean joins(int tx, int ty, int rx, int ry, DIR d, FurnisherItem item) {
 				return d.perpendicular().orthoID() == item.rotation;
@@ -65,7 +63,7 @@ final class ResthomeConstructor extends Furnisher{
 		};
 		
 		final RoomSprite1x1 sOnTopCards = new RoomSprite1x1(js, "ON_TOP_CARDS_1X1");
-		final RoomSpriteComboN sTable_clean = new RoomSpriteComboN(js, "TABLES_COMBO") {
+		final RoomSpriteCombo sTable_clean = new RoomSpriteCombo(js, "TABLES_COMBO") {
 			
 			@Override
 			public boolean render(SPRITE_RENDERER r, ShadowBatch s, int data, RenderIterator it, double degrade,
@@ -85,7 +83,7 @@ final class ResthomeConstructor extends Furnisher{
 		
 		final RoomSpriteBoxN sStage = new RoomSpriteBoxN(js, "STAGE_COMBO");
 		
-		final RoomSprite sTable_nick = new RoomSpriteComboN(sTable_clean) {
+		final RoomSprite sTable_nick = new RoomSpriteCombo(sTable_clean) {
 			
 			@Override
 			public boolean render(SPRITE_RENDERER r, ShadowBatch s, int data, RenderIterator it, double degrade,
@@ -226,7 +224,7 @@ final class ResthomeConstructor extends Furnisher{
 				
 			}, 16);
 			
-			flush(1, 0);
+			flush(1, 3);
 		}
 		
 		{
@@ -262,11 +260,6 @@ final class ResthomeConstructor extends Furnisher{
 		
 		FurnisherItemTools.makeUnder(this, js, "CARPET_COMBO");
 		
-	}
-
-	@Override
-	protected TILE_SHEET sheet(ComposerUtil c, ComposerSources s, ComposerDests d, int y1) {
-		return null;
 	}
 
 	@Override

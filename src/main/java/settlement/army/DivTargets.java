@@ -52,7 +52,7 @@ public final class DivTargets {
 			return null;
 		}
 		
-		list.clear();
+		list.clearSloppy();
 		SETT.PATH().finders().target.add(list, x, y, !player(), 128, 64);
 	
 		

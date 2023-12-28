@@ -3,6 +3,7 @@ package settlement.room.service.hygine.bath;
 import static settlement.main.SETT.*;
 import static settlement.room.service.hygine.bath.Bits.*;
 
+import init.resources.RBIT;
 import init.resources.RESOURCE;
 import init.sound.SoundSettlement.Sound;
 import settlement.entity.humanoid.Humanoid;
@@ -54,9 +55,9 @@ public class Oven implements SETT_JOB{
 	}
 	
 	@Override
-	public long jobResourceBitToFetch() {
+	public RBIT jobResourceBitToFetch() {
 		if (ins.blueprintI().consumtion.ins().get(0) == null)
-			return 0;
+			return null;
 		return ins.blueprintI().consumtion.ins().get(0).resource.bit;
 	}
 	

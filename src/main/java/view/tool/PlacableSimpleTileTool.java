@@ -13,11 +13,16 @@ final class PlacableSimpleTileTool extends placeFunc {
 
 	private PlacableSimpleTile placable;
 	@Override
-	void update(float ds, GameWindow window, boolean pressed) {
-		
+	void updateHovered(float ds, GameWindow window, boolean pressed) {
+		placable.renderOverlay(window);
 		
 	}
 	
+	
+	@Override
+	void update(float ds, GameWindow window, boolean pressed) {
+		placable.renderOverlay(window);
+	}
 
 	@Override
 	void render(SPRITE_RENDERER r, float ds, GameWindow window) {
@@ -25,13 +30,13 @@ final class PlacableSimpleTileTool extends placeFunc {
 		int tx = window.tile().x();
 		int ty = window.tile().y();
 		
-		placable.renderOverlay(tx, ty, r, ds, window);
+		
 		CharSequence problem = placable.isPlacable(tx, ty);
 		
 		if (problem == null) {
-			placable.renderPlaceHolder(r, window.tile().rel().x()+C.TILE_SIZEH, window.tile().rel().y()+C.TILE_SIZEH, false);
+			placable.renderPlaceHolder(r, tx, ty, window.tile().rel().x()+C.TILE_SIZEH, window.tile().rel().y()+C.TILE_SIZEH, false);
 		}else {
-			placable.renderPlaceHolder(r, window.tile().rel().x()+C.TILE_SIZEH, window.tile().rel().y()+C.TILE_SIZEH, true);
+			placable.renderPlaceHolder(r, tx, ty, window.tile().rel().x()+C.TILE_SIZEH, window.tile().rel().y()+C.TILE_SIZEH, true);
 			VIEW.hoverBox().error(problem);
 		}
 		COLOR.unbind();

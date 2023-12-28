@@ -2,8 +2,6 @@ package settlement.room.infra.inn;
 
 import game.time.TIME;
 import game.tourism.Review;
-import settlement.main.RenderData;
-import settlement.main.RenderData.RenderIterator;
 import settlement.misc.job.*;
 import settlement.room.main.RoomInstance;
 import settlement.room.main.TmpArea;
@@ -12,6 +10,8 @@ import settlement.room.main.util.RoomInit;
 import settlement.room.service.module.ROOM_SERVICER;
 import settlement.room.service.module.RoomServiceInstance;
 import snake2d.Renderer;
+import util.rendering.RenderData;
+import util.rendering.RenderData.RenderIterator;
 import util.rendering.ShadowBatch;
 
 public final class InnInstance extends RoomInstance implements JOBMANAGER_HASER, ROOM_SERVICER{

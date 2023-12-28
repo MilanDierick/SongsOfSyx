@@ -2,12 +2,13 @@ package settlement.stats.health;
 
 import java.io.IOException;
 
+import game.Profiler;
+import game.boosting.BOOSTABLES;
+import game.boosting.Boostable;
 import game.time.TIME;
 import init.D;
-import init.boostable.BOOSTABLE;
-import init.boostable.BOOSTABLES;
 import init.disease.DISEASES;
-import init.race.RACES;
+import init.race.*;
 import settlement.main.CapitolArea;
 import settlement.main.SETT.SettResource;
 import settlement.stats.Induvidual;
@@ -41,6 +42,7 @@ public final class HEALTH extends SettResource{
 	private double iinfectionChance = DISEASES.DISEASE_PER_YEAR / TIME.years().bitConversion(TIME.days());
 	
 	public HEALTH(){
+		
 		self = this;
 		new Bonuses();
 		rate.fill(100);
@@ -65,16 +67,16 @@ public final class HEALTH extends SettResource{
 	@Override
 	protected void clearBeforeGeneration(CapitolArea area) {
 		rate.fill(100);
-		health.fill((int) (BOOSTABLES.PHYSICS().HEALTH.defAdd*100));
-		hygine.fill((int) (BOOSTABLES.PHYSICS().HEALTH.defAdd*100));
+		health.fill((int) (BOOSTABLES.PHYSICS().HEALTH.baseValue*100));
+		hygine.fill((int) (BOOSTABLES.PHYSICS().HEALTH.baseValue*100));
 		super.clearBeforeGeneration(area);
 	}
 	
 	@Override
-	protected void update(float ds) {
+	protected void update(float ds, Profiler profiler) {
 
-		health.set((int) (BOOSTABLES.PHYSICS().HEALTH.get(null, null)*100));
-		hygine.set((int) (BOOSTABLES.CIVICS().HYGINE.get(null, null)*100));
+		health.set((int) (BOOSTABLES.PHYSICS().HEALTH.get(RACES.clP(null, null))*100));
+		hygine.set((int) (BOOSTABLES.CIVICS().HYGINE.get(RACES.clP(null, null))*100));
 		double pop = STATS.POP().POP.data().get(null);
 		{
 			
@@ -84,7 +86,8 @@ public final class HEALTH extends SettResource{
 				double d = 1 + 5-5*pop/min;
 				squalor.set((int) (d*100));
 			}else {
-				double high = 1.0/max(BOOSTABLES.PHYSICS().HEALTH)*max(BOOSTABLES.CIVICS().HYGINE);
+				double high = 1.0/(max(BOOSTABLES.PHYSICS().HEALTH)*max(BOOSTABLES.CIVICS().HYGINE));
+				
 				
 				double pi = 1.0/DISEASES.SQUALOR_POPULATION_DELTA;
 				
@@ -96,6 +99,8 @@ public final class HEALTH extends SettResource{
 			
 			
 		}
+		
+		
 		
 		double r = health.getD()*hygine.getD()*squalor.getD();
 		r = CLAMP.d(r, 0, 1);
@@ -110,12 +115,8 @@ public final class HEALTH extends SettResource{
 		
 	}
 	
-	private double max(BOOSTABLE b) {
-		double add = Math.max(BOOSTABLES.player().maxAdd(b), 0);
-		add -= Math.max(RACES.bonus().maxAdd(b), 0);
-		double mul = Math.max(BOOSTABLES.player().maxMul(b), 0);
-		mul /= Math.max(RACES.bonus().maxMul(b), 1);
-		return mul * (add+1);
+	private double max(Boostable b) {
+		return b.baseValue + b.max(POP_CL.class) - b.max(Race.class);
 	}
 
 	public static HISTORY_INT rate() {

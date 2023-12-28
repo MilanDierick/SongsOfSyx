@@ -1,32 +1,43 @@
 package game.faction.player;
 
 import java.io.IOException;
-import java.util.Arrays;
 
 import game.GAME;
+import game.boosting.BoostSpecs;
+import game.boosting.Boostable;
 import game.faction.FACTIONS;
-import game.faction.player.PLocks.PLocker;
-import game.statistics.G_REQ;
+import game.faction.Faction;
+import game.faction.npc.FactionNPC;
+import game.values.*;
 import init.D;
-import init.boostable.*;
-import init.boostable.BOOST_HOLDER.BOOST_HOLDERCOLL;
-import init.boostable.BOOST_LOOKUP.BOOSTER_LOOKUP_IMP;
-import init.boostable.BOOST_LOOKUP.SIMPLE;
 import init.paths.PATH;
 import init.paths.PATHS;
-import init.tech.Unlocks;
+import init.sprite.UI.UI;
+import settlement.stats.Induvidual;
+import snake2d.LOG;
+import snake2d.SPRITE_RENDERER;
+import snake2d.util.datatypes.DIR;
 import snake2d.util.file.*;
+import snake2d.util.misc.ACTION;
+import snake2d.util.misc.CLAMP;
+import snake2d.util.process.Proccesser;
 import snake2d.util.sets.*;
+import snake2d.util.sprite.SPRITE;
+import snake2d.util.sprite.TILE_SHEET;
+import util.data.DOUBLE_O;
 import util.info.INFO;
+import util.spritecomposer.*;
+import util.spritecomposer.ComposerThings.ITileSheet;
+import view.interrupter.IDebugPanel;
+import world.regions.Region;
 
 public final class PTitles {
 
 	private final LIST<PTitle> titles;
 	private int newAmount = 0;
 	public final INFO info;
-	private final Boost boost;
-	public final SIMPLE BOOSTER;
-	private static CharSequence ¤¤Unlocks = "¤Unlocks with title:";
+	public final BoostSpecs boosters;
+	private final BoostCompound<PTitle> bos;
 	private static CharSequence ¤¤name = "Titles";
 	private static CharSequence ¤¤desc = "Titles are unlocked by various achievements. At the start of each game, you may choose 5 of these unlocked titles to be associated with your name and boost your kingdom in various ways.";
 	
@@ -35,19 +46,20 @@ public final class PTitles {
 	}
 	
 	
-	PTitles(){
+	PTitles() throws IOException{
 		
 		
 		info = new INFO(¤¤name, ¤¤desc);
 		
 		PATH data = PATHS.INIT().getFolder("player").getFolder("titles");
 		PATH text = PATHS.TEXT().getFolder("player").getFolder("titles");
+		IconMaker mm = new IconMaker();
 		String[] ss = data.getFiles();
 		ArrayList<PTitle> all = new ArrayList<>(ss.length);
 		for (String s : ss) {
 			Json j = new Json(data.get(s));
 			Json t = new Json(text.get(s));
-			new PTitle(s, all, j, t);
+			new PTitle(s, all, j, t, mm);
 		}
 		this.titles = all;
 		
@@ -71,67 +83,64 @@ public final class PTitles {
 			}
 		}
 		
-		boost = new Boost(all);
-		
-		BOOSTER = boost;
-		
-	}
-	
-	public final PLocker locker = new PLocker(¤¤Unlocks) {
-
-		@Override
-		protected int unlocks() {
-			return all().size();
-		}
-
-		@Override
-		protected Unlocks unlock(int i) {
-			PTitle t = all().get(i);
-			if (t.selected)
-				return null;
-			return t.unlock;
-		}
-	};
-	
-	private class Boost extends BOOSTER_LOOKUP_IMP implements SIMPLE {
-
-		private final double[] add = new double[BOOSTABLES.all().size()];
-		private final double[] mul = new double[BOOSTABLES.all().size()];
-		
-		protected Boost(LIST<PTitle> titles) {
-			super(info.name);
-			for (PTitle t : titles)
-				init(t.boost);
-			setBonuses();
-			makeBoosters(this, true, false, true);
-		}
-
-		@Override
-		public double add(BOOSTABLE b) {
-			return add[b.index()];
-		}
-
-		@Override
-		public double mul(BOOSTABLE b) {
-			return mul[b.index()];
-		}
-		
-		private void setBonuses() {
-			Arrays.fill(add, 0);
-			Arrays.fill(mul, 1);
+		boosters = new BoostSpecs(¤¤name, UI.icons().s.chevron(DIR.N), true);
+		bos = new BoostCompound<PTitle>(boosters, titles) {
 			
-			for (PTitle t : titles) {
-				if (t.selected()) {
-					for (BBoost b : t.boost.boosts()) {
-						if (b.isMul())
-							mul[b.boostable.index()] *= b.value();
-						else
-							add[b.boostable.index()] += b.value();
-					}
+			double npc = CLAMP.d(titles.size()/5.0, 0, 1);
+			
+			@Override
+			protected double getValue(PTitle t) {
+				return t.selected ? 1 : 0;
+			}
+			
+			@Override
+			protected BoostSpecs bos(PTitle t) {
+				return t.boosters;
+			}
+			
+			@Override
+			protected double get(Boostable bo, FactionNPC f, boolean isMul) {
+				return npc*super.get(bo, f, isMul);
+			}
+		};
+		
+		IDebugPanel.add("STEAM ACHIEVE", new ACTION() {
+			
+			@Override
+			public void exe() {
+				if ((PATHS.isSteam() || PATHS.isDevelop()) && PATHS.local().PROFILE.exists("Titles")) {
+					Json old = new Json(PATHS.local().PROFILE.get("Titles"));
+					String[] sss = old.values("UNLOCKED");
+//					Proccesser.exec(SteamAchieve.class, new String[] {}, sss, new String[] {});
+					LOG.err("Steam integration is not available.");
 				}
 			}
-		}
+		});
+		IDebugPanel.add("STEAM ACHIEVE_ALL", new ACTION() {
+			
+			@Override
+			public void exe() {
+				if ((PATHS.isSteam() || PATHS.isDevelop()) && PATHS.local().PROFILE.exists("Titles")) {
+					String[] ss = new String[all().size()];
+					for (int i = 0; i< ss.length; i++) {
+						ss[i] = all().get(i).key;
+					}
+					LOG.err("Steam integration is not available.");
+				}
+			}
+		});
+		IDebugPanel.add("STEAM ACHIEVE_CLEAR", new ACTION() {
+			
+			@Override
+			public void exe() {
+				if ((PATHS.isSteam() || PATHS.isDevelop()) && PATHS.local().PROFILE.exists("Titles")) {
+					LOG.err("Steam integration is not available.");
+				}
+			}
+		});
+		
 	}
+
 	
 	final SAVABLE saver = new SAVABLE() {
 		
@@ -165,7 +174,7 @@ public final class PTitles {
 				
 				
 			}
-			boost.setBonuses();
+			bos.clearChache();
 		}
 		
 		@Override
@@ -174,7 +183,7 @@ public final class PTitles {
 				t.isNew = false;
 				t.selected = false;
 			}
-			boost.setBonuses();
+			bos.clearChache();
 		}
 	};
 	
@@ -250,6 +259,14 @@ public final class PTitles {
 		}
 	}
 
+	public static void achieve() {
+		if (PATHS.isSteam() && PATHS.local().PROFILE.exists("Titles")) {
+			Json old = new Json(PATHS.local().PROFILE.get("Titles"));
+			String[] sss = old.values("UNLOCKED");
+			LOG.err("Steam integration is not available.");
+		}
+	}
+	
 	
 	public LIST<PTitle> all(){
 		return titles;
@@ -258,22 +275,64 @@ public final class PTitles {
 	public static final class PTitle extends INFO implements INDEXED{
 
 		private final int index;
-		public final LIST<G_REQ> reqs;
+		public final Lockers lockers;
+		public final Lockable<Faction> lockable;
+		public final BoostSpecs boosters;
+		public final SPRITE icon;
+		
 		private final String key;
 		private boolean selected;
 		private boolean isNew;
 		private boolean unlocked;
-		private final BOOST_HOLDERCOLL boost;
-		public final Unlocks unlock;
 		
 		
-		PTitle(String key, LISTE<PTitle> all, Json jdata, Json jtext){
+		PTitle(String key, LISTE<PTitle> all, Json jdata, Json jtext, IconMaker iconM) throws IOException{
 			super(jtext);
 			this.key = key;
 			index = all.add(this);
-			boost = new BOOST_HOLDERCOLL(name, jdata);
-			reqs = G_REQ.READ(jdata);
-			unlock = new Unlocks(name, jdata);
+			
+			lockable = GVALUES.FACTION.LOCK.push();
+			lockable.push(jdata);
+			icon = iconM.get(jdata);
+			lockers = new Lockers(¤¤name + ": " + name, UI.icons().s.chevron(DIR.N));
+			lockers.add(GVALUES.FACTION, jdata, new DOUBLE_O<Faction>() {
+
+				@Override
+				public double getD(Faction t) {
+					if (t == FACTIONS.player()) {
+						return selected ? 1 : 0;
+					}
+					return 1;
+				}
+			
+			});
+			
+			lockers.add(GVALUES.INDU, jdata, new DOUBLE_O<Induvidual>() {
+
+				@Override
+				public double getD(Induvidual t) {
+					if (t.faction() == FACTIONS.player()) {
+						return selected ? 1 : 0;
+					}
+					return 1;
+				}
+			
+			});
+			
+			lockers.add(GVALUES.REGION, jdata, new DOUBLE_O<Region>() {
+
+				@Override
+				public double getD(Region t) {
+					if (t.faction() == FACTIONS.player()) {
+						return selected ? 1 : 0;
+					}
+					return 1;
+				}
+			
+			});
+			
+			boosters = new BoostSpecs(name, UI.icons().s.chevron(DIR.N), false);
+			boosters.push(jdata, null);
 		}
 
 		@Override
@@ -285,7 +344,7 @@ public final class PTitles {
 			if (s == selected)
 				return;
 			selected = s;
-			FACTIONS.player().titles.boost.setBonuses();
+			FACTIONS.player().titles.bos.clearChache();
 		}
 		
 		public boolean selected() {
@@ -293,13 +352,7 @@ public final class PTitles {
 		}
 		
 		private boolean unlockable() {
-			for (G_REQ r : reqs) {
-				if (!r.isFulfilled())
-					return false;
-				
-			}
-			
-			return true;
+			return lockable.passes(FACTIONS.player());
 		}
 		
 		public boolean unlocked() {
@@ -312,6 +365,65 @@ public final class PTitles {
 		
 		public void consumeNew() {
 			isNew = false;
+		}
+
+		
+	}
+	
+	private static class IconMaker {
+		
+		private final int WW = 5;
+		private int txs = 6;
+		private int tys = 4;
+		
+		IconMaker() throws IOException{
+			new ComposerThings.IInit(PATHS.SPRITE().getFolder("ui").get("Titles"), 540, 190) {
+				
+				@Override
+				protected void init(ComposerUtil c, ComposerSources s, ComposerDests d) throws IOException {
+					int hi = c.getSource().height/(tys*8+6);
+					s.full2.init(0, 0, WW, hi, txs, tys, d.s8);
+				}
+				
+			};
+		}
+		
+		public SPRITE get(Json json) throws IOException {
+			
+			int ii = json.i("ICON_I");
+			
+			TILE_SHEET s = new ITileSheet() {
+				
+				@Override
+				protected TILE_SHEET init(ComposerUtil c, ComposerSources s, ComposerDests d) {
+					s.full2.setVar(ii);
+					s.full2.paste(true);
+					return d.s8.saveGui();
+				}
+			}.get();
+			
+			return new SPRITE.Imp(txs*8, tys*8) {
+				
+				@Override
+				public void render(SPRITE_RENDERER r, int X1, int X2, int Y1, int Y2) {
+					
+					int w = (X2-X1)/txs;
+					int h = (Y2-Y1)/tys;
+					int y = Y1;
+					int i = 0;
+					for (int dy = 0; dy < tys; dy++) {
+						int x = X1;
+						for (int dx = 0; dx < txs; dx++) {
+							s.render(r, i, x, x+w, y, y+h);
+							x += w;
+							i++;
+							
+						}
+						y+= h;
+					}
+					
+				}
+			};
 		}
 		
 	}

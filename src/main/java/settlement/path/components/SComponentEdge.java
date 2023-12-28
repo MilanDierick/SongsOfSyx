@@ -30,6 +30,7 @@ public final class SComponentEdge {
 	
 	void retire() {
 		next = null;
+		to = null;
 		count--;
 		if (chache.hasRoom())
 			chache.add(this);

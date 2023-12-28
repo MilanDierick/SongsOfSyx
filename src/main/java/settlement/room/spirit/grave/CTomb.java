@@ -2,7 +2,6 @@ package settlement.room.spirit.grave;
 
 import java.io.IOException;
 
-import settlement.main.RenderData.RenderIterator;
 import settlement.path.AVAILABILITY;
 import settlement.room.main.*;
 import settlement.room.main.furnisher.*;
@@ -15,6 +14,7 @@ import snake2d.util.file.Json;
 import snake2d.util.misc.CLAMP;
 import util.gui.misc.GText;
 import util.info.GFORMAT;
+import util.rendering.RenderData.RenderIterator;
 import util.rendering.ShadowBatch;
 
 final class CTomb extends Furnisher{

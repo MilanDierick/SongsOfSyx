@@ -2,18 +2,18 @@ package world.army;
 
 import game.faction.FACTIONS;
 import init.D;
-import snake2d.util.datatypes.COORDINATE;
 import snake2d.util.misc.CLAMP;
 import snake2d.util.rnd.RND;
 import snake2d.util.sprite.text.Str;
-import util.data.BOOLEAN_OBJECT;
-import view.main.MessageText;
-import world.army.WARMYD.WArmySupply;
-import world.entity.WPathing;
+import view.ui.message.MessageText;
+import world.WORLD;
 import world.entity.army.WArmy;
 import world.entity.army.WArmyState;
-import world.map.regions.REGIOND;
-import world.map.regions.Region;
+import world.map.pathing.WRegSel;
+import world.map.pathing.WRegs.RDist;
+import world.map.pathing.WTREATY;
+import world.regions.Region;
+import world.regions.data.RD;
 
 final class WArmyUpdater {
 	
@@ -22,9 +22,10 @@ final class WArmyUpdater {
 	private static CharSequence ¤¤Desertion = "¤Desertion!";
 	private static CharSequence ¤¤DesertionD = "¤Army supplies are low, and as a result {0} soldiers have deserted from {1}.";
 	
-	{
-		D.ts(this.getClass());
+	static {
+		D.ts(WArmyUpdater.class);
 	}
+	
 	
 	boolean update(WArmy a) {
 		
@@ -41,7 +42,7 @@ final class WArmyUpdater {
 		if (a.state() != WArmyState.fortifying && a.state() != WArmyState.fortified)
 			return true;
 		
-		if (WARMYD.men(null).get(a) == 0)
+		if (AD.men(null).get(a) == 0)
 			return true;
 		
 		if (a.faction() == null) {
@@ -55,10 +56,10 @@ final class WArmyUpdater {
 	
 	void starve(WArmy a) {
 		
-		double health = WARMYD.supplies().health(a);
+		double health = AD.supplies().health(a);
 		int am = 0;
 		for (int di = 0; di < a.divs().size(); di++) {
-			WDIV div = a.divs().get(di);
+			ADDiv div = a.divs().get(di);
 			if (health < RND.rFloat()) {
 				if (div.needSupplies()) {
 					int aa = (int)(div.men()*(1.0-health)*(0.5+0.5*RND.rFloat()));
@@ -80,11 +81,11 @@ final class WArmyUpdater {
 	boolean supply(WArmy a) {
 		if (a.faction() == FACTIONS.player()) {
 			
-			WARMYD.supplies().update(a);
+			AD.supplies().update(a);
 			
-			if (WARMYD.supplies().health(a) < 1) {
-				if (WARMYD.supplies().health.get(a) == 0) {
-					WARMYD.supplies().health.set(a, 1);
+			if (AD.supplies().health(a) < 1) {
+				if (AD.supplies().health.get(a) == 0) {
+					AD.supplies().health.set(a, 1);
 					Str.TMP.clear();
 					Str.TMP.add(¤¤StarvingD).insert(0, a.name);
 					new MessageText(¤¤Starving, Str.TMP).send();
@@ -92,19 +93,19 @@ final class WArmyUpdater {
 				}
 				return false;
 			}
-			if (WARMYD.supplies().morale(a) < 1) {
-				if (WARMYD.supplies().morale.get(a) == 0) {
-					WARMYD.supplies().morale.set(a, 1);
+			if (AD.supplies().morale(a) < 1) {
+				if (AD.supplies().morale.get(a) == 0) {
+					AD.supplies().morale.set(a, 1);
 					Str.TMP.clear();
 					Str.TMP.add(¤¤StarvingD).insert(0, a.name);
 					new MessageText(¤¤Starving, Str.TMP).send();
 				}
 				return true;
 			}
-			WARMYD.supplies().health.set(a, 0);
-			WARMYD.supplies().morale.set(a, 0);
+			AD.supplies().health.set(a, 0);
+			AD.supplies().morale.set(a, 0);
 		}else if (a.acceptsSupplies()){
-			for (WArmySupply s : WARMYD.supplies().all) {
+			for (ADSupply s : AD.supplies().all) {
 				double am = Math.ceil(s.used().get(a)/16.0);
 				am = CLAMP.d(am, 0, s.needed(a));
 				s.current().inc(a, (int)am);
@@ -118,23 +119,7 @@ final class WArmyUpdater {
 			WDIV div = a.divs().get(di);
 			if (div instanceof WDivRegional) {
 				WDivRegional d = (WDivRegional) div;
-				int t = (int) (d.menTarget());
-				int m = d.men();
-				if (t < m) {
-					;
-				}else if (t > m) {
-					
-					if (a.acceptsSupplies()) {
-						if (d.daysUntilMenArrives() == 1) {
-							m += d.amountOfMenThatWillArrive()*WARMYD.supplies().health(a);
-							d.timerReset();
-						}else {
-							d.timerInc(-1);
-						}
-					}
-					m = CLAMP.i(m, 0, t);
-				}
-				d.menSet(m);
+				d.updateDay();
 			}else if (div instanceof WDivStored) {
 				((WDivStored) div).age();
 			}
@@ -143,7 +128,7 @@ final class WArmyUpdater {
 	
 	void updateRebel(WArmy a) {
 		
-		if (WARMYD.men(null).get(a) == 0) {
+		if (AD.men(null).get(a) == 0) {
 			a.disband();
 			return;
 		}
@@ -151,22 +136,21 @@ final class WArmyUpdater {
 		
 		Region r = a.region();
 		if (r == null) {
-			r = WPathing.findAdjacentRegion(a.ctx(), a.cty(), ally.get(a));
-			if (r == null) {
+			RDist rr = WORLD.PATH().tmpRegs.single(a.ctx(), a.cty(), WTREATY.NEIGHBOURS(null), ally.get(a));
+			if (rr == null) {
 				a.disband();
 			}else {
-				COORDINATE c = WPathing.random(r);
-				a.setDestination(c.x(), c.y());
+				a.setDestination(rr.reg.cx(), rr.reg.cy());
 			}
 		}else if(r.faction() == FACTIONS.player()) {
-			if (WARMYD.quality().get(a) > REGIOND.MILITARY().power.get(r)) {
+			if (AD.power().get(a) > RD.MILITARY().power.getD(r)) {
 				a.besiege(r);
 			}else if (RND.oneIn(16)) {
 				a.disband();
 			}
 		}else {
-			r = WPathing.findAdjacentRegion(a.ctx(), a.cty(), rebelTarget.get(a));
-			if (r != null) {
+			RDist rr = WORLD.PATH().tmpRegs.single(a.ctx(), a.cty(), WTREATY.NEIGHBOURS(r), rebelTarget.get(a));
+			if (rr != null && AD.power().get(a) > RD.MILITARY().power.getD(rr.reg)) {
 				a.besiege(r);
 			}
 		}
@@ -194,15 +178,15 @@ final class WArmyUpdater {
 //		}
 //	}
 	
-	private static final Finder ally = new Finder() {
+	private static final Sel ally = new Sel() {
 		
 		@Override
 		public boolean is(Region t) {
-			return FACTIONS.rel().ally(army.faction(), t.faction());
+			return t.faction() == null;
 		}
 	};
 	
-	private static final Finder rebelTarget = new Finder() {
+	private static final Sel rebelTarget = new Sel() {
 		
 		@Override
 		public boolean is(Region t) {
@@ -210,10 +194,10 @@ final class WArmyUpdater {
 		}
 	};
 	
-	static abstract class Finder implements BOOLEAN_OBJECT<Region> {
+	static abstract class Sel extends WRegSel {
 		WArmy army;
 		
-		public BOOLEAN_OBJECT<Region> get(WArmy army){
+		public WRegSel get(WArmy army){
 			this.army = army;
 			return this;
 		}

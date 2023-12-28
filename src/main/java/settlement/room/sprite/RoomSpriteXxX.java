@@ -4,15 +4,15 @@ import java.io.IOException;
 
 import init.sprite.game.SheetPair;
 import init.sprite.game.SheetType;
-import settlement.main.RenderData.RenderIterator;
 import settlement.room.main.furnisher.FurnisherItem;
 import snake2d.SPRITE_RENDERER;
 import snake2d.util.color.COLOR;
 import snake2d.util.datatypes.DIR;
 import snake2d.util.file.Json;
+import util.rendering.RenderData.RenderIterator;
 import util.rendering.ShadowBatch;
 
-public class RoomSpriteXxX extends RoomSpriteNew{
+public class RoomSpriteXxX extends RoomSpriteImp{
 
 	private int rotation = 0;
 	private final SheetType.cXxX type;

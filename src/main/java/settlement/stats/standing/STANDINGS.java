@@ -2,6 +2,7 @@ package settlement.stats.standing;
 
 import java.io.IOException;
 
+import game.Profiler;
 import settlement.entity.humanoid.HCLASS;
 import settlement.main.CapitolArea;
 import settlement.main.SETT.SettResource;
@@ -47,7 +48,7 @@ public class STANDINGS extends SettResource{
 	}
 	
 	@Override
-	protected void update(float ds) {
+	protected void update(float ds, Profiler profiler) {
 		happiness.update(ds);
 		submission.update(ds);
 	}

@@ -4,7 +4,6 @@ import java.io.IOException;
 
 import game.GAME;
 import game.time.TIME;
-import init.C;
 import init.paths.PATHS;
 import settlement.main.SETT;
 import snake2d.CORE;
@@ -32,7 +31,7 @@ import view.main.VIEW;
 public final class UISpecials {
 
 	
-	private final TILE_SHEET clockwork = new ITileSheet(PATHS.SPRITE_UI().get("Specials"), 1128, 224) {
+	private final TILE_SHEET clockwork = new ITileSheet(PATHS.SPRITE_UI().get("Specials"), 1128, 208) {
 		
 		@Override
 		protected TILE_SHEET init(ComposerUtil c, ComposerSources s, ComposerDests d) {
@@ -84,21 +83,11 @@ public final class UISpecials {
 		}
 	}.get();
 	
-	private final TILE_SHEET sheet = new ITileSheet() {
-		
-		@Override
-		protected TILE_SHEET init(ComposerUtil c, ComposerSources s, ComposerDests d) {
-			s.full.init(0, s.full.body().y2(), 1, 1, 9, 3, d.s16);
-			s.full.paste(true);
-			return d.s16.saveGui();	 
-		}
-	}.get();
-	
 	private final TILE_SHEET seasons = new ITileSheet() {
 		
 		@Override
 		protected TILE_SHEET init(ComposerUtil c, ComposerSources s, ComposerDests d) {
-			s.full.init(s.full.body().x2(), s.full.body().y1(), 1, 1, 8, 1, d.s32);
+			s.full.init(0, s.full.body().y2(), 1, 1, 8, 1, d.s32);
 			s.full.paste(true);
 			return d.s32.saveGui();	 
 		}
@@ -109,69 +98,6 @@ public final class UISpecials {
 
 	public UISpecials() throws IOException {
 
-	}
-	
-	public GTextR getSprite(CharSequence s) {
-		GText t = new GText(UI.FONT().H1, s) {
-			
-			private final int size = 48*C.SG;
-			int row = 9;
-			
-			@Override
-			public void render(SPRITE_RENDERER r, int X1, int X2, int Y1, int Y2) {
-				
-				int w = X2-X1;
-				
-				render(sheet, r, X1+w/2, Y1+(Y2-Y1)/2, w);
-				super.render(r, X1, X2, Y1, Y2);
-			};
-			
-			private void render(TILE_SHEET s, SPRITE_RENDERER r, int cx, int cy, int width) {
-				
-				int x1 = cx-width/2;
-				x1 -= size;
-				int y1 = cy-size/2;
-				
-				renderp(s, r, x1, y1, 0);
-				x1+= size;
-				
-				int mids = width /size;
-				int left = (width - mids*size);
-				
-				for (int i = 0; i < mids; i++) {
-					renderp(s, r, x1, y1, 1);
-					x1+= size;
-				}
-				if (left != 0) {
-					x1-= size-left;
-					renderp(s, r, x1, y1, 1);
-					x1+= size;
-				}
-				renderp(s, r, x1, y1, 2);
-			}
-			
-			private void renderp(TILE_SHEET s, SPRITE_RENDERER r, int x, int y, int i) {
-				
-				int t = i*3;
-				
-				for (int ty = 0; ty< 3; ty++) {
-					
-					for (int tx = 0; tx< 3; tx++) {
-						
-						s.render(r, t+tx, x+tx*s.size(), y);
-						
-					}
-					t+= row;
-					y+= s.size();
-				}
-				
-				
-				
-			}
-		};
-		t.lablify();
-		t.toUpper();
-		return t.r(DIR.C);
 	}
 	
 	public SPRITE lowerPanel() {
@@ -221,13 +147,13 @@ public final class UISpecials {
 
 		{
 			CLICKABLE c;
-			c = speedButt(KEYS.MAIN().SPEED0, 0, 0);
+			c = speedButt(KEYS.MAIN().SPEED0, 0, GAME.SPEED.speed0);
 			s.add(c, 32, 4);
-			c = speedButt(KEYS.MAIN().SPEED1, 1, 1);
+			c = speedButt(KEYS.MAIN().SPEED1, 1, GAME.SPEED.speed1);
 			s.addRightC(0, c);
-			c = speedButt(KEYS.MAIN().SPEED2, 2, 3);
+			c = speedButt(KEYS.MAIN().SPEED2, 2, GAME.SPEED.speed2);
 			s.addRightC(0, c);
-			c = speedButt(KEYS.MAIN().SPEED3, 3, 25);
+			c = speedButt(KEYS.MAIN().SPEED3, 3, GAME.SPEED.speed3);
 			s.addRightC(0, c);
 			
 		}
@@ -247,6 +173,11 @@ public final class UISpecials {
 			@Override
 			protected void render(SPRITE_RENDERER r, float ds, boolean isActive, boolean isSelected, boolean isHovered) {
 				isSelected = GAME.SPEED.speedTarget() == speed;
+				
+				boolean sspeed = speed == GAME.SPEED.speed3 && GAME.SPEED.speedTarget() == GAME.SPEED.speed4;
+				sspeed |= speed == GAME.SPEED.speed1 && GAME.SPEED.speedTarget() == GAME.SPEED.speed05;
+				isSelected |= sspeed;
+				
 				if (isHovered || isSelected) {
 					OPACITY.O99.bind();
 					buttons.render(r, 8, body().x1(), body().y1());
@@ -272,7 +203,12 @@ public final class UISpecials {
 			
 			@Override
 			protected void clickA() {
-				GAME.SPEED.speedSet(speed);
+				if (speed == GAME.SPEED.speed1 && GAME.SPEED.speedTarget() == GAME.SPEED.speed1)
+					GAME.SPEED.speedSet(GAME.SPEED.speed05);
+				if (speed == GAME.SPEED.speed3 && GAME.SPEED.speedTarget() == GAME.SPEED.speed3)
+					GAME.SPEED.speedSet(GAME.SPEED.speed4);
+				else
+					GAME.SPEED.speedSet(speed);
 			}
 		};
 		
@@ -284,7 +220,7 @@ public final class UISpecials {
 	
 	private class ClockWork extends HoverableAbs {
 
-		private final TextureCoords.Imp text = new TextureCoords.Imp();
+		private final TextureCoords text = new TextureCoords();
 		private final GuiSection hover = new GuiSection();
 		
 		public ClockWork() {
@@ -363,7 +299,7 @@ public final class UISpecials {
 				int x1 = body().x1();
 				if (off != 0) {
 					TextureCoords c = clockwork.getTexture(0);
-					text.get(c.x1()+off, c.y1(), width, c.y2()-c.y1());
+					text.get(c.x1+off, c.y1, width, c.y2-c.y1);
 					CORE.renderer().renderSprite(body().x1(), body().x1()+width, body().y1()-0, body().y2()-0, text);
 					x1 += width;
 				}else {
@@ -375,7 +311,7 @@ public final class UISpecials {
 				}
 				if (off != 0) {
 					TextureCoords c = clockwork.getTexture(0);
-					text.get(c.x1(), c.y1(), off, c.y2()-c.y1());
+					text.get(c.x1, c.y1, off, c.y2-c.y1);
 					CORE.renderer().renderSprite(body().x2()-off, body().x2(), body().y1()-0, body().y2()-0, text);
 				}
 				
@@ -425,7 +361,7 @@ public final class UISpecials {
 				}
 				
 				if (offX1 < pw && offX2 < pw) {
-					text.get(coo.x1()+offX1, coo.y1(), pw-(offX2+offX1), coo.y2()-coo.y1());
+					text.get(coo.x1+offX1, coo.y1, pw-(offX2+offX1), coo.y2-coo.y1);
 					CORE.renderer().renderSprite(start+offX1, start + pw - offX2, body().y1(), body().y1()+text.height(), text);
 				}
 				
@@ -446,12 +382,12 @@ public final class UISpecials {
 			if (x1 < body().x1()) {
 				
 				int off = body().x1()-x1;
-				text.get(c.x1()+off, c.y1(), size-off, c.y2()-c.y1());
+				text.get(c.x1+off, c.y1, size-off, c.y2-c.y1);
 				CORE.renderer().renderSprite(body().x1(), body().x1()+(size-off), y1, y1+size, text);
 				return true;
 			}else if (x1 + size > body().x2()) {
 				int width = body().x2()-x1;
-				text.get(c.x1(), c.y1(), width, c.y2()-c.y1());
+				text.get(c.x1, c.y1, width, c.y2-c.y1);
 				CORE.renderer().renderSprite(x1, x1+width, y1, y1+size, text);
 				return true;
 			}

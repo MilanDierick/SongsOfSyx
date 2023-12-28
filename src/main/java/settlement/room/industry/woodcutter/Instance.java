@@ -1,7 +1,6 @@
 package settlement.room.industry.woodcutter;
 
 import game.GAME;
-import settlement.main.RenderData;
 import settlement.main.SETT;
 import settlement.misc.job.*;
 import settlement.misc.util.RESOURCE_TILE;
@@ -14,6 +13,7 @@ import settlement.room.main.util.RoomInit;
 import snake2d.Renderer;
 import snake2d.util.datatypes.COORDINATE;
 import snake2d.util.rnd.RND;
+import util.rendering.RenderData;
 import util.rendering.ShadowBatch;
 
 final class Instance extends RoomInstance implements JOBMANAGER_HASER, ROOM_PRODUCER {

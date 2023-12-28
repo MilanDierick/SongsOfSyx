@@ -5,14 +5,14 @@ import java.io.IOException;
 import settlement.entity.humanoid.Humanoid;
 import settlement.main.SETT;
 import settlement.room.home.HOME;
-import settlement.room.home.HOME_TYPE;
+import settlement.room.home.HOMET;
+import settlement.room.home.HomeSettings.HomeSetting;
 import snake2d.util.file.*;
 import snake2d.util.sets.QueueInteger;
 
 public final class OddHome {
 
-	private final QueueInteger[] queues = new QueueInteger[HOME_TYPE.ALL().size()];
-	private HOME_TYPE[] types = new HOME_TYPE[3];
+	private final QueueInteger[] queues = new QueueInteger[HOMET.ALL().size()];
 	
 	OddHome(){
 		for (int y = 0; y < queues.length; y++) {
@@ -47,57 +47,52 @@ public final class OddHome {
 		HOME h = test(tx, ty, this);
 		if (h == null)
 			return;
-		HOME_TYPE t = h.availability();
+		HomeSetting s = h.availability();
 		h.done();
-		QueueInteger i = queues[t.index()];
-		if (!i.hasRoom())
-			i.poll();
-		i.push(tx+ty*SETT.TWIDTH);
+		for (int ti = 0; ti < HOMET.ALL().size(); ti++) {
+			if (s.is(ti)) {
+				HOMET t = HOMET.ALL().get(ti);
+				QueueInteger i = queues[t.index()];
+				if (!i.hasRoom())
+					i.poll();
+				i.push(tx+ty*SETT.TWIDTH);
+			}
+		}
 	}
 
 	
 	public HomeHouse get(Humanoid h, Object user) {
-		types[0] = HOME_TYPE.getGeneral(h);
-		types[1] = HOME_TYPE.getSpecific(h);
-		types[2] = HOME_TYPE.getSpecific2(h);
-		
-		for (HOME_TYPE t : types) {
-			while(queues[t.index()].hasNext()) {
-				int i = queues[t.index()].peek();
-				int tx = i%SETT.TWIDTH;
-				int ty = i/SETT.TWIDTH;
-				
-				HomeHouse ho = test(tx, ty, user);
-				if (ho != null && ho.availability() != null && ho.availability().isValid(h)) {
-					return ho;
-				}else {
-					queues[t.index()].poll();
-				}
-				if (ho != null)
-					ho.done();
+		HOMET t = HOMET.get(h);
+		while(queues[ t.index()].hasNext()) {
+			int i = queues[t.index()].peek();
+			int tx = i%SETT.TWIDTH;
+			int ty = i/SETT.TWIDTH;
+			
+			HomeHouse ho = test(tx, ty, user);
+			if (ho != null && ho.availability() != null && ho.availability().is(h)) {
+				return ho;
+			}else {
+				queues[t.index()].poll();
 			}
+			if (ho != null)
+				ho.done();
 		}
 		return null;
 	}
 	
 	public boolean has(Humanoid h) {
-		types[0] = HOME_TYPE.getGeneral(h);
-		types[1] = HOME_TYPE.getSpecific(h);
-		types[2] = HOME_TYPE.getSpecific2(h);
-		
-		for (HOME_TYPE t : types) {
-			while(queues[t.index()].hasNext()) {
-				int i = queues[t.index()].peek();
-				int tx = i%SETT.TWIDTH;
-				int ty = i/SETT.TWIDTH;
-				
-				HomeHouse ho = test(tx, ty, this);
-				if (ho != null) {
-					ho.done();
-					return true;
-				}
-				queues[t.index()].poll();
+		HOMET t = HOMET.get(h);
+		while(queues[t.index()].hasNext()) {
+			int i = queues[t.index()].peek();
+			int tx = i%SETT.TWIDTH;
+			int ty = i/SETT.TWIDTH;
+			
+			HomeHouse ho = test(tx, ty, this);
+			if (ho != null) {
+				ho.done();
+				return true;
 			}
+			queues[t.index()].poll();
 		}
 		return false;
 	}

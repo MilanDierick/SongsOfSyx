@@ -1,7 +1,6 @@
 package settlement.room.infra.elderly;
 
 import init.RES;
-import settlement.main.RenderData;
 import settlement.main.SETT;
 import settlement.misc.job.*;
 import settlement.path.AVAILABILITY;
@@ -11,6 +10,7 @@ import settlement.room.main.job.JobIterator;
 import settlement.room.main.util.RoomInit;
 import snake2d.Renderer;
 import snake2d.util.datatypes.COORDINATE;
+import util.rendering.RenderData;
 import util.rendering.ShadowBatch;
 
 final class ResthomeInstance extends RoomInstance implements JOBMANAGER_HASER{

@@ -4,7 +4,6 @@ import static settlement.main.SETT.*;
 
 import java.io.IOException;
 
-import settlement.main.RenderData.RenderIterator;
 import settlement.main.SETT;
 import settlement.path.AVAILABILITY;
 import settlement.room.main.*;
@@ -18,6 +17,7 @@ import snake2d.util.datatypes.DIR;
 import snake2d.util.file.Json;
 import util.gui.misc.GText;
 import util.info.GFORMAT;
+import util.rendering.RenderData.RenderIterator;
 import util.rendering.ShadowBatch;
 
 final class Constructor extends Furnisher{
@@ -49,7 +49,7 @@ final class Constructor extends Furnisher{
 		
 		final RoomSprite sMisc = new RoomSprite1x1(sp, "MISC_1X1");
 		
-		final RoomSprite sTable = new RoomSpriteComboN(sp, "TABLE_COMBO") {
+		final RoomSprite sTable = new RoomSpriteCombo(sp, "TABLE_COMBO") {
 
 			@Override
 			public void renderAbove(SPRITE_RENDERER r, ShadowBatch s, int data, RenderIterator it, double degrade) {
@@ -63,7 +63,7 @@ final class Constructor extends Furnisher{
 				return sMisc.getData(tx, ty, rx, ry, item, itemRan);
 			}
 		};
-		final RoomSprite sWork = new RoomSpriteComboN(sTable) {
+		final RoomSprite sWork = new RoomSpriteCombo(sTable) {
 
 			final RoomSprite idle = new RoomSprite1x1(sp, "WORK_UNUSED_1X1") {
 				@Override
@@ -72,7 +72,7 @@ final class Constructor extends Furnisher{
 				}
 			};
 			final RoomSprite active = new RoomSprite1x1(sp, "WORK_USED_1X1");
-			final RoomSpriteNew ontop = new RoomSprite1x1(sp, "WORK_USED_TOP_1X1");
+			final RoomSpriteImp ontop = new RoomSprite1x1(sp, "WORK_USED_TOP_1X1");
 			
 			@Override
 			public void renderAbove(SPRITE_RENDERER r, ShadowBatch s, int data, RenderIterator it, double degrade) {
@@ -96,7 +96,7 @@ final class Constructor extends Furnisher{
 		
 		final RoomSprite sShelfSingle = new RoomSprite1x1(sp, "SHELF_1X1") {
 			
-			final RoomSpriteNew ontop = new RoomSprite1x1(sp, "SHELF_TOP_1X1");
+			final RoomSpriteImp ontop = new RoomSprite1x1(sp, "SHELF_TOP_1X1");
 
 			@Override
 			public void renderAbove(SPRITE_RENDERER re, ShadowBatch s, int data, RenderIterator it, double degrade) {
@@ -125,7 +125,7 @@ final class Constructor extends Furnisher{
 		final RoomSprite sStool = new RoomSprite1x1(sp, "STOOL_1X1") {
 			@Override
 			protected boolean joins(int tx, int ty, int rx, int ry, DIR d, FurnisherItem item) {
-				return item.sprite(rx, ry) instanceof RoomSpriteComboN;
+				return item.sprite(rx, ry) instanceof RoomSpriteCombo;
 			}
 		};
 		

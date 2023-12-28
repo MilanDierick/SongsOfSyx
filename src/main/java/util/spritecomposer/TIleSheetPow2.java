@@ -15,6 +15,12 @@ class TIleSheetPow2 implements TILE_SHEET{
 	private final Tile t;
 	private final int scale;
 
+	private static final TextureCoords[] texs = new TextureCoords[] {
+		new TextureCoords(),
+		new TextureCoords()
+	};
+	private static int tI = 0;
+	
 	TIleSheetPow2(int scale, int tileSize, int startTile, int tilesX, int tiles) {
 
 		t = Optimizer.get(tileSize);
@@ -40,19 +46,7 @@ class TIleSheetPow2 implements TILE_SHEET{
 
 	@Override
 	public void render(SPRITE_RENDERER r, int tile, int x1, int y1) {
-		if (tile < 0)
-			return;
 		t.render(r, tile+startTile, x1, y1, scale);
-//		tile += startTile;
-//		int tx = tile & mask;
-//		int ty = tile >> scrollY;
-//
-//		int px = startPixelX + (tx * tileSize);
-//		int py = startPixelY + (ty * tileSize);
-//		
-//		
-//
-//		r.renderSprite(x1, x1 + quadSize, y1, y1 + quadSize, TextureCoords.Normal.get(px, py, tileSize, tileSize));
 	}
 
 	@Override
@@ -60,8 +54,9 @@ class TIleSheetPow2 implements TILE_SHEET{
 		tile += startTile;
 		int tx = tile & mask;
 		int ty = tile >> scrollY;
-		return TextureCoords.Texture.get(
-				(tx * t.size),
+			tI++;
+		return texs[tI&1].get(
+				(tx * quadSize/scale),
 				t.startY + (ty * t.size),
 				t.size,
 				t.size

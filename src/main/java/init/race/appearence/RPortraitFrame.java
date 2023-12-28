@@ -1,8 +1,8 @@
 package init.race.appearence;
 
 import game.GAME;
-import game.time.TIME;
-import init.boostable.BOOSTABLES;
+import game.values.GVALUES;
+import game.values.Lockable;
 import init.race.appearence.RColors.ColorCollection;
 import settlement.stats.Induvidual;
 import settlement.stats.STATS;
@@ -46,7 +46,7 @@ final class RPortraitFrame {
 //	public boolean onlyWhenDead;
 //	public boolean onlyWhenDeadNot;
 	
-	public final RCondition[] cons;
+	public final Lockable<Induvidual> cons = GVALUES.INDU.LOCK.push();
 	
 	
 	private static KeyMap<String> keepClean = new KeyMap<>();
@@ -91,14 +91,9 @@ final class RPortraitFrame {
 		dxr = json.has("OFF_X_RANDOM") ? json.i("OFF_X_RANDOM", 0, 40) : 0;
 		dyr = json.has("OFF_Y_RANDOM") ? json.i("OFF_Y_RANDOM", 0, 48) : 0;
 		
-		if (json.has("CONDITIONS")) {
-			Json[] jj = json.jsons("CONDITIONS");
-			cons = new RCondition[jj.length];
-			for (int ii = 0; ii < jj.length; ii++)
-				cons[ii] = new RCondition(jj[ii]);
-		}else {
-			cons = new RCondition[0];
-		}
+		
+		cons.push("CONDITIONS", json);
+		
 		
 		
 		int splits = json.has("SPLITS") ? json.i("SPLITS", 1, 3) : 1;
@@ -123,18 +118,14 @@ final class RPortraitFrame {
 		
 	}
 	
-	public void render(SPRITE_RENDERER r, TILE_SHEET sheet, TILE_SHEET sFilth, TILE_SHEET sBlood, int x1, int y1, Induvidual indu, boolean isDead, int scale) {
+	public void render(SPRITE_RENDERER r, TILE_SHEET sheet, RaceFrameMaker fm, int x1, int y1, Induvidual indu, boolean isDead, int scale) {
 		
-		double age = STATS.POP().AGE.indu().get(indu)/(TIME.years().bitConversion(TIME.days()));
+		double grayAt = STATS.POP().age.dAge(indu);
 		
-		double death = BOOSTABLES.PHYSICS().DEATH_AGE.get(indu);
-		double grayAt = age/death;
+		if (!cons.passes(indu))
+			return;
 		
-		for (RCondition c : cons) {
-			if (!c.comp.passes(c.stat.getD(indu), c.compI))
-				return; 
-		}
-		int ran = (int) ((indu.randomness() >> (random*8)) & 0x0FF);
+		int ran = (int) ((STATS.RAN().get(indu, 0) >> (random*8)) & 0x0FF);
 		if (occurence <= (ran&0x0F))
 			return;
 //		if (onlyWhenOld && grayAt < 0.7)
@@ -154,7 +145,7 @@ final class RPortraitFrame {
 //		if (onlyWhenDeadNot && isDead)
 //			return;
 		
-		COLOR col = color.get((int) ((indu.randomness2() >> (color.ran*4)) & 0x0F));
+		COLOR col = color.get((int) ((STATS.RAN().get(indu, 60) >> (color.ran*4)) & 0x0F));
 		
 		if (color.turnsGrayWhenOld && grayAt > 0.7) {
 			double d = grayAt-0.7;
@@ -188,25 +179,27 @@ final class RPortraitFrame {
 		COLOR.unbind();
 		OPACITY.O99.bind();
 		if (stains) {
-			int am = (int) (Math.ceil(STATS.NEEDS().DIRTINESS.stat().indu().getD(indu)*4)-1);
+			
+			int fi = 0;
+			
+			int am = (int) (Math.ceil(STATS.NEEDS().grime(indu)*4)-1);
 			if (am >= 0) {
-				int ti = tile_start%TILES;
-				ti += am*TILES;
 				i = tile_start + TILES*var;
 				for (int iy = 0; iy < rows; iy++) {
 					for (int ix = 0; ix < TILES_X; ix++) {
-						sheet.renderTextured(sFilth.getTexture(ti++), i++, x1+ix*TILE_SIZE*scale, y1+iy*TILE_SIZE*scale, scale);
+						sheet.renderTextured(fm.grit.get(am).sheet.getTexture(fi++), i++, x1+ix*TILE_SIZE*scale, y1+iy*TILE_SIZE*scale, scale);
 					}
 				}
 			}
-			if (STATS.NEEDS().INJURIES.count.getD(indu) > 0) {
+			fi = 0;
+			am = (int) (Math.ceil(STATS.NEEDS().INJURIES.count.getD(indu)*4)-1);
+			if (am >= 0) {
+				
 				indu.race().appearance().colors.blood.bind();
-				int ti = tile_start%TILES;
-				ti += (int)((STATS.NEEDS().INJURIES.count.getD(indu)-0.1)*4)*TILES;
 				i = tile_start + TILES*var;
 				for (int iy = 0; iy < rows; iy++) {
 					for (int ix = 0; ix < TILES_X; ix++) {
-						sheet.renderTextured(sBlood.getTexture(ti++), i++, x1+ix*TILE_SIZE*scale, y1+iy*TILE_SIZE*scale, scale);
+						sheet.renderTextured(fm.blood.get(am).sheet.getTexture(fi++), i++, x1+ix*TILE_SIZE*scale, y1+iy*TILE_SIZE*scale, scale);
 					}
 				}
 				COLOR.unbind();

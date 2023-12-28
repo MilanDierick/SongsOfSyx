@@ -12,6 +12,11 @@ public interface ADDABLE <E> {
 			add(e);
 	}
 	
+	default E addReturn(E element){
+		add(element);
+		return element;
+	}
+	
 	int tryAdd(E e);
 	
 	boolean hasRoom();

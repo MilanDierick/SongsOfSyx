@@ -1,7 +1,7 @@
 package settlement.entity.humanoid.ai.battle;
 
-import init.C;
 import init.D;
+import init.resources.RBIT.RBITImp;
 import init.resources.RESOURCE;
 import settlement.army.Div;
 import settlement.entity.humanoid.*;
@@ -13,9 +13,7 @@ import settlement.entity.humanoid.ai.main.AISUB.AISubActivation;
 import settlement.entity.humanoid.spirte.HSprites;
 import settlement.main.SETT;
 import settlement.stats.STATS;
-import settlement.stats.StatsEquippables.EQUIPPABLE;
-import settlement.stats.StatsEquippables.StatEquippableRange;
-import settlement.thing.projectiles.SProjectiles;
+import settlement.stats.equip.*;
 import settlement.thing.projectiles.Trajectory;
 import snake2d.util.datatypes.COORDINATE;
 import snake2d.util.datatypes.DIR;
@@ -450,19 +448,28 @@ final class MarchPlan extends AIPLAN.PLANRES{
 			if (s != null)
 				return s;
 			
+			if (a.division().settings.shouldbreak) {
+				for (int i = 0; i < DIR.ORTHO.size(); i++) {
+					int dx = a.tc().x()+DIR.ORTHO.get(i).x();
+					int dy = a.tc().y()+DIR.ORTHO.get(i).y();
+					if (AI.modules().battle.tile.shouldattackTile(d, a, dx, dy)) {
+						return d.resumeOtherPlan(a, AI.modules().battle.tile.init(d, a, dx, dy));
+					}
+				}
+//				
+//				if (AI.modules().battle.tile.shouldattackTile(d, a, a.physics.tx2(),a.physics.ty1())) {
+//					return d.resumeOtherPlan(a, AI.modules().battle.tile.init(d, a, a.physics.tx2(),a.physics.ty1()));
+//				}
+//				if (AI.modules().battle.tile.shouldattackTile(d, a, a.physics.tx1(),a.physics.ty2())) {
+//					return d.resumeOtherPlan(a, AI.modules().battle.tile.init(d, a, a.physics.tx1(),a.physics.ty2()));
+//				}
+//				if (AI.modules().battle.tile.shouldattackTile(d, a, a.physics.tx2(),a.physics.ty2())) {
+//					return d.resumeOtherPlan(a, AI.modules().battle.tile.init(d, a, a.physics.tx2(),a.physics.ty2()));
+//				}
+			}
+			
 			if (!a.physics.isWithinTile()) {
-				if (AI.modules().battle.tile.shouldattackTile(d, a, a.physics.tx1(),a.physics.ty1())) {
-					return d.resumeOtherPlan(a, AI.modules().battle.tile.init(d, a, a.physics.tx1(),a.physics.ty1()));
-				}
-				if (AI.modules().battle.tile.shouldattackTile(d, a, a.physics.tx2(),a.physics.ty1())) {
-					return d.resumeOtherPlan(a, AI.modules().battle.tile.init(d, a, a.physics.tx2(),a.physics.ty1()));
-				}
-				if (AI.modules().battle.tile.shouldattackTile(d, a, a.physics.tx1(),a.physics.ty2())) {
-					return d.resumeOtherPlan(a, AI.modules().battle.tile.init(d, a, a.physics.tx1(),a.physics.ty2()));
-				}
-				if (AI.modules().battle.tile.shouldattackTile(d, a, a.physics.tx2(),a.physics.ty2())) {
-					return d.resumeOtherPlan(a, AI.modules().battle.tile.init(d, a, a.physics.tx2(),a.physics.ty2()));
-				}
+				
 			}
 			
 			if (shouldFire(a, d))
@@ -540,14 +547,11 @@ final class MarchPlan extends AIPLAN.PLANRES{
 				a.speed.setDirCurrent(DIR.get(j.vx(), j.vy()));
 				
 				if (drawInter(a, d) >= 0.75) {
-					int x = a.body().cX()+a.speed.dir().x()*C.TILE_SIZEH;
-					int y = a.body().cY()+a.speed.dir().y()*C.TILE_SIZEH;
-					int h = SProjectiles.releaseHeight(a.tc().x(), a.tc().y());
-					StatEquippableRange rr = a.division().settings.ammo();
-					double ran = rr.accuracyRND(a.indu());
-				
-					SETT.PROJS().launch(x, y, 
-							h, j, a.division().settings.ammo().projectile, ran, rr.stat().indu().get(a.indu()));
+					EquipRange rr = a.division().settings.ammo();
+					
+					rr.launch(a, j);
+					
+
 					if (STATS.NEEDS().EXHASTION.indu().getD(a.indu()) > 0.25)
 						STATS.NEEDS().EXHASTION.indu().inc(a.indu(), -1);
 					a.division().settings.ammo().use(a.indu());
@@ -725,30 +729,32 @@ final class MarchPlan extends AIPLAN.PLANRES{
 	
 	private final Resumer fetchGear = new Resumer("Getting Battlegear") {
 		
+		final RBITImp bi = new RBITImp();
+		
 		@Override
 		protected AISubActivation setAction(Humanoid a, AIManager d) {
-			long bit = 0;
+			bi.clear();
 			Div div = STATS.BATTLE().DIV.get(a);
 			if (div == null)
 				return null;
 			
-			for (EQUIPPABLE e : STATS.EQUIP().military_all()) {
-				if (e.stat().indu().get(a.indu()) < e.target(a)) {
-					bit |= e.resource().bit;
+			for (Equip e : STATS.EQUIP().BATTLE_ALL()) {
+				if (e.stat().indu().get(a.indu()) < e.target(a.indu())) {
+					bi.or(e.resource(a.indu()));
 				}
 			}
 			
-			if (bit == 0)
+			if (bi.isClear())
 				return null;
 			
-			return AI.SUBS().walkTo.resource(a, d, bit, Integer.MAX_VALUE);
+			return AI.SUBS().walkTo.resource(a, d, bi, Integer.MAX_VALUE);
 		}
 		
 		@Override
 		protected AISubActivation res(Humanoid a, AIManager d) {
 			RESOURCE r = d.resourceCarried();
-			for (EQUIPPABLE e : STATS.EQUIP().military_all()) {
-				if (e.stat().indu().get(a.indu()) < e.target(a) && e.resource() == r) {
+			for (EquipBattle e : STATS.EQUIP().BATTLE_ALL()) {
+				if (e.stat().indu().get(a.indu()) < e.target(a.indu()) && e.resource(a.indu()) == r) {
 					e.inc(a.indu(), 1);
 					d.resourceCarriedSet(null);
 					break;
@@ -774,6 +780,7 @@ final class MarchPlan extends AIPLAN.PLANRES{
 		
 		if (!a.division().settings.moppingUp())
 			return null;
+		
 		if (STATS.POP().pop(HTYPE.ENEMY) == 0 && STATS.POP().pop(HTYPE.RIOTER) == 0)
 			return null;
 		

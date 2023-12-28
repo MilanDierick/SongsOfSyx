@@ -10,7 +10,7 @@ import settlement.entity.humanoid.ai.main.*;
 import settlement.entity.humanoid.ai.main.AISUB.AISubActivation;
 import settlement.main.SETT;
 import settlement.path.finder.SFinderRND;
-import settlement.stats.CAUSE_LEAVE;
+import settlement.stats.util.CAUSE_LEAVE;
 import settlement.thing.ThingsCorpses.Corpse;
 import snake2d.util.rnd.RND;
 import view.main.VIEW;

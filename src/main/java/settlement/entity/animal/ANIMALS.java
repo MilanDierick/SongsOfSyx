@@ -4,6 +4,7 @@ import static settlement.main.SETT.*;
 
 import java.io.IOException;
 
+import game.Profiler;
 import init.C;
 import init.paths.PATHS;
 import init.resources.RESOURCE;
@@ -30,7 +31,7 @@ import view.tool.*;
 public final class ANIMALS extends SettResource{
 
 	public final RCollection<AnimalSpecies> species = AnimalSpecies.create();
-	public final AnimalSpawning spawn = new AnimalSpawning();
+	public final AnimalSpawning spawn = new AnimalSpawning(this);
 	
 	private final ArrayList<AnimalSpecies> caravans  = new ArrayList<>(species.all().size());
 	private LIST<AnimalSpecies> sett;
@@ -165,7 +166,7 @@ public final class ANIMALS extends SettResource{
 	}
 	
 	@Override
-	protected void update(float ds) {
+	protected void update(float ds, Profiler profiler) {
 		spawn.update(ds);
 	}
 
@@ -180,7 +181,9 @@ public final class ANIMALS extends SettResource{
 		sett = exists(area);
 		//this.max = new AnimalGenerator(area, this).generate();
 		spawn.saver.clear();
-		spawn.generate(this, area);
+		
+		if (!area.isBattle)
+			spawn.generate(this, area);
 	}
 	
 	public LIST<AnimalSpecies> sett(){

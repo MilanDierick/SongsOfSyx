@@ -39,8 +39,13 @@ final class SCompN extends SComponent{
 	}
 
 	@Override
-	public byte edgeMask() {
-		return edgeMask;
+	public boolean hasEdge() {
+		return (edgeMask & 1) != 0;
+	}
+	
+	@Override
+	public boolean hasEntry() {
+		return (edgeMask & 2) != 0;
 	}
 	
 	@Override
@@ -102,14 +107,14 @@ final class SCompN extends SComponent{
 			return;
 		}
 		
-		SETT.PATH().comps.levels.get(level).update(null, this);
 		setEdges(checker, boundsC);
 		
 	}
 	
 	
 	private void add(SComponent underling) {
-		edgeMask |= underling.edgeMask();
+		edgeMask |= underling.hasEdge() ? 1 : 0;
+		edgeMask |= underling.hasEntry() ? 2 : 0;
 	}
 	
 	private void setEdges(SComponentChecker neighbours, RECTANGLE bounds) {

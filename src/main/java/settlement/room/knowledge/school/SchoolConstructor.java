@@ -2,7 +2,6 @@ package settlement.room.knowledge.school;
 
 import java.io.IOException;
 
-import settlement.main.RenderData.RenderIterator;
 import settlement.main.SETT;
 import settlement.misc.util.FSERVICE;
 import settlement.path.AVAILABILITY;
@@ -15,6 +14,7 @@ import settlement.room.sprite.RoomSprite1x1;
 import snake2d.SPRITE_RENDERER;
 import snake2d.util.datatypes.DIR;
 import snake2d.util.file.Json;
+import util.rendering.RenderData.RenderIterator;
 import util.rendering.ShadowBatch;
 
 final class SchoolConstructor extends Furnisher{

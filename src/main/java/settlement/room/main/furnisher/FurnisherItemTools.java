@@ -3,16 +3,16 @@ package settlement.room.main.furnisher;
 import java.io.IOException;
 
 import init.sprite.SPRITES;
-import settlement.main.RenderData.RenderIterator;
 import settlement.main.SETT;
 import settlement.path.AVAILABILITY;
 import settlement.room.main.Room;
 import settlement.room.sprite.RoomSprite;
-import settlement.room.sprite.RoomSpriteComboN;
-import settlement.tilemap.Floors.Floor;
+import settlement.room.sprite.RoomSpriteCombo;
+import settlement.tilemap.floor.Floors.Floor;
 import snake2d.SPRITE_RENDERER;
 import snake2d.util.datatypes.DIR;
 import snake2d.util.file.Json;
+import util.rendering.RenderData.RenderIterator;
 import util.rendering.ShadowBatch;
 
 public final class FurnisherItemTools {
@@ -35,7 +35,7 @@ public final class FurnisherItemTools {
 			
 			@Override
 			public void renderBelow(SPRITE_RENDERER r, ShadowBatch s, int data, RenderIterator it, double degrade) {
-				SETT.FLOOR().renderOntop(it, floor,  getRes(it.tx(), it.ty()));
+				SETT.FLOOR().renderOntop(it, floor,  getRes(it.tx(), it.ty())); 
 				super.renderBelow(r, s, data, it, degrade);
 			}
 			
@@ -102,7 +102,7 @@ public final class FurnisherItemTools {
 	
 	public static void makeUnder(Furnisher f, Json j, String key) throws IOException {
 		
-		RoomSpriteComboN ca = new RoomSpriteComboN(j, key) {
+		RoomSpriteCombo ca = new RoomSpriteCombo(j, key) {
 			@Override
 			public void renderBelow(SPRITE_RENDERER r, ShadowBatch s, int data, RenderIterator it, double degrade) {
 				super.render(r, s, data, it, degrade, false);

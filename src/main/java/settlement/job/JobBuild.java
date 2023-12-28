@@ -2,17 +2,18 @@ package settlement.job;
 
 import static settlement.main.SETT.*;
 
+import init.resources.RBIT;
 import init.resources.RESOURCE;
 import init.sound.SOUND;
 import init.sound.SoundSettlement.Sound;
 import settlement.entity.humanoid.Humanoid;
-import settlement.main.RenderData.RenderIterator;
 import settlement.main.SETT;
 import settlement.thing.THINGS.Thing;
 import settlement.thing.ThingsResources.ScatteredResource;
-import settlement.tilemap.Terrain.TerrainTile;
+import settlement.tilemap.terrain.Terrain.TerrainTile;
 import snake2d.Renderer;
 import snake2d.util.sprite.SPRITE;
+import util.rendering.RenderData.RenderIterator;
 import util.rendering.ShadowBatch;
 import view.tool.PlacableMessages;
 import view.tool.PlacableMulti;
@@ -38,7 +39,7 @@ public abstract class JobBuild extends Job{
 	private PSTATE state;
 
 	private final boolean solid;
-	final Placer placer;
+	Placer placer;
 	protected boolean needsFerClear = true;
 	protected final RESOURCE res;
 	protected final int resAmount;
@@ -103,12 +104,15 @@ public abstract class JobBuild extends Job{
 		if (PATH().solidity.is(tx, ty))
 			return PlacableMessages.¤¤SOLID_BLOCK;
 		TerrainTile t = TERRAIN().get(tx, ty);
+		
+		if (t.clearing().needs() && !t.clearing().can())
+			return PlacableMessages.¤¤MISC;
+		
 		if (becomesSolid() && !SETT.TERRAIN().MOUNTAIN.isMountain(tx, ty)) {
 			return null;
 		}else if (t.clearing().isStructure())
 			return PlacableMessages.¤¤STRUCTURE_BLOCK;
-		if (t.clearing().needs() && !t.clearing().can())
-			return PlacableMessages.¤¤MISC;
+		
 		return null;
 	}
 	
@@ -130,7 +134,7 @@ public abstract class JobBuild extends Job{
 			return PSTATE.CLEAR_VEG;
 		else if (resNeeds(tx, ty))
 			return PSTATE.FETCHING;
-		else if (solid && THINGS().resources.has(tx, ty, -1l))
+		else if (solid && THINGS().resources.has(tx, ty, RBIT.ALL))
 			return PSTATE.REMOVING;
 		else
 			return PSTATE.CONSTRUCTING;
@@ -144,7 +148,7 @@ public abstract class JobBuild extends Job{
 	}
 	
 	boolean terrainNeedsClear(int tx, int ty) {
-		return TERRAIN().get(tx, ty).clearing().needs() && !TERRAIN().get(tx, ty).clearing().isStructure();
+		return TERRAIN().get(tx, ty).clearing().needs() && !TERRAIN().get(tx, ty).clearing().isStructure() && TERRAIN().get(tx, ty).clearing().can();
 	}
 	
 	boolean resNeeds(int tx, int ty) {
@@ -166,8 +170,6 @@ public abstract class JobBuild extends Job{
 	
 	@Override
 	public double jobPerformTime(Humanoid skill) {
-		
-		
 		switch(state) {
 		case CLEAR_TERRAIN:
 			TerrainTile t = TERRAIN().get(coo);
@@ -198,12 +200,7 @@ public abstract class JobBuild extends Job{
 		switch(state) {
 		case CLEAR_TERRAIN:
 			TerrainTile t = TERRAIN().get(tile);
-			res = t.clearing().resource();
-			for (int i = 0; i < 5; i++) {
-				t.clearing().clear1(coo.x(), coo.y());
-				if (t != TERRAIN().get(coo))
-					break;
-			}
+			res = t.clearing().clear1(coo.x(), coo.y());
 			break;
 		case CLEAR_VEG:
 			GRASS().currentI.increment(coo.x(), coo.y(), -4);

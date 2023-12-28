@@ -18,7 +18,7 @@ public class PlacableMessages {
 	public static CharSequence ¤¤ROCK_MUST = "¤Must be placed on rock";
 	public static CharSequence ¤¤TREE_MUST = "¤Must be placed on tree";
 	public static CharSequence ¤¤WATER_MUST = "¤Must be placed on water";
-	public static CharSequence ¤¤WATER_RETURN = "¤Water table is too low.";
+	public static CharSequence ¤¤WATER_RETURN = "¤Water can only be dug where there is ground water.";
 	public static CharSequence ¤¤MOUNTAIN_MUST = "¤Must be placed on solid mountain";
 	public static CharSequence ¤¤MOUNTAIN_NOT = "¤Can't be placed on mountains or caves. Use mountain specific tools for this.";
 	public static CharSequence ¤¤ROCK_TREE_MUST = "¤Must be placed on rock or tree";

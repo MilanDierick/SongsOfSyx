@@ -11,8 +11,8 @@ import settlement.entity.ENTITY;
 import settlement.entity.humanoid.*;
 import settlement.main.SETT;
 import settlement.room.main.RoomInstance;
-import settlement.stats.STAT;
 import settlement.stats.STATS;
+import settlement.stats.stat.STAT;
 import snake2d.SPRITE_RENDERER;
 import snake2d.util.gui.GuiSection;
 import snake2d.util.gui.clickable.CLICKABLE;
@@ -137,8 +137,8 @@ final class UIList extends ISidePanel{
 						b.add(r.appearance().icon);
 						b.add(GFORMAT.i(b.text(), STATS.POP().pop(r, t)));
 						b.space();
-						tab++;
-						if (tab > 8) {
+						tab+=3;
+						if (tab > 9) {
 							b.NL();
 							tab = 0;
 						}
@@ -326,16 +326,16 @@ final class UIList extends ISidePanel{
 						text.add(STATS.APPEARANCE().name(h.indu()));
 					}
 				},
-				new GTSort<Humanoid>(STATS.POP().AGE.info().name) {
+				new GTSort<Humanoid>(DicMisc.¤¤Age) {
 					@Override
 					public int cmp(Humanoid current, Humanoid cmp) {
-						return STATS.POP().AGE.indu().get(current.indu()) - STATS.POP().AGE.indu().get(cmp.indu());
+						return STATS.POP().age.days(current.indu()) - STATS.POP().age.days(cmp.indu());
 					}
 	
 					@Override
 					public void format(Humanoid h, GText text) {
 						text.normalify();
-						text.add(STATS.POP().AGE.indu().get(h.indu())/TIME.years().bitConversion(TIME.days()));
+						text.add((double)STATS.POP().age.days(h.indu())/TIME.years().bitConversion(TIME.days()), 2);
 					}
 				},
 				new GTSort<Humanoid>(STATS.WORK().EMPLOYED.info.name) {
@@ -374,7 +374,7 @@ final class UIList extends ISidePanel{
 			
 			ArrayList<GTSort<Humanoid>> sother = new ArrayList<GTSort<Humanoid>>(STATS.all().size());
 			for (STAT s : STATS.createMatterList(true, false, null)) {
-				if (s == STATS.POP().AGE)
+				if (s == STATS.POP().age.AGE)
 					continue;
 				
 				GTSort<Humanoid> h = new GTSort<Humanoid>(s.info().name) {
@@ -449,7 +449,7 @@ final class UIList extends ISidePanel{
 		protected Humanoid getUnsorted(int index) {
 			ENTITY e = SETT.ENTITIES().getAllEnts()[index];
 			if (e instanceof Humanoid) {
-				if (S.get().developer || !((Humanoid)e).indu().hostile())
+				if (S.get().developer || ((Humanoid)e).indu().player())
 					return (Humanoid) e;
 			}
 			return null;

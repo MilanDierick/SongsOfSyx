@@ -20,7 +20,6 @@ public final class ROOM_JANITOR extends RoomBlueprintIns<JanitorInstance> implem
 	final JM jm = new JM(this);
 	public static final int radius = 150;
 	final Constructor constructor;
-	final Res res = new Res();
 	
 	public ROOM_JANITOR(RoomInitData init, RoomCategorySub block) throws IOException {
 		super(0, init, "_JANITOR", block);

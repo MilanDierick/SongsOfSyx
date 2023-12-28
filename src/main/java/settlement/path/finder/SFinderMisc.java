@@ -38,7 +38,7 @@ public abstract class SFinderMisc {
 			return false;
 		}
 		
-		RES.flooder().init(null);
+		RES.flooder().init(this);
 		RES.flooder().pushSloppy(start.x(), start.y(), 0, null);
 		
 		while (RES.flooder().hasMore()){

@@ -1,7 +1,7 @@
 package view.ui.tech;
 
+import game.boosting.*;
 import game.faction.FACTIONS;
-import init.boostable.*;
 import init.sprite.UI.UI;
 import init.tech.TECH;
 import init.tech.TECHS;
@@ -9,80 +9,117 @@ import snake2d.SPRITE_RENDERER;
 import snake2d.util.color.COLOR;
 import snake2d.util.color.OPACITY;
 import snake2d.util.datatypes.COORDINATE;
+import snake2d.util.datatypes.DIR;
 import snake2d.util.gui.GUI_BOX;
 import snake2d.util.gui.GuiSection;
-import snake2d.util.gui.Hoverable.HOVERABLE.HoverableAbs;
 import snake2d.util.gui.renderable.RENDEROBJ;
+import snake2d.util.sets.ArrayListGrower;
 import snake2d.util.sets.LinkedList;
-import snake2d.util.sprite.SPRITE;
 import util.colors.GCOLOR;
 import util.gui.misc.*;
 import util.gui.table.GScrollRows;
 import util.info.GFORMAT;
-import view.interrupter.ISidePanel;
 import view.main.VIEW;
 
-final class InfoBonuses extends ISidePanel{
+final class InfoBonuses extends GuiSection{
 
 	static TECH hovered;
 	
-	public InfoBonuses() {
+	public InfoBonuses(int height) {
 		
-		titleSet("");
+		
+		
 		
 		LinkedList<RENDEROBJ> rens = new LinkedList<>();
 		
-		for (BoostableCollection col : BOOSTABLES.colls()) {
-			rens.add(new GHeader(col.name));
-			for (BOOSTABLE b : col.all()) {
+		BoostableCat cat = null;
+		for (Boostable b : BOOSTING.ALL()) {
+			if (b.name != null && b.name.length() > 0) {
+				if (b.cat != cat) {
+					cat = b.cat;
+					rens.add(new GHeader(cat.name));
+				}
 				rens.add(new Boo(b));
 			}
 			
+			
 		}
 		
-		section = new GuiSection() {
+		add(new GScrollRows(rens, height-8).view());
+		
+		addRelBody(8, DIR.W, new RENDEROBJ.RenderImp(2, height) {
+
 			@Override
 			public void render(SPRITE_RENDERER r, float ds) {
-				
-				super.render(r, ds);
-				hovered = null;
+				GCOLOR.UI().border().render(r, body);
 			}
-		};
-		
-		section.add(new GScrollRows(rens, HEIGHT).view());
+		});
 		
 	}
 	
 	private final GText t = new GText(UI.FONT().S, 20);
 	
+	@Override
+	public void render(SPRITE_RENDERER r, float ds) {
+		
+		super.render(r, ds);
+		hovered = null;
+	}
+	
 	private class Boo extends HoverableAbs{
 
-		private final BOOSTABLE bo;
+		private final Boostable bo;
+		private ArrayListGrower<TECH> techs = new ArrayListGrower<>();
 		
-		public Boo(BOOSTABLE bo) {
-			super(264, 18);
+		public Boo(Boostable bo) {
+			super(300, 18);
 			this.bo = bo;
+			for (TECH t : TECHS.ALL()) {
+				for (BoostSpec b : t.boosters.all()) {
+					if (b.boostable == bo) {
+						techs.add(t);
+					}
+				}
+			}
 		}
 		
 		@Override
 		protected void render(SPRITE_RENDERER r, float ds, boolean isHovered) {
-			bo.icon().render(r, body().x1(), body().y1());
+			if (techs.size() == 0)
+				OPACITY.O50.bind();
+			else if (!isHovered)
+				OPACITY.O85.bind();
+			
+			bo.icon.render(r, body().x1(), body().y1());
 			if (hovered != null) {
-				for (BBoost b : hovered.boosts()) {
+				for (BoostSpec b : hovered.boosters.all()) {
 					if (b.boostable == bo)
 						isHovered = true;
 				}
 			}
 			
-			if (!isHovered)
-				OPACITY.O66.bind();
-			GCOLOR.T().H2.bind();
+			if (techs.size() > 0)
+				GCOLOR.T().H1.bind();
 			UI.FONT().S.render(r, bo.name, body().x1()+20, body().y1(), 0, bo.name.length() > 15 ? 15 : bo.name.length(), 1);
 			COLOR.unbind();
 			OPACITY.unbind();
 			t.clear();
-			GFORMAT.percInc(t, FACTIONS.player().tech.BOOSTER.mul(bo)*(1.0+FACTIONS.player().tech.BOOSTER.add(bo)));
-			t.render(r, body.x1()+200, body.y1());
+			double add = 0;
+			double mul = 1;
+			for (TECH t : techs) {
+				for (BoostSpec b : t.boosters.all()) {
+					if (b.boostable == bo) {
+						if (b.booster.isMul)
+							mul *= FACTIONS.player().tech.level(t)*(b.booster.to()-1) + 1;
+						else
+							add += FACTIONS.player().tech.level(t)*(b.booster.to());
+						
+					}
+				}
+			}
+			
+			GFORMAT.percInc(t, (add+1)*mul-1);
+			t.render(r, body.x1()+220, body.y1());
 		}
 		
 		@Override
@@ -92,15 +129,17 @@ final class InfoBonuses extends ISidePanel{
 			text.NL(8);
 			
 			GBox box = (GBox) text;
-			for (TECH t : TECHS.ALL()) {
-				for (BBoost b : t.boosts()) {
+			for (TECH t : techs) {
+				for (BoostSpec b : t.boosters.all()) {
 					if (b.boostable == bo) {
-						SPRITE c = FACTIONS.player().tech.level(t) > 0 ? GCOLOR.T().IGOOD : GCOLOR.T().INACTIVE;
-						box.add(c);
-						b.hover(box);
+						if (b.booster.isMul)
+							b.booster.hover(box, FACTIONS.player().tech.level(t)*(b.booster.to()-1) + 1);
+						else
+							b.booster.hover(box, FACTIONS.player().tech.level(t)*(b.booster.to()));
+						
 					}
 				}
-				
+				box.NL();
 			}
 			
 		}

@@ -8,10 +8,10 @@ import snake2d.util.color.ColorImp;
 import snake2d.util.datatypes.DIR;
 import snake2d.util.gui.GuiSection;
 import snake2d.util.sprite.text.StringInputSprite;
+import util.gui.common.BitmapSpriteEditor;
 import util.gui.misc.*;
-import view.common.BitmapSpriteEditor;
-import world.World;
-import world.map.regions.Region;
+import world.WORLD;
+import world.regions.Region;
 
 class Visual extends GuiSection{
 
@@ -23,23 +23,25 @@ class Visual extends GuiSection{
 		addRelBody(8, DIR.S, banner());
 		addRelBody(16, DIR.E, colors());
 		
+		
+		
 		addRelBody(16, DIR.N, info());
 		addRelBody(8, DIR.S, loadButts());
 		
-		addRelBody(16, DIR.E, new Colors(body().height()));
+		
 	}
 	
 	private static GuiSection loadButts() {
 		GuiSection s = new GuiSection();
 		
-		s.add(new GButt.Glow(D.g("Save-Profile", "Save as Default")) {
+		s.add(new GButt.ButtPanel(D.g("Save-Profile", "Save as Default")) {
 			@Override
 			protected void clickA() {
 				FactionProfileFlusher.flush(FACTIONS.player());
 			}
 		});
 		
-		s.addRightC(32, new GButt.Glow(D.g("Load-Profile", "Load as Default")) {
+		s.addRightC(32, new GButt.ButtPanel(D.g("Load-Profile", "Load Default")) {
 			
 			@Override
 			protected void renAction() {
@@ -58,18 +60,20 @@ class Visual extends GuiSection{
 	
 	private static GuiSection info() {
 		GuiSection s = new GuiSection();
-		StringInputSprite t = new StringInputSprite(28, UI.FONT().H2) {
+		StringInputSprite t = new StringInputSprite(24, UI.FONT().H2) {
 			@Override
 			protected void change() {
-				FACTIONS.player().appearence().name().clear().add(text());
+				FACTIONS.player().name.clear().add(text());
+				if (FACTIONS.player().capitolRegion() != null)
+					FACTIONS.player().capitolRegion().info.name().clear().add(text());
 			}
 		};
 		GInput in = new GInput(t);
-		t.text().clear().add(FACTIONS.player().appearence().name());
+		t.text().clear().add(FACTIONS.player().name);
 		s.add(new GHeader(D.g("fname", "Faction Name")));
-		s.addRightC(8, in);
+		s.addRightCAbs(210, in);
 		
-		t = new StringInputSprite(28, UI.FONT().H2) {
+		t = new StringInputSprite(24, UI.FONT().H2) {
 			@Override
 			protected void change() {
 				FACTIONS.player().ruler().name.clear().add(text());
@@ -78,7 +82,9 @@ class Visual extends GuiSection{
 		in = new GInput(t);
 		t.text().clear().add(FACTIONS.player().ruler().name);
 		s.add(new GHeader(D.g("rname", "Ruler Name")), 0, s.getLastY2()+12);
-		s.addRightC(8, in);
+		s.addRightCAbs(210, in);
+		
+		s.addRelBody(16, DIR.E, new ColorPop().butt());
 		
 		return s;
 	}
@@ -123,8 +129,8 @@ class Visual extends GuiSection{
 			
 			@Override
 			public void change() {
-				for (Region r : FACTIONS.player().kingdom().realm().regions())
-					World.MINIMAP().updateRegion(r);
+				for (Region r : FACTIONS.player().realm().all())
+					WORLD.MINIMAP().updateRegion(r);
 			}
 		});
 		s.addDownC(8, new GColorPicker(false, D.g("foreground")) {

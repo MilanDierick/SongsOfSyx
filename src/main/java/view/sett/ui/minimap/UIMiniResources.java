@@ -3,21 +3,16 @@ package view.sett.ui.minimap;
 import java.io.IOException;
 
 import game.GAME;
-import game.faction.FACTIONS;
-import game.time.TIME;
 import init.C;
 import init.D;
-import init.boostable.BOOSTABLES;
-import init.resources.*;
+import init.resources.RESOURCE;
+import init.resources.RESOURCES;
 import init.sprite.SPRITES;
 import init.sprite.UI.UI;
 import settlement.main.SETT;
-import settlement.room.industry.module.*;
 import settlement.room.industry.module.Industry.IndustryResource;
 import settlement.room.infra.stockpile.StockpileInstance;
-import settlement.room.main.RoomBlueprintIns;
-import settlement.room.main.RoomInstance;
-import settlement.stats.STATS;
+import settlement.room.main.RoomProduction.Source;
 import snake2d.MButt;
 import snake2d.SPRITE_RENDERER;
 import snake2d.util.color.COLOR;
@@ -27,19 +22,15 @@ import snake2d.util.file.FileGetter;
 import snake2d.util.file.FilePutter;
 import snake2d.util.gui.GUI_BOX;
 import snake2d.util.gui.GuiSection;
-import snake2d.util.gui.Hoverable.HOVERABLE;
 import snake2d.util.gui.clickable.CLICKABLE;
 import snake2d.util.gui.renderable.RENDEROBJ;
-import snake2d.util.misc.CLAMP;
 import snake2d.util.sets.LinkedList;
+import util.colors.GCOLOR;
 import util.data.INT.INTE;
 import util.dic.DicRes;
 import util.gui.misc.*;
-import util.gui.panel.GFrame;
 import util.gui.table.GScrollRows;
-import util.gui.table.GStaples;
 import util.info.GFORMAT;
-import util.statistics.HistoryResource;
 import view.main.VIEW;
 import view.sett.ui.minimap.UIMinimap.Expansion;
 
@@ -47,7 +38,6 @@ final class UIMiniResources extends Expansion{
 
 	private static CharSequence ¤¤desc = "¤Click to open resource details, right click to go to warehouse.";
 	private static CharSequence ¤¤Exists = "¤Resources exist scattered on the map that are not yet stored and counted.";
-	private static CharSequence ¤¤Food = "¤Days of food stored for all subjects.";
 	private static CharSequence ¤¤Production = "¤Produced per day:";
 	static {
 		D.ts(UIMiniResources.class);
@@ -73,7 +63,7 @@ final class UIMiniResources extends Expansion{
 				body().moveY1(y1);
 			}
 		};
-		mini.add(c, mini.body().x2()-c.body().width()-4, mini.body().y1()+4+16);
+		mini.add(c, mini.body().x2()-c.body().width()-4, mini.body().y1()+4);
 		c = new GButt.Glow(SPRITES.icons().s.arrow_right) {
 			@Override
 			protected void clickA() {
@@ -83,155 +73,13 @@ final class UIMiniResources extends Expansion{
 				body().moveY1(y1);
 			}
 		};
-		full.add(c, full.body().x2()-c.body().width()-4, full.body().y1()+4+16);
+		full.add(c, full.body().x2()-c.body().width()-4, full.body().y1()+4);
 		
 
 		
 	}
 	
-	private static RENDEROBJ foodDays(int width) {
-		
-		
-		
-		return new HOVERABLE.HoverableAbs(width-4, 18) {
-			
-			GStat s = new GStat() {
-				
-				@Override
-				public void update(GText text) {
-					int fd = (int) (STATS.FOOD().FOOD_DAYS.data(null).getD(null, 0)* STATS.FOOD().FOOD_DAYS.dataDivider());
-					GFORMAT.i(text, fd);
-				}
-			}.decrease();
-			
-			GStaples staples = new GStaples(STATS.DAYS_SAVED) {
-				
-				@Override
-				protected void hover(GBox box, int stapleI) {
-					
-				}
-				
-				@Override
-				protected double getValue(int stapleI) {
-					return STATS.FOOD().FOOD_DAYS.data(null).getD(null, STATS.DAYS_SAVED-stapleI -1);
-					
-				}
-			};
-			
-			{
-				staples.body().setWidth(200).setHeight(64);
-			}
-			
-			@Override
-			protected void render(SPRITE_RENDERER r, float ds, boolean isHovered) {
-				SPRITES.icons().s.plate.renderCY(r, body.x1(), body().cY());
-				
-				int x1 = body().x1()+20;
-				
-				GMeter.renderDelta(r, STATS.FOOD().FOOD_DAYS.data().getPeriodD(null, 8, 0), STATS.FOOD().FOOD_DAYS.data().getD(null), x1, body().x2(), body().y1(), body().y2());
-				s.adjust();
-				
-				OPACITY.O50.bind();
-				
-				x1 += 8;
-				COLOR.BLACK.render(r, x1-2, x1+s.width()+2, body().y1()+1, body().y2()-1);
-				OPACITY.unbind();
-				s.renderCY(r, x1, body().cY());
-			}
-			
-			@Override
-			public void hoverInfoGet(GUI_BOX text) {
-				GBox b = (GBox) text;
-				b.title(DicRes.¤¤Food);
-				
-				b.textLL(STATS.FOOD().FOOD_DAYS.info().name);
-				b.tab(5);
-				int fd = (int) (STATS.FOOD().FOOD_DAYS.data(null).getD(null, 0)* STATS.FOOD().FOOD_DAYS.dataDivider());
-				b.add(GFORMAT.iBig(b.text(), fd));
-				b.NL(8);
-				
-				b.text(¤¤Food);
-				b.NL();
-				b.add(staples);
-				b.NL(8);
-				
-				int t1 = 5;
-				int t2 = 2;
-				int years = 4;
-				
-				b.textLL(TIME.years().cycleName());
-				for (int i = 0; i < years; i++) {
-					b.tab(t1+i*t2);
-					b.add(b.text().lablifySub().add(-years+i));
-				}
-				b.tab(t1+years*t2);
-				b.add(b.text().lablifySub().add(0));
-				
-				b.NL();
-				b.textLL(DicRes.¤¤Stored);
-				for (int i = 0; i < years; i++) {
-					int back = (years - i)*4+TIME.seasons().bitCurrent();
-					b.tab(t1+i*t2);
-					b.add(GFORMAT.i(b.text(), get(SETT.ROOMS().STOCKPILE.tally().amountsSeason(), back)));
-				}
-				b.tab(t1+years*t2);
-				b.add(GFORMAT.i(b.text(), get(SETT.ROOMS().STOCKPILE.tally().amountsSeason(), 0)));
-				
-				b.NL();
-				b.textLL(FACTIONS.player().res().in.info().name);
-				for (int i = 0; i < years; i++) {
-					int back = (years - i)*4+TIME.seasons().bitCurrent();
-					b.tab(t1+i*t2);
-					b.add(GFORMAT.iIncr(b.text(), getA(FACTIONS.player().res().in, back)));
-				}
-				b.tab(t1+years*t2);
-				b.add(GFORMAT.iIncr(b.text(), getA(FACTIONS.player().res().in, 0)));
-				
-				b.NL();
-				b.textLL(FACTIONS.player().res().out.info().name);
-				for (int i = 0; i < years; i++) {
-					int back = (years - i)*4+TIME.seasons().bitCurrent();
-					b.tab(t1+i*t2);
-					b.add(GFORMAT.iIncr(b.text(), -getA(FACTIONS.player().res().out, back)));
-				}
-				b.tab(t1+years*t2);
-				b.add(GFORMAT.iIncr(b.text(), -getA(FACTIONS.player().res().out, 0)));
-				
-				b.NL();
-				b.textLL(STATS.POP().POP.info().name);
-				for (int i = 0; i < years; i++) {
-					int back = (years - i);
-					b.tab(t1+i*t2);
-					b.add(b.text().add(STATS.POP().popYearly().get(back)));
-				}
-				b.tab(t1+years*t2);
-				b.add(b.text().add(STATS.POP().popYearly().get(0)));
-				b.NL();
-				
-				
-				super.hoverInfoGet(text);
-			}
-			
-			private int get(HistoryResource h, int back) {
-				int am = 0;
-				for (Edible e : RESOURCES.EDI().all())
-					am += h.get(e.resource.index()).get(back);
-				return am;
-			}
-			
-			private int getA(HistoryResource h, int back) {
-				int am = 0;
-				for (Edible e : RESOURCES.EDI().all())
-					for (int i = 0; i < 4; i++) {
-						if (back-i >= 0)
-							am += h.get(e.resource.index()).get(back-i);
-					}
-				return am;
-			}
-			
-		};
-	
-	}
+
 	
 	private static class Mini extends GuiSection {
 		
@@ -240,6 +88,7 @@ final class UIMiniResources extends Expansion{
 		Mini(int y1){
 			RENDEROBJ row = mini(RESOURCES.ALL().get(0));
 			int width = row.body().width();
+			body().moveY1(y1);
 			int cats = 0;
 			for (RESOURCE r : RESOURCES.ALL())
 				if (r.category > cats) {
@@ -254,7 +103,7 @@ final class UIMiniResources extends Expansion{
 						rows.add(new RENDEROBJ.RenderImp(width, 16) {
 							@Override
 							public void render(SPRITE_RENDERER r, float ds) {
-								GFrame.renderHorizontal(r, body().x1()+4, body().x2()-4, body().y1()+8);
+								GCOLOR.UI().borderH(r, body().x1()+4, body().x2()-4, body().y1()+7,  body().y1()+10);
 							}
 						});
 						cat = r.category;
@@ -263,38 +112,13 @@ final class UIMiniResources extends Expansion{
 					rows.add(mini(r));
 					
 				}
-//				
-//				for (int c = 0; c <= cats; c++) {
-//					for (RESOURCE r : RESOURCES.ALL())
-//						if (r.category == c) {
-//							rows.add(res(r));
-//						}
-//					if (c != cats)
-//						rows.add(new RENDEROBJ.RenderImp(row.body().width(), 16) {
-//						
-//						@Override
-//						public void render(SPRITE_RENDERER r, float ds) {
-//							GFrame.renderHorizontal(r, body().x1()+4, body().x2()-4, body().y1()+8);
-//						}
-//					});
-//				}
 			}
 			
 			
-
+			body().setDim(width+6,C.HEIGHT()-y1);
 			
-			GFrame f = new GFrame();
-			f.body().setWidth(width);
-			f.body().setHeight(C.HEIGHT()-y1);
-			f.body().moveX2(C.WIDTH());
-			f.body().moveY1(y1);
-			add(f);
-			
-			
-			RENDEROBJ c = foodDays(width-4);
-			c.body().moveX1(body().x1()+2).moveY1(y1+4);
-			add(c);
-			y1 = c.body().y2()+4;
+			RENDEROBJ c;
+			y1 = y1+4;
 			
 			c = new GButt.Glow(UI.decor().up) {
 				@Override
@@ -306,9 +130,8 @@ final class UIMiniResources extends Expansion{
 					t.inc(-1);
 				}
 			};
-			
-			c.body().centerX(this);
-			c.body().moveY1(getLastY2()+4);
+			c.body().moveCX(body().cX()+2);
+			c.body().moveY1(y1);
 			add(c);
 			
 			
@@ -328,6 +151,7 @@ final class UIMiniResources extends Expansion{
 				}
 			};
 			addDownC(4, c);
+
 		}
 		
 		
@@ -340,6 +164,8 @@ final class UIMiniResources extends Expansion{
 		Full(int y1){
 			RENDEROBJ row = big(RESOURCES.ALL().get(0));
 			int width = row.body().width()*2;
+			body().setDim(width+6,C.HEIGHT()-y1);
+			body().moveY1(y1);
 			int cats = 0;
 			for (RESOURCE r : RESOURCES.ALL())
 				if (r.category > cats) {
@@ -355,7 +181,7 @@ final class UIMiniResources extends Expansion{
 						rows.add(new RENDEROBJ.RenderImp(width, 16) {
 							@Override
 							public void render(SPRITE_RENDERER r, float ds) {
-								GFrame.renderHorizontal(r, body().x1()+4, body().x2()-4, body().y1()+8);
+								GCOLOR.UI().borderH(r, body().x1()+4, body().x2()-4, body().y1()+7,  body().y1()+10);
 							}
 						});
 						s = new GuiSection();
@@ -371,38 +197,16 @@ final class UIMiniResources extends Expansion{
 					s.addRightC(0, big(r));
 					
 				}
-//				
-//				for (int c = 0; c <= cats; c++) {
-//					for (RESOURCE r : RESOURCES.ALL())
-//						if (r.category == c) {
-//							rows.add(res(r));
-//						}
-//					if (c != cats)
-//						rows.add(new RENDEROBJ.RenderImp(row.body().width(), 16) {
-//						
-//						@Override
-//						public void render(SPRITE_RENDERER r, float ds) {
-//							GFrame.renderHorizontal(r, body().x1()+4, body().x2()-4, body().y1()+8);
-//						}
-//					});
-//				}
 			}
 			
 			
 
 			
-			GFrame f = new GFrame();
-			f.body().setWidth(width);
-			f.body().setHeight(C.HEIGHT()-y1);
-			f.body().moveX2(C.WIDTH());
-			f.body().moveY1(y1);
-			add(f);
+
 			
 			
-			RENDEROBJ c = foodDays(width-8);
-			c.body().moveX1(body().x1()+4).moveY1(y1+4);
-			add(c);
-			y1 = c.body().y2()+4;
+			RENDEROBJ c; 
+			y1 = y1+4;
 			
 			c = new GButt.Glow(UI.decor().up) {
 				@Override
@@ -416,11 +220,11 @@ final class UIMiniResources extends Expansion{
 			};
 			
 			c.body().centerX(this);
-			c.body().moveY1(getLastY2()+4);
+			c.body().moveY1(y1);
 			add(c);
 			
 			
-			GScrollRows sc = new GScrollRows(rows, C.HEIGHT()-getLastY2()-c.body().height()-8, 0, false);
+			GScrollRows sc = new GScrollRows(rows, C.HEIGHT()-getLastY2()-c.body().height()-6, 0, false);
 			addDownC(0, sc.view());
 			
 			t = sc.target;
@@ -436,6 +240,8 @@ final class UIMiniResources extends Expansion{
 				}
 			};
 			addDownC(4, c);
+			
+			
 		}
 		
 		
@@ -448,55 +254,54 @@ final class UIMiniResources extends Expansion{
 			
 			@Override
 			public void hoverInfoGet(GUI_BOX text) {
+				res.hover(text);
+				
 				int a = SETT.ROOMS().STOCKPILE.tally().amountTotal(res);
 				int c = (int) SETT.ROOMS().STOCKPILE.tally().spaceTotal(res);
 				GBox b = (GBox) text;
-				b.title(res.names);
-				b.text(res.desc);
-				b.NL();
-				b.textL(DicRes.¤¤SpoilRate);
-				b.add(GFORMAT.perc(b.text(), res.degradeSpeed()*CLAMP.d(1.0/BOOSTABLES.CIVICS().SPOILAGE.get(null, null), 0, 10)));
-				b.add(b.text().add('/').add(TIME.years().cycleName()));
-				b.NL();
-				if (RESOURCES.EDI().is(res)) {
-					b.textL(DicRes.¤¤Edible);
-
-				}
 				
-				b.NL(4);
+				
+				b.sep();
 				b.textLL(¤¤Production);
 				b.NL();
 				{
-					for (Industry in : SETT.ROOMS().INDUSTRIES) {
-						for (IndustryResource r : in.outs()){
-							if (r.resource == res && in.blue instanceof RoomBlueprintIns<?>) {
-								double am = 0;
-								RoomBlueprintIns<?> ins = (RoomBlueprintIns<?>) in.blue;
-								for (int i = 0; i < ins.instancesSize(); i++) {
-									RoomInstance ii = ins.getInstance(i);
-									if (!(ii instanceof ROOM_PRODUCER) || ((ROOM_PRODUCER)ii).industry() == in)
-										am += IndustryUtil.calcProductionRate(r.rate, in, ii)*ii.employees().employed();
-								}
-								b.textL(ins.info.name);
-								b.tab(5);
-								b.add(GFORMAT.i(b.text(),(int) am));
-								b.NL();
-							}
+					
+					for (Source rr : SETT.ROOMS().PROD.producers(res)) {
+						b.add(rr.icon());
+						b.textL(rr.name());
+						if (rr.thereAreMultipleIns() != null) {
+							for (IndustryResource ii : rr.thereAreMultipleIns().ins())
+								b.add(ii.resource.icon().small);
 						}
+						b.tab(7);
+						b.add(GFORMAT.f0(b.text(),rr.am()));
+						b.NL();
 					}
+					
 				}
 				
-				
-				b.NL(8);
-				b.add(b.text().lablifySub().add(SETT.ROOMS().STOCKPILE.info.names));
+				b.sep();
+				b.textLL(DicRes.¤¤Stored);
+				b.NL();
+				b.add(SETT.ROOMS().STOCKPILE.icon.small);
+				b.textL(SETT.ROOMS().STOCKPILE.info.names);
+				b.tab(7);
 				b.add(GFORMAT.iofk(b.text(), a, c));
 				b.NL();
-				b.add(b.text().lablifySub().add(SETT.ROOMS().IMPORT.info.name));
+				
+				b.add(SETT.ROOMS().IMPORT.icon.small);
+				b.textL(SETT.ROOMS().IMPORT.info.names);
+				b.tab(7);
 				b.add(GFORMAT.iofk(b.text(), SETT.ROOMS().IMPORT.tally.amount.get(res), SETT.ROOMS().IMPORT.tally.capacity.get(res)));
 				b.NL();
-				b.add(b.text().lablifySub().add(SETT.ROOMS().EXPORT.info.name));
+				
+				b.add(SETT.ROOMS().EXPORT.icon.small);
+				b.textL(SETT.ROOMS().EXPORT.info.names);
+				b.tab(7);
 				b.add(GFORMAT.iofk(b.text(), SETT.ROOMS().EXPORT.tally.amount.get(res), SETT.ROOMS().EXPORT.tally.capacity.get(res)));
-				b.NL();
+				b.NL(8);
+				
+				
 				if (SETT.PATH().finders.resource.scattered.has(res)) {
 					b.text(¤¤Exists);
 				}
@@ -563,7 +368,7 @@ final class UIMiniResources extends Expansion{
 			
 			@Override
 			public boolean click() {
-				VIEW.s().panels.add(VIEW.UI().goods.detail(res, GAME.player()), true);
+				VIEW.UI().goods.detail(res, GAME.player());
 				return super.click();
 				
 			}
@@ -602,7 +407,8 @@ final class UIMiniResources extends Expansion{
 	@Override
 	public void render(SPRITE_RENDERER r, float ds) {
 		if (visableIs()) {
-			COLOR.WHITE15.render(r, body());
+			GCOLOR.UI().panBG.render(r, body());
+			GCOLOR.UI().borderH(r, body(), 0);
 			super.render(r, ds);
 		}
 	}

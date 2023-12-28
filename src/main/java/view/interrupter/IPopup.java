@@ -10,7 +10,7 @@ import snake2d.util.gui.GuiSection;
 import snake2d.util.gui.renderable.RENDEROBJ;
 import snake2d.util.misc.ACTION;
 import util.gui.misc.*;
-import util.gui.panel.GPanelS;
+import util.gui.panel.GPanel;
 
 public class IPopup extends Interrupter{
 	
@@ -18,7 +18,7 @@ public class IPopup extends Interrupter{
 	protected final GuiSection section = new GuiSection();
 	private int rights = 0;
 	private final int maxRights;
-	private GPanelS box = new GPanelS();
+	private GPanel box = new GPanel();
 	private boolean dismissable = true;
 	private boolean haltClose;
 	private final InterManager m;
@@ -26,7 +26,7 @@ public class IPopup extends Interrupter{
 	public IPopup(InterManager manager, GButt trigger){
 		
 		this(manager, trigger, 4);
-		box.setButtBg();
+		box.setButt();
 	}
 	
 	public IPopup(InterManager manager, GButt trigger, int row){

@@ -4,13 +4,13 @@ import static settlement.main.SETT.*;
 
 import game.GameDisposable;
 import init.D;
+import init.resources.RBIT;
 import init.resources.RESOURCE;
 import init.sprite.SPRITES;
 import settlement.job.StateManager.State;
-import settlement.main.RenderData.RenderIterator;
 import settlement.main.SETT;
 import settlement.misc.job.SETT_JOB;
-import settlement.tilemap.Terrain.TerrainTile;
+import settlement.tilemap.terrain.Terrain.TerrainTile;
 import snake2d.Renderer;
 import snake2d.SPRITE_RENDERER;
 import snake2d.util.color.*;
@@ -19,6 +19,7 @@ import snake2d.util.datatypes.Coo;
 import snake2d.util.sets.ArrayList;
 import snake2d.util.sprite.SPRITE;
 import util.gui.misc.GBox;
+import util.rendering.RenderData.RenderIterator;
 import util.rendering.ShadowBatch;
 import view.tool.PlacableMessages;
 import view.tool.PlacableMulti;
@@ -106,6 +107,10 @@ public abstract class Job implements SETT_JOB{
 
 	abstract void renderAbove(SPRITE_RENDERER r, int x, int y, int mask, int tx, int ty);
 	
+	protected void extraHovInfo(GBox box) {
+		
+	}
+	
 	abstract void init(int tx, int ty); 
 	abstract boolean becomesSolidNext();
 	
@@ -118,10 +123,10 @@ public abstract class Job implements SETT_JOB{
 	}
 	
 	@Override
-	public final long jobResourceBitToFetch() {
+	public final RBIT jobResourceBitToFetch() {
 		if (resourceCurrentlyNeeded() != null)
 			return resourceCurrentlyNeeded().bit;
-		return 0;
+		return null;
 	}
 	
 	@Override
@@ -144,7 +149,7 @@ public abstract class Job implements SETT_JOB{
 			}
 		}
 		
-		return lockText();
+		return null;
 		
 	}
 	

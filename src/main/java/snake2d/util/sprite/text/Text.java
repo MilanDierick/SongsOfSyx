@@ -52,12 +52,17 @@ public class Text extends Str implements SPRITE {
 		if (height == 0)
 			height = font.height(scale);
 		
-		if (width > maxWidth) {
+		if (!multipleLines) {
+			height = font.height(scale);
+			if (width > maxWidth) {
+				width = maxWidth;
+			}
+		}else if (width > maxWidth) {
 			width = maxWidth;
 			height = font.getHeight(this, width);
+			width = font.getDim(this, width+2, scale).x();
 		}
-		if (!multipleLines)
-			height = font.height(scale);
+		
 		return this;
 	}
 
@@ -88,6 +93,15 @@ public class Text extends Str implements SPRITE {
 	@Override
 	public Text add(char chars) {
 		super.add(chars);
+		return this;
+	}
+	
+	public Text para(CharSequence str) {
+		if (length() > 0)
+			s();
+		add('(');
+		add(str);
+		add(')');
 		return this;
 	}
 	
@@ -176,7 +190,7 @@ public class Text extends Str implements SPRITE {
 	}
 
 	public Text setMultipleLines(boolean m) {
-		this.multipleLines = false;
+		this.multipleLines = m;
 		adjustWidth();
 		return this;
 	}

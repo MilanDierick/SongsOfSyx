@@ -31,7 +31,7 @@ import view.sett.ui.room.UIRoomModule.UIRoomModuleImp;
 class Gui extends UIRoomModuleImp<PrisonInstance, ROOM_PRISON> {
 	
 	private static CharSequence ¤¤setAll = "¤Sentence all prisoners to be: {0}";
-	private static CharSequence ¤¤setSure = "¤Are you sure you wish to {0} all prisoners?";
+	private static CharSequence ¤¤setSure = "¤Are you sure you wish to inflict the punishment: {0} on all prisoners?";
 	
 	static {
 		D.ts(Gui.class);
@@ -76,7 +76,7 @@ class Gui extends UIRoomModuleImp<PrisonInstance, ROOM_PRISON> {
 					
 					@Override
 					protected void clickA() {						
-						VIEW.inters().yesNo.activate(Str.TMP.clear().add(¤¤setSure).insert(0, p.name), a, ACTION.NOP, true);
+						VIEW.inters().yesNo.activate(Str.TMP.clear().add(¤¤setSure).insert(0, p.action), a, ACTION.NOP, true);
 					}
 					
 					@Override

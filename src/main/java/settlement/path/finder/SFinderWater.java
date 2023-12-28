@@ -3,60 +3,21 @@ package settlement.path.finder;
 import static settlement.main.SETT.*;
 
 import init.RES;
+import settlement.main.SETT;
 import settlement.misc.util.FINDABLE;
-import settlement.room.service.hygine.bath.ROOM_BATH;
+import settlement.room.main.Room;
+import settlement.room.water.pool.ROOM_POOL;
 import snake2d.PathTile;
 import snake2d.util.datatypes.COORDINATE;
 import snake2d.util.datatypes.DIR;
 
 public final class SFinderWater extends SFinderFindable{
 	
-	private int x,y;
-	
+
 	SFinderWater() {
 		super("water");
 		new TestPath(name, this);
 	}
-
-	private final FINDABLE service = new FINDABLE() {
-		
-		@Override
-		public int x() {
-			return x;
-		}
-
-		@Override
-		public int y() {
-			return y;
-		}
-
-		@Override
-		public boolean findableReservedCanBe() {
-			return TERRAIN().WATER.reservable(x, y);
-		}
-
-		@Override
-		public void findableReserve() {
-			if (TERRAIN().WATER.reservable(x, y)) {
-				TERRAIN().WATER.reserve(x, y);
-				report(this, -1);
-			}
-			
-		}
-
-		@Override
-		public boolean findableReservedIs() {
-			return TERRAIN().WATER.reserved(x, y);
-		}
-
-		@Override
-		public void findableReserveCancel() {
-			if (TERRAIN().WATER.reserved(x, y)) {
-				TERRAIN().WATER.unreserve(x, y);
-				report(this, 1);
-			}
-		}
-	};
 	
 	public boolean findLand(COORDINATE start, SPath path, int maxDistance) {
 		
@@ -109,28 +70,35 @@ public final class SFinderWater extends SFinderFindable{
 	}
 	
 	private boolean isWater(int tx, int ty) {
-		return TERRAIN().WATER.isOpen(tx, ty) || ROOM_BATH.isPool(tx, ty);
+		return SETT.ENTITIES().submerged.is(tx, ty);
 	}
 
+	public FINDABLE get(int tx, int ty) {
+		FINDABLE s = TERRAIN().WATER.service.get(tx, ty);
+		if (s != null)
+			return s;
+		Room r = SETT.ROOMS().map.get(tx, ty);
+		if (r != null && r.blueprint() instanceof ROOM_POOL) {
+			FINDABLE f = ((ROOM_POOL) r.blueprint()).fservice(tx, ty);
+			if (f != null)
+				return f;
+		}
+		return null;
+	}
+	
 	@Override
 	public FINDABLE getReservable(int tx, int ty) {
-		if (TERRAIN().WATER.isService(tx, ty)) {
-			this.x = tx;
-			this.y = ty;
-			if (service.findableReservedCanBe())
-				return service;
-		}
+		FINDABLE f = get(tx, ty);
+		if (f != null && f.findableReservedCanBe())
+			return f;
 		return null;
 	}
 
 	@Override
 	public FINDABLE getReserved(int tx, int ty) {
-		if (TERRAIN().WATER.isService(tx, ty)) {
-			this.x = tx;
-			this.y = ty;
-			if (service.findableReservedIs())
-				return service;
-		}
+		FINDABLE f = get(tx, ty);
+		if (f != null && f.findableReservedIs())
+			return f;
 		return null;
 	}
 

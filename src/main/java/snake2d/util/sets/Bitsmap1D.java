@@ -1,6 +1,8 @@
 package snake2d.util.sets;
 
 import java.io.IOException;
+import java.io.Serializable;
+import java.util.Arrays;
 
 import snake2d.util.file.*;
 
@@ -10,12 +12,17 @@ import snake2d.util.file.*;
  * @author mail__000
  *
  */
-public class Bitsmap1D implements SAVABLE{
+public class Bitsmap1D implements SAVABLE, Serializable{
 	
-	private final int[][] bits;
-	private final int outof;
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+	private final long[] bits;
+	public final int outof;
 	private final int max;
-	
+	private final int stride;
+	private final long mask;
 	/**
 	 * 
 	 * @param outof - value to return if index is out of bounds
@@ -23,19 +30,21 @@ public class Bitsmap1D implements SAVABLE{
 	 * @param amount - how many of these memory chunks do you want, huh?
 	 */
 	public Bitsmap1D(int outof, int bits, int amount){
-		this.bits = new int[bits][amount/32 + (amount%32 > 0 ? 1 : 0)];
+		this.bits = new long[(int) (Math.ceil(bits*amount/64.0))];
 		this.outof = outof;
 		max = amount;
+		stride = bits;
+		mask = (1 << (bits))-1;
 	}
 	
 	@Override
 	public final void save(FilePutter fp) {
-		fp.is(bits);
+		fp.ls(bits);
 	}
 	
 	@Override
 	public final void load(FileGetter fp) throws IOException {
-		fp.readArray(bits);
+		fp.ls(bits);
 	}
 	
 	/**
@@ -48,27 +57,25 @@ public class Bitsmap1D implements SAVABLE{
 		if (index < 0 || index >= max)
 			return outof;
 		
-		int res = 0;
-		int s = index & 0b011111;
-		int k = index >> 5;
+		int i = (index*stride);
 		
-		for (int i = 0; i < bits.length; i++) {
-			int v = bits[i][k];
-			v = v >> s;
-			v &= 0b01;
-			res |= v << i;
-		}
+		int l1 = i >> 6;
+		int ls = 64 -stride-(i & 63);
 		
-		return res;
+		if (ls >= 0)
+			return (int) ((bits[l1] >> (ls))&mask);
+		
+		long v = bits[l1] << -ls;
+		ls += 64;
+		v |= bits[l1+1] >>> ls;
+		
+		return (int) (v&mask);
 		
 	}
 
 	@Override
 	public void clear() {
-		for (int i = 0; i < bits.length; i++) {
-			for (int k = 0; k < bits[0].length; k++)
-				bits[i][k] = 0;
-		}
+		Arrays.fill(bits, 0l);
 	}
 	
 	/**
@@ -78,26 +85,61 @@ public class Bitsmap1D implements SAVABLE{
 	 */
 	public void set(int index, int value){
 		
-		int scroll = index & 0b011111;
-		index = index >> 5;
+		long v = value;
+		v &= mask;
+		int i = (index*stride);
 		
-		for (int i = 0; i < bits.length; i++) {
-			bits[i][index] &= ~(1 << scroll);
-			bits[i][index] |= (value & 0b01) << scroll;
-			value = value >> 1;
+		int l1 = i >> 6;
+		int ls = 64-stride-(i & 63);
+		
+
+		
+		if (ls >= 0) {
+			bits[l1] &= ~(mask << ls);
+			bits[l1] |= v << ls;
+		}else {
+			
+			bits[l1] &= ~(mask >> -ls);
+			bits[l1] |= v >> -ls;
+			
+			ls += 64;
+			
+			bits[l1+1] &= ~(mask << ls);
+			bits[l1+1] |= v << ls;
+			
 		}
 		
+//		
+//		
+//		
+//		int scroll = index & 0b011111;
+//		index = index >> 5;
+//		
+//		for (int i = 0; i < bits.length; i++) {
+//			bits[i][index] &= ~(1 << scroll);
+//			bits[i][index] |= (value & 0b01) << scroll;
+//			value = value >> 1;
+//		}
+		
+	}
+	
+	public void inc(int index, int delta) {
+		set(index, get(index)+delta);
 	}
 	
 	public void setAll(int value) {
 		
-		for (int y = 0; y < bits.length; y++) {
-			int i = ((value >>> y) & 1);
-			i = (i == 1) ? -1 : 0;
-			for (int x = 0; x < bits[0].length; x++) {
-				bits[y][x] = i;
-			}
+		clear();
+		for (int i = 0; i < max; i++) {
+			set(i, value);
 		}
+//		for (int y = 0; y < bits.length; y++) {
+//			int i = ((value >>> y) & 1);
+//			i = (i == 1) ? -1 : 0;
+//			for (int x = 0; x < bits[0].length; x++) {
+//				bits[y][x] = i;
+//			}
+//		}
 	}
 	
 	
@@ -106,7 +148,22 @@ public class Bitsmap1D implements SAVABLE{
 	}
 	
 	public int maxValue() {
-		return (1 << bits.length)-1;
+		return (int) mask;
+	}
+	
+	public static void main(String[] args) {
+		int am = 20;
+		Bitsmap1D m = new Bitsmap1D(0, 5, am*2);
+		
+		for (int i = 0; i< am; i++) {
+			m.set(i, i+1);
+			System.out.println(m.get(i));
+		}
+		
+		for (int i = 0; i< am; i++) {
+			System.out.println(m.get(i));
+		}
+		
 	}
 	
 

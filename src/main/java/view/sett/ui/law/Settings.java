@@ -4,18 +4,18 @@ import game.faction.FACTIONS;
 import init.D;
 import init.race.RACES;
 import init.race.Race;
-import init.sprite.ICON;
 import init.sprite.SPRITES;
+import init.sprite.UI.Icon;
 import settlement.entity.humanoid.HCLASS;
 import settlement.entity.humanoid.HTYPE;
-import settlement.stats.STANDING.StandingDef.StandingData;
-import settlement.stats.STAT;
 import settlement.stats.STATS;
-import settlement.stats.StatsLaw.StatLaw;
 import settlement.stats.law.LAW;
 import settlement.stats.law.PRISONER_TYPE;
 import settlement.stats.law.Processing.*;
+import settlement.stats.law.StatsLaw.StatLaw;
 import settlement.stats.standing.STANDINGS;
+import settlement.stats.standing.StatStanding.StandingDef.StandingData;
+import settlement.stats.stat.STAT;
 import snake2d.SPRITE_RENDERER;
 import snake2d.util.color.COLOR;
 import snake2d.util.datatypes.DIR;
@@ -90,11 +90,11 @@ final class Settings extends GuiSection{
 			hh.addRightC(0, header(LAW.process().exile, 80, hi));
 			
 			for (PunishmentImp p : LAW.process().punishmentsdec) {
-				hh.addRightC(8, header(p, 100, hi));
+				hh.addRightC(12, header(p, 100, hi));
 			}
 			
 			for (PunishmentImp p : LAW.process().extras) {
-				hh.addRightC(8, header(p, 60, hi));
+				hh.addRightC(12, header(p, 60, hi));
 			}
 			
 			for (Extra p : LAW.process().other) {
@@ -316,20 +316,28 @@ final class Settings extends GuiSection{
 	
 	private RENDEROBJ header(PunishmentImp p, int width, int height) {
 		
-		HOVERABLE h = new HoverableAbs(width, height) {
+		
+		
+		HOVERABLE h = new ClickableAbs(width, height) {
+
 			
 			@Override
-			protected void render(SPRITE_RENDERER r, float ds, boolean isHovered) {
+			protected void render(SPRITE_RENDERER r, float ds, boolean isActive, boolean isSelected,
+					boolean isHovered) {
+				
+				if (isHovered && p.room != null) {
+					COLOR.WHITE50.render(r, body, 2);
+				}
+				
 				GMeter.render(r, GMeter.C_ORANGE, p.rate(null).getD(), body);
 				
 				p.icon.renderC(r, body);
 				
 				if (p.ser != null && p.ser.punishUsed() >= p.ser.punishTotal()*0.8) {
 					GCOLOR.UI().BAD.normal.bind();
-					SPRITES.icons().s.alert.render(r, body().x2()-ICON.SMALL.SIZE, body().y1());
+					SPRITES.icons().s.alert.render(r, body().x2()-Icon.S, body().y1());
 					COLOR.unbind();
 				}
-				
 				
 				
 			}
@@ -362,6 +370,14 @@ final class Settings extends GuiSection{
 				b.add(GFORMAT.iofkInv(b.text(), p.ser.punishTotal()-p.ser.punishUsed(), p.ser.punishTotal()));
 				}
 			}
+
+			
+			@Override
+			protected void clickA() {
+				if (p.room != null)
+					VIEW.s().ui.rooms.open(p.room, false);
+			}
+
 			
 		};
 		
@@ -385,7 +401,7 @@ final class Settings extends GuiSection{
 			}
 		};
 		
-		HOVERABLE h = new GButt.ButtPanelCheck() {
+		HOVERABLE h = new GButt.Checkbox() {
 			
 			@Override
 			protected void renAction() {

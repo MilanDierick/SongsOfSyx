@@ -2,9 +2,6 @@ package settlement.room.service.nursery;
 
 import java.io.IOException;
 
-import game.GAME;
-import init.C;
-import settlement.main.RenderData.RenderIterator;
 import settlement.main.SETT;
 import settlement.path.AVAILABILITY;
 import settlement.room.industry.module.Industry.IndustryResource;
@@ -17,9 +14,8 @@ import snake2d.SPRITE_RENDERER;
 import snake2d.util.datatypes.COORDINATE;
 import snake2d.util.datatypes.DIR;
 import snake2d.util.file.Json;
-import snake2d.util.sprite.TILE_SHEET;
+import util.rendering.RenderData.RenderIterator;
 import util.rendering.ShadowBatch;
-import util.spritecomposer.*;
 
 final class NurseryConstructor extends Furnisher{
 
@@ -28,9 +24,9 @@ final class NurseryConstructor extends Furnisher{
 	final FurnisherStat workers;
 	final FurnisherStat beds;
 	final FurnisherStat coziness;
-	private final int spawnS = 0;
 	private final RoomSprite sHead;
 	private final RoomSprite1xN sTail;
+	
 	protected NurseryConstructor(ROOM_NURSERY blue, RoomInitData init)
 			throws IOException {
 		super(init, 2, 3, 188, 94);
@@ -47,6 +43,7 @@ final class NurseryConstructor extends Furnisher{
 		sHead = new RoomSprite1xN(sData,"1x1_CRIB_TOP", true) {
 			
 			private final RoomSprite1xN fence = new RoomSprite1xN(sData,"1x1_CRIB_TOP_FENCE", true);
+			private final RoomSprite1x1 baby = new RoomSprite1x1(sData,"1x1_BABY");
 			
 			@Override
 			public void renderAbove(SPRITE_RENDERER r, ShadowBatch s, int data, RenderIterator it, double degrade) {
@@ -55,10 +52,7 @@ final class NurseryConstructor extends Furnisher{
 				DIR d = DIR.ORTHO.get(getRot(data));
 				if (blue.ss.init(it.tx()+d.x(), it.ty()+d.y())) {
 					if (blue.ss.age.get() > 0) {
-						int t = spawnS + 4*(it.ran()&0x07) + ((GAME.intervals().ranC(4, it.ran(), 3)));
-						sheet.render(r, t, it.x()+d.x()*C.TILE_SIZEH/2, it.y()+d.y()*C.TILE_SIZEH/2);
-						s.setDistance2Ground(0).setHeight(1);
-						sheet.render(s, t, it.x()+d.x()*C.TILE_SIZEH/2, it.y()+d.y()*C.TILE_SIZEH/2);
+						baby.render(r, s, data, it, degrade, false);
 					}
 				}
 				
@@ -74,12 +68,13 @@ final class NurseryConstructor extends Furnisher{
 			public void renderAbove(SPRITE_RENDERER r, ShadowBatch s, int data, RenderIterator it, double degrade) {
 				
 				if (blue.ss.init(it.tx(), it.ty())) {
-					long m = blue.ss.job.jobResourceBitToFetch();
+					int i = 0;
 					for (IndustryResource rr : blue.productionData.ins()) {
-						if ((rr.resource.bit & m) == 0) {
+						if (blue.ss.resources[i++].get() != 0) {
 							rr.resource.renderLaying(r, it.x(), it.y(), it.ran(), 1);
 						}
 					}
+					
 				}
 				
 				fence.render(r, s, data, it, degrade, rotates);
@@ -179,16 +174,6 @@ final class NurseryConstructor extends Furnisher{
 	boolean isTail(int tx, int ty) {
 		RoomSprite s = SETT.ROOMS().fData.sprite.get(tx, ty);
 		return s == sTail;
-	}
-
-	@Override
-	protected TILE_SHEET sheet(ComposerUtil c, ComposerSources s, ComposerDests d, int y1) {
-
-		s.singles.init(0, y1, 1, 1, 4, 2, d.s16);
-		s.singles.paste(3, true);
-		
-		
-		return d.s16.saveGame();
 	}
 
 	@Override

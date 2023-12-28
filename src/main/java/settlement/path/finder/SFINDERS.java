@@ -33,7 +33,7 @@ public class SFINDERS {
 	public final SFinderHumanTarget target = new SFinderHumanTarget();
 	public final SFinderHome home = new SFinderHome();
 	private SPathFinder finder;
-	
+
 	
 	private final SFinderSoldierManning[] soldierManning = new SFinderSoldierManning[] {
 		new SFinderSoldierManning(SETT.ARMIES().player()),

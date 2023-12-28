@@ -3,7 +3,6 @@ package settlement.room.industry.workshop;
 import static settlement.main.SETT.*;
 
 import game.GAME;
-import settlement.main.RenderData;
 import settlement.main.SETT;
 import settlement.misc.job.*;
 import settlement.misc.util.RESOURCE_TILE;
@@ -15,6 +14,7 @@ import settlement.room.main.job.JobPositions;
 import settlement.room.main.util.RoomInit;
 import snake2d.Renderer;
 import snake2d.util.datatypes.COORDINATE;
+import util.rendering.RenderData;
 import util.rendering.ShadowBatch;
 
 final class WorkshopInstance extends RoomInstance implements JOBMANAGER_HASER, ROOM_PRODUCER{
@@ -55,7 +55,7 @@ final class WorkshopInstance extends RoomInstance implements JOBMANAGER_HASER, R
 		jobs = new Jobs(this);
 		
 		
-		employees().maxSet((int) (jobs.size()*1.2));
+		employees().maxSet(jobs.size());
 		employees().neededSet(jobs.size());
 		activate();
 	}

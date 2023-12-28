@@ -6,8 +6,8 @@ import init.race.Race;
 import init.sprite.SPRITES;
 import settlement.entity.humanoid.HCLASS;
 import settlement.stats.STATS;
-import settlement.stats.StatsMultipliers.StatMultiplier;
-import settlement.stats.StatsMultipliers.StatMultiplierAction;
+import settlement.stats.muls.StatsMultipliers.StatMultiplier;
+import settlement.stats.muls.StatsMultipliers.StatMultiplierAction;
 import snake2d.SPRITE_RENDERER;
 import snake2d.util.datatypes.DIR;
 import snake2d.util.gui.GUI_BOX;
@@ -32,7 +32,6 @@ final class DPanel extends ISidePanel{
 	private static CharSequence ¤¤Cancel = "Click to cancel action for {0} subjects";
 	private static CharSequence ¤¤Set = "Set action for:";
 	private static CharSequence ¤¤Projected = "Projected fulfillment increase";
-	private static CharSequence ¤¤CurrentMultiplier = "Current Multiplier";
 	
 	static {
 		D.ts(DPanel.class);
@@ -55,7 +54,7 @@ final class DPanel extends ISidePanel{
 		LinkedList<RENDEROBJ> rows = new LinkedList<>();
 		
 		for (StatMultiplier m : STATS.MULTIPLIERS().get(cl)) {
-			if (m.available(cl) && m instanceof StatMultiplierAction) {
+			if (m.available(cl, race.get()) && m instanceof StatMultiplierAction) {
 				StatMultiplierAction dec = (StatMultiplierAction) m;
 				if (cl == HCLASS.SLAVE)
 					slave(rows, dec, race);
@@ -181,9 +180,24 @@ final class DPanel extends ISidePanel{
 		b.add(t);
 		b.NL(2);
 		
-		double dd = dec.standingIncrease(cl, race, am);
-		b.add(GFORMAT.percInc(b.text(), dd));
 		
+		
+		double d = (double)am/STATS.POP().POP.data(cl).get(race);
+		dec.boosters.hover(text, d, null, -1);
+		
+//		for (BoostSpec s : dec.boosters.all()) {
+//			double to = s.booster.to();
+//			double cur = s.booster.get(s.boostable, RACES.clP(race, cl));
+//			to -= cur;
+//			if (s.booster.isMul)
+//				to += 1;
+//			
+//			
+//			s.booster.hover(b, to);
+//			b.NL();
+//			
+//		}
+//		
 		b.NL(8);
 		
 		dec.info(b, am);
@@ -210,7 +224,7 @@ final class DPanel extends ISidePanel{
 
 				@Override
 				public void update(GText text) {
-					GFORMAT.f1(text, dec.multiplier(cl, race.get(), 0));
+					GFORMAT.f0(text, dec.value(cl, race.get(), 0));
 				}
 				
 			}, 260);
@@ -225,9 +239,9 @@ final class DPanel extends ISidePanel{
 			b.title(dec.name);
 			b.text(dec.desc);
 			b.NL(8);
-			b.textSLL(¤¤CurrentMultiplier);
-			b.tab(6);
-			b.add(GFORMAT.f0(b.text(),dec.multiplier(cl, race.get(), 0)));
+			
+			dec.boosters.hover(text, RACES.clP(race.get(), cl));
+			
 		}
 		
 	}

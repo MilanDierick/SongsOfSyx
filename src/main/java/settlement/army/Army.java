@@ -19,6 +19,7 @@ public final class Army implements Serializable{
 	private static final long serialVersionUID = 1L;
 	private final int index;
 	private final LIST<Div> divisions;
+	private final ArrayList<Div> ordered;
 	private int men = 0;
 	private final int menMax;
 	
@@ -32,9 +33,11 @@ public final class Army implements Serializable{
 		
 		ArrayList<Div> divs = new ArrayList<>(Config.BATTLE.DIVISIONS_PER_ARMY);
 		
+		
 		for (int i = 0; i < Config.BATTLE.DIVISIONS_PER_ARMY; i++)
 			new Div(divisions, divs, this, menPerDevision);
 		this.divisions = divs;
+		ordered = new ArrayList<Div>(divs);
 		
 		menMax = menPerDevision*Config.BATTLE.DIVISIONS_PER_ARMY;
 		bit = 1 << index;
@@ -50,6 +53,29 @@ public final class Army implements Serializable{
 		return divisions;
 	}
 	
+	public LIST<Div> ordered(){
+		return ordered;
+	}
+	
+	public void setDivAtOrderedIndex(Div toBeReplaced, Div replacer) {
+		if (ordered.remove(replacer) == null)
+			throw new RuntimeException();
+		int oi = ordered.indexOf(toBeReplaced);
+		if (oi < 0)
+			throw new RuntimeException();
+		ordered.insert(oi, replacer);
+	}
+	
+	public Div getNextEmptyOrdered() {
+		for (int di = 0; di < ordered.size(); di++) {
+			Div d = ordered.get(di);
+			if (d.info.men() == 0 && d.menNrOf() == 0) {
+				return d;
+			}
+		}
+		return null;
+	}
+	
 	public int men() {
 		return men;
 	}
@@ -62,6 +88,12 @@ public final class Army implements Serializable{
 		return SETT.ARMIES().armies().get((index+1)%2);
 	}
 	
+	public Faction faction() {
+		if (this == SETT.ARMIES().player())
+			return FACTIONS.player();
+		return FACTIONS.otherFaction();
+	}
+	
 	final SAVABLE saver = new SAVABLE() {
 		
 		@Override
@@ -71,6 +103,9 @@ public final class Army implements Serializable{
 			file.i(men);
 			file.d(morale);
 			file.ls(moraleData);
+			for (Div d : ordered) {
+				file.i(d.indexArmy());
+			}
 		}
 		
 		@Override
@@ -87,6 +122,11 @@ public final class Army implements Serializable{
 				ArmyMorale.SUPPLIES.setD(Army.this, 1.0);
 			}
 			
+			ordered.clearSloppy();
+			for (int i = 0; i < divisions.size(); i++) {
+				ordered.add(divisions.get(file.i()));
+			}
+			
 			update(3);
 		}
 		
@@ -99,6 +139,8 @@ public final class Army implements Serializable{
 			morale = 1;
 			Arrays.fill(moraleData, 0);
 			ArmyMorale.SUPPLIES.setD(Army.this, 1.0);
+			ordered.clearSloppy();
+			ordered.add(divisions);
 		}
 	};
 
@@ -108,17 +150,26 @@ public final class Army implements Serializable{
 	
 	void update(double ds) {
 		upTimer -= ds;
-		if (upTimer < 0) {
-			initMorale();
+		if (upTimer < 0 && SETT.ARMIES().enemy().men() == 0) {
+			if (this == SETT.ARMIES().enemy())
+				resetMorale();
+			else {
+				ArmyMorale.CASULTIES.inc(this, CLAMP.i(ArmyMorale.CASULTIES.get(this)/10, 10, 1000));
+				ArmyMorale.DESERTION.inc(this, CLAMP.i(ArmyMorale.DESERTION.get(this)/10, 10, 1000));
+			}
 			
 		}
 	}
 	
-	public void initMorale() {
-		morale = 1;
-		for (DOUBLE_O<Army> d : ArmyMorale.factors)
+	public void resetMorale() {
+		
+		ArmyMorale.CASULTIES.set(this, 0);
+		ArmyMorale.DESERTION.set(this, 0);
+		ArmyMorale.SUPPLIES.setD(this, 1.0);
+		for (DOUBLE_O<Army> d : ArmyMorale.factors) {
 			morale *= d.getD(this);
-		upTimer += 2;
+		}
+		morale = 1;
 		morale = CLAMP.d(morale, 0, 1.5);
 	}
 
@@ -128,10 +179,6 @@ public final class Army implements Serializable{
 	
 	public boolean defender() {
 		return true;
-	}
-	
-	public Faction faction() {
-		return this == SETT.ARMIES().player() ? FACTIONS.player() : FACTIONS.other();
 	}
 	
 }

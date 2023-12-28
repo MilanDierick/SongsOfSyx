@@ -66,7 +66,7 @@ final class IChange extends Interrupter implements KeyPoller{
 		int cx = C.DIM().cX();
 		int y1 = C.DIM().cY()-200;
 		
-		text.setFont(UI.FONT().H1S);
+		text.setFont(UI.FONT().H1);
 		text.lablify();
 		text.set(¤¤Pick);
 		text.renderC(r, cx, y1);

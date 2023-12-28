@@ -1,6 +1,8 @@
 package settlement.room.spirit.temple;
 
 import game.faction.FACTIONS;
+import game.faction.FResources.RTYPE;
+import init.resources.RBIT;
 import init.resources.RESOURCE;
 import init.sound.SoundSettlement.Sound;
 import settlement.entity.humanoid.Humanoid;
@@ -42,7 +44,7 @@ public abstract class TempleJob {
 	public abstract boolean jobReservedIs();
 	public abstract void jobReserveCancel();
 
-	public abstract long jobResourceBitToFetch();
+	public abstract RBIT jobResourceBitToFetch();
 
 	public abstract void jobStartPerforming();
 
@@ -106,11 +108,11 @@ public abstract class TempleJob {
 		}
 
 		@Override
-		public long jobResourceBitToFetch() {
+		public RBIT jobResourceBitToFetch() {
 			if (altar.resourceNeeds()) {
 				return res.bit;
 			}
-			return 0;
+			return null;
 		}
 
 		@Override
@@ -123,7 +125,7 @@ public abstract class TempleJob {
 			jobReserveCancel();
 			if (res > 0) {
 				altar.resourceInc(res);
-				FACTIONS.player().res().outSacrificed.inc(this.res, res);
+				FACTIONS.player().res().inc(this.res, RTYPE.CONSUMED, -res);
 			}
 		}
 		
@@ -170,8 +172,8 @@ public abstract class TempleJob {
 		}
 
 		@Override
-		public long jobResourceBitToFetch() {
-			return 0;
+		public RBIT jobResourceBitToFetch() {
+			return null;
 		}
 
 		@Override

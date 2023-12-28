@@ -5,9 +5,7 @@ import static settlement.main.SETT.*;
 import java.io.IOException;
 
 import init.C;
-import init.sprite.ICON;
 import init.sprite.SPRITES;
-import settlement.main.RenderData.RenderIterator;
 import settlement.main.SETT;
 import settlement.path.AVAILABILITY;
 import settlement.room.main.*;
@@ -15,17 +13,18 @@ import settlement.room.main.furnisher.*;
 import settlement.room.main.util.RoomInit;
 import settlement.room.main.util.RoomInitData;
 import settlement.room.sprite.RoomSprite;
-import settlement.room.sprite.RoomSpriteSimple;
-import settlement.tilemap.Floors.Floor;
+import settlement.room.sprite.RoomSprite1x1;
+import settlement.tilemap.floor.Floors.Floor;
 import snake2d.SPRITE_RENDERER;
 import snake2d.util.color.OPACITY;
 import snake2d.util.datatypes.AREA;
 import snake2d.util.datatypes.DIR;
-import snake2d.util.sprite.TILE_SHEET;
+import snake2d.util.file.Json;
+import snake2d.util.sprite.SPRITE;
 import util.gui.misc.GText;
 import util.info.GFORMAT;
+import util.rendering.RenderData.RenderIterator;
 import util.rendering.ShadowBatch;
-import util.spritecomposer.*;
 
 final class Constructor extends Furnisher{
 	
@@ -39,7 +38,6 @@ final class Constructor extends Furnisher{
 		return SETT.ROOMS().fData.tIndex.get(tx, ty) == cr.index(); 	
 	}
 
-	
 
 
 	
@@ -47,7 +45,7 @@ final class Constructor extends Furnisher{
 			throws IOException {
 		super(init, 1, 1, 152, 100);
 		this.blue = blue;
-		floor2 = SETT.FLOOR().getByKey("FLOOR2", init.data());
+		floor2 = SETT.FLOOR().map.getByKey("FLOOR2", init.data());
 		crates = new FurnisherStat(this, 1) {
 			
 			@Override
@@ -61,13 +59,14 @@ final class Constructor extends Furnisher{
 			}
 		};
 		
-		RoomSprite spriteCrate = new RoomSpriteSimple(sheet, 2*4, 4) {
+		Json sp = init.data().json("SPRITES");
+		
+		RoomSprite spriteCrate = new RoomSprite1x1(sp, "CRATE_1X1") {
 			
 			@Override
-			public byte getData(int tx, int ty, int rx, int ry, FurnisherItem item, int itemRan) {
-				return (byte) (4*(item.rotation& 0b01));
-			};
-			
+			protected boolean joins(int tx, int ty, int rx, int ry, DIR d, FurnisherItem item) {
+				return item.rotation == d.orthoID();
+			}
 			@Override
 			public boolean render(SPRITE_RENDERER r, ShadowBatch s, int data, RenderIterator it, double degrade, boolean isCandle) {
 				super.render(r, s, data, it, degrade, isCandle);
@@ -82,6 +81,7 @@ final class Constructor extends Furnisher{
 				return true;
 			};
 		};
+
 		
 		RoomSprite.Imp marker = new RoomSprite.Imp() {
 			
@@ -95,7 +95,7 @@ final class Constructor extends Furnisher{
 				ImportInstance ins = ROOMS().IMPORT.getter.get(it.tile());
 				if (ins == null)
 					return;
-				ICON.MEDIUM i = ins.resource() == null ? SPRITES.icons().m.cancel : ins.resource().icon();
+				SPRITE i = ins.resource() == null ? SPRITES.icons().m.cancel : ins.resource().icon();
 				OPACITY.O99.bind();
 				i.render(r, it.x(), it.x()+C.TILE_SIZE, it.y(), it.y()+C.TILE_SIZE);
 				OPACITY.unbind();
@@ -126,13 +126,13 @@ final class Constructor extends Furnisher{
 		
 		FurnisherItemTile ee = new FurnisherItemTile(
 				this,
-				new SpriteThingy(0), 
+				new SpriteThingy(sp, "POST_1X1"), 
 				AVAILABILITY.ROOM, 
 				false);
 		
 		FurnisherItemTile cc = new FurnisherItemTile(
 				this,
-				new SpriteThingy(1), 
+				new SpriteThingy(sp, "FENCE_1X1"), 
 				AVAILABILITY.ROOM, 
 				false);
 		
@@ -218,18 +218,6 @@ final class Constructor extends Furnisher{
 	}
 
 	@Override
-	protected TILE_SHEET sheet(ComposerUtil c, ComposerSources s, ComposerDests d, int y1) {
-		s.full.init(0, y1, 1, 1, 2, 1, d.s16);
-		for (int i = 0; i < 2; i++)
-			s.full.setSkip(1, i).paste(3, true);
-		
-		s.full.init(0, s.full.body().y2(), 1, 1, 4, 1, d.s16);
-		s.full.paste(true);
-		s.full.pasteRotated(1, true);
-		return d.s16.saveGame();
-	}
-
-	@Override
 	public boolean usesArea() {
 		return false;
 	}
@@ -282,24 +270,13 @@ final class Constructor extends Furnisher{
 		
 	}
 	
-	private class SpriteThingy extends RoomSpriteSimple{
-
-		private int offset;
+	private class SpriteThingy extends RoomSprite1x1{
 		
-		public SpriteThingy(int offset) {
-			super(sheet, 0, 1);
-			if (offset > 0) {
-				setShadow(8, 0);
-			}else {
-				setShadow(0, 8);
-			}
-			this.offset = offset*4;
+		public SpriteThingy(Json js, String key) throws IOException {
+			super(js, key);
+			
 		}
-		
-//		@Override
-//		protected boolean joinsWith(RoomSprite s, boolean outof, int dir, DIR test) {
-//			return s instanceof SpriteThingy;
-//		};
+
 		
 		@Override
 		public boolean render(SPRITE_RENDERER r, ShadowBatch s, int data, RenderIterator it, double degrade,
@@ -312,17 +289,11 @@ final class Constructor extends Furnisher{
 			super.render(r, s, data, it, degrade, false);
 		}
 
-	
+
 		@Override
-		public byte getData(int tx, int ty, int rx, int ry, FurnisherItem item, int itemRan) {
-			int i = 0;
-			for (DIR d : DIR.ORTHO) {
-				if (item.sprite(rx+d.x(), ry+d.y()) instanceof SpriteThingy) {
-					return (byte) (offset+i);
-				}
-				i++;
-			}
-			return 0;
+		protected boolean joins(int tx, int ty, int rx, int ry, DIR d, FurnisherItem item) {
+			return item.sprite(rx, ry) instanceof SpriteThingy;
 		}
+		
 	}
 }

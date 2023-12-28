@@ -2,7 +2,6 @@ package settlement.room.knowledge.laboratory;
 
 import java.io.IOException;
 
-import settlement.main.RenderData.RenderIterator;
 import settlement.main.SETT;
 import settlement.path.AVAILABILITY;
 import settlement.room.main.*;
@@ -14,11 +13,10 @@ import snake2d.SPRITE_RENDERER;
 import snake2d.util.datatypes.AREA;
 import snake2d.util.datatypes.DIR;
 import snake2d.util.file.Json;
-import snake2d.util.sprite.TILE_SHEET;
 import util.gui.misc.GText;
 import util.info.GFORMAT;
+import util.rendering.RenderData.RenderIterator;
 import util.rendering.ShadowBatch;
-import util.spritecomposer.*;
 
 final class Constructor extends Furnisher{
 
@@ -70,7 +68,7 @@ final class Constructor extends Furnisher{
 		
 		final RoomSprite1x1 tablet = new RoomSprite1x1(sj, "TABLE_KNOWLEDGE_ONTOP_1X1");
 		
-		final RoomSpriteNew sTableWork = new RoomSpriteComboN(sj, "TABLE_COMBO") {
+		final RoomSpriteImp sTableWork = new RoomSpriteCombo(sj, "TABLE_COMBO") {
 			
 			final RoomSprite1x1 ontop = new RoomSprite1x1(sj, "WORK_TABLE_1X1") {
 				
@@ -102,7 +100,7 @@ final class Constructor extends Furnisher{
 			}
 		};
 
-		final RoomSprite sTableStorage = new RoomSpriteComboN(sTableWork) {
+		final RoomSprite sTableStorage = new RoomSpriteCombo(sTableWork) {
 			
 			
 			@Override
@@ -196,11 +194,6 @@ final class Constructor extends Furnisher{
 		
 		flush(1, 3);
 		
-	}
-
-	@Override
-	protected TILE_SHEET sheet(ComposerUtil c, ComposerSources s, ComposerDests d, int y1) {		
-		return null;
 	}
 
 	@Override

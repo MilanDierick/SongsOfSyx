@@ -1,6 +1,5 @@
 package view.menu;
 
-import game.GAME;
 import init.*;
 import init.sprite.UI.UI;
 import menu.Menu;
@@ -46,7 +45,7 @@ public class IMenu extends Interrupter{
 		super();
 		this.manager = manager;
 		pin().desturberSet();
-		big = UI.FONT().H1S;
+		big = UI.FONT().H1;
 		small = UI.FONT().H2;
 		keys = new ScKeys(this, big, small);
 		main = new GuiSection() {
@@ -169,7 +168,7 @@ public class IMenu extends Interrupter{
 			@Override
 			public void exe() {
 				
-				if (!GAME.battle().canSave()) {
+				if (!VIEW.canSave()) {
 					exit.exe();
 					return;
 				}

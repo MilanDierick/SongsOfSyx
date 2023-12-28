@@ -1,12 +1,12 @@
 package settlement.army.formation;
 
 import init.sprite.SPRITES;
-import settlement.main.RenderData;
 import snake2d.CORE;
 import snake2d.SPRITE_RENDERER;
 import snake2d.util.datatypes.COORDINATE;
 import snake2d.util.datatypes.DIR;
 import snake2d.util.sprite.SPRITE;
+import util.rendering.RenderData;
 
 public final class DivRenderer {
 

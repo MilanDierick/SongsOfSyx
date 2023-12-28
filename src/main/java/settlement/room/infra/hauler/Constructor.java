@@ -5,9 +5,7 @@ import static settlement.main.SETT.*;
 import java.io.IOException;
 
 import init.C;
-import init.sprite.ICON;
 import init.sprite.SPRITES;
-import settlement.main.RenderData.RenderIterator;
 import settlement.main.SETT;
 import settlement.path.AVAILABILITY;
 import settlement.room.main.Room;
@@ -20,6 +18,8 @@ import snake2d.SPRITE_RENDERER;
 import snake2d.util.color.OPACITY;
 import snake2d.util.datatypes.DIR;
 import snake2d.util.file.Json;
+import snake2d.util.sprite.SPRITE;
+import util.rendering.RenderData.RenderIterator;
 import util.rendering.ShadowBatch;
 
 final class Constructor extends Furnisher{
@@ -35,10 +35,10 @@ final class Constructor extends Furnisher{
 			public boolean render(SPRITE_RENDERER r, ShadowBatch s, int data, RenderIterator it, double degrade,
 					boolean isCandle) {
 				super.render(r, s, data, it, degrade, isCandle);
-				int d = SETT.ROOMS().data.get(it.tile());
-				if (blue().is(it.tile()) && Crate.resource(d) != null) {
+				HaulerInstance ins = blue().get(it.tx(), it.ty());
+				if (ins!= null && blue().crate.get(it.tx(), it.ty(), ins, ins.sdata).resource() != null) {
 					
-					Crate.resource(d).renderLaying(r, it.x(), it.y(), it.ran(), Crate.amount(d));
+					 blue().crate.resource().renderLaying(r, it.x(), it.y(), it.ran(), blue().crate.amount());
 				}
 				return false;
 			}
@@ -53,7 +53,7 @@ final class Constructor extends Furnisher{
 				if (ins == null)
 					return false;
 				
-				ICON.MEDIUM i = ins.resource() == null ? SPRITES.icons().m.cancel : ins.resource().icon();
+				SPRITE i = ins.resource() == null ? SPRITES.icons().m.cancel : ins.resource().icon();
 				OPACITY.O99.bind();
 				i.render(r, it.x(), it.x()+C.TILE_SIZE, it.y(), it.y()+C.TILE_SIZE);
 				OPACITY.unbind();
@@ -62,7 +62,7 @@ final class Constructor extends Furnisher{
 			}
 		};
 		
-		RoomSpriteComboN spriteFence = new RoomSpriteComboN(sp, "FENCE_COMBO") {
+		RoomSpriteCombo spriteFence = new RoomSpriteCombo(sp, "FENCE_COMBO") {
 			@Override
 			protected boolean joins(int tx, int ty, int rx, int ry, DIR d, FurnisherItem item) {
 				return false;

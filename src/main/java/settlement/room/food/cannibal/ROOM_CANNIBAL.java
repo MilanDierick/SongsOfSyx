@@ -7,6 +7,7 @@ import game.time.TIME;
 import init.race.RACES;
 import init.race.Race;
 import init.resources.*;
+import init.resources.RBIT.RBITImp;
 import settlement.main.SETT;
 import settlement.path.finder.SFinderRoomService;
 import settlement.room.main.RoomBlueprintIns;
@@ -42,25 +43,26 @@ public class ROOM_CANNIBAL extends RoomBlueprintIns<CannibalInstance>{
 	
 	RESOURCE[] resources() {
 		
+		RBITImp m = new RBITImp();
+		
 		if (resources == null) {
 			int am = 0;
-			long m = 0;
 			for (Race race : RACES.all()) {
 				for (RES_AMOUNT r : race.resources()) {
-					if ((m & r.resource().bit) == 0) {
+					if (!m.has(r.resource())) {
 						am++;
-						m |= r.resource().bit;
+						m.or(r.resource());
 					}
 				}
 			}
 			RESOURCE[] res = new RESOURCE[am];
-			m = 0;
+			m.clear();
 			am = 0;
 			for (Race race : RACES.all()) {
 				for (RES_AMOUNT r : race.resources()) {
-					if ((m & r.resource().bit) == 0) {
+					if (!m.has(r.resource())) {
 						res[am++] = r.resource();
-						m |= r.resource().bit;
+						m.or(r.resource());
 					}
 				}
 			}

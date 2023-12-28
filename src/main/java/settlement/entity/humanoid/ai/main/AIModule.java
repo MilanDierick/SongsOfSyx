@@ -33,7 +33,7 @@ public abstract class AIModule implements INDEXED {
 			throw new RuntimeException();
 	}
 	
-	protected abstract AiPlanActivation getPlan(Humanoid a, AIManager d);
+	public abstract AiPlanActivation getPlan(Humanoid a, AIManager d);
 	protected void init(Humanoid a, AIManager d) {
 		
 	}
@@ -43,6 +43,10 @@ public abstract class AIModule implements INDEXED {
 	protected abstract void update(Humanoid a, AIManager d, boolean newDay, int byteDelta, int updateOfDay);
 	public abstract int getPriority(Humanoid a, AIManager d);
 
+	public AiPlanActivation resume(Humanoid a, AIManager d, int timesResumedBefore) {
+		return null;
+	}
+	
 	public final boolean is(Humanoid a, AIManager d) {
 		return AIModules.current(d) == this;
 	}

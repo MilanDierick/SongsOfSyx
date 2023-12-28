@@ -5,6 +5,7 @@ import java.nio.file.Path;
 
 import init.paths.PATH;
 import init.paths.PATHS;
+import snake2d.Errors;
 import snake2d.SPRITE_RENDERER;
 import snake2d.util.color.COLOR;
 import snake2d.util.color.ColorImp;
@@ -14,21 +15,20 @@ import snake2d.util.rnd.RND;
 public final class WorldGen implements SAVABLE {
 	
 	public boolean hasGeneratedTerrain;
-	public boolean hasPlacedCapitol;
+	public boolean isDone;
 	public double lat = 0.5;
 	public String map = null;
 	public int seed = RND.seed();
 	public int playerX,playerY;
 	
 	
-	public WorldGen(World world) {
+	public WorldGen(WORLD world) {
 		clear();
 	}
 
 	@Override
 	public void save(FilePutter file) {
 		file.bool(hasGeneratedTerrain);
-		file.bool(hasPlacedCapitol);
 		file.d(lat);
 		if (map != null) {
 			file.bool(true);
@@ -39,13 +39,12 @@ public final class WorldGen implements SAVABLE {
 		file.i(seed);
 		file.i(playerX);
 		file.i(playerY);
-		
+		file.bool(isDone);
 	}
 
 	@Override
 	public void load(FileGetter file) throws IOException {
 		hasGeneratedTerrain = file.bool();
-		hasPlacedCapitol = file.bool();
 		lat = file.d();
 		if (file.bool()) {
 			map = file.chars();
@@ -54,25 +53,25 @@ public final class WorldGen implements SAVABLE {
 		seed = file.i();
 		playerX = file.i();
 		playerY = file.i();
-		
+		isDone = file.bool();
 	}
 
 	@Override
 	public void clear() {
 		hasGeneratedTerrain = false;
-		hasPlacedCapitol = false;
 		lat = 0.5;
 		map = null;
 		seed = RND.rInt(Integer.MAX_VALUE);
 		playerX = -1;
 		playerY = -1;
+		isDone = false;
 	}
 
 	public static final class WorldGenMapType {
 
-		public static final int DIM = 100;
-		private final byte[][] map = new byte[100][100];
-		private static double ii = 1.0/256;
+		public final int DIM;
+		private final byte[][] map;
+		private final double ii;
 		
 		private static COLOR[] cols = new COLOR[] {
 			new ColorImp(25, 25, 50),
@@ -82,23 +81,21 @@ public final class WorldGen implements SAVABLE {
 		
 		public final String name;
 		
-		public WorldGenMapType(String name) {
+		public WorldGenMapType(String name, int worldDim) {
 			this.name = name;
 			Path path = PATHS.SPRITE().getFolder("world").getFolder("generatorMaps").get(name);
-			SnakeImage im;
-			try {
-				im = new SnakeImage(path, DIM, DIM);
-				for (int y = 0; y < im.height; y++) {
-					for (int x = 0; x < im.width; x++) {
-						map[y][x] = (byte) ((im.rgb.get(x, y)>>8) & 0x0FF);
-					}
+			SnakeImage im = new SnakeImage(path);
+			DIM = im.width;
+			if (DIM != im.height)
+				throw new Errors.DataError(PATHS.SPRITE().getFolder("world").getFolder("generatorMaps").get(name).toAbsolutePath() + " is not a square. Image must have the same with and height");
+			map = new byte[DIM][DIM];
+			for (int y = 0; y < im.height; y++) {
+				for (int x = 0; x < im.width; x++) {
+					map[y][x] = (byte) ((im.rgb.get(x, y)>>8) & 0x0FF);
 				}
-				im.dispose();
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
 			}
-			
+			ii = 1.0/worldDim;
+			im.dispose();
 		}
 		
 		private double g(int x, int y) {
@@ -171,12 +168,12 @@ public final class WorldGen implements SAVABLE {
 			
 		}
 		
-		public static WorldGenMapType[] getAll() {
+		public static WorldGenMapType[] getAll(int worldDim) {
 			PATH p = PATHS.SPRITE().getFolder("world").getFolder("generatorMaps");
 			String[] files = p.getFiles();
 			WorldGenMapType[] res = new WorldGenMapType[files.length];
 			for (int i = 0; i < files.length; i++)
-				res[i] = new WorldGenMapType(files[i]);
+				res[i] = new WorldGenMapType(files[i], worldDim);
 			return res;
 		}
 		

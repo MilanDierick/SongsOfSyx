@@ -4,7 +4,6 @@ import static settlement.main.SETT.*;
 
 import init.RES;
 import settlement.main.SETT;
-import settlement.room.service.hygine.bath.ROOM_BATH;
 import snake2d.PathTile;
 import snake2d.util.datatypes.COORDINATE;
 import snake2d.util.datatypes.DIR;
@@ -17,7 +16,7 @@ public final class SFinderUnreachable {
 	
 	public boolean find(COORDINATE start, SPath path, int maxDistance) {
 		
-		if (TERRAIN().WATER.isOpen(start.x(), start.y())){
+		if (TERRAIN().WATER.open.is(start.x(), start.y())){
 			return findWater(start, path, maxDistance);
 					
 		}else if (PATH().connectivity.is(start)) {
@@ -33,6 +32,7 @@ public final class SFinderUnreachable {
 		
 		while(RES.flooder().hasMore()) {
 			t = RES.flooder().pollSmallest();
+			
 			if (PATH().connectivity.is(t)) {
 				RES.flooder().done();
 				path.setDirect(start.x(), start.y(), t.x(), t.y(), t, true);
@@ -74,6 +74,8 @@ public final class SFinderUnreachable {
 		int bx = -1;
 		int by = -1;
 		
+		PathTile backup = null;
+		
 		while(RES.flooder().hasMore()) {
 			t = RES.flooder().pollSmallest();
 			if (isLand(t.x(), t.y())) {
@@ -85,7 +87,8 @@ public final class SFinderUnreachable {
 					bx = t.x();
 					by = t.y();
 				}
-			}
+			}else if (!PATH().solidity.is(t) && backup == null)
+				backup = t;
 			if (t.getValue() > maxDistance)
 				break;
 			
@@ -106,8 +109,13 @@ public final class SFinderUnreachable {
 			path.setDirect(start.x(), start.y(), t.x(), t.y(), t, true);
 			return true;
 		}
-		
 		RES.flooder().done();
+		if (backup != null) {
+			path.setDirect(start.x(), start.y(), backup.x(), backup.y(), backup, true);
+			return true;
+		}
+		
+		
 		return false;
 		
 	}
@@ -127,7 +135,7 @@ public final class SFinderUnreachable {
 	}
 	
 	private boolean isWater(int tx, int ty) {
-		return TERRAIN().WATER.isOpen(tx, ty) || ROOM_BATH.isPool(tx, ty);
+		return SETT.ENTITIES().submerged.is(tx, ty);
 	}
 
 }

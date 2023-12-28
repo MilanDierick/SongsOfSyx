@@ -5,23 +5,30 @@ import init.C;
 import init.resources.RESOURCE;
 import init.sprite.UI.UI;
 import settlement.main.SETT;
-import snake2d.LOG;
-import snake2d.SPRITE_RENDERER;
+import snake2d.*;
 import snake2d.util.color.COLOR;
 import snake2d.util.color.ColorImp;
 import snake2d.util.datatypes.RECTANGLE;
 import snake2d.util.gui.GUI_BOX;
 import snake2d.util.gui.renderable.RENDEROBJ;
+import snake2d.util.misc.CLAMP;
 import snake2d.util.sets.ArrayList;
+import snake2d.util.sets.ArrayListGrower;
 import snake2d.util.sprite.SPRITE;
 import snake2d.util.sprite.TextureCoords;
 import snake2d.util.sprite.text.Text;
-import util.gui.panel.GPanelS;
+import util.colors.GCOLOR;
+import util.data.INT.INTE;
+import util.gui.panel.GPanel;
+import util.gui.slider.GSliderVer;
 import util.info.GFORMAT;
 import util.info.INFO;
+import view.main.VIEW;
 
 public class GBox implements SPRITE, GUI_BOX{
 
+	private final static int maxHeight = 600;
+	
 	private final static GBox dummy = new GBox();
 	
 	private final static int MARGIN = 4;
@@ -34,7 +41,11 @@ public class GBox implements SPRITE, GUI_BOX{
 	private ArrayList<GText> texts = new ArrayList<>(64*16);
 	private int rensFreeI = 0;
 	private int textsFreeI = 0;
-	private final GPanelS box = new GPanelS();
+	private final GPanel box = new GPanel();
+	
+	private final ArrayListGrower<Sep> sepsFree = new ArrayListGrower<>();
+	private int sepsFreeI = 0;
+	private final Scroll scroll = new Scroll();
 	
 	private RENDEROBJ.RenderImp object = new RENDEROBJ.RenderImp() {
 		@Override
@@ -57,9 +68,10 @@ public class GBox implements SPRITE, GUI_BOX{
 		dHeight = 0;
 		rensFreeI = 0;
 		textsFreeI = 0;
+		sepsFreeI = 0;
 		width = 0;
 		height = 0;
-		box.titleClear();
+		box.title().clear();
 	}
 	
 	private final class Ren {
@@ -374,17 +386,26 @@ public class GBox implements SPRITE, GUI_BOX{
 			NL();
 
 		if (width == 0 || height == 0) {
+			box.inner().setWidth(width).setHeight(height);
 			box.inner().moveX1(X1);
 			box.inner().moveY1(Y1);
 			box.renderTitle(r);
 			return;
 			
 		}
+		
+		
 			
 		
 		box.inner().setWidth(width).setHeight(height);
 		box.inner().moveX1(X1);
 		box.inner().moveY1(Y1);
+		
+		
+		if (scroll.init()) {
+			box.inner().incrW(scroll.sl.body().width()+8);
+			box.inner().setHeight(maxHeight);
+		}
 		box.render(r, 0);
 		
 		renderWithout(r, X1, Y1);
@@ -392,21 +413,38 @@ public class GBox implements SPRITE, GUI_BOX{
 	}
 	
 	public void renderWithout(SPRITE_RENDERER r, int X1, int Y1){
-		for (Ren ren : rens) {
-			if (ren.renderable != null) {
-				ren.col.bind();
-				ren.renderable.render(r, X1+ren.x, Y1+ren.y);
-				COLOR.unbind();
+		if (dHeight != 0)
+			NL();
+		
+		if (scroll.init()) {
+			for (Ren ren : rens) {
+				scroll.render(r, ren, X1, Y1);
+				
 			}
-				
-			else {
-				RENDEROBJ o = ren.ren;
-				
-				o.body().moveX1Y1(X1+ren.x, Y1+ren.y);
-				o.render(r, 0);
-				
+			scroll.sl.body().moveX1(X1+width+4);
+			scroll.sl.body().moveY1(Y1);
+			scroll.sl.render(r, 0);
+			
+		}else {
+			for (Ren ren : rens) {
+				if (ren.renderable != null) {
+					ren.col.bind();
+					
+					ren.renderable.render(r, X1+ren.x, Y1+ren.y);
+					COLOR.unbind();
+				}
+					
+				else {
+					RENDEROBJ o = ren.ren;
+					
+					o.body().moveX1Y1(X1+ren.x, Y1+ren.y);
+					o.render(r, 0);
+					
+				}
 			}
 		}
+		
+		
 	}
 
 	@Override
@@ -442,11 +480,120 @@ public class GBox implements SPRITE, GUI_BOX{
 		return rensFreeI == 0;
 	}
 	
-	public static interface HovInfo {
-		
-		void hover(GBox b);
-		
+	public GBox sep() {
+		NL();
+		if (sepsFreeI >= sepsFree.size()) {
+			sepsFree.add(new Sep());
+		}
+		add(sepsFree.get(sepsFreeI));
+		NL();
+		sepsFreeI++;
+		return this;
 	}
 
+	private class Sep extends RENDEROBJ.RenderImp {
 
+		Sep(){
+			super(1, 12);
+		}
+		@Override
+		public void render(SPRITE_RENDERER r, float ds) {
+			GCOLOR.UI().border().render(r, body.x1(), body.x1()+(width), body.y1()+6, body.y1()+7);
+		}
+		
+	}
+	
+	private class Scroll {
+
+		int current;
+		int max;
+		final int dh = (int) (maxHeight/5.0);
+		int ri = -1;
+		final INTE ii = new INTE() {
+			
+			@Override
+			public int min() {
+				return 0;
+			}
+			
+			@Override
+			public int max() {
+				return max;
+			}
+			
+			@Override
+			public int get() {
+				return current;
+			}
+			
+			@Override
+			public void set(int t) {
+				current = t;
+			}
+		};
+		
+		final GSliderVer sl = new GSliderVer(ii, maxHeight);
+		
+		public boolean init() {
+			
+			int h = height + dHeight;
+			if (h < maxHeight)
+				return false;
+			
+			max = (int) Math.ceil((double)(h-maxHeight)/dh);
+			
+			if (Math.abs(VIEW.RI() - ri) > 2) {
+				current = 0;
+				
+			}
+			ri = VIEW.RI();
+			
+			
+			double dv = MButt.clearWheelSpin();
+			if (dv < 0)
+				current++;
+			else if (dv > 0)
+				current--;
+			current = CLAMP.i(current, 0, max);
+			return true;
+			
+		}
+		
+		public boolean passes(Ren ren) {
+			
+			int y1 = current*dh;
+			int y2 = y1+maxHeight;
+			if (ren.renderable != null) {
+				return ren.y >= y1 && ren.y + ren.renderable.height() < y2;
+			}else {
+				RENDEROBJ o = ren.ren;
+				return ren.y >= y1 && ren.y + o.body().height() < y2;
+			}
+			
+		}
+		
+		public void render(SPRITE_RENDERER r, Ren ren, int X1, int Y1){
+			
+			
+			
+			if (passes(ren)) {
+				Y1 -= current*dh;
+				if (ren.renderable != null) {
+					ren.col.bind();
+					
+					ren.renderable.render(r, X1+ren.x, Y1+ren.y);
+					COLOR.unbind();
+				}
+					
+				else {
+					RENDEROBJ o = ren.ren;
+					
+					o.body().moveX1Y1(X1+ren.x, Y1+ren.y);
+					o.render(r, 0);
+					
+				}
+			}
+		}
+		
+	}
 }

@@ -1,12 +1,11 @@
 package init.tech;
 
+import java.io.IOException;
 import java.util.Arrays;
 
 import game.GAME;
 import init.D;
-import init.boostable.*;
-import init.paths.PATH;
-import init.paths.PATHS;
+import init.paths.PATHS.ResFolder;
 import init.tech.TECH.TechRequirement;
 import snake2d.Errors;
 import snake2d.util.file.Json;
@@ -16,12 +15,16 @@ import util.info.INFO;
 public final class TECHS {
 
 	private static LIST<TECH> ALL;
-	private static CharSequence ¤¤name = "Technology";
-	private static CharSequence ¤¤desc = "Technologies unlocks various boosts and rooms";
+	public static CharSequence ¤¤name = "Technology";
+	public static CharSequence ¤¤desc = "Technologies unlocks various boosts and rooms";
 	static {D.ts(TECHS.class);}
 	private static final INFO info = new INFO(¤¤name, ¤¤desc);
-	private static LIST<LIST<TechBoost>> map;
 	
+	private static LIST<TechTree> trees;
+
+	public static LIST<TechTree> TREES(){
+		return trees;
+	}
 	
 	public static LIST<TECH> ALL(){
 		return ALL;
@@ -31,83 +34,108 @@ public final class TECHS {
 		return info;
 	}
 	
-	public static LIST<TechBoost> map(BOOSTABLE b){
-		return map.get(b.index());
-	}
-	
-	public TECHS() {
+	public TECHS() throws IOException{
+		
+		
 		
 
-		PATH gData = PATHS.INIT().getFolder("tech");
-		PATH gText = PATHS.TEXT().getFolder("tech");
-		
-		String[] files = gData.getFiles();
+
 		
 		final KeyMap<TECH> map = new KeyMap<>();
 		LinkedList<TECH> all = new LinkedList<>();
 		
-		
-		for (String key : files) {
-			Json da = new Json(gData.get(key));
-			Json te = new Json(gText.get(key));
-			if (da.has("TECHS") && da.jsonsIs("TECHS")) {
-				Json[] js = da.jsons("TECHS");
-				Json[] jt = te.jsons("TECHS");
-				for (int i = 0; i < js.length; i++) {
-					
-					TECH t = new TECH(all, js[i], jt[i%jt.length]);
-					map.put(key+i, t);
+		{
+			
+			//ArrayListGrower<TECH> all = new ArrayListGrower<>();
+			
+			ArrayListGrower<TechTree> trees = new ArrayListGrower<>();
+			ResFolder data = new ResFolder("tech", false);
+			
+			for (String k : data.init.folders()) {
+				if (data.init.getFolder(k).exists("TREE")) {
+					trees.add(new TechTree(data, k, all));
 				}
 				
-			}else {
-				TECH t = new TECH(all, da, te);
-				map.put(key, t);
 			}
-			
+			TECHS.trees = trees;
 		}
-	
+		
+		
+		
+
 		ALL = new ArrayList<>(all);
 		
-		for (String key : files) {
+		for (TECH t : ALL) {
+			map.put(t.key, t);
+		}
+		
+		for (TECH tech : ALL) {
 			
-			Json[] js = null;
-			TECH[] techs = null;
-			
-			{
-				Json jj = new Json(gData.get(key));
-				
-				if (jj.has("TECHS") && jj.jsonsIs("TECHS")) {
-					js = jj.jsons("TECHS");
-					techs = new TECH[js.length];
-					for (int i = 0; i < js.length; i++)
-						techs[i] = map.get(key+i);
-					
-				}else {
-					js = new Json[] {jj};
-					techs = new TECH[] {map.get(key)};
-				}
-			}
-			
-			for (int i = 0; i < js.length; i++) {
-				Json j =  js[i];
-				TECH tech = techs[i];
-				LinkedList<TechRequirement> needs = new LinkedList<>();
-				if (j.has("REQUIRES_TECH_LEVEL")) {
-					Json jj = j.json("REQUIRES_TECH_LEVEL");
-					for (String k : jj.keys()) {
+			Json j = tech.requires;
+			tech.requires = null;
+			LinkedList<TechRequirement> needs = new LinkedList<>();
+			if (j.has("REQUIRES_TECH_LEVEL")) {
+				Json jj = j.json("REQUIRES_TECH_LEVEL");
+				for (String k : jj.keys()) {
+					String kk = k;
+					if (!map.containsKey(k)) {
+						if (tech.tree != null)
+							k = tech.tree.key + "_" + k;
+
 						if (!map.containsKey(k)) {
 							GAME.Warn(jj.errorGet(k, "REQUIRES_TECH_LEVEL"));
-						}else {
-							TechRequirement t = new TechRequirement(map.get(k), jj.i(k, 0, map.get(k).levelMax));
-							needs.add(t);
+							continue;
 						}
 					}
+					TechRequirement t = new TechRequirement(map.get(k), jj.i(kk, 0, map.get(k).levelMax));
+					needs.add(t);
 				}
-				
-				tech.set(new ArrayList<>(needs));
-				tech.prune(new ArrayList<>(needs));
 			}
+			tech.set(new ArrayList<>(needs));
+			tech.prune(new ArrayList<>(needs));
 		}
+		
+		
+//		for (String key : files) {
+//			
+//			Json[] js = null;
+//			TECH[] techs = null;
+//			
+//			{
+//				Json jj = new Json(gData.get(key));
+//				
+//				if (jj.has("TECHS") && jj.jsonsIs("TECHS")) {
+//					js = jj.jsons("TECHS");
+//					techs = new TECH[js.length];
+//					for (int i = 0; i < js.length; i++)
+//						techs[i] = map.get(key+i);
+//					
+//				}else {
+//					js = new Json[] {jj};
+//					techs = new TECH[] {map.get(key)};
+//				}
+//			}
+//			
+//			for (int i = 0; i < js.length; i++) {
+//				Json j =  js[i];
+//				TECH tech = techs[i];
+//				LinkedList<TechRequirement> needs = new LinkedList<>();
+//				if (j.has("REQUIRES_TECH_LEVEL")) {
+//					Json jj = j.json("REQUIRES_TECH_LEVEL");
+//					for (String k : jj.keys()) {
+//						if (!map.containsKey(k)) {
+//							GAME.Warn(jj.errorGet(k, "REQUIRES_TECH_LEVEL"));
+//						}else {
+//							TechRequirement t = new TechRequirement(map.get(k), jj.i(k, 0, map.get(k).levelMax));
+//							needs.add(t);
+//						}
+//					}
+//				}
+//				
+//				tech.set(new ArrayList<>(needs));
+//				tech.prune(new ArrayList<>(needs));
+//			}
+//		}
 		
 		detectCycles();
 	
@@ -134,7 +162,6 @@ public final class TECHS {
 		}
 		
 		
-		buildMap();
 	}
 	
 	private void fillRequirements(int[] reqed, TECH t) {
@@ -146,24 +173,7 @@ public final class TECHS {
 		}
 	}
 	
-	private void buildMap() {
-		ArrayList<LIST<TechBoost>> map = new ArrayList<>(BOOSTABLES.all().size());
-		
-		for (BOOSTABLE b : BOOSTABLES.all()) {
-			LinkedList<TechBoost> li = new LinkedList<>();
-			for (TECH t : ALL) {
-				for (BBoost bb : t.boosts()) {
-					if (bb.boostable == b)
-						li.add(new TechBoost(t, bb));
-				}
-			}
-			ArrayList<TechBoost> res = new ArrayList<>(li);
-			map.add(res);
-		}
-		
-		TECHS.map = map;
-		
-	}
+
 	
 	private void detectCycles() {
 		
@@ -195,18 +205,7 @@ public final class TECHS {
 		
 	}
 	
-	public static class TechBoost {
-		
-		public final TECH tech;
-		public final BBoost boost;
-		
-		public TechBoost(TECH tech, BBoost boost) {
-			this.tech = tech;
-			this.boost = boost;
-		}
-		
-		
-	}
+
 
 	
 	

@@ -5,7 +5,6 @@ import java.io.IOException;
 import init.D;
 import init.sprite.SPRITES;
 import init.sprite.game.*;
-import settlement.main.RenderData.RenderIterator;
 import settlement.main.SETT;
 import settlement.room.main.*;
 import settlement.room.main.furnisher.Furnisher;
@@ -17,10 +16,9 @@ import snake2d.SPRITE_RENDERER;
 import snake2d.util.color.COLOR;
 import snake2d.util.datatypes.*;
 import snake2d.util.sets.LIST;
-import snake2d.util.sprite.TILE_SHEET;
 import util.gui.misc.GText;
 import util.info.GFORMAT;
-import util.spritecomposer.*;
+import util.rendering.RenderData.RenderIterator;
 
 final class Constructor extends Furnisher{
 
@@ -40,13 +38,12 @@ final class Constructor extends Furnisher{
 
 		@Override
 		public double get(AREA area, double fromItems) {
-			if (mustBeIndoors())
-				return 1;
+			
 			double v = 0;
 			for (COORDINATE c : area.body()) {
 				
 				if (area.is(c)) {
-					v += SETT.FERTILITY().target.get(c);
+					v += Tile.ferBase(c.x(), c.y(), isIndoors);
 				}
 			}
 			return v/area.area();
@@ -79,13 +76,10 @@ final class Constructor extends Furnisher{
 			
 			@Override
 			protected double getBase(AREA area, double[] acc) {
-				double f = area.area();
-				if (!isIndoors) {
-					f = 0;
-					for (COORDINATE c : area.body()) {
-						if (area.is(c)) {
-							f += SETT.FERTILITY().target.get(c);
-						}
+				double f = 0;
+				for (COORDINATE c : area.body()) {
+					if (area.is(c)) {
+						f += Tile.ferBase(c.x(), c.y(), isIndoors);
 					}
 				}
 				return ROOM_FARM.WORKERPERTILEI*f;
@@ -96,17 +90,12 @@ final class Constructor extends Furnisher{
 		isIndoors = init.data().bool("INDOORS");
 		this.blue = blue;
 		
-		sheets = SPRITES.GAME().get(SheetType.s1x1, "_FARM_DIRT");
+		sheets = SPRITES.GAME().sheets(SheetType.s1x1, "_FARM_DIRT", null);
 //		for (Sheet s : sheets) {
 //			s.hasRotation = true;
 //			s.hasShadow = false;
 //		}
 
-	}
-
-	@Override
-	protected TILE_SHEET sheet(ComposerUtil c, ComposerSources s, ComposerDests d, int y1) {
-		return null;
 	}
 
 	@Override
@@ -165,7 +154,6 @@ final class Constructor extends Furnisher{
 	}
 	
 	void renderTill(SPRITE_RENDERER r, RenderIterator it, AREA area, double till) {
-		
 		
 		int d = direction(it, area);
 		

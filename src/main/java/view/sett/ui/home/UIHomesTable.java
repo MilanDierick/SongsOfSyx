@@ -1,13 +1,13 @@
 package view.sett.ui.home;
 
 import init.D;
-import init.sprite.ICON;
 import init.sprite.SPRITES;
+import init.sprite.UI.Icon;
 import settlement.entity.ENTITY;
 import settlement.entity.humanoid.HCLASS;
 import settlement.entity.humanoid.Humanoid;
 import settlement.main.SETT;
-import settlement.room.home.HOME_TYPE;
+import settlement.room.home.HOMET;
 import settlement.stats.STATS;
 import snake2d.SPRITE_RENDERER;
 import snake2d.util.datatypes.DIR;
@@ -47,16 +47,16 @@ final class UIHomesTable extends GuiSection {
 		Data housed = new Data(¤¤Housed, ¤¤HousedD) {
 
 			@Override
-			GText format(GText t, HOME_TYPE h) {
-				return GFORMAT.i(t, STATS.HOME().GETTER.stat().data(h.clas()).get(h.race()));
+			GText format(GText t, HOMET h) {
+				return GFORMAT.i(t, STATS.HOME().GETTER.stat().data(h.cl).get(h.race));
 			}
 		};
 
 		Data homeless = new Data(¤¤Homeless, ¤¤HomelessD) {
 
 			@Override
-			GText format(GText t, HOME_TYPE h) {
-				int am = STATS.HOME().GETTER.hasSearched.data(h.clas()).get(h.race());
+			GText format(GText t, HOMET h) {
+				int am = STATS.HOME().GETTER.hasSearched.data(h.cl).get(h.race);
 				GFORMAT.i(t, am);
 				if (am > 0)
 					t.errorify();
@@ -67,18 +67,11 @@ final class UIHomesTable extends GuiSection {
 		Data available = new Data(¤¤HousingAvailable, ¤¤HousingAvailableD) {
 
 			@Override
-			GText format(GText t, HOME_TYPE h) {
+			GText format(GText t, HOMET h) {
 
 				int am = SETT.ROOMS().HOMES.total(h) - SETT.ROOMS().HOMES.used(h);
 
-				if (h.race() != null) {
-					h = h.clas() == HCLASS.CITIZEN ? HOME_TYPE.CITIZEN(null) : HOME_TYPE.SLAVE(null);
-					am += SETT.ROOMS().HOMES.total(h) - SETT.ROOMS().HOMES.used(h);
-				}
-				if (h.clas() != null) {
-					h = HOME_TYPE.EVERYONE();
-					am += SETT.ROOMS().HOMES.total(h) - SETT.ROOMS().HOMES.used(h);
-				}
+			
 				return GFORMAT.i(t, am);
 			}
 		};
@@ -86,17 +79,10 @@ final class UIHomesTable extends GuiSection {
 		Data total = new Data(¤¤HousingTotal, "") {
 
 			@Override
-			GText format(GText t, HOME_TYPE h) {
+			GText format(GText t, HOMET h) {
 				int am = SETT.ROOMS().HOMES.total(h);
 
-				if (h.race() != null) {
-					h = h.clas() == HCLASS.CITIZEN ? HOME_TYPE.CITIZEN(null) : HOME_TYPE.SLAVE(null);
-					am += SETT.ROOMS().HOMES.total(h);
-				}
-				if (h.clas() != null) {
-					h = HOME_TYPE.EVERYONE();
-					am += SETT.ROOMS().HOMES.total(h);
-				}
+				
 				return GFORMAT.i(t, am);
 			}
 		};
@@ -104,8 +90,8 @@ final class UIHomesTable extends GuiSection {
 		Data furnishing = new Data(STATS.HOME().materials.info().name, STATS.HOME().materials.info().desc) {
 
 			@Override
-			GText format(GText t, HOME_TYPE h) {
-				return GFORMAT.perc(t, STATS.HOME().materials.data(h.clas()).getD(h.race()));
+			GText format(GText t, HOMET h) {
+				return GFORMAT.perc(t, STATS.HOME().materials.data(h.cl).getD(h.race));
 			}
 		};
 
@@ -113,10 +99,10 @@ final class UIHomesTable extends GuiSection {
 
 			@Override
 			public int nrOFEntries() {
-				return HOME_TYPE.ALL().size();
+				return HOMET.ALL().size();
 			}
 
-			private void hover(GBox box, HOME_TYPE h, Data d) {
+			private void hover(GBox box, HOMET h, Data d) {
 				box.textL(d.name);
 				box.tab(5);
 				box.add(d.format(box.text(), h));
@@ -127,7 +113,7 @@ final class UIHomesTable extends GuiSection {
 
 			@Override
 			public void hoverInfo(int index, GBox box) {
-				HOME_TYPE h = HOME_TYPE.ALL().get(index);
+				HOMET h = HOMET.ALL().get(index);
 				box.title(h.name);
 
 				hover(box, h, homeless);
@@ -140,8 +126,8 @@ final class UIHomesTable extends GuiSection {
 
 			@Override
 			public boolean activeIs(int index) {
-				HOME_TYPE h = HOME_TYPE.ALL().get(index);
-				return STATS.POP().POP.data(h.clas()).get(h.race()) > 0;
+				HOMET h = HOMET.ALL().get(index);
+				return STATS.POP().POP.data(h.cl).get(h.race) > 0;
 			}
 		};
 		GRowBuilder b;
@@ -152,11 +138,11 @@ final class UIHomesTable extends GuiSection {
 
 			@Override
 			public RENDEROBJ build(GETTER<Integer> ier) {
-				return new HOVERABLE.Sprite(ICON.MEDIUM.SIZE + 4) {
+				return new HOVERABLE.Sprite(Icon.M + 4) {
 					@Override
 					protected void render(SPRITE_RENDERER r, float ds, boolean isHovered) {
-						HOME_TYPE h = HOME_TYPE.ALL().get(ier.get());
-						h.icon().render(r, body.x1() + 2, body().y1() + 2);
+						HOMET h = HOMET.ALL().get(ier.get());
+						h.icon.render(r, body.x1() + 2, body().y1() + 2);
 					}
 				};
 			}
@@ -176,7 +162,7 @@ final class UIHomesTable extends GuiSection {
 					@Override
 					public void update(GText text) {
 
-						HOME_TYPE h = HOME_TYPE.ALL().get(ier.get());
+						HOMET h = HOMET.ALL().get(ier.get());
 						available.format(text, h);
 					}
 				};
@@ -185,7 +171,7 @@ final class UIHomesTable extends GuiSection {
 					@Override
 					public void update(GText text) {
 						text.add('(');
-						HOME_TYPE h = HOME_TYPE.ALL().get(ier.get());
+						HOMET h = HOMET.ALL().get(ier.get());
 						total.format(text, h);
 						text.add(')');
 					}
@@ -215,7 +201,7 @@ final class UIHomesTable extends GuiSection {
 					@Override
 					public void update(GText text) {
 
-						HOME_TYPE h = HOME_TYPE.ALL().get(ier.get());
+						HOMET h = HOMET.ALL().get(ier.get());
 						furnishing.format(text, h);
 					}
 				};
@@ -224,28 +210,22 @@ final class UIHomesTable extends GuiSection {
 
 					@Override
 					protected void clickA() {
-						HOME_TYPE h = HOME_TYPE.ALL().get(ier.get());
-						if (h == HOME_TYPE.EVERYONE() || h == HOME_TYPE.NOBLE())
+						HOMET h = HOMET.ALL().get(ier.get());
+						if (h.cl == HCLASS.NOBLE)
 							return;
 
-						if (h.clas() == HCLASS.CITIZEN) {
-							VIEW.s().ui.standing.openAccess(h.race());
+						if (h.cl == HCLASS.CITIZEN) {
+							VIEW.s().ui.standing.openAccess(h.race);
 						}
 
 						super.clickA();
 					}
 
 					@Override
-					protected void renAction() {
-						HOME_TYPE h = HOME_TYPE.ALL().get(ier.get());
-						activeSet(h != HOME_TYPE.EVERYONE() && h != HOME_TYPE.NOBLE());
-					}
-
-					@Override
 					public void hoverInfoGet(GUI_BOX text) {
 
-						HOME_TYPE h = HOME_TYPE.ALL().get(ier.get());
-						if (h != HOME_TYPE.EVERYONE() && h != HOME_TYPE.NOBLE())
+						HOMET h = HOMET.ALL().get(ier.get());
+						if (h.cl != HCLASS.NOBLE)
 							text.text(¤¤FurnishClick);
 						text.NL(8);
 
@@ -271,15 +251,15 @@ final class UIHomesTable extends GuiSection {
 
 					@Override
 					protected void clickA() {
-						HOME_TYPE h = HOME_TYPE.ALL().get(ier.get());
+						HOMET h = HOMET.ALL().get(ier.get());
 						search(h);
 						super.clickA();
 					}
 
 					@Override
 					protected void renAction() {
-						HOME_TYPE h = HOME_TYPE.ALL().get(ier.get());
-						activeSet(STATS.HOME().GETTER.hasSearched.data(h.clas()).get(h.race()) > 0);
+						HOMET h = HOMET.ALL().get(ier.get());
+						activeSet(STATS.HOME().GETTER.hasSearched.data(h.cl).get(h.race) > 0);
 					}
 
 					@Override
@@ -307,7 +287,7 @@ final class UIHomesTable extends GuiSection {
 		}
 	}
 
-	private void search(HOME_TYPE t) {
+	private void search(HOMET t) {
 
 		ENTITY[] ee = SETT.ENTITIES().getAllEnts();
 
@@ -322,7 +302,7 @@ final class UIHomesTable extends GuiSection {
 				if (STATS.HOME().GETTER.hasSearched.indu().get(h.indu()) == 0)
 					continue;
 
-				if (t == HOME_TYPE.getGeneral(h) || t == HOME_TYPE.getSpecific(h) || t == HOME_TYPE.getSpecific2(h)) {
+				if (t == HOMET.get(h)) {
 					subject = h;
 					return;
 				}
@@ -342,7 +322,7 @@ final class UIHomesTable extends GuiSection {
 			this.desc = desc;
 		}
 
-		abstract GText format(GText t, HOME_TYPE h);
+		abstract GText format(GText t, HOMET h);
 
 	}
 
@@ -355,7 +335,7 @@ final class UIHomesTable extends GuiSection {
 
 					@Override
 					public void update(GText text) {
-						HOME_TYPE h = HOME_TYPE.ALL().get(ier.get());
+						HOMET h = HOMET.ALL().get(ier.get());
 						data.format(text, h);
 
 					}

@@ -8,13 +8,12 @@ import init.D;
 import init.settings.S;
 import init.settings.S.Setting;
 import menu.GUI.OptionLine;
-import menu.screens.Screener;
 import snake2d.util.gui.GUI_BOX;
 import snake2d.util.gui.GuiSection;
 import snake2d.util.gui.clickable.CLICKABLE;
 import util.gui.misc.GText;
 
-final class ScOptions extends GuiSection implements SCREEN{
+final class ScOptions extends GuiSection implements SC{
 
 	private final LinkedList<Option> options = new LinkedList<Option>();
 	private final CLICKABLE revert;

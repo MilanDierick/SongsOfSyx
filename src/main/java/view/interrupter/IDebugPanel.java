@@ -9,7 +9,7 @@ import snake2d.CORE;
 import snake2d.SPRITE_RENDERER;
 import snake2d.util.gui.clickable.CLICKABLE;
 import snake2d.util.misc.ACTION;
-import snake2d.util.misc.TOGGLEBLE;
+import util.data.BOOLEAN.BOOLEAN_MUTABLE;
 import util.gui.misc.GButt;
 import view.main.VIEW;
 
@@ -27,8 +27,8 @@ public class IDebugPanel extends IDebugPanelAbs{
 	
 	private final static TreeMap<CharSequence, CLICKABLE> hash = new TreeMap<CharSequence, CLICKABLE>();
 	
-	private static CLICKABLE get(String name, TOGGLEBLE toggle) {
-		GButt.CheckboxTitle c = new GButt.CheckboxTitle(UI.FONT().S.getText(name)) {
+	private static CLICKABLE get(String name, BOOLEAN_MUTABLE toggle) {
+		GButt.Checkbox c = new GButt.Checkbox(UI.FONT().S.getText(name)) {
 			@Override
 			protected void clickA() {
 				selectedToggle();
@@ -37,7 +37,7 @@ public class IDebugPanel extends IDebugPanelAbs{
 			@Override
 			protected void render(SPRITE_RENDERER r, float ds, boolean isActive, boolean isSelected,
 					boolean isHovered) {
-				selectedSet(toggle.isOn());
+				selectedSet(toggle.is());
 				super.render(r, ds, isActive, isSelected, isHovered);
 			}
 		};
@@ -62,7 +62,7 @@ public class IDebugPanel extends IDebugPanelAbs{
 		
 	}
 	
-	public static void add(String name, TOGGLEBLE toggle) {
+	public static void add(String name, BOOLEAN_MUTABLE toggle) {
 		put(name, get(name, toggle));
 	}
 	
@@ -87,25 +87,18 @@ public class IDebugPanel extends IDebugPanelAbs{
 	
 	static InterManager addStaticStuff(InterManager manager) {
 		
-		add("show stats", new TOGGLEBLE() {
+		add("show stats", new BOOLEAN_MUTABLE() {
+
+
 
 			@Override
-			public void setOn() {
+			public BOOLEAN_MUTABLE set(boolean bool) {
 				RES.debugger().toggle();
+				return this;
 			}
 
 			@Override
-			public void setOff() {
-				RES.debugger().toggle();
-			}
-
-			@Override
-			public void set(boolean bool) {
-				RES.debugger().toggle();
-			}
-
-			@Override
-			public boolean isOn() {
+			public boolean is() {
 				return RES.debugger().isToggled();
 			}
 			

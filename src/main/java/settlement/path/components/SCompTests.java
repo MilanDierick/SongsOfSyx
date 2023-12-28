@@ -2,12 +2,12 @@ package settlement.path.components;
 
 import init.sprite.SPRITES;
 import settlement.main.ON_TOP_RENDERABLE;
-import settlement.main.RenderData;
-import settlement.main.RenderData.RenderIterator;
 import settlement.path.components.SCompFinder.SCompPath;
 import snake2d.Renderer;
 import snake2d.util.color.COLOR;
 import snake2d.util.misc.ACTION;
+import util.rendering.RenderData;
+import util.rendering.RenderData.RenderIterator;
 import util.rendering.ShadowBatch;
 import view.main.VIEW;
 import view.sett.IDebugPanelSett;

@@ -35,8 +35,8 @@ public class C {
 	
 	
 	private static final Rec DIM = new Rec(0, WIDTH, 0, HEIGHT);
-	public static final int SETTLE_TSIZE = 768;
-	public static final RECTANGLE SETTLE_TDIM = new Rec(0, SETTLE_TSIZE, 0, SETTLE_TSIZE);
+//	public static final int TWIDTH = 768;
+//	public static final RECTANGLE SETTLE_TDIM = new Rec(0, TWIDTH, 0, TWIDTH);
 	public static final double SQR2 = Math.sqrt(2.0);
 	public static final double SQR2I = 1.0/Math.sqrt(2.0);
 	public static final String WEB_PAGE = "https://songsofsyx.com";

@@ -3,13 +3,13 @@ package settlement.room.main;
 import static settlement.main.SETT.*;
 
 import init.resources.RESOURCE;
-import init.sprite.ICON.BIG;
-import settlement.main.RenderData.RenderIterator;
+import init.sprite.UI.Icon;
 import settlement.main.SETT;
 import settlement.maintenance.ROOM_DEGRADER;
 import settlement.path.AVAILABILITY;
 import settlement.room.main.construction.ConstructionData;
 import settlement.room.main.construction.ConstructionInit;
+import settlement.room.main.employment.RoomEmploymentIns;
 import settlement.room.main.furnisher.Furnisher;
 import settlement.room.main.furnisher.FurnisherItemTile;
 import settlement.room.main.job.ROOM_EMPLOY_AUTO;
@@ -18,6 +18,7 @@ import settlement.room.sprite.RoomSprite;
 import snake2d.Renderer;
 import snake2d.util.datatypes.*;
 import snake2d.util.sprite.text.Str;
+import util.rendering.RenderData.RenderIterator;
 import util.rendering.ShadowBatch;
 
 public abstract class RoomInstance extends Room.RoomInstanceImp implements AREA{
@@ -39,7 +40,6 @@ public abstract class RoomInstance extends Room.RoomInstanceImp implements AREA{
 	protected final Str iname = new Str.StringReusableSer(32);
 	private byte upgrade;
 	private float isolation = 0;
-	private  byte shape;
 	
 	protected RoomInstance(RoomBlueprintIns<? extends RoomInstance> blueprint, TmpArea area, RoomInit init) {
 		super(ROOMS(), blueprint, false);
@@ -88,16 +88,6 @@ public abstract class RoomInstance extends Room.RoomInstanceImp implements AREA{
 		exists = true;
 		iname.add(blueprint.info.name).s().add('#').add(blueprint.roomNameI++).toLower();
 		blueprint.addInstance(this);
-		byte s = 0;
-		if (constructor().hasShape()) {
-			double ss = SETT.ENV().squareness.getPercent(this);
-			if (ss < 0.5)
-				s = -1;
-			else if (ss > 0.5)
-				s = 1;
-				
-		}
-		this.shape = s;
 		isolation = (float) SETT.ROOMS().isolation.getProspect(blueprint, this, null);
 		SETT.MAINTENANCE().initRoomDegrade(this, mX(), mY());
 		
@@ -119,7 +109,7 @@ public abstract class RoomInstance extends Room.RoomInstanceImp implements AREA{
 		updateAction(updateInterval, day, daycount);
 		
 		
-		work.update(active(), day, this.blueprintI() instanceof ROOM_EMPLOY_AUTO && ((ROOM_EMPLOY_AUTO)this.blueprintI()).autoEmploy(this), updateInterval);
+		((SecretEmployment)work).update(active(), day, this.blueprintI() instanceof ROOM_EMPLOY_AUTO && ((ROOM_EMPLOY_AUTO)this.blueprintI()).autoEmploy(this), updateInterval);
 		
 	}
 	
@@ -162,7 +152,6 @@ public abstract class RoomInstance extends Room.RoomInstanceImp implements AREA{
 	}
 	
 	private final void updateReachability() {
-		work.remove();
 		boolean was = active(); 
 		reachable = PATH().reachability.is(mX(), mY());
 		
@@ -171,7 +160,7 @@ public abstract class RoomInstance extends Room.RoomInstanceImp implements AREA{
 		}else if (active() && !was){
 			activateAction();
 		}
-		work.add();
+		((SecretEmployment)work).activate(active());
 	}
 	
 	@Override
@@ -189,20 +178,20 @@ public abstract class RoomInstance extends Room.RoomInstanceImp implements AREA{
 
 	public final void activate(boolean a) {
 		
-		work.remove();
-		
 		if (active()) {
-			
 			deactivateAction();
 		}
 		
 		active = a;
 		
 		if (active()) {
-			
 			activateAction();
 		}
-		work.add();
+		
+		((SecretEmployment)work).activate(active());
+		
+		
+		
 	}
 	
 	protected abstract void activateAction();
@@ -243,19 +232,29 @@ public abstract class RoomInstance extends Room.RoomInstanceImp implements AREA{
 	}
 	
 	@Override
-	public TmpArea remove(int tx, int ty, boolean scatter, Object obj, boolean forced) {
+	public final TmpArea remove(int tx, int ty, boolean scatter, Object obj, boolean forced) {
 		if (!exists)
 			throw new RuntimeException();
 		if (!is(tx, ty))
 			throw new RuntimeException();
+		
+		if (!canRemoveAndRemoveAction(tx, ty, scatter, obj, forced))
+			return SETT.ROOMS().tmpArea(obj);
+		
+		
+		
+		
 		SETT.ROOMS().stats.finished().remove(mX(), mY());
 		deactivate();
+		
+		((SecretEmployment)employees()).dispose();
+		
 		dispose();
 		
 		if (scatter && constructor() != null)
 			Deleter.scatterMaterials(this, constructor(), upgrade());
 		
-		employees().dispose();
+		
 		
 		for (COORDINATE c : body()) {
 			if (!is(c))
@@ -275,6 +274,10 @@ public abstract class RoomInstance extends Room.RoomInstanceImp implements AREA{
 		TmpArea a = ROOMS().map.delete(this, mX(), mY(), obj);
 		return a;
 		
+	}
+	
+	protected boolean canRemoveAndRemoveAction(int tx, int ty, boolean scatter, Object obj, boolean forced) {
+		return true;
 	}
 	
 	@Override
@@ -345,8 +348,8 @@ public abstract class RoomInstance extends Room.RoomInstanceImp implements AREA{
 	}
 	
 	@Override
-	public BIG icon() {
-		return constructor().icon();
+	public Icon icon() {
+		return blueprintI().iconBig();
 	}
 	
 	private static class Degrader extends ROOM_DEGRADER {
@@ -439,9 +442,14 @@ public abstract class RoomInstance extends Room.RoomInstanceImp implements AREA{
 		
 	}
 	
-	public byte shape() {
-		return shape;
+	public static abstract class SecretEmployment {
+		protected abstract void update(boolean active, boolean day, boolean auto, double seconds);
+		protected abstract void activate(boolean active);
+		protected abstract void dispose();
+		
+		protected SecretEmployment() {
+			
+		}
 	}
-	
 
 }

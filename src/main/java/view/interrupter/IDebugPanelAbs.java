@@ -11,12 +11,13 @@ import snake2d.util.color.COLOR;
 import snake2d.util.datatypes.*;
 import snake2d.util.gui.GuiSection;
 import snake2d.util.gui.clickable.CLICKABLE;
-import snake2d.util.gui.renderable.RENDEROBJ;
 import snake2d.util.misc.ACTION;
+import snake2d.util.sprite.text.Str;
 import snake2d.util.sprite.text.StringInputSprite;
 import snake2d.util.sprite.text.StringInputSprite.InputClickable;
-import util.gui.misc.*;
-import util.gui.panel.GPanelL;
+import util.gui.misc.GBox;
+import util.gui.misc.GButt;
+import util.gui.panel.GPanel;
 import view.keyboard.KEYS;
 
 public class IDebugPanelAbs extends Interrupter{
@@ -24,7 +25,7 @@ public class IDebugPanelAbs extends Interrupter{
 	private final GuiSection section = new GuiSection();
 	private final Type current;
 
-	private final GPanelL panel;
+	private final GPanel panel;
 	private final StringInputSprite filter = new StringInputSprite(20, UI.FONT().M){
 		@Override
 		protected void change() {
@@ -43,7 +44,8 @@ public class IDebugPanelAbs extends Interrupter{
 		desturberSet();
 		this.manager = manager;
 		addMisc();
-		panel = new GPanelL(0.5, 0.7);
+		panel = new GPanel().setDim(1000, 700);
+		panel.setBig();
 		panel.setCloseAction(new ACTION() {
 			@Override
 			public void exe() {
@@ -51,7 +53,7 @@ public class IDebugPanelAbs extends Interrupter{
 				
 			}
 		});
-		
+		panel.setTitle("Debugger Panel", UI.FONT().H2);
 		section.add(panel);
 		
 		
@@ -59,12 +61,10 @@ public class IDebugPanelAbs extends Interrupter{
 
 		section.body().centerIn(C.DIM());
 		
-		RECTANGLE bounds = panel.getInnerArea();
+		RECTANGLE bounds = panel.inner();
 		fc.body().moveX1Y1(bounds.x1(), bounds.y1()+20);
 		section.add(fc);
-		RENDEROBJ title = new GText(UI.FONT().H2, "Debugger Panel").lablify().r(DIR.C);
-		panel.centreTitle(title);
-		section.add(title);
+		
 		hash.clear();
 		current.init(0);
 		
@@ -124,14 +124,14 @@ public class IDebugPanelAbs extends Interrupter{
 		@SuppressWarnings("unchecked")
 		Type(TreeMap<CharSequence, CLICKABLE> items){
 			this.items = (TreeMap<String, CLICKABLE>) items.clone();
-			next = new GButt.Icon(SPRITES.icons().m.arrow_right) {
+			next = new GButt.ButtPanel(SPRITES.icons().m.arrow_right) {
 				@Override
 				protected void clickA() {
 					prev.activeSet(true);
 					init(itemLast);
 				};
 			};
-			prev = new GButt.Icon(SPRITES.icons().m.arrow_left) {
+			prev = new GButt.ButtPanel(SPRITES.icons().m.arrow_left) {
 				@Override
 				protected void clickA() {
 					next.activeSet(true);
@@ -144,7 +144,7 @@ public class IDebugPanelAbs extends Interrupter{
 			this.itemCount = 0;
 			this.itemLast = first;
 			super.clear();
-			RECTANGLE bounds = panel.getInnerArea();
+			RECTANGLE bounds = panel.inner();
 			body().moveX1Y1(bounds.x1(), fc.body().y2()+10);
 			int x1 = body().x1();
 			int y1 = body().y1();
@@ -155,7 +155,7 @@ public class IDebugPanelAbs extends Interrupter{
 			int cols = 0;
 			
 			for (java.util.Map.Entry<String, CLICKABLE> c : items.entrySet()) {
-				if (filter.text().length() == 0 || c.getKey().contains(filter.text())) {
+				if (filter.text().length() == 0 || Str.containsText(c.getKey(), filter.text())) {
 					i++;
 					if (i < first)
 						continue;

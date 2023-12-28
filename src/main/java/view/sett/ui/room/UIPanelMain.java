@@ -7,29 +7,38 @@ import init.D;
 import init.race.RACES;
 import init.race.Race;
 import init.sprite.SPRITES;
+import init.sprite.UI.UI;
+import settlement.entity.EntityIterator;
 import settlement.entity.humanoid.HTYPE;
+import settlement.entity.humanoid.Humanoid;
 import settlement.main.SETT;
-import settlement.room.main.*;
+import settlement.room.main.RoomBlueprintImp;
+import settlement.room.main.RoomBlueprintIns;
 import settlement.room.main.category.RoomCategories.RoomCategoryMain;
+import settlement.room.main.employment.RoomEmployment;
+import settlement.room.main.employment.RoomEquip;
 import settlement.stats.STATS;
-import settlement.stats.StatsEquippables;
-import settlement.stats.StatsEquippables.StatEquippableWork;
 import snake2d.SPRITE_RENDERER;
 import snake2d.util.datatypes.DIR;
 import snake2d.util.gui.GUI_BOX;
 import snake2d.util.gui.GuiSection;
 import snake2d.util.gui.renderable.RENDEROBJ;
 import snake2d.util.sprite.SPRITE;
+import util.data.INT;
+import util.data.INT.IntImp;
 import util.dic.DicMisc;
+import util.dic.DicTime;
 import util.gui.misc.*;
+import util.gui.table.GStaples;
 import util.info.GFORMAT;
+import util.statistics.HISTORY_INT;
 import view.interrupter.ISidePanel;
 import view.main.VIEW;
 
 final class UIPanelMain extends ISidePanel {
 
 	final UIPanelWorkPrio work = new UIPanelWorkPrio();
-	private final UIPanelWorkTools[] tools = new UIPanelWorkTools[STATS.EQUIP().work().size()];
+	private final UIPanelWorkTools[] tools = new UIPanelWorkTools[SETT.ROOMS().employment.tools.ALL.size()];
 
 	public UIPanelMain(UIRoom[] rooms) {
 
@@ -52,6 +61,7 @@ final class UIPanelMain extends ISidePanel {
 
 				@Override
 				public void hoverInfoGet(GBox b) {
+					b.title(STATS.WORK().EMPLOYED.stat().info().name);
 					b.textL(DicMisc.¤¤Needed);
 					b.tab(5);
 					b.add(GFORMAT.iBig(b.text(), ROOMS().employment.NEEDED.get()));
@@ -82,10 +92,12 @@ final class UIPanelMain extends ISidePanel {
 					b.NL();
 				};
 
-			}.hv(STATS.WORK().EMPLOYED.stat().info().name));
+			}.hh(UI.icons().s.hammer));
 			
-			temp.addRightC(48, new GStat() {
+			temp.addRightC(90, new GStat() {
 
+				CharSequence title = D.g("Odd-jobbers");
+				
 				@Override
 				public void update(GText text) {
 					int am = 0;
@@ -96,81 +108,127 @@ final class UIPanelMain extends ISidePanel {
 					if (am < 0)
 						am = 0;
 					GFORMAT.i(text, am);
+					
 				}
 				
 				@Override
 				public void hoverInfoGet(GBox b) {
 					b.NL();
-					
+					b.title(title);
 					for (Race r: RACES.all()) {
 						b.textL(r.info.names);
 						b.tab(5);
 						b.add(GFORMAT.i(b.text(), STATS.WORK().workforce(r) - STATS.WORK().EMPLOYED.stat().data().get(r)));
 						b.NL();
 					}
+					
+					INT.IntImp ii = new IntImp();
+					
+					new EntityIterator.Humans() {
 						
+						@Override
+						protected boolean processAndShouldBreakH(Humanoid h, int ie) {
+							if (h.indu().hType().works)
+								ii.inc(1);
+							return false;
+						}
+					}.iterate();
+					
 				};
 				
-			}.hv(D.g("Odd-jobbers")).hoverInfoSet(D.g("OddjobbersD",
+			}.hh(UI.icons().s.human).hoverInfoSet(D.g("OddjobbersD",
 					"If your workforce is greater than what is needed, the surplus workers are odd-jobbers and will build and do odd jobs over your entire city map. If this number is negative you are missing workers to employ, and need to review your rooms. Ill employed rooms will function poorly.")));
 
+			
+			temp.addRightC(90, new GButt.ButtPanel(DicMisc.¤¤Priority) {
+				@Override
+				protected void clickA() {
+					last().add(work, false);
+				}
+			}.icon(SPRITES.icons().m.arrow_up));
+
+			
+			
 			section.addRelBody(0, DIR.S, temp);
+		}
+		
+		{
+			HISTORY_INT em = SETT.ROOMS().employment.hEmployed();
+			GStaples chart = new GStaples(em.historyRecords()) {
+				
+				@Override
+				protected void hover(GBox box, int stapleI) {
+					
+					box.title(STATS.WORK().EMPLOYED.stat().info().name);
+					
+					int ii = em.historyRecords()-stapleI - 1;
+					GText t = box.text();
+					DicTime.setDaysAgo(t, ii);
+					t.adjustWidth();
+					box.add(t.lablify());
+					box.NL();
+					box.add(GFORMAT.i(box.text(), em.get(ii)));
+					box.NL(8);
+				
+					
+					if (stapleI > 0) {
+						for (RoomEmployment e : SETT.ROOMS().employment.ALL()) {
+							int now = e.history().get(ii);
+							int delta = now -  e.history().get(ii+1);
+							if (delta != 0) {
+								box.add(e.blueprint().iconBig().small);
+								box.textLL(e.blueprint().info.names);
+								box.tab(7);
+								box.add(GFORMAT.iIncr(box.text(), delta));
+								box.NL();
+							}
+						}
+					}
+					
+				}
+				
+				@Override
+				protected double getValue(int stapleI) {
+					return em.get(em.historyRecords()-stapleI - 1);
+				}
+			};
+			chart.normalize(true);
+			
+			chart.body().setWidth(410).setHeight(80);
+			
+			section.addRelBody(8, DIR.S, chart);
 		}
 
 		{
 			GuiSection equip = new GuiSection();
 			
 			int k = 0;
-			{
-				GuiSection temp = new GuiSection();
-				
-				temp.addRightC(32, new GButt.ButtPanel(DicMisc.¤¤Priority) {
-					@Override
-					protected void clickA() {
-						last().add(work, false);
-					}
-				}.icon(SPRITES.icons().m.arrow_up));
-
-				
-				equip.add(temp, (k%2)*128, (k/2)*32);
-				k++;
-			}
 			
-			for (StatEquippableWork w : STATS.EQUIP().work()) {
-				tools[w.tIndex] = new UIPanelWorkTools(w);
+			for (RoomEquip w : SETT.ROOMS().employment.tools.ALL) {
+				tools[w.index()] = new UIPanelWorkTools(w);
 				RENDEROBJ o = new GButt.ButtPanel(new GStat() {
 					
 					@Override
 					public void update(GText text) {
-						int current = w.stat().data().get(null);
-						current += SETT.ROOMS().STOCKPILE.tally().amountTotal(w.resource());
-						int needed = 0;
-						for (RoomEmployment p : SETT.ROOMS().employment.ALL()) {
-							if (w.target(p) > 0)
-								needed += w.target(p)*p.neededWorkers();
-						}
-						GFORMAT.iofkInv(text, current, needed);
+						GFORMAT.iofkInv(text, w.currentTotal(), w.neededTotal());
 					}
 				}) {
 					@Override
 					protected void clickA() {
-						last().add(tools[w.tIndex], false);
+						last().add(tools[w.index()], false);
 					}
 					
 					@Override
 					public void hoverInfoGet(GUI_BOX text) {
 						GBox b = (GBox) text;
-						b.title(w.resource.names);
-						b.text(w.stat().info().desc);
-						b.NL(8);
+						b.add(w.info);
 						
-						b.textL(StatsEquippables.¤¤WearRate);
-						b.add(GFORMAT.perc(b.text(), w.wearRate));
-						b.NL();
-						b.text(StatsEquippables.¤¤WearRateD);
+						b.sep();
+						w.boosts.hover(text, 1.0, -1);
+						
 					}
 					
-				} .setDim(124, 24+8).icon(w.resource().icon());
+				} .setDim(124, 24+8).icon(w.resource.icon());
 				
 				equip.add(o, (k%2)*140, (k/2)*32);
 				k++;
@@ -259,8 +317,8 @@ final class UIPanelMain extends ISidePanel {
 
 	}
 	
-	public void open(StatEquippableWork w) {
-		VIEW.s().panels.add(tools[w.tIndex], true);
+	public void open(RoomEquip w) {
+		VIEW.s().panels.add(tools[w.index()], true);
 	}
 
 

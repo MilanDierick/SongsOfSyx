@@ -1,6 +1,10 @@
 package util.data;
 
-import util.data.BOOLEAN_OBJECT.BOOLEAN_OBJECTE;
+import java.io.IOException;
+
+import snake2d.util.file.FileGetter;
+import snake2d.util.file.FilePutter;
+import util.data.BOOLEANO.BOOLEAN_OBJECTE;
 import util.data.DOUBLE_O.DOUBLE_OE;
 import util.data.INT_O.INT_OE;
 import util.data.LONG_O.LONG_OE;
@@ -25,13 +29,13 @@ public abstract class DataOL<T> {
 		}else if(max <= 0b011) {
 			return new DataCrumb();
 		}else if (max <= 0b01111) {
-			return new DataNibble();
+			return new DataNibble(max);
 		}else if(max <= 0b011111111) {
-			return new DataByte();
+			return new DataByte(max);
 		}else if(max <= 0x0FFFF) {
-			return new DataShort();
+			return new DataShort(null, max);
 		}else if(max <= 0x0FFFFFFFF){
-			return new DataInt();
+			return new DataInt(null, max);
 		}
 		return new DataInt();
 	}
@@ -45,6 +49,21 @@ public abstract class DataOL<T> {
 	private final Count cCrumb = new Count(2, cNibble);
 	private final Count cBit = new Count(1, cCrumb);
 	
+	public void merge(DataOL<T> other) {
+		for (int i = 0; i < other.cInt.count-1; i++)
+			cInt.count();
+		for (int i = 0; i < other.cShort.count-1; i++)
+			cShort.count();
+		for (int i = 0; i < other.cByte.count-1; i++)
+			cByte.count();
+		for (int i = 0; i < other.cNibble.count-1; i++)
+			cNibble.count();
+		for (int i = 0; i < other.cCrumb.count-1; i++)
+			cCrumb.count();
+		for (int i = 0; i < other.cBit.count-1; i++)
+			cBit.count();
+		
+	}
 	
 	private class Count {
 		
@@ -132,6 +151,8 @@ public abstract class DataOL<T> {
 		
 		@Override
 		public void set(T t, int s) {
+			if (s < min(t) || s > max(t))
+				throw new RuntimeException(s + " " + min(t) + " " + max(t));
 			long c = mask;
 			s &= mask;
 			data(t)[iLong] &= ~(mask<<scroll);
@@ -205,6 +226,10 @@ public abstract class DataOL<T> {
 		
 		public DataNibble(CharSequence name, CharSequence desc) {
 			this(new INFO(name, desc), 0x0F);
+		}
+		
+		public DataNibble(CharSequence name, CharSequence desc, int max) {
+			this(new INFO(name, desc), max);
 		}
 		
 		@Override
@@ -337,6 +362,46 @@ public abstract class DataOL<T> {
 		
 	}
 	
+	public class DataShortE implements INT_OE<T>{
+
+		private final DataByte by;
+		private final DataShort sh;
+		private final int max;
+		
+		public DataShortE() {
+			this(0x0FFFFFF);
+		}
+		
+		public DataShortE(int max) {
+			by = new DataByte();
+			sh = new DataShort();
+			this.max = max;
+		}
+		
+		@Override
+		public int get(T t) {
+			return (by.get(t)<<16)+sh.get(t);
+		}
+
+		@Override
+		public int min(T t) {
+			return 0;
+		}
+
+		@Override
+		public int max(T t) {
+			return max;
+		}
+
+		@Override
+		public void set(T t, int v) {
+			int b = (v >> 16)&0x0FF;
+			by.set(t, b);
+			sh.set(t, (v&0xFFFF));
+		}
+		
+	}
+	
 	public class DataInt extends DataAbs implements INT_OE<T>{
 		
 		private final int max;
@@ -457,6 +522,27 @@ public abstract class DataOL<T> {
 			return info;
 		}
 		
+	}
+	
+	public void checkSave(FilePutter p) {
+		p.i(cInt.count);
+		p.i(cShort.count);
+		p.i(cByte.count);
+		p.i(cNibble.count);
+		p.i(cCrumb.count);
+		p.i(cBit.count);
+	}
+	
+	public boolean check(FileGetter p) throws IOException {
+		boolean ret = true;
+
+		ret = ret & p.i() == cInt.count;
+		ret = ret & p.i() == cShort.count;
+		ret = ret & p.i() == cByte.count;
+		ret = ret & p.i() == cNibble.count;
+		ret = ret & p.i() == cCrumb.count;
+		ret = ret & p.i() == cBit.count;
+		return ret;
 	}
 	
 	

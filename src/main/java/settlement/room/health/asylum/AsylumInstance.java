@@ -4,7 +4,6 @@ import init.C;
 import settlement.entity.ENTITY;
 import settlement.entity.humanoid.HEvent;
 import settlement.entity.humanoid.Humanoid;
-import settlement.main.RenderData;
 import settlement.main.SETT;
 import settlement.misc.job.*;
 import settlement.room.industry.module.Industry;
@@ -17,6 +16,7 @@ import settlement.room.main.util.RoomInit;
 import snake2d.Renderer;
 import snake2d.util.datatypes.COORDINATE;
 import snake2d.util.datatypes.DIR;
+import util.rendering.RenderData;
 import util.rendering.ShadowBatch;
 
 final class AsylumInstance extends RoomInstance implements JOBMANAGER_HASER, ROOM_PRODUCER {

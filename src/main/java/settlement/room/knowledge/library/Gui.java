@@ -41,13 +41,13 @@ class Gui extends UIRoomModuleImp<LibraryInstance, ROOM_LIBRARY> {
 				GBox b = (GBox) text;
 				b.text(¤¤TargetD);
 				double m =  blueprint.boostPerStation()*getter.get().employees().employed();
-				double p = IndustryUtil.calcProductionRate(1, null, blueprint.bonus, getter.get());
+				double p = IndustryUtil.calcProductionRate(1, null, blueprint.bonus(), getter.get());
 				p *= m;
 				b.NL();
 				b.add(perc(b.text(), p, m));
 				b.NL(8);
 				
-				IndustryUtil.hoverProductionRate(b, 1, null, blueprint.bonus, getter.get());
+				IndustryUtil.hoverProductionRate(b, 1, null, blueprint.bonus(), getter.get());
 			}
 			
 		};
@@ -56,7 +56,7 @@ class Gui extends UIRoomModuleImp<LibraryInstance, ROOM_LIBRARY> {
 			
 			@Override
 			public void update(GText text) {
-				double p = IndustryUtil.calcProductionRate(1, null, blueprint.bonus, getter.get());
+				double p = IndustryUtil.calcProductionRate(1, null, blueprint.bonus(), getter.get());
 				GFORMAT.perc(text, p, 1);
 				
 			}
@@ -67,7 +67,7 @@ class Gui extends UIRoomModuleImp<LibraryInstance, ROOM_LIBRARY> {
 			@Override
 			public void update(GText text) {
 				double m =  blueprint.boostPerStation()*getter.get().employees().employed();
-				double p = IndustryUtil.calcProductionRate(1, null, blueprint.bonus, getter.get());
+				double p = IndustryUtil.calcProductionRate(1, null, blueprint.bonus(), getter.get());
 				p *= m;
 				perc(text, p, m);
 				

@@ -3,7 +3,6 @@ package settlement.room.service.nursery;
 import settlement.entity.ENTITY;
 import settlement.entity.humanoid.HEvent;
 import settlement.entity.humanoid.Humanoid;
-import settlement.main.RenderData;
 import settlement.main.SETT;
 import settlement.misc.job.JOBMANAGER_HASER;
 import settlement.misc.job.SETT_JOB;
@@ -15,6 +14,7 @@ import settlement.room.main.job.JobPositions;
 import settlement.room.main.util.RoomInit;
 import snake2d.Renderer;
 import snake2d.util.datatypes.COORDINATE;
+import util.rendering.RenderData;
 import util.rendering.ShadowBatch;
 
 final class NurseryInstance extends RoomInstance implements ROOM_PRODUCER, JOBMANAGER_HASER{

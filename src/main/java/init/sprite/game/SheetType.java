@@ -3,6 +3,10 @@ package init.sprite.game;
 import java.io.IOException;
 import java.nio.file.Path;
 
+import game.GAME;
+import init.C;
+import init.paths.PATH;
+import init.paths.PATHS;
 import init.sprite.SPRITES;
 import init.sprite.UI.UICons;
 import settlement.path.AVAILABILITY;
@@ -10,9 +14,11 @@ import snake2d.Errors;
 import snake2d.SPRITE_RENDERER;
 import snake2d.util.color.COLOR;
 import snake2d.util.datatypes.DIR;
+import snake2d.util.file.Json;
 import snake2d.util.file.SnakeImage;
 import snake2d.util.sets.*;
 import snake2d.util.sprite.TILE_SHEET;
+import snake2d.util.sprite.TextureCoords;
 import util.spritecomposer.*;
 import util.spritecomposer.ComposerThings.ITileSheet;
 
@@ -24,6 +30,7 @@ public abstract class SheetType implements INDEXED{
 	public static final cXxX s3x3 = new cXxX(3); 
 	public static final cCombo sCombo = new cCombo(); 
 	public static final cBox sBox = new cBox(); 
+	public static final cTex sTex = new cTex(); 
 	public static final LIST<SheetType> ALL = new ArrayList<>(tall);
 	static {
 		tall = null;
@@ -36,7 +43,7 @@ public abstract class SheetType implements INDEXED{
 	public final int sizeSize;
 	private final int index;
 	private final Sheet dummy;
-	private final boolean defRotates;
+	public final boolean defRotates;
 	
 	private SheetType(String path, int sizeSize, int W, int H, boolean rot){
 		this.path = path;
@@ -48,9 +55,21 @@ public abstract class SheetType implements INDEXED{
 		defRotates = rot;
 	}
 	
-	public abstract TILE_SHEET make(boolean rotate, int amount, int y1) throws IOException;
+	public abstract TILE_SHEET make(int amount, int y1) throws IOException;
 	
-	protected LIST<Sheet> make(Path p, boolean rotates) throws IOException {
+	protected LIST<TILE_SHEET> make(String key, Json error) throws IOException {
+		
+		PATH pp = PATHS.SPRITE_GAME().getFolder(path);
+		
+		if (!pp.exists(key)) {
+			if (error != null) {
+				GAME.WarnLight(error.path());
+			}
+			GAME.WarnLight("The sprite file: " + key + " does not exist in the folder: " + pp.get() + error.path());
+			return new ArrayList<TILE_SHEET>(DUMMY);
+		}
+		
+		Path p = pp.get(key);
 		
 		SnakeImage im = new SnakeImage(p);
 
@@ -65,13 +84,13 @@ public abstract class SheetType implements INDEXED{
 		
 		new ComposerThings.IInit(p, w*W*2, h*H);
 		
-		ArrayList<Sheet> res = new ArrayList<>(h);
+		ArrayList<TILE_SHEET> res = new ArrayList<>(h);
 		
-		rotates &= defRotates;
+		
 		
 		for (int yy = 0; yy < h; yy++) {
-			TILE_SHEET s = make(rotates, w, yy*H);
-			res.add(new Sheet.Imp(this, s, rotates));
+			TILE_SHEET s = make(w, yy*H);
+			res.add(s);
 		}
 		
 		return res;
@@ -102,6 +121,94 @@ public abstract class SheetType implements INDEXED{
 		return index;
 	}
 
+	public static class cTex extends SheetType {
+		
+		cTex(){
+			super("texture", 1, 16+6, 16+6, true);
+		}
+		
+		@Override
+		protected LIST<TILE_SHEET> make(String key, Json error) throws IOException {
+			PATH pp = PATHS.SPRITE_GAME().getFolder(path);
+			
+			if (!pp.exists(key)) {
+				if (error != null) {
+					GAME.WarnLight(error.path());
+				}
+				GAME.WarnLight("The sprite file: " + key + " does not exist in the folder: " + pp.get());
+				return new ArrayList<TILE_SHEET>(DUMMY);
+			}
+			
+			Path p = pp.get(key);
+			
+			SnakeImage im = new SnakeImage(p);
+
+			final int iwidth = im.width/2;
+			final int iheight = im.height;
+			im.dispose();
+			
+			int tilesX = (iwidth-12)/16;
+			
+			if (tilesX*16 + 12 != iwidth)
+				throw new Errors.DataError("Image width does not work. resize", p);
+			
+			int tilesY = iheight/28;
+			if (tilesY*28 != iheight)
+				throw new Errors.DataError("Image height does not work. resize", p);
+		
+			new ComposerThings.IInit(p, iwidth*2, iheight);
+			
+			ArrayList<TILE_SHEET> res = new ArrayList<>(tilesY);
+			
+			for (int i = 0; i < tilesY; i++) {
+				final int k = i;
+				TILE_SHEET s = new ITileSheet() {
+					
+					@Override
+					protected TILE_SHEET init(ComposerUtil c, ComposerSources s, ComposerDests d) {
+						s.full.init(0, 0, 1, tilesY, tilesX, 1, d.s16);
+						s.full.setVar(k).paste(true);
+						return d.s16.saveGame();
+					}
+				}.get();
+				res.add(s);
+			}
+			return res;
+		}
+		
+
+		@Override
+		public int tile(Sheet sheet, SheetData da, int data, int variation, int rotation) {
+			
+			variation &= 0xFFFF;
+			int am = sheet.tiles;
+			if (sheet.hasShadow) {
+				am -= 1;
+			}
+			variation = getVar(variation, am, da.circular);
+			
+			return variation%am;
+		}
+
+		@Override
+		public void renderOverlay(int x, int y, SPRITE_RENDERER r, AVAILABILITY a, int data, int rotation, boolean single) {
+			if (a.player < 0) {
+				SPRITES.cons().BIG.filled.render(r, 0, x, y);
+			}else if (a.from > 1  || a.player > AVAILABILITY.ROOM.player)
+				SPRITES.cons().BIG.dashedThick.render(r, 0, x, y);
+			else
+				SPRITES.cons().BIG.outline.render(r, 0, x, y);
+		}
+
+
+		@Override
+		public TILE_SHEET make(int amount, int y1) throws IOException {
+			// TODO Auto-generated method stub
+			return null;
+		}
+		
+	}
+	
 	public static class c1X1 extends SheetType {
 		
 		c1X1(){
@@ -110,7 +217,20 @@ public abstract class SheetType implements INDEXED{
 		
 		
 		@Override
-		public LIST<Sheet> make(Path p, boolean rotates) throws IOException {
+		public LIST<TILE_SHEET> make(String key, Json error) throws IOException {
+			
+			PATH pp = PATHS.SPRITE_GAME().getFolder(path);
+			
+			if (!pp.exists(key)) {
+				if (error != null) {
+					GAME.WarnLight(error.path());
+				}
+				GAME.WarnLight("The sprite file: " + key + " does not exist in the folder: " + pp.get() + error.path());
+				return new ArrayList<TILE_SHEET>(DUMMY);
+			}
+			
+			Path p = pp.get(key);
+			
 			SnakeImage im = new SnakeImage(p);
 
 			final int iwidth = im.width/2;
@@ -132,23 +252,23 @@ public abstract class SheetType implements INDEXED{
 		
 			new ComposerThings.IInit(p, iwidth*2, iheight);
 			
-			ArrayList<Sheet> res = new ArrayList<>(houses);
+			ArrayList<TILE_SHEET> res = new ArrayList<>(houses);
 			
 			if (houseYs == 1) {
 				for (int yy = 0; yy < houses; yy++) {
-					TILE_SHEET s = make(rotates, tilesX, yy*houseHeight);
-					res.add(new Sheet.Imp(this, s, true));
+					TILE_SHEET s = make(tilesX, yy*houseHeight);
+					res.add(s);
 				}				
 			}else {
 				for (int yy = 0; yy < houses; yy++) {
 					int y = houseHeight*(yy/houseYs);
 					if (yy % houseYs == 0) {
-						TILE_SHEET s = makeFirst(rotates, tilesX, y);
-						res.add(new Sheet.Imp(this, s, true));
+						TILE_SHEET s = makeFirst(tilesX, y);
+						res.add(s);
 					}else {
 						y += 16*(yy % houseYs);
-						TILE_SHEET s = make(rotates, tilesX, y);
-						res.add(new Sheet.Imp(this, s, true));
+						TILE_SHEET s = make(tilesX, y);
+						res.add(s);
 					}
 				}
 			}
@@ -168,21 +288,17 @@ public abstract class SheetType implements INDEXED{
 			throw new Errors.DataError("Image has wrong dimensions. Image height must be a multiple of x*16+6 pixels. x = how many tiles. Yeah, I can't explain it better...", p);
 		}
 		
-		private TILE_SHEET makeFirst(boolean rotate, int w, int y1) throws IOException {
+		private TILE_SHEET makeFirst(int w, int y1) throws IOException {
 			return new ITileSheet() {
 				
 				@Override
 				protected TILE_SHEET init(ComposerUtil c, ComposerSources s, ComposerDests d) {
 					s.full2.init(0, y1, w, 1, 1, 1, d.s16);
 					for (int i = 0; i < w; i++) {
-						if (rotate) {
-							s.full2.setVar(i).pasteRotated(2, true);
-							s.full2.setVar(i).pasteRotated(3, true);
-							s.full2.setVar(i).pasteRotated(0, true);
-							s.full2.setVar(i).pasteRotated(1, true);
-						}
-						else
-							s.full2.setVar(i).pasteRotated(2, true);
+						s.full2.setVar(i).pasteRotated(2, true);
+						s.full2.setVar(i).pasteRotated(3, true);
+						s.full2.setVar(i).pasteRotated(0, true);
+						s.full2.setVar(i).pasteRotated(1, true);
 					}
 					return d.s16.saveGame();
 				}
@@ -190,17 +306,14 @@ public abstract class SheetType implements INDEXED{
 		}
 		
 		@Override
-		public TILE_SHEET make(boolean rotate, int w, int y1) throws IOException {
+		public TILE_SHEET make(int w, int y1) throws IOException {
 			return new ITileSheet() {
 				
 				@Override
 				protected TILE_SHEET init(ComposerUtil c, ComposerSources s, ComposerDests d) {
 					s.full2.init(0, y1, w, 1, 1, 1, d.s16);
 					for (int i = 0; i < w; i++) {
-						if (rotate)
-							s.full2.setVar(i).paste(3, true);
-						else
-							s.full2.setVar(i).paste(true);
+						s.full2.setVar(i).paste(3, true);
 					}
 					return d.s16.saveGame();
 				}
@@ -269,17 +382,14 @@ public abstract class SheetType implements INDEXED{
 		}
 		
 		@Override
-		public TILE_SHEET make(boolean rotate, int w, int y1) throws IOException {
+		public TILE_SHEET make(int w, int y1) throws IOException {
 			return new ITileSheet() {
 				
 				@Override
 				protected TILE_SHEET init(ComposerUtil c, ComposerSources s, ComposerDests d) {
 					s.combo.init(0, y1, w, 1, size, d.s16);
 					for (int i = 0; i < w; i++) {
-						if (rotate)
-							s.combo.setVar(i).paste(3, true);
-						else
-							s.combo.setVar(i).paste(true);
+						s.combo.setVar(i).paste(3, true);
 					}
 						
 					return d.s16.saveGame();
@@ -358,8 +468,8 @@ public abstract class SheetType implements INDEXED{
 		}
 
 		@Override
-		public TILE_SHEET make(boolean rotate, int amount, int y1) throws IOException {
-			return new ITileSheet() {
+		public TILE_SHEET make(int amount, int y1) throws IOException {
+			TILE_SHEET s =  new ITileSheet() {
 				
 				@Override
 				protected TILE_SHEET init(ComposerUtil c, ComposerSources s, ComposerDests d) {
@@ -370,6 +480,10 @@ public abstract class SheetType implements INDEXED{
 					return d.s16.saveGame();
 				}
 			}.get();
+			
+			
+			
+			return s;
 		}
 
 		@Override
@@ -413,15 +527,14 @@ public abstract class SheetType implements INDEXED{
 		}
 
 		@Override
-		public TILE_SHEET make(boolean rotate, int amount, int y1) throws IOException {
+		public TILE_SHEET make(int amount, int y1) throws IOException {
 			return new ITileSheet() {
 				
 				@Override
 				protected TILE_SHEET init(ComposerUtil c, ComposerSources s, ComposerDests d) {
 					s.combo.init(0, y1, amount, 1, 4, d.s16);
-					int ro = rotate ? 1 : 0;
 					for (int i = 0; i < amount; i++)
-						s.combo.setVar(i).paste(ro, true);
+						s.combo.setVar(i).paste(1, true);
 					return d.s16.saveGame();
 				}
 			}.get();
@@ -432,7 +545,9 @@ public abstract class SheetType implements INDEXED{
 			int[] ids = boxI[data];
 			if(ids == null)
 				return 0;
+			
 			data = ids[variation%ids.length];
+			variation = variation >> 4;
 			rotation &= 1;
 			int ss = (16* ((s.hasRotation ? 2 : 1)));
 			int vars = s.tiles/ss;
@@ -458,5 +573,40 @@ public abstract class SheetType implements INDEXED{
 		return dummy;
 	}
 
+	public static final TILE_SHEET DUMMY = new TILE_SHEET() {
+		
+		@Override
+		public int tiles() {
+			return 16;
+		}
+		
+		@Override
+		public int size() {
+			return C.TILE_SIZE;
+		}
+		
+		@Override
+		public void renderTextured(TextureCoords texture, int tile, int x1, int x2, int scale) {
+			// TODO Auto-generated method stub
+			
+		}
+		
+		@Override
+		public void renderTextured(TextureCoords texture, int tile, int x1, int y1) {
+			// TODO Auto-generated method stub
+			
+		}
+		
+		@Override
+		public void render(SPRITE_RENDERER r, int tile, int x1, int x2, int y1, int y2) {
+			COLOR.WHITE100.render(r, x1, x2, y1, y2);
+			
+		}
+		
+		@Override
+		public TextureCoords getTexture(int tile) {
+			return COLOR.WHITE100.texture();
+		}
+	};
 	
 }

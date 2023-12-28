@@ -116,6 +116,13 @@ final class StateManager implements TileGetter<StateManager.State> {
 		if (depth < MAX_DISTANCE)
 			return depth;
 		
+		
+		for (int di = 0; di < DIR.ORTHO.size(); di++) {
+			DIR d = DIR.ORTHO.get(di);
+			if (!IN_BOUNDS(tx, ty, d) || PATH().solidity.is(tx, ty, d))
+				depth+=SETT.TWIDTH;
+		}
+		
 		return depth + getDepthNortho(tx, ty);
 	}
 	
@@ -139,16 +146,8 @@ final class StateManager implements TileGetter<StateManager.State> {
 			}
 		}
 		
-		int am = 0;
-		if (depth == MAX_DISTANCE) {
-			for (int di = 0; di < DIR.ORTHO.size(); di++) {
-				DIR d = DIR.ORTHO.get(di);
-				if (!IN_BOUNDS(tx, ty, d) || PATH().solidity.is(tx, ty, d))
-					am+=SETT.TWIDTH;
-			}
-		}
 		
-		return depth + am;
+		return depth;
 	}
 	
 	public int getDepthNortho(int tx, int ty) {

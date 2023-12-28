@@ -28,8 +28,8 @@ class CORE_INFO{
 	public DisplayMode[] currentdisplays = new DisplayMode[0];
 	public String[] audioDevices;
 	
-	public static CORE_INFO create() {
-		Process p = Proccesser.executeLwjgl(CORE_INFO.class, new String[] {}, new String[] {});
+	public static CORE_INFO cre2ate() {
+		Process p = Proccesser.executeLwjgl(CORE_INFO.class, new String[] {}, new String[] {}, new String[] {});
 		while(p.isAlive())
 			;
 	

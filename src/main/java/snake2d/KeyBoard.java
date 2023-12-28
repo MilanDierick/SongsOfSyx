@@ -94,9 +94,9 @@ public class KeyBoard {
 					if (c == KEYCODES.KEY_BACKSPACE)
 						listener.backspace();
 					if (c == KEYCODES.KEY_LEFT)
-						listener.left();
+						listener.left(GLFW.glfwGetKey(CORE.getGraphics().getWindow(), KEYCODES.KEY_LEFT_SHIFT) == GLFW.GLFW_PRESS);
 					if (c == KEYCODES.KEY_RIGHT)
-						listener.right();
+						listener.right(GLFW.glfwGetKey(CORE.getGraphics().getWindow(), KEYCODES.KEY_LEFT_SHIFT) == GLFW.GLFW_PRESS);
 					if (c == KEYCODES.KEY_DELETE)
 						listener.del();
 				}

@@ -7,6 +7,7 @@ import settlement.main.SETT;
 import settlement.room.infra.admin.ROOM_ADMIN;
 import snake2d.util.file.*;
 import snake2d.util.misc.CLAMP;
+import world.regions.data.RD;
 
 public final class PAdmin {
 
@@ -44,7 +45,7 @@ public final class PAdmin {
 	}
 	
 	public int used() {
-		return FACTIONS.player().kingdom().spentAdmin();
+		return RD.ADMIN().consumed(FACTIONS.player());
 	}
 	
 	public int available() {

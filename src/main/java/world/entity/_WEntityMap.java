@@ -3,10 +3,14 @@ package world.entity;
 import init.C;
 import snake2d.util.datatypes.RECTANGLE;
 import snake2d.util.sets.*;
+import world.WORLD;
+import world.regions.Region;
+import world.regions.WREGIONS;
 
 class _WEntityMap {
 
 	private final _QuadrantArray[][] quadrants;
+	private final WEntity[] region = new WEntity[WREGIONS.MAX];
 	private final int qMaxX;
 	private final int qMaxY;
 	private final int gridSize = C.TILE_SIZE*16;
@@ -40,6 +44,14 @@ class _WEntityMap {
 		
 		quadrants[e.gridY][e.gridX].add(e);
 		
+		e.regionI = -1;
+		Region reg = WORLD.REGIONS().map.get(e.ctx(), e.cty());
+		if (reg != null) {
+			e.regionI = (short) reg.index();
+			WEntity rn = region[reg.index()];
+			region[reg.index()] = e;
+			e.regionNext = rn;
+		}
 	}
 	
 	public void remove(WEntity e){
@@ -49,16 +61,37 @@ class _WEntityMap {
 		
 		quadrants[e.gridY][e.gridX].remove(e);
 		e.gridY = -1;
-		
+		if (e.regionI != -1) {
+			
+			WEntity current = region[e.regionI];
+			region[e.regionI] = null;
+			while(current != null) {
+				if (current != e) {
+					WEntity rn = region[e.regionI];
+					region[e.regionI] = current;
+					WEntity next = current.regionNext;
+					current.regionNext = rn;
+					current = next;
+				}else
+					current = current.regionNext;
+			}
+			e.regionNext = null;
+			e.regionI = -1;
+		}
 	}
 	
+	public WEntity regFirst(Region reg) {
+		return region[reg.index()];
+	}
 
 	public void move(WEntity e) {
 		
 		short gridX = (short) (e.body().x1()/gridSize);
 		short gridY = (short) (e.body().y1()/gridSize);
+		Region reg = WORLD.REGIONS().map.get(e.ctx(), e.cty());
+		int ri = reg == null ? -1 : reg.index();
 		
-		if (e.gridX != gridX || e.gridY != gridY) {
+		if (e.gridX != gridX || e.gridY != gridY || ri != e.regionI) {
 			remove(e);
 			add(e);
 		}
@@ -121,6 +154,8 @@ class _WEntityMap {
 				quadrants[y][x].clear();
 			}
 		}
+		for (int i = 0; i < region.length; i++)
+			region[i] = null;
 	}
 
 	

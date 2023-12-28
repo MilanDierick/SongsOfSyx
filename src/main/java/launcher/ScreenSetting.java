@@ -1,26 +1,30 @@
 
 package launcher;
 
-import static launcher.Resources.*;
-
 import init.C;
-import launcher.LSettings.LSetting;
-import launcher.Resources.GUI;
+import init.D;
+import launcher.GUI.*;
+import launcher.LSettings.LSettingInt;
 import snake2d.*;
 import snake2d.Displays.DisplayMode;
 import snake2d.util.color.COLOR;
 import snake2d.util.color.OPACITY;
 import snake2d.util.datatypes.COORDINATE;
+import snake2d.util.datatypes.DIR;
 import snake2d.util.gui.GuiSection;
 import snake2d.util.gui.clickable.CLICKABLE;
 import snake2d.util.misc.ACTION;
-import snake2d.util.process.Proccesser;
+import snake2d.util.misc.OS;
 import snake2d.util.sprite.SPRITE;
 import snake2d.util.sprite.text.Str;
 import snake2d.util.sprite.text.Text;
 
 class ScreenSetting extends GuiSection{
 
+	{
+		D.gInit(this);
+	}
+	
 	private final Launcher l;
 	
 	private final GuiSection fullScreen = new GuiSection() {
@@ -40,6 +44,15 @@ class ScreenSetting extends GuiSection{
 				super.render(r, ds);
 		}
 	};
+	private final GuiSection borderless  = new GuiSection() {
+		
+		@Override
+		public void render(SPRITE_RENDERER r, float ds) {
+			visableSet(l.s.screenMode.get() == LSettings.screenModeBorderLess);
+			if (visableIs())
+				super.render(r, ds);
+		}
+	};
 	
 	private final ScrollBox content;
 	
@@ -51,75 +64,61 @@ class ScreenSetting extends GuiSection{
 	ScreenSetting(Launcher l){
 		
 		this.l = l;
-		final int m = 5;
 		final int x1 = 40;
 		
-		{
-			SPRITE[] panel = Sprites.smallPanel;
-			add(panel[0], 0, 0);
-			for (int i = 0; i <= 6; i++)
-				addDown(0, panel[1]);
-			addDown(0, panel[2]);
-			
-			
-		}
+		CharSequence sback = D.g("Back");
 		
 		{
-			CLICKABLE c = new CheckBox(l.s.debug, "Debug", "Starts the game in debug mode and will print extra information and diagnostics when enabled at the cost of performance. Helpful when modding.");
-			c.body().moveY1(70);
-			c.body().moveX1(x1);
-			add(c);
 			
-			c = new CheckBox(l.s.developer, "Developer", "Enables powerful tools in game that can be used to test things, or cheat.");
-			c.body().moveY1(getLastY1());
-			c.body().moveX1(x1 + 200);
-			add(c);
+			GuiSection s = new GuiSection();
+			int i = 0;
+			int cols = 5;
+			int wi = 170;
+			int hi = 52;
+			
+			CLICKABLE c = new CheckBox(l.s.debug, D.g("Debug"), D.g("debugD", "Starts the game in debug mode and will print extra information and diagnostics when enabled at the cost of performance. Helpful when modding."));
+			s.addGridD(c, i++, cols, wi, hi, DIR.NW);
+			
+			c = new CheckBox(l.s.developer, D.g("Developer"), D.g("DeveloperD", "Enables powerful tools in game that can be used to test things, or cheat."));
+			s.addGridD(c, i++, cols, wi, hi, DIR.NW);
 			
 
-			c = new CheckBox(l.s.linear, "Linear", "Enables linear filtering when the game is scaled.");
-			c.body().moveY1(getLastY1());
-			c.body().moveX1(x1 + 2*200);
-			add(c);
+			c = new CheckBox(l.s.linear, D.g("Linear"), D.g("LinearD", "Enables linear filtering when the game is scaled."));
+			s.addGridD(c, i++, cols, wi, hi, DIR.NW);
 			
-			if (!Proccesser.isMac()) {
-				c = new CheckBox(l.s.rpc, "RPC", "Enables rich presense, that will send out information to other apps such as discord about your game for others to see.");
-				c.body().moveY1(getLastY1());
-				c.body().moveX1(x1 + 3*200);
-				add(c);
+			if (OS.get() != OS.MAC) {
+				c = new CheckBox(l.s.rpc, D.g("RPC"), D.g("RPCD", "Enables rich presence, that will send out information to other applications such as discord about your game for others to see."));
+				s.addGridD(c, i++, cols, wi, hi, DIR.NW);
 			}
 			
-			c = new CheckBox(l.s.shading, "Shading", "Use normal maps and dynamic lighning");
-			c.body().moveY1(getLastY2());
-			c.body().moveX1(x1 + 0);
-			add(c);
+			c = new CheckBox(l.s.shading, D.g("Shading"), D.g("ShadingD", "Use normal maps and dynamic lightening"));
+			s.addGridD(c, i++, cols, wi, hi, DIR.NW);
 			
-			c = new CheckBox(l.s.vsync, "VSync", "Enables vsync to reduce screen tearing. Can cause conflicts with NVidia GSync in which case it's recommended to turn that off.");
-			c.body().moveY1(getLastY1());
-			c.body().moveX1(x1 + 200);
-			add(c);
+			c = new CheckBox(l.s.vsync, D.g("VSync"), D.g("VSyncD", "Enables vsync to reduce screen tearing. Can cause conflicts with NVidia GSync in which case it's recommended to turn that off."));
+			s.addGridD(c, i++, cols, wi, hi, DIR.NW);
 			
-			c = new CheckBox(l.s.easy, "UI-Easy", "Only works with the default english language. Replaces the fonts with open sans, and tweeks UI colors to make things more clear.");
-			c.body().moveY1(getLastY1());
-			c.body().moveX1(x1 + 2*200);
-			add(c);
-		}
-		
-		
-		{
-			CLICKABLE c;
+			c = new CheckBox(l.s.easy, D.g("UI-Easy"), D.g("UI-EasyD", "Only works with the default english language. Replaces the fonts with open sans, and tweeks UI colors to make things more clear."));
+			s.addGridD(c, i++, cols, wi, hi, DIR.NW);
 			
-			c = new Clicker("Audio", "What audio device to use. If empty, the game can not find a device with openal support. Try fiddling with headphones and jacks if you have a problem.") {
-				private final String none = "none";
-				private final String def = "default";
+			CharSequence none = D.g("none");
+			CharSequence def = D.g("default");
+			
+			SPRITE ss = new SPRITE.Imp(250, l.res.font.height()+12) {
+				Text t = new Text(l.res.font, 64);
+				CharSequence a = D.g("Audio");
+				
+				
 				@Override
-				void set(Text t) {
-					t.set(get());
-					t.setMaxChars(40);
+				public void render(SPRITE_RENDERER r, int X1, int X2, int Y1, int Y2) {
 					
+					t.clear().add(a).add(':').s();
+					t.add(get());
+					t.adjustWidth();
+					t.renderC(r, X1+(X2-X1)/2, Y1+(Y2-Y1)/2);
 				}
-				private double timer = 5;
-				private String get() {
-					String a = l.s.audiodevice;
+				
+				private CharSequence get() {
+					String a = l.s.audiodevice.get();
 					if (a == null) {
 						return none;
 					}else if(a.isEmpty()) {
@@ -139,24 +138,16 @@ class ScreenSetting extends GuiSection{
 
 					
 				}
-				
-				@Override
-				protected void render(SPRITE_RENDERER r, float ds, boolean isActive, boolean isSelected,
-						boolean isHovered) {
-					super.render(r, ds, isActive, isSelected, isHovered);
-					timer-= ds;
-					if (timer < 0) {
-						timer = 5;
-						SoundDevices.refresh();
-					}
-				}
+			};
+			
+			c = new GUI.Button(ss) {
 				
 				@Override
 				protected void clickA() {
 					GuiSection mFullScreens = new GuiSection();
 					ScrollBox content = new ScrollBox(Sett.HEIGHT-100);
 					
-					CLICKABLE up = new GUI.Button.Sprite(Sprites.arrowUpDown[0]).clickActionSet(new ACTION() {
+					CLICKABLE up = new BSprite(l.res.arrowUpDown[0]).clickActionSet(new ACTION() {
 						@Override
 						public void exe() {
 							content.scrollUp();
@@ -165,7 +156,7 @@ class ScreenSetting extends GuiSection{
 					mFullScreens.add(up);
 					
 					
-					CLICKABLE down = new GUI.Button.Sprite(Sprites.arrowUpDown[1]).clickActionSet(new ACTION() {
+					CLICKABLE down = new BSprite(l.res.arrowUpDown[1]).clickActionSet(new ACTION() {
 						@Override
 						public void exe() {
 							content.scrollDown();
@@ -177,27 +168,27 @@ class ScreenSetting extends GuiSection{
 					content.addNavButts(up, down);
 					content.body().moveX1Y1(30, 0);
 					
-					content.add(new GUI.Button.Text("none").clickActionSet(new ACTION() {
+					content.add(new BText(l.res, none).clickActionSet(new ACTION() {
 						@Override
 						public void exe() {
-							l.s.audiodevice = null;
+							l.s.audiodevice.set(null);
 							message = null;
 						}
 					}));
 					
-					content.add(new GUI.Button.Text("default").clickActionSet(new ACTION() {
+					content.add(new BText(l.res, def).clickActionSet(new ACTION() {
 						@Override
 						public void exe() {
-							l.s.audiodevice = "";
+							l.s.audiodevice.set("");
 							message = null;
 						}
 					}));
 					
 					for (String s : SoundDevices.get()) {
-						content.add(new GUI.Button.Text(s).clickActionSet(new ACTION() {
+						content.add(new BText(l.res, s).clickActionSet(new ACTION() {
 							@Override
 							public void exe() {
-								l.s.audiodevice = s;
+								l.s.audiodevice.set(s);
 								message = null;
 							}
 						}));
@@ -205,7 +196,7 @@ class ScreenSetting extends GuiSection{
 					
 					mFullScreens.add(content);
 					
-					CLICKABLE can = new GUI.Button.Text("CANCEL") {
+					CLICKABLE can = new BText(l.res, D.g("Back")) {
 						@Override
 						protected void clickA() {
 							message = null;
@@ -221,50 +212,25 @@ class ScreenSetting extends GuiSection{
 					
 					message = mFullScreens;
 				}
-				
 			};
+			c.hoverInfoSet(D.g("audioD", "What audio device to use. If empty, the game can not find a device with openal support. Try fiddling with headphones and jacks if you have a problem."));
+			
+			s.addGridD(c, i++, cols, wi, hi, DIR.NW);
 			
 			
-			add(c, x1+280, getLastY2()+m);
 			
-			
-//			c = new Multi(l.s.audioDevice, "AUDIO", "What audio device to use. If empty, the game can not find a device with openal support. Try fiddling with headphones and jacks if you have a problem.", 400) {
-//				private double timer = 5;
-//				private String none = "none";
-//				@Override
-//				public void setValue(Text v, LSetting s) {
-//					if (s.get() == 0) {
-//						v.set(none);
-//					}else {
-//						int i = s.get()-1;
-//						if (i < 0 || i >= SoundDevices.get().size())
-//							v.set(none);
-//						else
-//							v.set(SoundDevices.get().get(i));
-//						
-//					}
-//				}
-//				
-//				@Override
-//				public void render(SPRITE_RENDERER r, float ds) {
-//					timer-= ds;
-//					if (timer < 0) {
-//						timer = 5;
-//						SoundDevices.refresh();
-//					}
-//					super.render(r, ds);
-//				}
-//			};
-//			c.body().moveY1(getLastY1());
-//			c.body().moveX1(x1+280);
-//			add(c);
+			add(s, 0, 0);
 			
 
+			
 		}
 		
 		{
 			
-			CLICKABLE c = new Multi(l.s.screenMode, "Screen", "The type of display to be created for the game.", 200) {
+			GuiSection s = new GuiSection();
+			
+			
+			CLICKABLE c = new Multi(l.s.screenMode, D.g("Screen"), D.g("ScreedD", "The type of display to be created for the game."), 200) {
 				int i = -1;
 				
 				@Override
@@ -276,23 +242,22 @@ class ScreenSetting extends GuiSection{
 					super.render(r, ds);
 				}
 				
-				private String[] vs = new String[] {
-					"Borderless",
-					"Full",
-					"Windowed"
+				private CharSequence[] vs = new CharSequence[] {
+					D.g("Borderless"),
+					D.g("Full"),
+					D.g("Windowed")
 				};
 				
 				@Override
-				public void setValue(Text v, LSetting s) {
+				public void setValue(Text v, LSettingInt s) {
 					v.add(vs[s.get()]);
 				}
 				
 			};
-			c.body().moveY1(getLastY2()+m*3);
-			c.body().moveX1(x1);
-			add(c);
+
+			s.add(c);
 			
-			c = new Multi(l.s.monitor, "Monitor", "Which monitor to start the game in.") {
+			c = new Multi(l.s.monitor, D.g("Monitor"), D.g("MonitorD", "Which monitor to start the game in.")) {
 				int i = -1;
 				
 				@Override
@@ -305,38 +270,51 @@ class ScreenSetting extends GuiSection{
 				}
 				
 			};
-			c.body().moveY1(getLastY1());
-			c.body().moveX1(x1 + 450);
-			add(c);
+			s.addRightC(16, c);
 			
+			s.addRelBody(8, DIR.S, new SPRITE.Imp(800, 2) {
+				
+				@Override
+				public void render(SPRITE_RENDERER r, int X1, int X2, int Y1, int Y2) {
+					COLOR.WHITE65.render(r, x1, X2, Y1, Y2);
+				}
+			});
 			
+			addRelBody(8, DIR.S, s);
 		}
 		
 		{
 		
-			CLICKABLE b = new Clicker("Resolution", "What resolution to use in full screen mode") {
+			SPRITE ss = new SPRITE.Imp(400, l.res.font.height()+12) {
+				Text t = new Text(l.res.font, 64);
+				CharSequence a = D.g("Resolution");
 				
 				@Override
-				void set(Text t) {
-					t.clear();
+				public void render(SPRITE_RENDERER r, int X1, int X2, int Y1, int Y2) {
+					
+					t.clear().add(a).add(':').s();
+
 					DisplayMode d = Displays.available(l.s.monitor.get()).get(l.s.fullScreenDisplay.get());
 					t.add(d.width).add(' ').add('x').add(' ').add(d.height).add(' ').add('@').add(d.refresh).add('H').add('z');
+					t.adjustWidth();
+					t.renderC(r, X1+(X2-X1)/2, Y1+(Y2-Y1)/2);
 				}
-				
+			};
+			
+			CLICKABLE b = new GUI.Button(ss) {
+
 				@Override
 				protected void clickA() {
 					message = mFullScreens;
 				}
 			};
+			b.hoverInfoSet(D.g("ResolutionD", "What resolution to use in full screen mode"));
 			
 
 			fullScreen.addRightC(32, b);
-			CLICKABLE d = new CheckBox(l.s.fill, "Fill", "Stretches the defined window over the whole screen.");
-			d.body().moveX1(3*200);
-			fullScreen.add(d, 3*200, 0);
 			
 			
-			fullScreen.body().moveY1(getLastY2()+m);
+			fullScreen.body().moveY1(getLastY2()+16);
 			fullScreen.body().moveX1(x1);
 			
 			add(fullScreen);
@@ -344,7 +322,7 @@ class ScreenSetting extends GuiSection{
 			mFullScreens = new GuiSection();
 			content = new ScrollBox(Sett.HEIGHT-100);
 			
-			CLICKABLE up = new GUI.Button.Sprite(Sprites.arrowUpDown[0]).clickActionSet(new ACTION() {
+			CLICKABLE up = new BSprite(l.res.arrowUpDown[0]).clickActionSet(new ACTION() {
 				@Override
 				public void exe() {
 					content.scrollUp();
@@ -353,7 +331,7 @@ class ScreenSetting extends GuiSection{
 			mFullScreens.add(up);
 			
 			
-			CLICKABLE down = new GUI.Button.Sprite(Sprites.arrowUpDown[1]).clickActionSet(new ACTION() {
+			CLICKABLE down = new BSprite(l.res.arrowUpDown[1]).clickActionSet(new ACTION() {
 				@Override
 				public void exe() {
 					content.scrollDown();
@@ -366,7 +344,7 @@ class ScreenSetting extends GuiSection{
 			content.body().moveX1Y1(30, 0);
 			mFullScreens.add(content);
 			
-			CLICKABLE can = new GUI.Button.Text("CANCEL") {
+			CLICKABLE can = new BText(l.res, sback) {
 				@Override
 				protected void clickA() {
 					message = null;
@@ -386,58 +364,92 @@ class ScreenSetting extends GuiSection{
 		
 		
 		{
-			CLICKABLE c = new Multi(l.s.windowWidth, "Width", "The width of the window") {
+			CLICKABLE c = new Multi(l.s.windowWidth, D.g("Width"), D.g("widthD", "The width of the window")) {
 				
 				@Override
-				public void setValue(Text v, LSetting s) {
+				public void setValue(Text v, LSettingInt s) {
 					v.add((int)(s.getD()*100));
 					v.add('%');
 				}
 			};
 			windowed.add(c);
 			c = new Multi(
-					l.s.windowHeight, "Height", "The height of the window") {
+					l.s.windowHeight, D.g("Height"), D.g("HeightD", "The height of the window")) {
 				@Override
-				public void setValue(Text v, LSetting s) {
+				public void setValue(Text v, LSettingInt s) {
 					v.add((int)(s.getD()*100));
 					v.add('%');
 				}
 			};
 			windowed.addDown(0, c);
 			
-			
-			CLICKABLE d = new CheckBox(l.s.fill, "Fill", "Stretches the defined window over the whole screen.");
-			d.body().moveX1(3*200);
-			windowed.add(d);
+			CLICKABLE d;
+//			CLICKABLE d = new CheckBox(l.s.fill, "Fill", "Stretches the defined window over the whole screen.");
+//			d.body().moveX1(3*200);
+//			windowed.add(d);
 			windowed.body().moveY1(getLastY1());
 			windowed.body().moveX1(x1);
 			
-			d = new CheckBox(l.s.decorated, "Borders", "Use borders and system decoration on the window");
-			windowed.addDown(0, d);
+			d = new CheckBox(l.s.decorated, D.g("Borders"), D.g("BorderD", "Use borders and system decoration on the window"));
+			windowed.addRelBody(16, DIR.E, d);
 			
 			add(windowed);
 		}
+		
+		{
+			
+			CLICKABLE c = new Multi(l.s.windowBorderLessScale, D.g("Scale"), D.g("ScaleD", "The scale of the game. Choose a bigger scale if the game is too small for you.")) {
+				
+				@Override
+				public void setValue(Text v, LSettingInt s) {
+					v.add((int)(100 + s.getD()*100));
+					v.add('%');
+				}
+			};
+			borderless.add(c);
+			
+			borderless.body().moveY1(getLastY1());
+			borderless.body().moveX1(x1);
+			
+			
+			add(borderless);
+		}
 
+		{
+			GuiSection s = new GuiSection();
+			s.body().setWidth(Sett.WIDTH);
+
+			CLICKABLE b;
+			b = new BText(l.res, sback).clickActionSet(new ACTION() {
+				@Override
+				public void exe() {
+					exit();
+				}
+			});
+			b.body().moveX2(Sett.WIDTH-16);
+			s.add(b);
+			
+			b = new BText(l.res, D.g("Reset")).clickActionSet(new ACTION() {
+				@Override
+				public void exe() {
+					l.s.setDefault();
+				}
+			});
+			b.body().moveX2(s.getLastX1()-8);
+			s.add(b);
+			s.addCentredY(new GUI.Header(l.res, D.g("Settings")), 16);
+			
+			
+			addRelBody(16, DIR.N, s);
+			
+			
+		}
 		
-		CLICKABLE b = new GUI.Button.Text("RESET").clickActionSet(new ACTION() {
-			@Override
-			public void exe() {
-				l.s.setDefault();
-			}
-		});
-		b.body().moveX1(550).moveY2(body().y2()-30);
-		add(b);
 		
-		b = new GUI.Button.Text("BACK").clickActionSet(new ACTION() {
-			@Override
-			public void exe() {
-				exit();
-			}
-		});
-		b.body().moveX1(getLastX2() + 40).moveY2(getLastY2());
-		add(b);
+		
 		
 		body().centerIn(0, Sett.WIDTH, 0, Sett.HEIGHT);
+		body().moveY1(16);
 		settResolutions();
 		
 	}
@@ -462,7 +474,7 @@ class ScreenSetting extends GuiSection{
 		}
 		final COLOR c2 = c;
 		
-		CLICKABLE b = new GUI.Button.Text(Displays.available(l.s.monitor.get()).get(i).toString()) {
+		CLICKABLE b = new BText(l.res, Displays.available(l.s.monitor.get()).get(i).toString()) {
 			
 			@Override
 			protected void clickA() {
@@ -498,10 +510,13 @@ class ScreenSetting extends GuiSection{
 	
 	@Override
 	public void render(SPRITE_RENDERER r, float ds) {
+		OPACITY.O75.bind();
+		COLOR.BLACK.render(r, 0, Sett.WIDTH, 0, Sett.HEIGHT);
+		OPACITY.unbind();
 		super.render(r, ds);
 		if (hoverInfo.length() != 0) {
-			Gui.c_label.bind();
-			Sprites.font.render(r, hoverInfo, 40, 300, 450, 1);
+			GUI.c_label.bind();
+			l.res.font.render(r, hoverInfo, 16, 350, Sett.WIDTH-32, 1);
 			hoverInfo.clear();
 		}
 		if (message != null){
@@ -531,61 +546,12 @@ class ScreenSetting extends GuiSection{
 		
 	};
 	
-	private abstract class Clicker extends CLICKABLE.ClickableAbs{
+	private class CheckBox extends BText{
 
-		private final SPRITE s;
-		private Text t = new Text(Sprites.font, 64).setScale(1.5);
-
-		Clicker(String name, String desc) {
-			this.s = new Text(Sprites.font, name).setScale(1.5);
-			hoverInfoSet(desc);
-			body.setHeight(s.height());
-		}
-		
-		@Override
-		protected void render(SPRITE_RENDERER r, float ds, boolean isActive,
-				boolean isSelected, boolean isHovered) {
-			
-			set(t);
-			t.adjustWidth();
-			body.setWidth(s.width() + 10 + t.width());
-			
-			
-			if (!isActive)
-				Gui.c_inactive.bind();
-			else if (isHovered && isSelected)
-				Gui.c_hover_selected.bind();
-			else if (isHovered)
-				Gui.c_hover.bind();
-			else if (isSelected)
-				Gui.c_selected.bind();
-			s.render(r, body.x1(), body.y1());
-			t.renderCY(r, body().x1()+s.width()+10, body().cY());
-			COLOR.unbind();
-
-		}
-		
-		@Override
-		public boolean hover(COORDINATE mCoo) {
-			if (super.hover(mCoo) && this.hoverInfo != null) {
-				ScreenSetting.this.hoverInfo.add(this.hoverInfo);
-				return true;
-			}
-			return false;
-		}
-		
-		abstract void set(Text t);
-	}
-	
-	private class CheckBox extends CLICKABLE.ClickableAbs{
-
-		private final SPRITE s;
-		private final LSetting b;
-
-		CheckBox(LSetting b, String name, String desc) {
+		private final LSettingInt b;
+		CheckBox(LSettingInt b, CharSequence name, CharSequence desc) {
+			super(l.res, name, 150);
 			this.b = b;
-			this.s = new Text(Sprites.font, name).setScale(1.5);
-			body.setWidth(Sprites.checkBox1.width() + 10 + s.width()).setHeight(s.height());
 			hoverInfoSet(desc);
 		}
 		
@@ -599,23 +565,8 @@ class ScreenSetting extends GuiSection{
 				boolean isSelected, boolean isHovered) {
 			
 			isSelected = b.get() == 1;
+			super.render(r, ds, isActive, isSelected, isHovered);
 			
-			SPRITE box = isSelected ? Sprites.checkBox2 : Sprites.checkBox1;
-			int y1 = (s.height()-box.height())/2;
-			box.render(r, body.x1(), body.y1()+y1);
-			
-			
-			if (!isActive)
-				Gui.c_inactive.bind();
-			else if (isHovered && isSelected)
-				Gui.c_hover_selected.bind();
-			else if (isHovered)
-				Gui.c_hover.bind();
-			else if (isSelected)
-				Gui.c_selected.bind();
-			s.render(r, body.x1()+box.width()+10, body.y1());
-			COLOR.unbind();
-
 		}
 		
 		@Override
@@ -632,8 +583,8 @@ class ScreenSetting extends GuiSection{
 	private class Multi extends GuiSection{
 
 		private final SPRITE s;
-		private final Text value = new Text(Sprites.font, 100).setScale(1.5);
-		private final CLICKABLE left = new GUI.Button.Sprite(Sprites.arrowLR[0]) {
+		private final Text value = new Text(l.res.font, 100);
+		private final CLICKABLE left = new BSprite(l.res.arrowLR[0]) {
 			@Override
 			protected void clickA() {
 				b.inc(-1);
@@ -644,7 +595,7 @@ class ScreenSetting extends GuiSection{
 				activeSet(b.get() > b.min());
 			};
 		};
-		private final CLICKABLE right = new GUI.Button.Sprite(Sprites.arrowLR[1]) {
+		private final CLICKABLE right = new BSprite(l.res.arrowLR[1]) {
 			@Override
 			protected void clickA() {
 				b.inc(1);
@@ -656,22 +607,22 @@ class ScreenSetting extends GuiSection{
 			};
 		};
 		
-		private final LSetting b;
+		private final LSettingInt b;
 		private int width;
-		private String desc;
+		private CharSequence desc;
 		
-		Multi(LSetting b, String name, String desc) {
+		Multi(LSettingInt b, CharSequence name, CharSequence desc) {
 			this(b, name, desc, 100);
 		}
 		
-		Multi(LSetting b, String name, String desc, int w) {
+		Multi(LSettingInt b, CharSequence name, CharSequence desc, int w) {
 			this.b = b;
-			s = new snake2d.util.sprite.text.Text(Sprites.font, name).setScale(1.5);
+			s = new snake2d.util.sprite.text.Text(l.res.font, name);
 			add(s, 0, 0);
 			hoverInfoSet(desc);
 			this.desc = desc;
-			width = w;
-			addRightC(25,left);
+			width = 180;
+			addRightCAbs(120,left);
 			addRightC(width, right);
 		}
 		
@@ -681,11 +632,11 @@ class ScreenSetting extends GuiSection{
 			setValue(value, b);
 			value.adjustWidth();
 			int dx = (width-value.width())/2;
-			value.render(r, left.body().x2()+dx, body().y1());
+			value.renderCY(r, left.body().x2()+dx, body().cY());
 			super.render(r, ds);
 		}
 		
-		public void setValue(Text v, LSetting s) {
+		public void setValue(Text v, LSettingInt s) {
 			v.add(s.get());
 		}
 		

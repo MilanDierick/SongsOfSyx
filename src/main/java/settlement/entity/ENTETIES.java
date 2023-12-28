@@ -5,6 +5,7 @@ import static settlement.main.SETT.*;
 import java.io.IOException;
 
 import game.GAME;
+import game.Profiler;
 import init.C;
 import init.sprite.SPRITES;
 import settlement.entity.animal.Animal;
@@ -20,6 +21,7 @@ import snake2d.util.color.COLOR;
 import snake2d.util.datatypes.*;
 import snake2d.util.file.FileGetter;
 import snake2d.util.file.FilePutter;
+import snake2d.util.map.MAP_BOOLEAN;
 import snake2d.util.sets.*;
 import util.rendering.ShadowBatch;
 import view.sett.IDebugPanelSett;
@@ -50,7 +52,10 @@ public class ENTETIES extends SettResource{
 	private final ArrayList<ENTITY> temp = new ArrayList<ENTITY>(3000);
 	private final Rec lWin = new Rec();
 	
+	public final MAP_BOOLEAN submerged = new SubmergedMap();
+	
 	public ENTETIES(){
+		
 		grid = new Grid();
 		
 		freeIndexes.fill();
@@ -147,7 +152,7 @@ public class ENTETIES extends SettResource{
 		if (MM-old != am)
 			GAME.Notify(""+(MM-old) + " " + am);
 		
-		
+
 	}
 	
 	@Override
@@ -167,7 +172,7 @@ public class ENTETIES extends SettResource{
 	 * Add e to this handler. E will be updated and moved. Do not add an entity twice!
 	 * @param e
 	 */
-	boolean add(ENTITY e){
+	boolean add(ENTITY e, boolean collide){
 		if (e.handlerId != -1)
 			throw new RuntimeException("entity already added!");
 		
@@ -188,8 +193,18 @@ public class ENTETIES extends SettResource{
 		ents[oi] = e;
 		e.handlerId = i;
 		e.physics.initMoveCheck();
-		grid.add(e);
+		grid.add(e, collide);
 		return true;
+	}
+	
+	public void moveIntoTheTheUnknown(ENTITY e) {
+		grid.remove(e);
+	}
+	
+	public void returnFromTheTheUnknown(ENTITY e) {
+		if (e.gx == -1 && e.gy == -1)
+			grid.add(e, false);
+		
 	}
 	
 	/**
@@ -308,7 +323,7 @@ public class ENTETIES extends SettResource{
 	private int k = 0;
 	private float lastDs = 0;
 	@Override
-	public void update(float ds){
+	public void update(float ds, Profiler profiler){
 
 		
 		k++;

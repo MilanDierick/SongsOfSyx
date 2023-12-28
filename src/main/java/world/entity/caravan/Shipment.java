@@ -6,62 +6,37 @@ import game.GAME;
 import game.faction.FACTIONS;
 import game.faction.Faction;
 import game.faction.trade.FACTION_IMPORTER;
+import game.faction.trade.ITYPE;
 import game.time.TIME;
 import init.C;
 import init.resources.RESOURCE;
 import init.resources.RESOURCES;
-import settlement.main.SETT;
 import snake2d.*;
 import snake2d.util.datatypes.DIR;
 import snake2d.util.file.FileGetter;
 import snake2d.util.file.FilePutter;
 import snake2d.util.misc.CLAMP;
-import snake2d.util.sets.ArrayList;
-import snake2d.util.sets.LIST;
-import util.dic.DicGeo;
-import util.dic.DicRes;
 import util.rendering.ShadowBatch;
 import view.main.VIEW;
-import world.World;
-import world.entity.*;
-import world.entity.WPathing.WorldPathCost;
-import world.map.regions.CapitolPlacablity;
-import world.map.regions.Region;
+import world.WORLD;
+import world.entity.WEntity;
+import world.map.pathing.WPath;
+import world.map.pathing.WTREATY;
+import world.regions.Region;
 
 
 public final class Shipment extends WEntity{
 
 	public static final int MAX_DISTANCE = 550;
-	private static double speed = World.SPEED*24.0*C.TILE_SIZE/(SETT.TWIDTH/CapitolPlacablity.TILE_DIM);
+	private static double speed = C.TILE_SIZE*0.1;
 	
-	private final WPath path = new WPath();
-	private int destination;
+	private final WPath path = new P();
+	private short destReg;
+	private short destFaction;
 	private final int[] payload = new int[RESOURCES.ALL().size()];
 	
-	private static final WorldPathCost cost =new WorldPathCost() {
-		
-		@Override
-		public boolean canMove(Region a, Region b) {
-			return true;
-		}
-	};
-	
 	private byte type;
-
-	public enum Type {
-		tax(DicGeo.¤¤Tribute),
-		trade(DicGeo.¤¤Trade),
-		spoils(DicRes.¤¤Spoils);
-		
-		public static final LIST<Type> all = new ArrayList<>(values());
-		public final CharSequence name;
-		
-		private Type(CharSequence name) {
-			this.name = name;
-		}
-	}
-
-	
+	private byte size = -1;	
 	
 	Shipment(){
 		super(C.TILE_SIZE, C.TILE_SIZE);
@@ -70,7 +45,8 @@ public final class Shipment extends WEntity{
 	
 	@Override
 	protected void save(FilePutter file) {
-		file.i(destination);
+		file.s(destReg);
+		file.s(destFaction);
 		file.b(type);
 		file.is(payload);
 		path.save(file);
@@ -78,10 +54,12 @@ public final class Shipment extends WEntity{
 	
 	@Override
 	protected WEntity load(FileGetter file) throws IOException {
-		destination = file.i();
+		destReg = file.s();
+		destFaction = file.s();
 		type = file.b();
 		file.is(payload);
 		path.load(file);
+		size = -1;
 		return this;
 	}
 	
@@ -91,25 +69,49 @@ public final class Shipment extends WEntity{
 		
 	}
 
+	
 	@Override
 	protected void renderAboveTerrain(Renderer r, ShadowBatch s, float ds, int x, int y) {
 		
+		if (WORLD.FOW().is(ctx(), cty()))
+			return;
+		
 		int i;
 		
-		if (World.WATER().has.is(body().cX()>>C.T_SCROLL, body().cY()>>C.T_SCROLL)) {
+		if (WORLD.WATER().isBig.is(body().cX()>>C.T_SCROLL, body().cY()>>C.T_SCROLL)) {
 			i = 8*3;
 		}else {
 			i = (int) GAME.intervals().get05()%3;
 			i*= 8;
 		}
-		if (type != 0)
-			i+= 8*4;
-		World.ENTITIES().caravans.caravan.render(r, i+path.dir().id(), x, y);
+//		if (type != 0)
+//			i+= 8*4;
+		
+		if (size == -1) {
+			int size = 0;
+			for (int py : payload)
+				size += py;
+			size /= 256;
+			this.size = (byte) CLAMP.i(size, 0, 2);
+		}
+		
+		i += size*8*4;
+		
 		s.setDistance2Ground(0).setHeight(2);
-		World.ENTITIES().caravans.caravan.render(s, i+path.dir().id(), x, y);
-		if (TIME.light().nightIs() && (TIME.light().partOfCircular()*16 > (destination&0x07))) {
-			x += C.TILE_SIZEH/2+(GAME.intervals().get05()+destination & 0b11);
-			y += C.TILE_SIZEH/2+(GAME.intervals().get05()+(destination>>4) & 0b11);
+		WORLD.ENTITIES().caravans.caravan.render(r, i+path.dir().id(), x, y);
+		WORLD.ENTITIES().caravans.caravan.render(s, i+path.dir().id(), x, y);
+		
+		int am = 2;
+		if (am > 1) {
+			
+		}
+		
+		if (TIME.light().nightIs() && (TIME.light().partOfCircular()*16 > (destReg&0x07))) {
+			DIR d = path.dir();
+			x += 8*d.x();
+			y += 8*d.y();
+			x += C.TILE_SIZEH/2+(4-(GAME.intervals().get05()%8));
+			y += C.TILE_SIZEH/2+(4-(GAME.intervals().get04()%8));
 			CORE.renderer().renderUniLight(x, y, 2, 128);
 		}
 	}
@@ -118,7 +120,7 @@ public final class Shipment extends WEntity{
 		int i = (int) (VIEW.renderSecond()*2)%3;
 		i*= 8;
 		i+= 8*4;
-		World.ENTITIES().caravans.caravan.render(r, i+DIR.SW.id(), x, y);
+		WORLD.ENTITIES().caravans.caravan.render(r, i+DIR.SW.id(), x, y);
 	}
 	
 	@Override
@@ -130,7 +132,7 @@ public final class Shipment extends WEntity{
 	@Override
 	protected void update(float ds) {
 
-		path.move(this, speed*ds, cost);
+		path.move(this, speed*ds);
 		if (!path.isValid()) {
 			cancel();
 			return;
@@ -152,27 +154,24 @@ public final class Shipment extends WEntity{
 
 	
 	private void cancel() {
-		//GAME.Notify("oh no!");
 		remove();
 	}
 	
 	private void arrive() {
-		Faction f = destination().faction();
+		Faction f = faction();
+		if (f == null || f.capitolRegion() != destination()) {
+			cancel();
+			return;
+		}
 		FACTION_IMPORTER s = f.buyer();
 		
 		
 		for (RESOURCE r : RESOURCES.ALL()) {
 			int am = payload[r.bIndex()];
 			if (am != 0) {
-				s.reserveSpace(r, -am);
+				ITYPE t = ITYPE.all.get(type);
+				s.deliverAndUnreserve(r, am, t);
 				payload[r.bIndex()] = 0;
-				if (type() == Type.tax) {
-					s.addTaxes(r, am);
-				}else if (type() == Type.trade)
-					s.addImport(r, am);
-				else {
-					s.addSpoils(r, am);
-				}
 			}
 		}
 		remove();
@@ -184,17 +183,18 @@ public final class Shipment extends WEntity{
 	
 
 	
-	void add(int tx, int ty, Faction destination, Type type) {
+	void add(int tx, int ty, Faction destination, ITYPE type) {
 		
 		for (int i = 0; i < payload.length; i++)
 			payload[i] = 0;
 		body().moveX1Y1(tx*C.TILE_SIZE, ty*C.TILE_SIZE);
 		path.clear();
-		this.destination = destination.index();
+		this.destFaction = (short) destination.index();
+		this.destReg = (short) destination.capitolRegion().index();
 		
-		WPathing.path(tx, ty, destination.capitolRegion().cx(), destination.capitolRegion().cy(), path, cost);
+		path.find(tx, ty, destination.capitolRegion().cx(), destination.capitolRegion().cy());
 
-		this.type = (byte) type.ordinal();
+		this.type = (byte) type.index;
 		
 		add();
 	}
@@ -212,8 +212,9 @@ public final class Shipment extends WEntity{
 			return;
 		}
 		for (RESOURCE r : RESOURCES.ALL()) {
-			if (payload[r.bIndex()] > 0)
-				destination().faction().buyer().reserveSpace(r, -payload[r.bIndex()]);
+			if (payload[r.bIndex()] > 0) {
+				faction().buyer().reserve(r, -payload[r.bIndex()], type());
+			}
 			payload[r.bIndex()] = 0;
 		}
 		
@@ -221,11 +222,11 @@ public final class Shipment extends WEntity{
 
 	@Override
 	protected Shipments constructor() {
-		return World.ENTITIES().caravans;
+		return WORLD.ENTITIES().caravans;
 	}
 	
-	public Type type() {
-		return Type.all.get(type);
+	public ITYPE type() {
+		return ITYPE.all.get(type);
 	}
 	
 	@Override
@@ -234,9 +235,17 @@ public final class Shipment extends WEntity{
 	}
 	
 	public Shipment load(RESOURCE r, int amount) {
-		destination().faction().buyer().reserveSpace(r, -payload[r.bIndex()]);
 		payload[r.bIndex()] = CLAMP.i(amount+payload[r.bIndex()], 0, Integer.MAX_VALUE);
-		destination().faction().buyer().reserveSpace(r, payload[r.bIndex()]);
+		size = -1;
+		return this;
+	}
+	
+	public Shipment loadAndReserve(RESOURCE r, int amount) {
+		if (amount == 0)
+			return this;
+		faction().buyer().reserve(r, amount, type());
+		payload[r.bIndex()] = CLAMP.i(amount+payload[r.bIndex()], 0, Integer.MAX_VALUE);
+		size = -1;
 		return this;
 	}
 	
@@ -245,11 +254,7 @@ public final class Shipment extends WEntity{
 	}
 	
 	public Region destination() {
-		Faction f = FACTIONS.getByIndex(destination);
-		if (!f.isActive())
-			return null;
-		
-		return f.capitolRegion();
+		return WORLD.REGIONS().getByIndex(destReg);
 	}
 	
 	@Override
@@ -257,5 +262,18 @@ public final class Shipment extends WEntity{
 		return path;
 	}
 	
+	private static class P extends WPath {
+
+		@Override
+		public WTREATY treaty() {
+			return WTREATY.DUMMY();
+		}
+		
+	};
+	
+	@Override
+	public Faction faction() {
+		return FACTIONS.getByIndex(destFaction);
+	}
 	
 }

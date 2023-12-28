@@ -15,7 +15,7 @@ import snake2d.util.sprite.SPRITE;
 
 public class GuiSection implements CLICKABLE{
 	
-	private final ArrayListResize<RENDEROBJ> renderables = new ArrayListResize<RENDEROBJ>(2,512*4);
+	protected final ArrayListResize<RENDEROBJ> renderables = new ArrayListResize<RENDEROBJ>(2,512*4);
 	
 	private RECTANGLE previous;
 	private HOVERABLE hovered;
@@ -202,6 +202,21 @@ public class GuiSection implements CLICKABLE{
 		int y = body().y1() + (i/rows)*(r.body().height()+my);
 		
 		return add(r, x, y);
+	}
+	
+	public GuiSection addGridD(RENDEROBJ r, int i, int cols, int width, int height, DIR align){
+		
+		int x = body().x1() + (i%cols)*(width);
+		int y = body().y1() + (i/cols)*(height);
+		
+		if (x + width > body().width())
+			body().setWidth(x+width);
+		
+		r.body().moveC(x + width/2, y + height/2);
+		int dx = (width-r.body().width())/2;
+		int dy = (height-r.body().height())/2;
+		r.body().incr(dx*align.x(), dy*align.y());
+		return add(r);
 	}
 	
 	public GuiSection addC(RENDEROBJ r, int cx, int cy){
@@ -483,6 +498,13 @@ public class GuiSection implements CLICKABLE{
 			body().unify(section.body());
 		previous = section.body();
 	}
+	
+	public void absorb(GuiSection section){
+		for (RENDEROBJ r : section.renderables){
+			add(r);
+		}
+		body().unify(section.body());
+	}
 
 	@Override
 	public Rec body() {
@@ -523,6 +545,8 @@ public class GuiSection implements CLICKABLE{
 	public GuiSection addRelBody(int m, DIR e, SPRITE ren) {
 		return addRelBody(m, e, new RENDEROBJ.Sprite(ren));
 	}
+
+
 
 
 }

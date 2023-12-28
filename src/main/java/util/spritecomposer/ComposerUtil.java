@@ -57,7 +57,7 @@ public final class ComposerUtil {
 			CORE.checkIn();
 			TexSource = new SnakeImage(path);
 			if (TexSource.width % 2 != 0)
-				throw new RuntimeException();
+				throw new RuntimeException(path + "  has the wrong dimension. Width must be divisible by 2");
 			sourceHalf = TexSource.width / 2;
 			saveFile(path);
 		}else {
@@ -170,6 +170,31 @@ public final class ComposerUtil {
 		return res;
 	}
 	
+	private int mergeV(double value, int c1, int c2) {
+		
+		int c1a = (c1 >> 8) & 0x000000FF;
+		int c1b = (c1 >> 16) & 0x000000FF;
+		int c1c = (c1 >> 24) & 0x000000FF;
+		
+		int c2a = (c2 >> 8) & 0x000000FF;
+		int c2b = (c2 >> 16) & 0x000000FF;
+		int c2c = (c2 >> 24) & 0x000000FF;
+		
+		int t;
+		int res = 0x000000FF;
+		
+		t = (int) (c1c*value + c2c*(1.0-value));
+		res |= t << 24;
+		
+		t = (int) (c1b*value + c2b*(1.0-value));
+		res |= t << 16;
+		
+		t = (int) (c1a*value + c2a*(1.0-value));
+		res |= t << 8;
+		
+		return res;
+	}
+	
 	private int mergeNormal(int m, int c1, int c2) {
 		
 		m = m & 0x0000FF00;
@@ -218,6 +243,31 @@ public final class ComposerUtil {
 				int c = buffer[y][x];
 				if ((c & 0x000000FF) == 0)
 					continue;
+				dest.diffuseSet(dest.x1() + dx, dest.y1() + dy, c);
+				
+				int nc = buffern[y][x];
+				if ((nc & 0x000000FF) == 0)
+					continue;
+				dest.normalSet(dest.x1() + dx, dest.y1() + dy, nc);
+			}
+
+		}
+
+	}
+	
+	void paste(ComposerDests.Dest dest, double bgBlend) {
+
+		for (int y = 0; y < dest.height(); y++) {
+			for (int x = 0; x < dest.width(); x++) {
+				int dx = x;
+				int dy = y;
+
+				int c = buffer[y][x];
+				if ((c & 0x000000FF) == 0)
+					continue;
+				
+				c = mergeV(bgBlend, dest.diffuseGet(dest.x1() + dx, dest.y1() + dy), c);
+				
 				dest.diffuseSet(dest.x1() + dx, dest.y1() + dy, c);
 				
 				int nc = buffern[y][x];

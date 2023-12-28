@@ -4,13 +4,13 @@ import init.C;
 import init.race.RACES;
 import init.race.Race;
 import settlement.entity.humanoid.spirte.HCorpseRenderer;
-import settlement.main.RenderData.RenderIterator;
 import settlement.main.SETT;
 import settlement.misc.util.FSERVICE;
 import settlement.thing.ThingsCorpses.Corpse;
 import snake2d.Renderer;
 import snake2d.util.bit.Bit;
 import snake2d.util.bit.Bits;
+import util.rendering.RenderData.RenderIterator;
 import util.rendering.ShadowBatch;
 
 class Dump implements FSERVICE{

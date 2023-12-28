@@ -66,14 +66,6 @@ final class BuilderInstance extends RoomInstance implements ROOM_RADIUS_INSTANCE
 		// TODO Auto-generated method stub
 		return null;
 	}
-	
-	
-	@Override
-	public void reportWorkSuccess(boolean success) {
-		super.reportWorkSuccess(success);
-		if (!success)
-			failHour = (byte) (TIME.hours().bitCurrent());
-	}
 
 	@Override
 	public int radius() {
@@ -82,7 +74,7 @@ final class BuilderInstance extends RoomInstance implements ROOM_RADIUS_INSTANCE
 
 	@Override
 	public boolean searching() {
-		return failHour != TIME.hours().bitCurrent(); 
+		return true; 
 	}
 
 

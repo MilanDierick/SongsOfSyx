@@ -1,5 +1,6 @@
 package settlement.room.service.hygine.bath;
 
+import settlement.main.SETT;
 import snake2d.util.gui.GuiSection;
 import util.data.GETTER;
 import util.gui.misc.*;
@@ -17,6 +18,10 @@ class Gui extends UIRoomModuleImp<BathInstance, ROOM_BATH> {
 		if (i.getHeat() < 1) {
 			box.add(box.text().errorify().add(blueprint.sHeatingProblem));
 		}
+		
+		if (i.water < 1) {
+			box.add(box.text().errorify().add(blueprint.sWaterProblem));
+		}
 			
 		super.problem(i, box);
 	}
@@ -31,6 +36,13 @@ class Gui extends UIRoomModuleImp<BathInstance, ROOM_BATH> {
 				GFORMAT.perc(text, getter.get().getHeat());
 			}
 		}.hh(blueprint.sHeating).hoverInfoSet(blueprint.sHeatingDesc));
+		
+		grid.add(new GStat() {
+			@Override
+			public void update(GText text) {
+				GFORMAT.perc(text, getter.get().water);
+			}
+		}.hh(SETT.ENV().environment.WATER_SWEET.name).hoverInfoSet(SETT.ENV().environment.WATER_SWEET.desc));
 		
 	}
 

@@ -4,7 +4,6 @@ import static settlement.main.SETT.*;
 
 import java.io.IOException;
 
-import settlement.main.RenderData.RenderIterator;
 import settlement.main.SETT;
 import settlement.path.AVAILABILITY;
 import settlement.room.main.*;
@@ -16,11 +15,10 @@ import snake2d.SPRITE_RENDERER;
 import snake2d.util.datatypes.AREA;
 import snake2d.util.datatypes.DIR;
 import snake2d.util.file.Json;
-import snake2d.util.sprite.TILE_SHEET;
 import util.gui.misc.GText;
 import util.info.GFORMAT;
+import util.rendering.RenderData.RenderIterator;
 import util.rendering.ShadowBatch;
-import util.spritecomposer.*;
 
 final class Constructor extends Furnisher{
 
@@ -67,7 +65,7 @@ final class Constructor extends Furnisher{
 
 		final RoomSprite1x1 sUsed = new RoomSprite1x1(sj, "WORK_USED_1x1");
 		
-		final RoomSprite sWork = new RoomSpriteComboN(sj, "TABLE_COMBO") {
+		final RoomSprite sWork = new RoomSpriteCombo(sj, "TABLE_COMBO") {
 
 			private final RoomSprite1x1 available = new RoomSprite1x1(sj, "WORK_UNUSED_1x1");
 			private final RoomSprite1x1 dec = new RoomSprite1x1(sj, "TABLE_DECOR_1x1");
@@ -215,11 +213,6 @@ final class Constructor extends Furnisher{
 		flush(1, 3);
 		
 		FurnisherItemTools.makeUnder(this, sj, "CARPET_COMBO");
-	}
-
-	@Override
-	protected TILE_SHEET sheet(ComposerUtil c, ComposerSources s, ComposerDests d, int y1) {
-		return null;
 	}
 
 	@Override

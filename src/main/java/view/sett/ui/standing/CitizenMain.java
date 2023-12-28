@@ -1,18 +1,17 @@
 package view.sett.ui.standing;
 
-import game.GAME;
+import game.boosting.BOOSTABLES;
 import game.time.TIME;
+import init.race.RACES;
 import init.race.Race;
-import init.sprite.ICON;
 import init.sprite.SPRITES;
+import init.sprite.UI.Icon;
 import init.sprite.UI.UI;
 import settlement.entity.humanoid.HCLASS;
-import settlement.stats.STAT;
 import settlement.stats.STATS;
-import settlement.stats.StatsMultipliers.StatMultiplier;
 import settlement.stats.standing.STANDINGS;
 import settlement.stats.standing.StandingCitizen;
-import settlement.stats.standing.StandingCitizen.CitizenThing;
+import settlement.stats.stat.STAT;
 import snake2d.SPRITE_RENDERER;
 import snake2d.util.color.ColorImp;
 import snake2d.util.datatypes.COORDINATE;
@@ -59,8 +58,8 @@ final class CitizenMain extends GuiSection {
 	
 	@Override
 	public void render(SPRITE_RENDERER r, float ds) {
-		if (current == null)
-			current = GAME.player().race();
+//		if (current == null)
+//			current = GAME.player().race();
 		super.render(r, ds);
 		hov.set(-1);
 	}
@@ -73,7 +72,7 @@ final class CitizenMain extends GuiSection {
 			@Override
 			protected void clickA() {
 				if (current != null)
-					VIEW.inters().wiki.showRace(current);
+					VIEW.UI().wiki.showRace(current);
 			};
 			
 			
@@ -147,36 +146,25 @@ final class CitizenMain extends GuiSection {
 					b.NL(8);
 					
 					b.textLL(DicMisc.¤¤Current);
-					b.add(GFORMAT.perc(b.text(), h.main.getD(current)));
+					b.add(GFORMAT.perc(b.text(), h.loyalty.getD(current)));
 					b.add(SPRITES.icons().s.arrow_right);
 
 					b.textLL(DicMisc.¤¤Target);
 					b.tab(6);
-					b.add(GFORMAT.perc(b.text(), h.mainTarget.getD(current)));
+					b.add(GFORMAT.perc(b.text(), h.loyaltyTarget.getD(current)));
 					b.NL(8);
 					
 					{
 						b.textLL(h.happiness.info().name);
 						b.tab(6);
-						b.add(GFORMAT.f1(b.text(), h.happiness.getD(current)));
+						b.add(GFORMAT.perc(b.text(), h.happiness.getD(current, 0)));
 						b.NL();
-						b.text(h.happiness.info().desc);
-						b.NL(4);
 					}
 					
-					for (CitizenThing t : h.factors){
-						b.textLL(t.info().name);
-						b.tab(6);
-						b.add(GFORMAT.f1(b.text(), t.getD(current)));
-						b.NL();
-						b.text(t.info().desc);
-						b.NL(4);
-						
-						
-					}
+					
 					b.NL(8);
 					
-					
+					BOOSTABLES.BEHAVIOUR().LOYALTY.hoverDetailed(b, RACES.clP(current, HCLASS.CITIZEN), DicMisc.¤¤Boosts, true);
 				}
 			};
 			ss.add(new GHeader(h.info().name));
@@ -184,15 +172,15 @@ final class CitizenMain extends GuiSection {
 
 				@Override
 				public void update(GText text) {
-					GFORMAT.perc(text, h.main.getD(current));
+					GFORMAT.perc(text, h.loyalty.getD(current));
 				}
 			});
-			ss.addRightC(32, new RENDEROBJ.RenderImp(ICON.MEDIUM.SIZE) {
+			ss.addRightC(32, new RENDEROBJ.RenderImp(Icon.M) {
 
 				@Override
 				public void render(SPRITE_RENDERER r, float ds) {
-					double now = h.main.getD(current);
-					double t = h.mainTarget.getD(current);
+					double now = h.loyalty.getD(current);
+					double t = h.loyaltyTarget.getD(current);
 					int am = (int) CLAMP.d(Math.abs(now - t) * 10, 0, 1);
 					SPRITE a = SPRITES.icons().m.arrow_right;
 					GCOLOR.UI().goodFlash().bind();
@@ -201,7 +189,7 @@ final class CitizenMain extends GuiSection {
 						a = SPRITES.icons().m.arrow_left;
 					}
 					for (int i = 0; i < am; i++) {
-						a.render(r, body().x1() + i * ICON.MEDIUM.SIZE, body().y1());
+						a.render(r, body().x1() + i * Icon.M, body().y1());
 					}
 				}
 			});
@@ -210,8 +198,8 @@ final class CitizenMain extends GuiSection {
 
 				@Override
 				public void render(SPRITE_RENDERER r, float ds) {
-					double now = h.main.getD(current);
-					double t = h.mainTarget.getD(current);
+					double now = h.loyalty.getD(current);
+					double t = h.loyaltyTarget.getD(current);
 					GMeter.renderDelta(r, now, t, body);
 				}
 			};
@@ -236,11 +224,11 @@ final class CitizenMain extends GuiSection {
 					box.NL();
 					
 					box.textLL(DicMisc.¤¤Current);
-					box.add(GFORMAT.perc(box.text(), h.main.getD(current, fromZero)));
+					box.add(GFORMAT.perc(box.text(), h.loyalty.getD(current, fromZero)));
 					box.add(SPRITES.icons().s.arrow_right);
 					box.textLL(DicMisc.¤¤Target);
 					box.tab(6);
-					box.add(GFORMAT.perc(box.text(), h.mainTarget.getD(current, fromZero)));
+					box.add(GFORMAT.perc(box.text(), h.loyaltyTarget.getD(current, fromZero)));
 					box.NL(8);
 					
 					{
@@ -251,15 +239,8 @@ final class CitizenMain extends GuiSection {
 						
 					}
 					
-					for (CitizenThing t : h.factors){
-						box.textLL(t.info().name);
-						box.tab(6);
-						box.add(GFORMAT.f1(box.text(), t.getD(current, fromZero)));
-						box.NL();
-						
-						
-					}
 					
+					BOOSTABLES.BEHAVIOUR().LOYALTY.hoverDetailedHistoric(box, RACES.clP(current, HCLASS.CITIZEN), DicMisc.¤¤Boosts, true, fromZero);
 					
 				}
 
@@ -275,7 +256,7 @@ final class CitizenMain extends GuiSection {
 				@Override
 				protected double getValue(int stapleI) {
 					int fromZero = STATS.DAYS_SAVED - stapleI - 1;
-					return h.main.getD(current, fromZero);
+					return h.loyalty.getD(current, fromZero);
 				}
 
 				@Override
@@ -328,10 +309,10 @@ final class CitizenMain extends GuiSection {
 					b.add(GFORMAT.percBig(b.text(), h.expectation.getD(current)));
 					b.NL();
 					b.text(h.expectation.info().desc);
-					b.NL(8);
+					b.sep();
 					
-					UIDecreeButt.hover(b, HCLASS.CITIZEN, current);
-					
+					//UIDecreeButt.hover(b, HCLASS.CITIZEN, current);
+					BOOSTABLES.BEHAVIOUR().HAPPI.hoverDetailed(b, RACES.clP(current, HCLASS.CITIZEN), DicMisc.¤¤Boosts, true);
 					
 				}
 			};
@@ -375,25 +356,11 @@ final class CitizenMain extends GuiSection {
 					box.tab(7);
 					box.add(GFORMAT.perc(box.text(), h.happiness.getD(current, fromZero)));
 					
-					box.NL();
-					for (StatMultiplier m : STATS.MULTIPLIERS().get(HCLASS.CITIZEN)) {
-						box.tab(1);
-						box.textL(m.name);
-						box.tab(7);
-						box.add(GFORMAT.f1(box.text(), m.multiplier(HCLASS.CITIZEN, current, fromZero)));
-						double d1 = m.multiplier(HCLASS.CITIZEN, current, fromZero);
-						double d2 = d1;
-						if (stapleI > 0)
-							d2 = m.multiplier(HCLASS.CITIZEN, current, fromZero+1);
-						if (Math.abs(d1 -d2) > 0.001) {
-							box.tab(9);
-							box.add(GFORMAT.f0(box.text(), d1-d2));
-							box.NL();
-						}
-						box.NL();
-					}
+					box.sep();
 					
-					box.NL(8);
+					BOOSTABLES.BEHAVIOUR().HAPPI.hoverDetailedHistoric(box, RACES.clP(current, HCLASS.CITIZEN), DicMisc.¤¤Boosts, true, fromZero);
+					
+					box.sep();
 					
 					box.textLL(h.fullfillment.info().name);
 					box.tab(7);

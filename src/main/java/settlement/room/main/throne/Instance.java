@@ -2,9 +2,7 @@ package settlement.room.main.throne;
 
 import static settlement.main.SETT.*;
 
-import init.sprite.ICON.BIG;
-import settlement.main.RenderData;
-import settlement.main.RenderData.RenderIterator;
+import init.sprite.UI.Icon;
 import settlement.main.SETT;
 import settlement.maintenance.ROOM_DEGRADER;
 import settlement.path.AVAILABILITY;
@@ -12,6 +10,8 @@ import settlement.room.main.Room;
 import settlement.room.main.TmpArea;
 import snake2d.Renderer;
 import snake2d.util.datatypes.*;
+import util.rendering.RenderData;
+import util.rendering.RenderData.RenderIterator;
 import util.rendering.ShadowBatch;
 
 final class Instance extends Room.RoomInstanceImp {
@@ -42,7 +42,10 @@ final class Instance extends Room.RoomInstanceImp {
 		SETT.ROOMS().map.init(this);
 		
 		
-		DIR td = DIR.ORTHO.get(rot).perpendicular();
+		
+		DIR td = DIR.ORTHO.getC(rot).perpendicular();
+		
+		
 		
 		for (COORDINATE c : body) {
 			
@@ -174,7 +177,7 @@ final class Instance extends Room.RoomInstanceImp {
 	}
 	
 	@Override
-	public BIG icon() {
+	public Icon icon() {
 		return blueprintI().sprite.icon;
 	}
 

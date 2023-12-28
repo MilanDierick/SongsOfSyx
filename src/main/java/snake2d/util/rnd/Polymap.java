@@ -80,7 +80,7 @@ public class Polymap implements BODY_HOLDER{
 		float[][] heights = new float[height][width];
 		int id = 1;
 		
-		r = 64;
+		r = width/size;
 		ri = 1.0/r;
 		
 		double dx = (double)width/size;
@@ -94,6 +94,53 @@ public class Polymap implements BODY_HOLDER{
 				qy += dy/2;
 				qx += dx*Math.pow(RND.rFloat(), relaxation) * (RND.rBoolean() ? 0.5 : -0.5);
 				qy += dy*Math.pow(RND.rFloat(), relaxation) * (RND.rBoolean() ? 0.5 : -0.5);
+				polly((int)qx, (int)qy, id++, heights);
+			}
+		}
+
+		
+		checkers = new int[id];
+		body = new Rec(width, height);
+		checker = new MAP_BOOLEANE.BooleanMapE(width, height) {
+			
+			@Override
+			public MAP_BOOLEANE set(int tile, boolean value) {
+				if (value)
+					checkers[ids[tile]] = checkI;
+				else
+					checkers[ids[tile]] = checkI-1;
+				return this;
+			}
+
+			@Override
+			public boolean is(int tile) {
+				return checkers[ids[tile]] == checkI;
+			}
+		};
+	}
+	
+	public Polymap(RECTANGLE bounds, int cellsize, double randomness){
+		this.width = bounds.width();
+		this.height = bounds.height();
+		ids = new int[height*width];
+		this.bounds = new Rec(width, height);
+		float[][] heights = new float[height][width];
+		int id = 1;
+		
+		r = cellsize;
+		ri = 1.0/r;
+		
+		int d = cellsize/2;
+		
+		
+		for (int y = -cellsize; y < height+cellsize; y+=cellsize) {
+			for (int x = -cellsize; x < width+cellsize; x+=cellsize) {
+				double qx = x;
+				double qy = y;
+				qx += d;
+				qy += d;
+				qx += RND.rSign()*RND.rFloat(d)*randomness;
+				qy += RND.rSign()*RND.rFloat(d)*randomness;
 				polly((int)qx, (int)qy, id++, heights);
 			}
 		}
@@ -152,7 +199,8 @@ public class Polymap implements BODY_HOLDER{
 
 	
 	private void polly(int x, int y, int id, float[][] heights) {
-		if (heights[y][x] == 1f)
+		
+		if (bounds.holdsPoint(x, y) && heights[y][x] == 1f)
 			return;
 		for (int y1 = (int) (-r); y1 < r; y1++) {
 			int ty = y1 + y;

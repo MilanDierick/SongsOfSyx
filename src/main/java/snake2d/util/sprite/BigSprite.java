@@ -43,7 +43,7 @@ public abstract class BigSprite {
 		
 	}
 	
-	private final TextureCoords.Imp stencil = new TextureCoords.Imp();
+	private final TextureCoords stencil = new TextureCoords();
 	
 	/**
 	 * 

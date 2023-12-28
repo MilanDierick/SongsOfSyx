@@ -19,7 +19,7 @@ public abstract class ROOM_SPECTATOR {
 	
 	public abstract boolean is(int sx, int sy);
 	public abstract COORDINATE lookAt(int sx, int sy);
-	public abstract RoomServiceDataAccess service();
+	public abstract RoomServiceAccess service();
 	
 	public boolean shouldCheer(int sx, int sy) {
 		return false;

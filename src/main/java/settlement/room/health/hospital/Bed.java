@@ -1,5 +1,7 @@
 package settlement.room.health.hospital;
 
+import init.resources.RBIT;
+import init.resources.RBIT.RBITImp;
 import init.resources.RESOURCE;
 import init.sound.SoundSettlement.Sound;
 import settlement.entity.humanoid.Humanoid;
@@ -72,6 +74,8 @@ final class Bed {
 	
 	private final SETT_JOB job = new SETT_JOB() {
 		
+		private final RBITImp bits = new RBITImp();
+		
 		@Override
 		public boolean jobUseTool() {
 			return false;
@@ -88,15 +92,15 @@ final class Bed {
 		}
 		
 		@Override
-		public long jobResourceBitToFetch() {
-			long m = 0;
+		public RBIT jobResourceBitToFetch() {
+			bits.clear();
 			RESOURCE a = b().indus.get(0).ins().get(0).resource;
 			RESOURCE b = b().indus.get(0).ins().get(1).resource;
 			if (wres1.get() == 0)
-				m |= a.bit;
+				bits.or(a);
 			if (wres2.get() == 0)
-				m |= b.bit;
-			return m;
+				bits.or(b);
+			return bits.isClear() ? null : bits;
 		}
 		
 		@Override

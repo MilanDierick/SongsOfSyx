@@ -2,7 +2,9 @@ package view.sett.ui.standing;
 
 import init.race.Race;
 import settlement.entity.humanoid.HCLASS;
-import settlement.stats.*;
+import settlement.stats.STATS;
+import settlement.stats.stat.SETT_STATISTICS;
+import settlement.stats.stat.STAT;
 import snake2d.SPRITE_RENDERER;
 import snake2d.util.color.COLOR;
 import snake2d.util.color.ColorImp;

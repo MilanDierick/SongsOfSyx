@@ -2,6 +2,7 @@ package util.data;
 
 import snake2d.util.bit.Bits;
 import snake2d.util.misc.CLAMP;
+import snake2d.util.rnd.RND;
 
 public interface INT_O<T> extends DOUBLE_O<T> {
 
@@ -39,9 +40,42 @@ public interface INT_O<T> extends DOUBLE_O<T> {
 			inc(t, i);
 			return this;
 		}
+		
+
+		
 		public default void inc(T t, int i) {
 			set(t, CLAMP.i(get(t)+i, min(t), max(t)));
 		}
+		
+		public default void incFraction(T t, double d) {
+			int am = (int) d;
+			if (am != d) {
+				if (d < 0 && -d-am > RND.rFloat())
+					am--;
+				else if (d > 0 && d-am > RND.rFloat())
+					am++;
+			}
+			set(t, CLAMP.i(get(t)+am, min(t), max(t)));
+		}
+		
+		public default DOUBLE_OE<T> moveTo(T t, double d, int target) {
+			int am = (int) d;
+			if (am != d) {
+				if (d < 0 && -(d+am) > RND.rFloat())
+					am--;
+				else if (d > 0 && d-am > RND.rFloat())
+					am++;
+			}
+			int tt = get(t)+am;
+			if (d < 0 && tt < target)
+				tt = target;
+			else if (d > 0 && tt > target)
+				tt = target;
+			
+			set(t, CLAMP.i(tt, min(t), max(t)));
+			return this;
+		}
+		
 		
 		public default void andSet(T t, int i) {
 			set(t, get(t) & i);

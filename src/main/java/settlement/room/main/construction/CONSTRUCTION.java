@@ -8,8 +8,8 @@ import settlement.room.main.furnisher.Furnisher;
 import settlement.room.main.furnisher.FurnisherItem;
 import settlement.room.main.util.RoomInit;
 import settlement.room.main.util.RoomState;
-import settlement.tilemap.TBuilding;
 import settlement.tilemap.TILE_FIXABLE;
+import settlement.tilemap.terrain.TBuilding;
 import snake2d.util.datatypes.*;
 import snake2d.util.map.MAP_BOOLEAN;
 
@@ -42,7 +42,7 @@ public final class CONSTRUCTION {
 		}
 		
 		ConstructionData.dBroken.set(area, tx, ty, 1);
-		
+		ConstructionData.dFloored.set(area, tx, ty, 0);
 		FurnisherItem it = SETT.ROOMS().fData.item.get(tx, ty);
 		if (it != null) {
 			COORDINATE c = SETT.ROOMS().fData.itemX1Y1(tx, ty, ctmp);
@@ -114,7 +114,7 @@ public final class CONSTRUCTION {
 		r.upgradeSet(x1, y1, upgrade);
 		if (state != null) {
 			if (r instanceof RoomInstance)
-				state.apply((RoomInstance)SETT.ROOMS().map.get(x1, y1));
+				state.apply((RoomInstance)SETT.ROOMS().map.get(x1, y1), x1, y1);
 		}
 		
 		if (r != null) {

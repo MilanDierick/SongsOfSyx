@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.Arrays;
 
 import game.GAME;
+import game.faction.FResources.RTYPE;
 import init.resources.*;
 import settlement.misc.util.FSERVICE;
 import settlement.path.finder.SFinderRoomService;
@@ -16,9 +17,8 @@ import settlement.room.main.category.RoomCategorySub;
 import settlement.room.main.furnisher.Furnisher;
 import settlement.room.main.job.ROOM_EMPLOY_AUTO;
 import settlement.room.main.util.RoomInitData;
-import settlement.room.service.module.RoomServiceDataAccess;
-import settlement.room.service.module.RoomServiceDataAccess.ROOM_SERVICE_ACCESS_HASER;
-import settlement.stats.STATS;
+import settlement.room.service.module.RoomServiceNeed;
+import settlement.room.service.module.RoomServiceNeed.ROOM_SERVICE_NEED_HASER;
 import snake2d.util.datatypes.COORDINATE;
 import snake2d.util.datatypes.DIR;
 import snake2d.util.file.FileGetter;
@@ -27,11 +27,11 @@ import snake2d.util.rnd.RND;
 import snake2d.util.sets.*;
 import view.sett.ui.room.UIRoomModule;
 
-public final class ROOM_CANTEEN extends RoomBlueprintIns<CanteenInstance> implements ROOM_EMPLOY_AUTO, ROOM_SERVICE_ACCESS_HASER, INDUSTRY_HASER{
+public final class ROOM_CANTEEN extends RoomBlueprintIns<CanteenInstance> implements ROOM_EMPLOY_AUTO, ROOM_SERVICE_NEED_HASER, INDUSTRY_HASER{
 
 	final Constructor constructor;
 	final Industry industryFuel;
-	final RoomServiceDataAccess service;
+	final RoomServiceNeed service;
 	final long[] amounts = new long[RESOURCES.EDI().all().size()];
 	long total;
 	final SService food = new SService(this);
@@ -44,16 +44,11 @@ public final class ROOM_CANTEEN extends RoomBlueprintIns<CanteenInstance> implem
 		super(index, data, key, cat);
 		constructor = new Constructor(this, data);
 		industryFuel = new Industry(this, data.data(), (RoomBoost) null, null);
-		service = new RoomServiceDataAccess(this, data) {
+		service = new RoomServiceNeed(this, data) {
 			
 			@Override
 			public FSERVICE service(int tx, int ty) {
 				return food.get(tx, ty);
-			}
-
-			@Override
-			public double totalMultiplier() {
-				return 1.0/STATS.NEEDS().HUNGER.rate.get(null, null);
 			}
 		};
 
@@ -108,7 +103,7 @@ public final class ROOM_CANTEEN extends RoomBlueprintIns<CanteenInstance> implem
 		return total;
 	}
 	
-	public long amount(Edible e) {
+	public long amount(ResG e) {
 		return amounts[e.index()];
 	}
 	
@@ -128,11 +123,11 @@ public final class ROOM_CANTEEN extends RoomBlueprintIns<CanteenInstance> implem
 	}
 
 	@Override
-	public RoomServiceDataAccess service() {
+	public RoomServiceNeed service() {
 		return service;
 	}
 	
-	public short grab(Edible pref, int amount, int tx, int ty) {
+	public short grab(ResG pref, int amount, int tx, int ty) {
 		CanteenInstance ins = getter.get(tx, ty);
 		if (ins == null)
 			return Meal.make(pref, 0);
@@ -152,7 +147,7 @@ public final class ROOM_CANTEEN extends RoomBlueprintIns<CanteenInstance> implem
 		
 		if (ins.amount(pref) >= am) {
 			ins.consume(pref, am, tx, ty);
-			GAME.player().res().outConsumed.inc(pref.resource, am);
+			GAME.player().res().inc(pref.resource, RTYPE.CONSUMED, -am);
 			
 			return Meal.make(pref, am);
 		}
@@ -161,13 +156,13 @@ public final class ROOM_CANTEEN extends RoomBlueprintIns<CanteenInstance> implem
 
 			int k = RND.rInt(RESOURCES.EDI().all().size());
 			
-			Edible largest = null;
+			ResG largest = null;
 			int al = -1;
 			for (int i = 0; i < RESOURCES.EDI().all().size(); i++) {
-				Edible e = RESOURCES.EDI().all().get((i+k)%RESOURCES.EDI().all().size());
+				ResG e = RESOURCES.EDI().all().get((i+k)%RESOURCES.EDI().all().size());
 				if (ins.amount(e) > am) {
 					ins.consume(e, am, tx, ty);
-					GAME.player().res().outConsumed.inc(e.resource, am);
+					GAME.player().res().inc(e.resource, RTYPE.CONSUMED, -am);
 					return Meal.make(e, am);
 				}
 				if (ins.amount(e) > al) {
@@ -180,7 +175,7 @@ public final class ROOM_CANTEEN extends RoomBlueprintIns<CanteenInstance> implem
 			if (largest != null && al > 0) {
 				if (al > am)
 					al = am;
-				GAME.player().res().outConsumed.inc(largest.resource, al);
+				GAME.player().res().inc(largest.resource, RTYPE.CONSUMED, -al);
 				ins.consume(largest, al, tx, ty);
 				return Meal.make(largest, al);
 			}

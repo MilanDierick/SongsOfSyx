@@ -14,12 +14,12 @@ public class RoomServiceInstance implements Serializable{
 	public byte lastHigh;
 	
 	
-	public RoomServiceInstance(int total, RoomServiceDataSimple data) {
+	public RoomServiceInstance(int total, RoomService data) {
 		this.total = (short) total;
 		data.increServices(this.total, 0);
 	}
 	
-	public void report(FSERVICE s, RoomServiceDataSimple data, int delta) {
+	public void report(FSERVICE s, RoomService data, int delta) {
 		
 		if(s.findableReservedCanBe()) {
 			available += delta;
@@ -40,7 +40,7 @@ public class RoomServiceInstance implements Serializable{
 			lastHigh = h;
 	}
 	
-	public void report(FSERVICE s, RoomServiceDataSimple data, int delta, int reservable, int reserved) {
+	public void report(FSERVICE s, RoomService data, int delta, int reservable, int reserved) {
 			
 		this.reserved += reserved*delta;
 		available += reservable*delta;
@@ -89,7 +89,7 @@ public class RoomServiceInstance implements Serializable{
 		currentHigh = 0;
 	}
 
-	public void dispose(RoomServiceDataSimple data) {
+	public void dispose(RoomService data) {
 		data.increServices(-this.total, -available);
 		available = 0;
 	}

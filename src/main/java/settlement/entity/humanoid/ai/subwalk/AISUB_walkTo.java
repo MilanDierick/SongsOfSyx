@@ -16,7 +16,7 @@ import settlement.path.finder.SFinderFindable;
 import settlement.path.finder.SFinderRoomService;
 import settlement.room.main.Room;
 import settlement.room.main.RoomInstance;
-import settlement.room.service.module.RoomServiceDataSimple;
+import settlement.room.service.module.RoomService;
 import settlement.thing.DRAGGABLE;
 import settlement.thing.DRAGGABLE.DRAGGABLE_HOLDER;
 import snake2d.util.datatypes.COORDINATE;
@@ -220,7 +220,7 @@ public final class AISUB_walkTo {
 		return resource(a,d,r.mask, 250);
 	}
 	
-	public AISubActivation resource(Humanoid a, AIManager d, long resBits, int maxDist ) {
+	public AISubActivation resource(Humanoid a, AIManager d, RBIT resBits, int maxDist ) {
 		RESOURCE res = PATH().finders.resource.normal.reserve(a.physics.tileC(), resBits, d.path, maxDist);
 		if (res == null) {
 			d.subPathByte = -1;
@@ -232,7 +232,7 @@ public final class AISUB_walkTo {
 		return resource.activate(a, d);
 	}
 	
-	public AISubActivation resource(Humanoid a, AIManager d, long resBits) {
+	public AISubActivation resource(Humanoid a, AIManager d, RBIT resBits) {
 		return resource(a, d, resBits, 250);
 	}
 	
@@ -270,7 +270,15 @@ public final class AISUB_walkTo {
 		
 	}
 	
-	public AISubActivation service(Humanoid a, AIManager d, RoomServiceDataSimple r) {
+	public AISubActivation depositInited(Humanoid a, AIManager d, RESOURCE r) {
+		
+		d.subPathByte = r.bIndex();
+		d.resourceCarriedSet(r);
+		return storage.activate(a, d);
+		
+	}
+	
+	public AISubActivation service(Humanoid a, AIManager d, RoomService r) {
 		return service(a, d, r.finder, r.radius);
 		
 	}
@@ -297,11 +305,11 @@ public final class AISUB_walkTo {
 		return service.activate(a, d);
 	}
 	
-	public AISubActivation serviceInclude(Humanoid a, AIManager d, RoomServiceDataSimple r) {
+	public AISubActivation serviceInclude(Humanoid a, AIManager d, RoomService r) {
 		return serviceInclude(a, d, r.finder, r.radius);	
 	}
 	
-	public AISubActivation serviceInclude(Humanoid a, AIManager d, RoomServiceDataSimple r, int dist) {
+	public AISubActivation serviceInclude(Humanoid a, AIManager d, RoomService r, int dist) {
 		return serviceInclude(a, d, r.finder, dist);	
 	}
 	
@@ -432,8 +440,9 @@ public final class AISUB_walkTo {
 		@Override
 		public boolean hasFailed(Humanoid a, AIManager d) {
 			DRAGGABLE c = DRAGGABLE.DRAGGABLE_HOLDER.all().get(d.subPathByte).draggable((short) d.planObject);
+			boolean ret = c == null || !c.canBeDragged();
 			
-			return c == null || !c.canBeDragged() || a.physics.tileC().tileDistanceTo((c.body().cX() >> C.T_SCROLL), (c.body().cY() >> C.T_SCROLL)) > 3;
+			return ret;
 		}
 	};
 	

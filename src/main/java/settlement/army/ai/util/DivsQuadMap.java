@@ -45,6 +45,8 @@ public final class DivsQuadMap {
 	}
 	
 	void add(Div div, int pcx, int pcy) {
+		
+		
 		pcx = pcx >> add_scroll;
 		if (pcx < 0 || pcx >= map[0].length)
 			return;

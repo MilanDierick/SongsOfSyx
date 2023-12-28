@@ -4,6 +4,7 @@ import static settlement.main.SETT.*;
 
 import game.GAME;
 import game.faction.FACTIONS;
+import game.faction.FResources.RTYPE;
 import init.resources.RESOURCE;
 import init.resources.RESOURCES;
 import settlement.entity.humanoid.Humanoid;
@@ -16,6 +17,7 @@ import settlement.job.Job;
 import settlement.main.SETT;
 import settlement.misc.job.SETT_JOB;
 import settlement.misc.util.TILE_STORAGE;
+import snake2d.LOG;
 import snake2d.util.datatypes.DIR;
 import snake2d.util.misc.CLAMP;
 import snake2d.util.sprite.text.Str;
@@ -26,37 +28,46 @@ class PlanOddjobber extends PlanWork {
 	private final Regular regular = new Regular();
 	private final Crate crate = new Crate();
 	
+	private final PlanOddHunt hunt = new PlanOddHunt(this);
+	
 	PlanOddjobber() {
 		
 	}
 
-	private static int distance,crateX,crateY;
+	private static boolean full;
+	private static int crateX,crateY;
 	private static Job sjob;
 	
-	public static boolean hasOddjob(Humanoid a) {
+	public static boolean hasOddjob(Humanoid a, boolean full) {
 	
-		if (PATH().finders.job.hasAny(a.tc().x(), a.tc().y()))
+//		double ch = STATS.WORK().workforce()-STATS.WORK().EMPLOYED.stat().data().get(null);
+//		ch /= 2000;
+//		ch = CLAMP.d(ch, 0, 1);
+//		ch = 0.1 + ch*0.9;
+//		if (ch > STATS.RAN().get(a.indu(), 17, 16)/(double)0x0FFFF)
+//			return false;
+		
+		if (PATH().finders.job.hasJobs(a.tc().x(), a.tc().y(), full))
 			return true;
-		if (PATH().finders.jobStore.hasStoreJob(a.tc().x(), a.tc().y()))
+	
+		if (SETT.PATH().finders.prey.has(a.tc()))
+			return true;
+		
+		if (shouldStore(a) && PATH().finders.jobStore.has(a.tc().x(), a.tc().y()))
 			return true;
 		return false;
 	}
 	
-	protected AiPlanActivation activateOddjobber(Humanoid a, AIManager d) {
-		distance = Integer.MAX_VALUE;
-		sjob = ajacent(a, d);
-		if (sjob == null)
-			sjob = PATH().finders.job.find(a.tc().x(), a.tc().y(), distance, d.path);
-		crateX = a.tc().x();
-		crateY = a.tc().y();
-		return super.activate(a, d);
+	public static boolean shouldStore(Humanoid a) {
+		return true; //(STATS.RAN().get(a.indu(), 17, 4)+TIME.days().bitCurrent() & 0x0F) == 0;
+		
 	}
 	
-	protected AiPlanActivation activateOddjobber(Humanoid a, AIManager d, int dist) {
-		distance = dist;
+	protected AiPlanActivation activateOddjobber(Humanoid a, AIManager d) {
+		full = true;
 		sjob = ajacent(a, d);
 		if (sjob == null)
-			sjob = PATH().finders.job.find(a.tc().x(), a.tc().y(), distance, d.path);
+			sjob = PATH().finders.job.find(a.tc().x(), a.tc().y(), d.path, full);
 		crateX = a.tc().x();
 		crateY = a.tc().y();
 		return super.activate(a, d);
@@ -68,15 +79,15 @@ class PlanOddjobber extends PlanWork {
 		int wy = work(a).mY();
 		crateX = wx;
 		crateY = wy;
-		distance = 100;
+		full = false;
 		d.path.clear();
 		if (PATH().connectivity.is(wx, wy)) {
-			sjob = PATH().finders.job.find(wx, wy, distance, null);
+			sjob = PATH().finders.job.find(wx, wy, null, full);
 			return super.activate(a, d);
 		}
 		for (DIR dir : DIR.ORTHO) {
 			if (PATH().connectivity.is(wx, wy, dir)) {
-				sjob = PATH().finders.job.find(wx+dir.x(), wy+dir.y(), distance, null);
+				sjob = PATH().finders.job.find(wx+dir.x(), wy+dir.y(), null, full);
 				return super.activate(a, d);
 			}
 		}
@@ -87,26 +98,37 @@ class PlanOddjobber extends PlanWork {
 	private Job ajacent(Humanoid a, AIManager d) {
 		
 		if (d.planTile.tileDistanceTo(a.tc()) == 1) {
-			Job j = SETT.JOBS().getter.get(d.planTile);
-			if (j != null && j.jobReserveCanBe() && j.jobResourceBitToFetch() == 0)
-				return j;
+			return ajacentJob(d.planTile.x(), d.planTile.y());
 		}
 		
 		for (DIR dd : DIR.ORTHO) {
-			Job j = SETT.JOBS().getter.get(a.tc(), dd);
-			if (j != null && j.jobReserveCanBe() && j.jobResourceBitToFetch() == 0)
+			Job j = ajacentJob(a.tc().x()+dd.x(), a.tc().y()+dd.y());
+			if (j != null)
 				return j;
 		}
 		return null;
 		
 	}
 	
+	private Job ajacentJob(int tx, int ty) {
+		Job j = SETT.JOBS().getter.get(tx, ty);
+		if (j == null)
+			return null;
+		if (SETT.JOBS().tool_activate.isPlacable(tx, ty, null, null) == null)
+			return null;
+		if (!j.jobReserveCanBe() || j.jobResourceBitToFetch() != null)
+			return null;
+		if (j == SETT.JOBS().clearss.food && !SETT.WEATHER().growthRipe.cropsAreRipe())
+			return null;
+		return j;
+	}
+	
 	protected AiPlanActivation activateWorker(Humanoid a, AIManager d, int sx, int sy, int radius) {
 
-		distance = Integer.MAX_VALUE;
+		full = true;
 		crateX = sx;
 		crateY = sy;
-		sjob = PATH().finders.job.findWeird(sx, sy,radius);
+		sjob = PATH().finders.job.findOnlyJobForced(sx, sy,radius);
 		return super.activate(a, d);
 	}
 	
@@ -118,7 +140,6 @@ class PlanOddjobber extends PlanWork {
 	@Override
 	protected AISubActivation init(Humanoid a, AIManager d) {
 		Job j = sjob;
-		
 		
 		if (j != null) {
 			d.planTile.set(j.jobCoo());
@@ -133,9 +154,21 @@ class PlanOddjobber extends PlanWork {
 					return s;
 			}
 		}
-		TILE_STORAGE c = PATH().finders.jobStore.find(crateX, crateY, 100);
-		if (c != null)
-			return crate.init(a, d, c);
+		
+		if (full) {
+			AISubActivation s = hunt.init(a, d);
+			if (s != null)
+				return s;
+		}
+
+		
+		if (shouldStore(a)) {
+			TILE_STORAGE c = PATH().finders.jobStore.find(crateX, crateY);
+			if (c != null)
+				return crate.init(a, d, c);
+		}
+		
+		
 		
 		return null;
 
@@ -146,8 +179,10 @@ class PlanOddjobber extends PlanWork {
 	private boolean isClearJob(Job j, Humanoid a) {
 		if (j == null)
 			return false;
+		if (j == SETT.JOBS().clearss.food && !SETT.WEATHER().growthRipe.cropsAreRipe())
+			return false;
 		if (j.jobPerformTime(a) == 0) {
-			if (j.jobResourceBitToFetch() == 0)
+			if (j.jobResourceBitToFetch() == null)
 				return false;
 		}
 		return j.res() != null && j.jobResourcesNeeded() > 0;
@@ -172,14 +207,14 @@ class PlanOddjobber extends PlanWork {
 				if (isClearJob(j,a) && j.jobReserveCanBe() && j.res() == res) {
 					d.planByte1 |= 1 << di;
 					extraRes += j.jobResourcesNeeded();
-					needsNow &= j.jobResourceBitToFetch() != 0;
-					j.jobReserve(j.jobResourceBitToFetch() > 0 ? j.res() : null);
+					needsNow &= j.jobResourceBitToFetch() != null;
+					j.jobReserve(j.jobResourceBitToFetch() != null ? j.res() : null);
 					if (extraRes >= WorkAbs.maxCarry)
 						break;
 				}
 			}
 			if (res != null) {
-				AISubActivation s = fetch.activate(a, d, res.bit, CLAMP.i(extraRes, 0, WorkAbs.maxCarry), needsNow ? Integer.MAX_VALUE : distance, true, true);
+				AISubActivation s = fetch.activate(a, d, res.bit, CLAMP.i(extraRes, 0, WorkAbs.maxCarry), needsNow ? Integer.MAX_VALUE : 120, true, true);
 				if (s != null)
 					return s;
 			}
@@ -248,7 +283,7 @@ class PlanOddjobber extends PlanWork {
 				DIR dir = dirs[di];
 				if ((d.planByte1 & (1 << di)) != 0) {
 					Job j = SETT.JOBS().getter.get(d.planTile, dir);
-					if (j != null && j.jobResourceBitToFetch() != 0) {
+					if (j != null && j.jobResourceBitToFetch() != null) {
 						cancelJob(a, d, j, resource(d));
 						d.planByte1 &= ~(1 << di);
 					}
@@ -349,9 +384,9 @@ class PlanOddjobber extends PlanWork {
 					j = JOBS().getter.get(d.path.destX(), d.path.destY());
 					if (isClearJob(j, a) && j.jobReserveCanBe()) {
 						
-						if (j.jobResourceBitToFetch() == 0)
+						if (j.jobResourceBitToFetch() == null)
 							j.jobReserve(null);
-						else if (d.resourceCarried() == resource(d) && resource(d) != null && (j.jobResourceBitToFetch() & d.resourceCarried().bit) != 0)
+						else if (d.resourceCarried() == resource(d) && resource(d) != null && j.jobResourceBitToFetch().has(d.resourceCarried()))
 							j.jobReserve(d.resourceCarried());
 					}
 
@@ -423,9 +458,9 @@ class PlanOddjobber extends PlanWork {
 				
 				j = JOBS().getter.get(d.path.destX(), d.path.destY());
 				if (isClearJob(j, a) && j.jobReserveCanBe()) {
-					if (j.jobResourceBitToFetch() == 0)
+					if (j.jobResourceBitToFetch() == null)
 						j.jobReserve(null);
-					else if (d.resourceCarried() != null && (j.jobResourceBitToFetch() & d.resourceCarried().bit) != 0) {
+					else if (d.resourceCarried() != null &&  (j.jobResourceBitToFetch().has(d.resourceCarried()))) {
 						j.jobReserve(d.resourceCarried());
 					}
 				}
@@ -471,7 +506,7 @@ class PlanOddjobber extends PlanWork {
 			d.planTile.set(j.jobCoo());
 			d.planByte1 = -1;
 			d.resourceDrop(a);
-			if (j.jobResourceBitToFetch() != 0) {
+			if (j.jobResourceBitToFetch() != null) {
 				AISubActivation s = fetch.activate(a, d, j.jobResourceBitToFetch(), CLAMP.i(j.jobResourcesNeeded(), 0, WorkAbs.maxCarry), Integer.MAX_VALUE, true, true);
 				if (s != null) {
 					j = SETT.JOBS().getter.get(d.planTile);
@@ -623,8 +658,9 @@ class PlanOddjobber extends PlanWork {
 					return null;
 				}
 				if (produced != null) {
-					d.resourceCarriedSet(produced);
-					return dumpResource.set(a, d);
+					THINGS().resources.create(a.physics.tileC(), produced, 1);
+//					d.resourceCarriedSet(produced);
+//					return dumpResource.set(a, d);
 				}
 
 				if (AI.modules().work.moduleCanContinue(a, d)) {
@@ -632,7 +668,7 @@ class PlanOddjobber extends PlanWork {
 					if (j != null && j.jobReserveCanBe()) {
 						if (j.jobResourcesNeeded() == 0)
 							j.jobReserve(null);
-						else if (d.resourceCarried() != null && d.resourceCarried().isInMask(j.jobResourceBitToFetch()))
+						else if (d.resourceCarried() != null && d.resourceCarried().bit.has(j.jobResourceBitToFetch()))
 							j.jobReserve(d.resourceCarried());
 						else
 							return null;
@@ -771,7 +807,7 @@ class PlanOddjobber extends PlanWork {
 			return false;
 		if (j.jobPerformTime(a) != 0)
 			return false;
-		if (j.jobResourceBitToFetch() != 0)
+		if (j.jobResourceBitToFetch() != null)
 			return false;
 		return true;
 	}
@@ -783,9 +819,37 @@ class PlanOddjobber extends PlanWork {
 			
 		d.resourceDrop(a);
 		
+		int deadSwitch = 0;
+		
 		while(d.resourceA() < WorkAbs.maxCarry && isDumpJob(a, d, j)) {
+			deadSwitch ++;
+			if (deadSwitch > 100) {
+				LOG.ln();
+				if (!j.jobReservedIs(null) && j.jobReserveCanBe()) {
+					LOG.ln("reserving");
+					j.jobReserve(null);
+				}
+				if (j.jobReservedIs(null)) {
+					LOG.ln("reserved");
+					RESOURCE r = j.jobPerform(a, null, 0);
+					LOG.ln(r + " " + j + " " + j.jobPerformTime(a));
+					if (d.resourceCarried() == null) {
+						d.resourceCarriedSet(r);
+					}else if (d.resourceCarried() != r) {
+						THINGS().resources.create(j.jobCoo(), r, 1);
+						return d.resourceA() > 0;
+					}else {
+						d.resourceAInc(1);
+					}
+				}else {
+					return d.resourceA() > 0;
+				}
+				j = JOBS().getter.get(j.jobCoo());
+				continue;
+			}
 			if (!j.jobReservedIs(null) && j.jobReserveCanBe()) {
 				j.jobReserve(null);
+				j = JOBS().getter.get(j.jobCoo());
 			}
 			if (j.jobReservedIs(null)) {
 				RESOURCE r = j.jobPerform(a, null, 0);
@@ -821,7 +885,7 @@ class PlanOddjobber extends PlanWork {
 			if (PATH().finders.resourceDump.find(a.physics.tileC(), d.path)) {
 				return AI.SUBS().walkTo.path(a, d);
 			} else {
-				FACTIONS.player().res().outSpoilt.inc(d.resourceCarried(), d.resourceA());
+				FACTIONS.player().res().inc(d.resourceCarried(), RTYPE.SPOILAGE, -d.resourceA());
 				//THINGS().resources.createPrecise(a.physics.tileC().x(), a.physics.tileC().y(), d.resourceCarried(), 1);
 				d.resourceCarriedSet(null);
 				return null;
@@ -847,6 +911,12 @@ class PlanOddjobber extends PlanWork {
 	};
 	
 	
+	final class Hunt {
+
+
+		
+
+	}
 	
 
 	

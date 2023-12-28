@@ -1,14 +1,15 @@
 package view.world.ui.army;
 
+import snake2d.util.gui.GUI_BOX;
 import view.interrupter.ISidePanels;
 import view.main.VIEW;
 import world.entity.army.WArmy;
 
 public final class UIArmies {
 
-	private final UIArmyList list = new UIArmyList();
-	final UIArmy army = new UIArmy();
-	public final DivCard divCard = new DivCard();
+	private final List list = new List();
+	final Army army = new Army();
+	private final Hoverer hoverer = new Hoverer();
 	
 	public void openList(WArmy f) {
 		openList(f, VIEW.world().panels);
@@ -37,6 +38,10 @@ public final class UIArmies {
 	
 	public void close(ISidePanels m) {
 		m.remove(list);
+	}
+	
+	public void hover(GUI_BOX box, WArmy a) {
+		hoverer.hover(box, a);
 	}
 	
 }

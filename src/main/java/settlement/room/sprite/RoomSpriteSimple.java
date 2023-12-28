@@ -1,11 +1,11 @@
 package settlement.room.sprite;
 
 import init.sprite.SPRITES;
-import settlement.main.RenderData;
-import settlement.main.RenderData.RenderIterator;
 import settlement.room.main.furnisher.FurnisherItem;
 import snake2d.SPRITE_RENDERER;
 import snake2d.util.sprite.TILE_SHEET;
+import util.rendering.RenderData;
+import util.rendering.RenderData.RenderIterator;
 import util.rendering.ShadowBatch;
 
 public class RoomSpriteSimple extends RoomSprite.Imp {

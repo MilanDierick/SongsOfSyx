@@ -2,6 +2,7 @@ package settlement.room.military.artillery;
 
 import init.C;
 import settlement.army.Army;
+import settlement.entity.humanoid.Humanoid;
 import settlement.main.SETT;
 import settlement.path.finder.SFinderSoldierManning.FINDABLE_MANNING;
 import snake2d.util.datatypes.DIR;
@@ -92,9 +93,8 @@ class Service {
 		}
 
 		@Override
-		public void work(double time) {
-			time /= 4*blue.RELOAD_TIME;
-			ins.work(time);
+		public void work(double time, Humanoid a) {
+			ins.work(time, a);
 			
 		}
 

@@ -1,9 +1,11 @@
 package settlement.entity.animal.spawning;
 
 import java.io.IOException;
+import java.util.Arrays;
 
 import game.time.TIME;
 import settlement.entity.animal.ANIMALS;
+import settlement.entity.animal.AnimalSpecies;
 import settlement.main.CapitolArea;
 import snake2d.util.file.*;
 import snake2d.util.sets.ArrayList;
@@ -27,13 +29,15 @@ public final class AnimalSpawning {
 	};
 	private int max = 0;
 	
+	private final double[] killed;
 	
 	
-	public AnimalSpawning() {
+	public AnimalSpawning(ANIMALS animals) {
 		ArrayList<AnimalSpawnSpot> li = new ArrayList<>(16);
 		for (int i = 0; i < li.max(); i++)
 			li.add(new AnimalSpawnSpot(i));
 		this.spots = li;
+		killed = new double[animals.species.all().size()];
 	}
 	
 	public void update(float ds) {
@@ -59,6 +63,7 @@ public final class AnimalSpawning {
 			for (AnimalSpawnSpot s : spots)
 				s.save(file);
 			uper.save(file);
+			file.dsE(killed);
 		}
 		
 		@Override
@@ -69,6 +74,7 @@ public final class AnimalSpawning {
 				max += s.max();
 			}
 			uper.load(file);
+			file.dsE(killed);
 		}
 		
 		@Override
@@ -77,11 +83,24 @@ public final class AnimalSpawning {
 				s.clear();
 			uper.clear();
 			max = 0;
+			Arrays.fill(killed, 0.0);
 		}
 	};
 	
 	public LIST<AnimalSpawnSpot> all(){
 		return spots;
+	}
+	
+	public boolean isTimeForAKill(AnimalSpecies s) {
+		return killed[s.index()]/4 >= 1;
+	}
+	
+	public void reportKilled(AnimalSpecies s) {
+		killed[s.index()] += s.danger;
+	}
+	
+	public void reportKillRevenge(AnimalSpecies s) {
+		killed[s.index()] -= 2;
 	}
 	
 }

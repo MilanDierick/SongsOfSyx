@@ -1,11 +1,11 @@
 package settlement.room.law.slaver;
 
-import settlement.main.RenderData;
 import settlement.room.main.RoomInstance;
 import settlement.room.main.TmpArea;
 import settlement.room.main.util.RoomInit;
 import snake2d.Renderer;
 import snake2d.util.datatypes.COORDINATE;
+import util.rendering.RenderData;
 import util.rendering.ShadowBatch;
 
 final class ExecutionInstance extends RoomInstance {

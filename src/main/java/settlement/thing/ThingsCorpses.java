@@ -4,15 +4,13 @@ import java.io.IOException;
 import java.util.Arrays;
 
 import game.GAME;
-import game.time.TIME;
 import init.C;
 import init.D;
 import init.race.Race;
 import init.race.appearence.RPortrait;
 import init.settings.S;
 import init.sound.SOUND;
-import settlement.entity.humanoid.HCLASS;
-import settlement.entity.humanoid.HTYPE;
+import settlement.entity.humanoid.*;
 import settlement.entity.humanoid.spirte.HCorpseRenderer;
 import settlement.main.SETT;
 import settlement.path.components.SComponent;
@@ -20,8 +18,10 @@ import settlement.path.finder.SFinderFindable;
 import settlement.room.main.RoomInstance;
 import settlement.room.spirit.grave.GraveData;
 import settlement.room.spirit.grave.GraveData.GRAVE_DATA_HOLDER;
-import settlement.stats.*;
-import settlement.stats.StatsBurial.StatGrave;
+import settlement.stats.Induvidual;
+import settlement.stats.STATS;
+import settlement.stats.colls.StatsBurial.StatGrave;
+import settlement.stats.util.CAUSE_LEAVE;
 import settlement.thing.DRAGGABLE.DRAGGABLE_HOLDER;
 import settlement.thing.THINGS.ThingFactory;
 import settlement.thing.ThingsCorpses.Corpse;
@@ -41,7 +41,7 @@ import view.sett.SETT_HOVERABLE;
 
 public class ThingsCorpses extends ThingFactory<Corpse>{
 	
-	private final static int MAX = 2048;
+	private final static int MAX = 2048*4;
 	private final Corpse[] corpses = new Corpse[MAX];
 	private final SpecialHolder holder = new SpecialHolder();
 	private static String ¤¤burrial = "¤Burial Site";
@@ -90,7 +90,13 @@ public class ThingsCorpses extends ThingFactory<Corpse>{
 		return corpses;
 	}
 	
-	public Corpse create(Induvidual a, RECTANGLE hitbox, DIR d, boolean intact, CAUSE_LEAVE cause) {
+	public Corpse create(Humanoid h, boolean intact, CAUSE_LEAVE cause) {
+		
+		return create(h.indu(), h.body().cX(), h.body().cY(), h.speed.dir(), intact, cause);
+	
+	}
+	
+	public Corpse create(Induvidual a, int cx, int cy, DIR d, boolean intact, CAUSE_LEAVE cause) {
 		
 		if (!cause.leavesCorpse)
 			return null;
@@ -98,7 +104,7 @@ public class ThingsCorpses extends ThingFactory<Corpse>{
 		if (remainingToAdd() == 0)
 			return null;
 		
-		if (SETT.TERRAIN().WATER.DEEP.is(hitbox.cX()>>C.T_SCROLL, hitbox.cY()>>C.T_SCROLL))
+		if (SETT.TERRAIN().WATER.DEEP.is(cx>>C.T_SCROLL, cy>>C.T_SCROLL))
 			return null;
 		
 		Corpse c = nextInLine();
@@ -107,8 +113,7 @@ public class ThingsCorpses extends ThingFactory<Corpse>{
 			throw new RuntimeException();
 		}
 		
-		c.init(a, hitbox, d, intact, cause);
- 		
+		c.init(a, cx, cy, d, intact, cause);
 		return c;
 		
 	}
@@ -381,7 +386,7 @@ public class ThingsCorpses extends ThingFactory<Corpse>{
 		@Override
 		public void render(Renderer r, ShadowBatch shadows, float ds, int offsetX, int offsetY) {
 
-			boolean inWater = SETT.TERRAIN().WATER.isOpen(ctx(), cty());
+			boolean inWater = SETT.ENTITIES().submerged.is(ctx(), cty());
 			int x = hitbox.x1() + offsetX - indu.race().appearance().off;
 			int y = hitbox.y1() + offsetY - indu.race().appearance().off;
 			
@@ -395,8 +400,8 @@ public class ThingsCorpses extends ThingFactory<Corpse>{
 				if (!indu.race().physics.decays) {
 					decay = 0;
 				}
-				STATS.NEEDS().DIRTINESS.stat().indu().setD(indu, decay);
-				
+				STATS.NEEDS().DIRTINESS.setD(indu, decay);
+
 				if (intact)
 					HCorpseRenderer.renderCorpse(indu, direction, inWater, decay, r, shadows, x, y);
 				else
@@ -418,11 +423,12 @@ public class ThingsCorpses extends ThingFactory<Corpse>{
 			
 		}
 		
-		void init(Induvidual a, RECTANGLE hitbox, DIR d, boolean intact, CAUSE_LEAVE cause) {
+		void init(Induvidual a, int cx, int cy, DIR d, boolean intact, CAUSE_LEAVE cause) {
 			this.indu = a;
 			this.intact = intact;
 			this.decay = 0;
-			this.hitbox.set(hitbox);
+			this.hitbox.setDim(a.race().physics.hitBoxsize(), a.race().physics.hitBoxsize());
+			this.hitbox.moveC(cx, cy);
 			this.direction = (byte) d.id();
 			this.flyTimer = -RND.rFloat(15f);
 			this.claimed = false;
@@ -724,7 +730,7 @@ public class ThingsCorpses extends ThingFactory<Corpse>{
 				@Override
 				public void update(GText text) {
 					text.color(COLOR.WHITE85);
-					int age = (int)(STATS.POP().AGE.indu().get(indu)/TIME.years().bitConversion(TIME.days()));
+					int age = STATS.POP().age.years(indu);
 					text.clear().add(STATS.APPEARANCE().name(indu)).add(',').s().add(age).add(',').s().add(indu.hType().name);
 	
 					

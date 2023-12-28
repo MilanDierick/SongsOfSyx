@@ -18,7 +18,7 @@ public final class QueueInteger implements Serializable, SAVABLE {
 	private int currentSize = 0;
 
 	public QueueInteger(int size) {
-		this.queue = new int[size];
+		this.queue = new int[size+1];
 		clear();
 	}
 
@@ -59,7 +59,7 @@ public final class QueueInteger implements Serializable, SAVABLE {
 	}
 
 	public boolean hasRoom() {
-		return currentSize < queue.length;
+		return currentSize < queue.length-1;
 	}
 
 	public boolean isFull() {
@@ -71,7 +71,7 @@ public final class QueueInteger implements Serializable, SAVABLE {
 	}
 
 	public int capacity() {
-		return queue.length;
+		return queue.length-1;
 	}
 
 	public int size() {

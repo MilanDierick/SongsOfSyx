@@ -1,22 +1,16 @@
 package game.faction.player;
 
 import java.io.IOException;
-import java.util.*;
 
+import game.boosting.BoostSpecs;
 import game.faction.FACTIONS;
-import game.faction.player.PLocks.PLocker;
+import game.faction.Faction;
+import game.values.*;
 import init.D;
-import init.boostable.*;
-import init.boostable.BOOST_LOOKUP.BOOSTER_LOOKUP_IMP;
-import init.boostable.BOOST_LOOKUP.SIMPLE;
 import init.paths.PATH;
 import init.paths.PATHS;
-import init.tech.Unlocks;
-import settlement.entity.humanoid.HCLASS;
-import settlement.main.SETT;
-import settlement.room.main.RoomBlueprint;
-import settlement.room.main.RoomBlueprintImp;
-import settlement.stats.STATS;
+import init.sprite.UI.UI;
+import settlement.stats.Induvidual;
 import snake2d.Errors;
 import snake2d.SPRITE_RENDERER;
 import snake2d.util.datatypes.DIR;
@@ -25,16 +19,15 @@ import snake2d.util.gui.GUI_BOX;
 import snake2d.util.gui.GuiSection;
 import snake2d.util.gui.renderable.RENDEROBJ;
 import snake2d.util.misc.ACTION;
-import snake2d.util.sets.ArrayList;
-import snake2d.util.sets.INDEXED;
-import snake2d.util.sets.LIST;
+import snake2d.util.sets.*;
+import util.data.DOUBLE_O;
+import util.dic.DicMisc;
 import util.gui.misc.GBox;
 import util.gui.misc.GHeader;
-import util.info.GFORMAT;
 import util.info.INFO;
 import view.interrupter.IDebugPanel;
-import view.main.MessageSection;
-import world.World;
+import view.ui.message.MessageSection;
+import world.regions.Region;
 
 public final class PLevels {
 
@@ -42,8 +35,6 @@ public final class PLevels {
 	
 	private static CharSequence ¤¤mTitle = "¤New level unlocked!";
 	private static CharSequence ¤¤mMessage = "¤A new level has been bestowed upon your name!";
-	private static CharSequence ¤¤UnlocksByTech = "¤Unlocks with level:";
-	private static CharSequence ¤¤PopReq = "¤Citizens required: ";
 	{
 		D.t(this);
 	}
@@ -57,28 +48,15 @@ public final class PLevels {
 	
 	private Level current;
 	private boolean increase;
-	private final int[] roomLock = new int[SETT.ROOMS().all().size()];
-	public BOOST_LOOKUP.SIMPLE BOOSTER;
-	private final Boost boost;
+	public final BoostSpecs boosters;
+	private final BoostCompound<Level> bos;
 	
 	public PLevels() {
-		Arrays.fill(roomLock, 0);
+
 		PATH data = PATHS.INIT().getFolder("player").getFolder("level");
 		PATH text = PATHS.TEXT().getFolder("player").getFolder("level");
 		String[] ss = data.getFiles();
-		HashMap<String, Integer> map = new HashMap<>();
-		for (String s : ss) {
-			Json j = new Json(data.get(s));
-			map.put(s, j.i("POPULATION", 0, Integer.MAX_VALUE));
-		}
-			
 		
-		Arrays.sort(ss, new Comparator<String>() {
-			@Override
-			public int compare(String o1, String o2) {
-				return map.get(o1) - map.get(o2);
-			}
-		});
 		
 		levels = new ArrayList<>(ss.length);
 		
@@ -90,12 +68,7 @@ public final class PLevels {
 			new Errors.DataError("Insufficient levels declared. Needs more than 0", data.get());
 		current = levels.get(0);
 		
-		for (Level l : levels) {
-			for (RoomBlueprintImp b : l.roomsUnlocks()) {
-				if (l.index() > roomLock[b.index()])
-					roomLock[b.index()] = l.index();
-			}
-		}
+
 		
 		IDebugPanel.add("Increase level", new ACTION() {
 			
@@ -105,46 +78,20 @@ public final class PLevels {
 			}
 		});
 		
-		boost = new Boost(levels);
-		BOOSTER = boost;
-	}
-	
-	private class Boost extends BOOSTER_LOOKUP_IMP implements SIMPLE {
-
-		private final double[] add = new double[BOOSTABLES.all().size()];
-		private final double[] mul = new double[BOOSTABLES.all().size()];
-		
-		protected Boost(ArrayList<Level> levels) {
-			super(info.name);
-			for (Level t : levels)
-				init(t);
-			setBonuses(0);
-			makeBoosters(this, true, false, true);
-		}
-
-		@Override
-		public double add(BOOSTABLE b) {
-			return add[b.index()];
-		}
-
-		@Override
-		public double mul(BOOSTABLE b) {
-			return mul[b.index()];
-		}
-		
-		private void setBonuses(int i) {
-			Arrays.fill(add, 0);
-			Arrays.fill(mul, 1);
+		boosters = new BoostSpecs(DicMisc.¤¤Level, UI.icons().s.star, true);
+		bos = new BoostCompound<PLevels.Level>(boosters, levels) {
 			
-			for (int l = 0; l <= i; l++) {
-				for (BBoost b : levels.get(l).boosts()) {
-					if (b.isMul())
-						mul[b.boostable.index()] *= b.value();
-					else
-						add[b.boostable.index()] += b.value();
-				}
+			@Override
+			protected double getValue(Level t) {
+				return current.index >= t.index ? 1 : 0;
 			}
-		}
+			
+			@Override
+			protected BoostSpecs bos(Level t) {
+				return t.boosters;
+			}
+		};
+		
 	}
 	
 	final SAVABLE saver = new SAVABLE() {
@@ -161,28 +108,23 @@ public final class PLevels {
 				i = levels.size()-1;
 			current = levels.get(i);
 			
-			boost.setBonuses(i);
+			bos.clearChache();
 		}
 		
 		@Override
 		public void clear() {
 			current = levels.get(0);
-			boost.setBonuses(0);
+			bos.clearChache();
 		}
 	};
 	
 	void update() {
-		int p = STATS.POP().POP.data(HCLASS.CITIZEN).get(null, 0) + World.ARMIES().cityDivs().total();
-		if (current().index() < levels.size()-1 && (increase || levels.get(current().index()+1).condition <= p)) {
+		if (current().index() < levels.size()-1 && (increase || levels.get(current().index()+1).lockable.passes(FACTIONS.player()))) {
 			current = levels.get(current().index()+1);
-			boost.setBonuses(current().index());
+			bos.clearChache();
 			new Mess(current.index).send();
 			increase = false;
 		}
-	}
-	
-	boolean roomIsLocked(RoomBlueprint room) {
-		return roomLock[room.index()] > current().index;
 	}
 	
 	public LIST<Level> all(){
@@ -193,40 +135,77 @@ public final class PLevels {
 		return current;
 	}	
 	
-	public static class Level extends Unlocks implements INDEXED{
+	public static class Level implements INDEXED{
 		
-		private final int condition;
 		private final int index;
 		public final CharSequence male;
 		public final CharSequence female;
 		public final CharSequence desc;
 		
+		public final BoostSpecs boosters;
+		public final Lockable<Faction> lockable;
+		public final Lockers lockers;
+		
 		Level(ArrayList<Level> all, String key, PATH data, PATH text){
-			super("", new Json(data.get(key)));
 			this.index = all.add(this);
 			Json d = new Json(data.get(key));
 			Json t = new Json(text.get(key));
-			this.condition = d.i("POPULATION");
 			male = t.text("MALE");
 			female = t.text("FEMALE");
 			desc = t.text("DESC");
 			
-		}
-		
-		public int popNeeded() {
-			return condition;
-		}
-		
-		public int noblesAllowed() {
-			return nobles;
+			lockable = GVALUES.FACTION.LOCK.push();
+			lockable.push(d);
+			lockers = new Lockers(DicMisc.¤¤Level + ": " + male, UI.icons().s.star);
+			
+			lockers.add(GVALUES.FACTION, d, new DOUBLE_O<Faction>() {
+
+				@Override
+				public double getD(Faction t) {
+					
+					if (t == FACTIONS.player()) {
+						if (FACTIONS.player().level().current().index() >= Level.this.index())
+							return 1.0;
+						return 0;
+					}
+					return 1;
+				}
+			
+			});
+			
+			lockers.add(GVALUES.INDU, d, new DOUBLE_O<Induvidual>() {
+
+				@Override
+				public double getD(Induvidual t) {
+					if (t.faction() == FACTIONS.player()) {
+						if (FACTIONS.player().level().current().index() >= Level.this.index())
+							return 1.0;
+						return 0;
+					}
+					return 1;
+				}
+			
+			});
+			
+			lockers.add(GVALUES.REGION, d, new DOUBLE_O<Region>() {
+
+				@Override
+				public double getD(Region t) {
+					if (t.faction() == FACTIONS.player()) {
+						if (FACTIONS.player().level().current().index() >= Level.this.index())
+							return 1.0;
+						return 0;
+					}
+					return 1;
+				}
+			
+			});
+			
+			boosters = new BoostSpecs(DicMisc.¤¤Level + ": " + male, UI.icons().s.star, false);
+			boosters.push(d, null);
 		}
 		
 		public CharSequence name() {
-			return male;
-		}
-
-		@Override
-		public CharSequence boosterName() {
 			return male;
 		}
 		
@@ -235,33 +214,20 @@ public final class PLevels {
 			return index;
 		}
 		
-		@Override
 		public void hoverInfoGet(GUI_BOX text) {
 			GBox b = (GBox) text;
 			b.title(name());
 			b.text(desc);
 			b.NL(4);
-			b.add(b.text().errorify().add(¤¤PopReq));
-			b.add(GFORMAT.i(b.text(), popNeeded()));
-			b.NL();
 			
-			super.hoverInfoGet(text);
+			lockable.hover(text, FACTIONS.player());
+			b.sep();
+			lockers.hover(text);
+			b.NL(8);
+			boosters.hover(text, 1.0, -1);
 			
 		}
 	}
-
-	public final PLocker locker = new PLocker(¤¤UnlocksByTech) {
-
-		@Override
-		protected int unlocks() {
-			return all().size() - (current().index()+1);
-		}
-
-		@Override
-		protected Unlocks unlock(int i) {
-			return all().get(current().index()+1 +i);
-		}
-	};
 	
 	private static class Mess extends MessageSection {
 

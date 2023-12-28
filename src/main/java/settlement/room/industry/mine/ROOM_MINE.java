@@ -2,15 +2,15 @@ package settlement.room.industry.mine;
 
 import java.io.IOException;
 
+import game.boosting.Boostable;
 import init.D;
-import init.boostable.BOOSTABLE;
-import init.boostable.BOOSTABLES;
 import init.resources.*;
 import settlement.path.finder.SFinderRoomService;
 import settlement.room.industry.module.INDUSTRY_HASER;
 import settlement.room.industry.module.Industry;
 import settlement.room.industry.module.Industry.RoomBoost;
 import settlement.room.main.*;
+import settlement.room.main.BonusExp.RoomExperienceBonus;
 import settlement.room.main.category.RoomCategorySub;
 import settlement.room.main.furnisher.Furnisher;
 import settlement.room.main.util.RoomInitData;
@@ -25,6 +25,7 @@ import util.gui.misc.*;
 import util.info.GFORMAT;
 import util.info.INFO;
 import view.sett.ui.room.UIRoomModule;
+import world.regions.Region;
 
 public final class ROOM_MINE extends RoomBlueprintIns<MineInstance> implements INDUSTRY_HASER{
 
@@ -45,7 +46,7 @@ public final class ROOM_MINE extends RoomBlueprintIns<MineInstance> implements I
 		
 		minable = RESOURCES.minables().get(init.data());
 		constructor = new Constructor(init, this);
-		BOOSTABLE skill = BOOSTABLES.ROOMS().pushRoom(this, init.data(), type);
+		Boostable skill = pushBo(init.data(), type, true);
 		{D.t(this);}
 		
 		CharSequence out = D.g("OutputD", "When building the mine, the density of the {0} determines the output. The highest density is applied when you have but 1 worker. This value will move down to the average density the more people you employ in the mine. Increasing the amount of workers will always result in more produce, the efficiency/worker will go down however.");
@@ -85,12 +86,17 @@ public final class ROOM_MINE extends RoomBlueprintIns<MineInstance> implements I
 				new RESOURCE[] {minable.resource}, 
 				new double[] {init.data().d("YEILD_WORKER_DAILY", 0, 1000)}, 
 				new RoomBoost[] {constructor.efficiency, employed}, 
-				skill);
+				skill) {
+			@Override
+			public double getRegionBonus(Region reg) {
+				return reg.info.minableBonus(minable);
+			}
+		};
 		
 		job = new Job(this);
 		indus = new ArrayList<>(productionData);
 		
-		
+		new RoomExperienceBonus(this, init.data(), skill);
 	}
 	
 	@Override

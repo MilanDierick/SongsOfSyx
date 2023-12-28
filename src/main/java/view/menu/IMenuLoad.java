@@ -4,7 +4,6 @@ import game.GameLoader;
 import init.C;
 import init.paths.PATHS;
 import init.sprite.UI.UI;
-import menu.screens.Screener;
 import snake2d.MButt;
 import snake2d.util.color.COLOR;
 import snake2d.util.datatypes.COORDINATE;

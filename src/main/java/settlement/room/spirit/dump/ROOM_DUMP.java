@@ -9,8 +9,8 @@ import settlement.room.main.RoomBlueprintIns;
 import settlement.room.main.category.RoomCategorySub;
 import settlement.room.main.furnisher.Furnisher;
 import settlement.room.main.util.RoomInitData;
-import settlement.room.service.module.RoomServiceDataSimple;
-import settlement.room.service.module.RoomServiceDataSimple.ROOM_SERVICE_HASER;
+import settlement.room.service.module.RoomService;
+import settlement.room.service.module.RoomService.ROOM_SERVICE_HASER;
 import settlement.thing.ThingsCorpses.Corpse;
 import snake2d.util.file.FileGetter;
 import snake2d.util.file.FilePutter;
@@ -18,7 +18,7 @@ import snake2d.util.file.FilePutter;
 public class ROOM_DUMP extends RoomBlueprintIns<DumpInstance> implements ROOM_SERVICE_HASER{
 
 	final Constructor constructor;
-	final RoomServiceDataSimple service;
+	final RoomService service;
 	public static CharSequence ¤¤RemoveProblem = "¤This resting place still holds the dead and can not be removed. Deactivate the room and allow the corpses to decompose peacefully. Current cadavers: {0}. Days until clear: {1}.";
 	
 	static {
@@ -28,7 +28,7 @@ public class ROOM_DUMP extends RoomBlueprintIns<DumpInstance> implements ROOM_SE
 	public ROOM_DUMP(RoomInitData data, RoomCategorySub cat) throws IOException {
 		super(0, data, "_DUMP_CORPSE", cat);
 		constructor = new Constructor(this, data);
-		service = new RoomServiceDataSimple(this, data) {
+		service = new RoomService(this, data) {
 			
 			@Override
 			public FSERVICE service(int tx, int ty) {
@@ -71,7 +71,7 @@ public class ROOM_DUMP extends RoomBlueprintIns<DumpInstance> implements ROOM_SE
 	}
 	
 	@Override
-	public RoomServiceDataSimple service() {
+	public RoomService service() {
 		return service;
 	}
 

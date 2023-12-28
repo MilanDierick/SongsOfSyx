@@ -4,32 +4,32 @@
 package settlement.room.infra.export;
 
 import game.faction.FACTIONS;
-import game.faction.trade.PlayerPrices.TradeHolder;
+import game.faction.npc.FactionNPC;
 import init.D;
 import init.resources.RESOURCE;
 import init.resources.RESOURCES;
-import init.sprite.ICON;
 import init.sprite.SPRITES;
-import settlement.main.SETT;
+import init.sprite.UI.Icon;
 import settlement.room.main.RoomInstance;
 import snake2d.SPRITE_RENDERER;
 import snake2d.util.datatypes.DIR;
 import snake2d.util.gui.GuiSection;
+import snake2d.util.gui.clickable.CLICKABLE.ClickWrap;
 import snake2d.util.gui.renderable.RENDEROBJ;
 import snake2d.util.misc.Dictionary;
 import snake2d.util.sets.LISTE;
 import snake2d.util.sprite.SPRITE;
 import util.data.GETTER;
-import util.dic.DicGeo;
 import util.dic.DicRes;
-import util.gui.common.GResSelector;
+import util.gui.common.UIPickerRes;
 import util.gui.misc.*;
 import util.gui.table.GTableSorter.GTFilter;
 import util.gui.table.GTableSorter.GTSort;
 import util.info.GFORMAT;
+import view.main.VIEW;
 import view.sett.ui.room.UIRoomBulkApplier;
 import view.sett.ui.room.UIRoomModule.UIRoomModuleImp;
-import view.ui.UIGoodsTrade;
+import view.ui.goods.UIGoodsExport;
 
 class Gui extends UIRoomModuleImp<ExportInstance, ROOM_EXPORT> {
 
@@ -81,11 +81,12 @@ class Gui extends UIRoomModuleImp<ExportInstance, ROOM_EXPORT> {
 		}.hh(DicRes.¤¤Sold);
 		grid.add(r);
 		
-		section.addRelBody(2, DIR.S, new GResSelector(true) {
+		final UIPickerRes pop = new UIPickerRes(true) {
 			
 			@Override
 			protected void select(RESOURCE r, int li) {
 				g.get().resourceSet(r);
+				VIEW.inters().popup.close();
 			}
 			
 			@Override
@@ -97,92 +98,70 @@ class Gui extends UIRoomModuleImp<ExportInstance, ROOM_EXPORT> {
 			protected void hoverResource(RESOURCE res, GBox b) {
 				b.title(res.name);
 				
+				CharSequence p = blueprint.tally.problem(res, false);
+				if (p != null) {
+					b.error(p);
+				}else {
+					p = blueprint.tally.warning(res);
+					if (p != null)
+						b.add(b.text().warnify().add(p));
+				}
+				b.NL();
+				
+			
+				
 				b.textL(DicRes.¤¤Buyers);
 				b.tab(6);
 				b.textL(DicRes.¤¤buyPrice);
 				b.tab(9);
 				b.textL(DicRes.¤¤Stored);
 				b.NL();
-				for (TradeHolder h : FACTIONS.tradeUtil().getBuyers(FACTIONS.player(), res)) {
-					b.add(b.text().lablify().add(h.faction().appearence().name()));
+				for (FactionNPC h : FACTIONS.pRel().traders()) {
+					if (h.buyer().priceBuyP(res) <= 0)
+						continue;
+					b.add(b.text().lablify().add(h.name));
 					b.tab(6);
-					b.add(GFORMAT.f(b.text(), h.price()));
+					b.add(GFORMAT.f(b.text(), h.buyer().priceBuyP(res)));
 					b.tab(9);
-					b.add(GFORMAT.i(b.text(), h.stored()));
+					b.add(GFORMAT.i(b.text(), h.stockpile.amount(res)));
 					b.NL();
 				}
 				
-				if (FACTIONS.tradeUtil().getBuyers(FACTIONS.player(), res).size() == 0)
-					b.error(DicRes.¤¤noBuyers);
 			}
+		};
+		
+		SPRITE la = new SPRITE.Imp(Icon.M) {
+			
+			@Override
+			public void render(SPRITE_RENDERER r, int X1, int X2, int Y1, int Y2) {
+				if (g.get().resource() != null)
+					g.get().resource().icon().render(r, X1, X2, Y1, Y2);
+				else
+					SPRITES.icons().m.cancel.render(r, X1, X2, Y1, Y2);
+			}
+		};
+		
+		section.addRelBody(2, DIR.S, new GButt.ButtPanel(la) {
+			
+			@Override
+			protected void clickA() {
+				VIEW.inters().popup.show(pop, this, true);
+			}
+			
 		});
 		
 		{
-			GuiSection s = new GuiSection() {
+			UIGoodsExport ex = new UIGoodsExport();
+			ClickWrap s = new ClickWrap(ex) {
 				
 				@Override
-				public void render(SPRITE_RENDERER r, float ds) {
-					visableSet(g.get().resource() != null);
-					if (visableIs())
-						super.render(r, ds);
+				protected RENDEROBJ pget() {
+					if (g.get().resource() == null)
+						return null;
+					ex.res.set(g.get().resource());
+					return ex;
 				}
-				
 			};
-			
-			s.add(new RENDEROBJ.Sprite(ICON.MEDIUM.SIZE*2) {
-				
-				@Override
-				public void render(SPRITE_RENDERER r, float ds) {
-					setSprite(g.get().resource().icon().huge);
-					super.render(r, ds);
-				}
-				
-			});
-			s.addRightC(32, new GHeader(DicGeo.¤¤Global));
-			
-			s.add(new GHeader(DicRes.¤¤ExportLevel), 0, s.getLastY2()+4);
-			
-			s.addDown(2, UIGoodsTrade.sliderExport(new GETTER<RESOURCE>() {
-
-				@Override
-				public RESOURCE get() {
-					return g.get().resource();
-				}
-				
-			}, 180));
-			
-			
-			
-			s.add(new GStat() {
-				
-				@Override
-				public void update(GText text) {
-					GFORMAT.i(text, SETT.ROOMS().STOCKPILE.tally().amountTotal(g.get().resource()));
-					text.s();
-					GFORMAT.perc(text, SETT.ROOMS().STOCKPILE.tally().load(g.get().resource()));
-				}
-			}.hh(SETT.ROOMS().STOCKPILE.info.names, 120), 0, s.getLastY2()+2);
-			
-			s.addDown(8, new GStat() {
-				@Override
-				public void update(GText text) {
-					GFORMAT.i(text, blueprint.tally.promised.get(g.get().resource()));
-				}
-			}.hh(DicRes.¤¤Outbound, 120));
-			
-			s.addDown(8, new GStat() {
-				@Override
-				public void update(GText text) {
-					GFORMAT.i(text, blueprint.tally.forSale(g.get().resource()));
-				}
-			}.hh(DicRes.¤¤ForSale, 120));
-			
-			s.addDown(8, new GStat() {
-				@Override
-				public void update(GText text) {
-					GFORMAT.i(text, FACTIONS.tradeUtil().getBuyPriceBest(FACTIONS.player(), g.get().resource()));
-				}
-			}.hh(DicRes.¤¤sellPrice, 120));
 			
 			section.add(s, section.body().x1()+8, section.getLastY2()+8);
 			
@@ -193,7 +172,7 @@ class Gui extends UIRoomModuleImp<ExportInstance, ROOM_EXPORT> {
 	@Override
 	protected void appendTableButt(GuiSection s, GETTER<RoomInstance> ins) {
 
-		s.add(new SPRITE.Imp(ICON.SMALL.SIZE) {
+		s.add(new SPRITE.Imp(Icon.S) {
 
 			@Override
 			public void render(SPRITE_RENDERER r, int X1, int X2, int Y1, int Y2) {

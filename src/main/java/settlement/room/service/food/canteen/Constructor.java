@@ -4,7 +4,6 @@ import java.io.IOException;
 
 import init.C;
 import init.resources.*;
-import settlement.main.RenderData.RenderIterator;
 import settlement.main.SETT;
 import settlement.path.AVAILABILITY;
 import settlement.room.main.*;
@@ -16,6 +15,7 @@ import snake2d.SPRITE_RENDERER;
 import snake2d.util.color.COLOR;
 import snake2d.util.datatypes.DIR;
 import snake2d.util.file.Json;
+import util.rendering.RenderData.RenderIterator;
 import util.rendering.ShadowBatch;
 
 final class Constructor extends Furnisher{
@@ -39,7 +39,7 @@ final class Constructor extends Furnisher{
 		
 		sPlate = new RoomSprite1x1(sp, "PLATE_1X1");
 		
-		final RoomSprite spriteOven = new RoomSpriteComboN(sp, "TABLE_COMBO") {
+		final RoomSprite spriteOven = new RoomSpriteCombo(sp, "TABLE_COMBO") {
 			
 			final RoomSprite1x1 beneath = new RoomSprite1x1(sp, "OVEN_BENEATH_1X1");
 			final RoomSprite1x1 beneath_used = new RoomSprite1x1(sp, "OVEN_BENEATH_USED_1X1");
@@ -83,7 +83,7 @@ final class Constructor extends Furnisher{
 		};
 		
 		
-		final RoomSprite spriteFood = new RoomSpriteComboN(sp, "TABLE_COMBO") {
+		final RoomSprite spriteFood = new RoomSpriteCombo(sp, "TABLE_COMBO") {
 			
 			
 			@Override
@@ -99,7 +99,7 @@ final class Constructor extends Furnisher{
 				int ri = ran%RESOURCES.EDI().all().size();
 				for (int i = 0; i < 9; i++) {
 					
-					Edible e = RESOURCES.EDI().all().get(ri%RESOURCES.EDI().all().size());
+					ResG e = RESOURCES.EDI().all().get(ri%RESOURCES.EDI().all().size());
 					
 					double a = (double)0x07*ins.amount(e)/ins.maxAmount;
 					if (a > 0 && a >= (ran&0x07)) {
@@ -119,7 +119,7 @@ final class Constructor extends Furnisher{
 
 		};
 		
-		final RoomSprite spriteMisc = new RoomSpriteComboN(spriteFood) {
+		final RoomSprite spriteMisc = new RoomSpriteCombo(spriteFood) {
 			
 			private final RoomSprite top = new RoomSprite1x1(sp, "TOOLS_1X1");
 			
@@ -134,10 +134,10 @@ final class Constructor extends Furnisher{
 		final RoomSprite spriteChair = new RoomSprite1x1(sp, "STOOL_1X1") {
 			@Override
 			protected boolean joins(int tx, int ty, int rx, int ry, DIR d, FurnisherItem item) {
-				return item.sprite(rx, ry) instanceof RoomSpriteComboN;
+				return item.sprite(rx, ry) instanceof RoomSpriteCombo;
 			}
 		};
-		final RoomSprite spriteTableDec = new RoomSpriteComboN(spriteFood) {
+		final RoomSprite spriteTableDec = new RoomSpriteCombo(spriteFood) {
 			private final RoomSprite top = new RoomSprite1x1(sp, "DECOR_1X1");
 			@Override
 			public void renderAbove(SPRITE_RENDERER r, ShadowBatch s, int data, RenderIterator it, double degrade) {
@@ -147,7 +147,7 @@ final class Constructor extends Furnisher{
 			}
 			
 		};
-		final RoomSprite spriteTable = new RoomSpriteComboN(spriteFood) {
+		final RoomSprite spriteTable = new RoomSpriteCombo(spriteFood) {
 			
 			@Override
 			public void renderAbove(SPRITE_RENDERER r, ShadowBatch s, int data, RenderIterator it, double degrade) {

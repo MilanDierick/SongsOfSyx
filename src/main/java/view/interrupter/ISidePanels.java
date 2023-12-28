@@ -11,11 +11,10 @@ import snake2d.util.gui.GUI_BOX;
 import snake2d.util.gui.GuiSection;
 import snake2d.util.gui.clickable.CLICKABLE;
 import snake2d.util.sets.ArrayList;
-import snake2d.util.sprite.SPRITE;
+import util.colors.GCOLOR;
 import util.dic.DicMisc;
 import util.gui.misc.*;
-import util.gui.panel.GFrame;
-import view.ui.UIPanelTop;
+import view.ui.top.UIPanelTop;
 
 public final class ISidePanels extends Interrupter{
 	
@@ -209,7 +208,7 @@ public final class ISidePanels extends Interrupter{
 		boolean pinned;
 		private GText title = new GText(UI.FONT().H2, 20).lablify();
 		private ISidePanel panel;
-		private final CLICKABLE close = new GButt.Glow(SPRITES.icons().m.exit) {
+		private final CLICKABLE close = new GButt.ButtPanel(SPRITES.icons().m.exit) {
 			@Override
 			protected void clickA() {
 				remove(panel);
@@ -232,7 +231,7 @@ public final class ISidePanels extends Interrupter{
 			s.body().centerIn(this);
 			s.body().moveY1(ISidePanel.Y2+ISidePanel.M);
 			add(s);
-			close.body().moveC(body().x2()-(close.body().width()/2+8), ISidePanel.Y1+ISidePanel.M+16);
+			close.body().moveC(body().x2()-(close.body().width()/2+8), ISidePanel.Y1+(ISidePanel.Y2-ISidePanel.Y1)/2);
 			add(close);
 			this.panel = panel;
 		}
@@ -241,22 +240,23 @@ public final class ISidePanels extends Interrupter{
 		public void render(SPRITE_RENDERER r, float ds) {
 			if (panel.title != null)
 				this.title.clear().add(panel.title).adjustWidth();
-			COLOR.WHITE05.render(r, body().x1(), body().x2(), ISidePanel.Y1, ISidePanel.Y2);
 			
-			int ws = body().width()/UI.PANEL().panelL.dim();
-			int rm = body().width()%UI.PANEL().panelL.dim();
 			
+			
+			
+			
+			COLOR.WHITE10.render(r, body().x1(), body().x2(), ISidePanel.Y1, C.HEIGHT());
+			UI.PANEL().butt.render(r, body().x1(), body().x2()-3, ISidePanel.Y1+UI.PANEL().butt.margin, ISidePanel.Y2-UI.PANEL().butt.margin, 0, DIR.N.mask()|DIR.S.mask());
+			
+			GCOLOR.UI().border(r, body().x1(), body().x1()+3, ISidePanel.Y1, C.HEIGHT());
+			GCOLOR.UI().border(r, body().x2()-3, body().x2(), ISidePanel.Y1, C.HEIGHT());
+
+			
+
+
+		
 			{
-				SPRITE s = UI.PANEL().panelL.get(DIR.W, DIR.E);
-				
-				
-				int x1 = body().x1();
-				for (int x = 0; x < ws; x++) {
-					s.render(r, x1+x*s.width(), ISidePanel.Y1+ISidePanel.M);
-					if (rm != 0) {
-						s.render(r, body().x2()-s.width(), ISidePanel.Y1+ISidePanel.M);
-					}
-				}
+
 				if (title.length() != 0) {
 					title.adjustWidth();
 					int x = body().x1() + (close.body().x1()-body().x1())/2;
@@ -266,37 +266,37 @@ public final class ISidePanels extends Interrupter{
 			}
 			
 			
-			
-			
-			
-			{
-				SPRITE s = UI.PANEL().panelL.get(DIR.W, DIR.E, DIR.S);
-				
-				int x1 = body().x1();
-				int y1 = ISidePanel.Y2;
-				for (int x = 0; x < ws; x++) {
-					s.render(r, x1+x*s.width(), y1);
-				}
-				if (rm != 0) {
-					s.render(r, body().x2()-s.width(), y1);
-				}
-				s = UI.PANEL().panelL.get(DIR.W, DIR.E, DIR.N, DIR.S);
-				y1+=s.height();
-				
-				while(y1 < body().y2()) {
-					for (int x = 0; x < ws; x++) {
-						s.render(r, x1+x*s.width(), y1);
-					}
-					if (rm != 0) {
-						s.render(r, body().x2()-s.width(), y1);
-					}
-					y1+=s.height();
-				}
-			}
-			
-			GFrame.renderVertical(r, body().x1(), UIPanelTop.HEIGHT, body().height());
-			
-			GFrame.renderVertical(r, body().x2()-GFrame.MARGIN*3, UIPanelTop.HEIGHT, body().height());
+//			
+//			
+//			
+//			{
+//				SPRITE s = UI.PANEL().panelL.get(DIR.W, DIR.E, DIR.S);
+//				
+//				int x1 = body().x1();
+//				int y1 = ISidePanel.Y2;
+//				for (int x = 0; x < ws; x++) {
+//					s.render(r, x1+x*s.width(), y1);
+//				}
+//				if (rm != 0) {
+//					s.render(r, body().x2()-s.width(), y1);
+//				}
+//				s = UI.PANEL().panelL.get(DIR.W, DIR.E, DIR.N, DIR.S);
+//				y1+=s.height();
+//				
+//				while(y1 < body().y2()) {
+//					for (int x = 0; x < ws; x++) {
+//						s.render(r, x1+x*s.width(), y1);
+//					}
+//					if (rm != 0) {
+//						s.render(r, body().x2()-s.width(), y1);
+//					}
+//					y1+=s.height();
+//				}
+//			}
+//			
+//			UI.PANEL().hollow.renderVertical(r, body().x1(), UIPanelTop.HEIGHT, body().height());
+//			
+//			UI.PANEL().hollow.renderVertical(r, body().x2()-GFrame.MARGIN*3, UIPanelTop.HEIGHT, body().height());
 			
 			super.render(r, ds);
 			

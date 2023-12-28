@@ -9,7 +9,6 @@ import init.D;
 import init.paths.PATHS;
 import init.sprite.UI.UI;
 import menu.GUI.COLORS;
-import menu.screens.Screener;
 import snake2d.MButt;
 import snake2d.SPRITE_RENDERER;
 import snake2d.util.color.COLOR;
@@ -29,10 +28,11 @@ import util.gui.table.GScrollable;
 import util.info.GFORMAT;
 import util.save.SaveFile;
 
-class ScLoad implements SCREEN{
+class ScLoad implements SC{
 
 	private final GuiSection main;
 	private final GuiSection prompt;
+	private final GuiSection deleteOld = new GuiSection();
 	private GuiSection current;
 	private final CLICKABLE load;
 	private final CLICKABLE delete;
@@ -44,6 +44,8 @@ class ScLoad implements SCREEN{
 	private final Menu menu;
 	static CharSequence ¤¤name = "¤load";
 	static CharSequence ¤¤delete = "¤Delete Save?";
+	static CharSequence ¤¤deleteAll = "¤Delete Old";
+	static CharSequence ¤¤deleteAllD = "¤Delete {0} outdated saves forever? You might still be able to load them if you opt out for an earlier version of the game.";
 	
 	ScLoad(Menu menu) {
 		
@@ -63,7 +65,7 @@ class ScLoad implements SCREEN{
 			}
 		});
 		load.activeSet(false);
-		main.add(load);
+		//main.add(load);
 		
 		delete = new Screener.ScreenButton(DicMisc.¤¤delete);
 		delete.clickActionSet(new ACTION() {
@@ -74,7 +76,23 @@ class ScLoad implements SCREEN{
 			}
 		});
 		delete.activeSet(false);
-		main.addRightC(bottomMarginX, delete);
+		//main.addRightC(bottomMarginX, delete);
+		
+		
+		CLICKABLE deleteAll = new Screener.ScreenButton(¤¤deleteAll) {
+			
+			@Override
+			protected void clickA() {
+				current = deleteOld;
+			}
+			
+			@Override
+			protected void renAction() {
+				activeSet(oldSaves() > 0);
+			}
+			
+		};
+		//main.addRightC(bottomMarginX, deleteAll);
 		
 		main.body().centerX(bounds.x1(), bounds.x2());
 		main.body().moveY1(bottomY);
@@ -82,6 +100,10 @@ class ScLoad implements SCREEN{
 		
 		
 		ScrollRow[] butts = new ScrollRow[] {
+			new Savebutt(),
+			new Savebutt(),
+			new Savebutt(),
+			new Savebutt(),
 			new Savebutt(),
 			new Savebutt(),
 			new Savebutt(),
@@ -119,9 +141,56 @@ class ScLoad implements SCREEN{
 		scr.addButt(load);
 		scr.addButt(delete);
 		
+		deleteAll.body().moveCY(delete.body().cY());
+		deleteAll.body().moveX1(delete.body().x2()+100);
+		
+		
 		main.add(scr);
 		main.moveLastToBack();
-		
+		main.add(deleteAll);
+		{
+			addTitleText(deleteOld, ¤¤delete);
+			deleteOld.addDownC(48, new GStat() {
+				
+				@Override
+				public void update(GText text) {
+					text.add(¤¤deleteAllD);
+					text.insert(0, oldSaves());
+					text.setMaxWidth(600);
+					text.setMultipleLines(true);
+				}
+			}.increase().r(DIR.C));
+			
+			CLICKABLE yes = getNavButt(DicMisc.¤¤Yes);
+			yes.clickActionSet(new ACTION() {
+				@Override
+				public void exe() {
+					
+					for (SaveFile f : saves) {
+						if (VERSION.versionMajor(f.version) < VERSION.VERSION_MAJOR)
+							PATHS.local().SAVE.delete(f.fullName);
+					}
+					selectedSave = -1;
+					delete.activeSet(false);
+					populateSaves();
+					current = main;
+				}
+			});
+			
+			CLICKABLE no = getNavButt(DicMisc.¤¤No);
+			no.clickActionSet(new ACTION() {
+				@Override
+				public void exe() {
+					current = main;
+				}
+			});
+			
+			GuiSection ss = new GuiSection();
+			ss.add(yes).addRightC(64, no);
+			deleteOld.addRelBody(48, DIR.S, ss);
+			
+			deleteOld.body().centerIn(C.DIM());
+		}
 
 		
 		prompt = new GuiSection();
@@ -168,10 +237,23 @@ class ScLoad implements SCREEN{
 		
 	}
 	
+	
+	
 	private void populateSaves() {
 		saves = SaveFile.list();
 		delete.activeSet(false);
 		selectedSave = -1;
+	}
+	
+	private int oldSaves() {
+		if (saves == null)
+			return 0;
+		int i = 0;
+		for (SaveFile f : saves) {
+			if (VERSION.versionMajor(f.version) < VERSION.VERSION_MAJOR)
+				i++;
+		}
+		return i;
 	}
 	
 	@Override
@@ -212,7 +294,7 @@ class ScLoad implements SCREEN{
 		int index = -1;
 		
 		public Savebutt() {
-			body.setWidth(1000);
+			body.setWidth(Screener.inner.width());
 			body.setHeight(28);
 		}
 		
@@ -241,7 +323,7 @@ class ScLoad implements SCREEN{
 					COLORS.hover.bind();
 				}
 			}
-			font().render(r, version, body().x1(), body().y1());
+			UI.FONT().M.render(r, version, body().x1(), body().y1());
 			
 			if (index == selectedSave) {
 				COLORS.selected.bind();
@@ -251,13 +333,13 @@ class ScLoad implements SCREEN{
 			
 			
 			
-			font().render(r, s.name, body().x1() + 60, body().y1());
+			font().render(r, s.name, body().x1() + 90, body().y1());
 
 			tmp.clear().add('p').s();
 			GFORMAT.i(tmp, s.pop);
-			font().render(r, tmp, body().x1() + 740, body().y1());
+			UI.FONT().M.render(r, tmp, body().x1() + 830, body().y1());
 			
-			font().render(r, s.ago, body().x1() + 820, body().y1());
+			UI.FONT().M.render(r, s.ago, body().x2() - 180, body().y1());
 			COLOR.unbind();
 		}
 		

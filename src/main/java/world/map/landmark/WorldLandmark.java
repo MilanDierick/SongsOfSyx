@@ -46,7 +46,7 @@ public class WorldLandmark {
 	
 	void clear(){
 		name.clear().add(index);
-		description.clear().add(index);
+		description.clear();
 		cx = -1;
 		cy = -1;
 		textSize = -1;

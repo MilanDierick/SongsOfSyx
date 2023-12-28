@@ -1,6 +1,7 @@
 package util.spritecomposer;
 
-import init.C;
+import init.*;
+import snake2d.CORE;
 import snake2d.LOG;
 import snake2d.util.datatypes.COORDINATE;
 import snake2d.util.datatypes.Rec;
@@ -33,6 +34,8 @@ public final class ComposerDests {
 		}
 		s16.skip(1);
 	}
+	
+	private volatile boolean saved = false;
 	
 	void save(java.nio.file.Path deff, java.nio.file.Path nor, FilePutter p, int extraHeight) {
 		
@@ -76,8 +79,31 @@ public final class ComposerDests {
 		
 		chunk.dispose();
 
-		diffuse.save(""+deff.toAbsolutePath());
-		normal.save(""+nor.toAbsolutePath());
+		
+		saved = false;
+		
+		Thread t = new Thread(new Runnable() {
+			
+			@Override
+			public void run() {
+				diffuse.save(""+deff.toAbsolutePath());
+				normal.save(""+nor.toAbsolutePath());
+				saved = true;
+			}
+		});
+		
+		t.start();
+		
+		while(!saved) {
+			CORE.checkIn();
+			try {
+				Thread.sleep(16);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+		}
+		
+		
 		
 		diffuse.dispose();
 		normal.dispose();

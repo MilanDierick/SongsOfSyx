@@ -68,6 +68,12 @@ public interface KEY_COLLECTION<T> {
 		return tryGetByKey(key(), reader);
 	}
 	
+	public default LIST<T> getMany(String key, Json reader){
+
+		return getManyByKey(key, reader);
+		
+	}
+	
 	public default LIST<T> getMany(Json reader){
 
 		return getManyByKey(this.key()+"S", reader);
@@ -207,4 +213,6 @@ public interface KEY_COLLECTION<T> {
 	public String key();
 	
 	public LIST<T> all();
+	
+	
 }

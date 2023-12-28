@@ -22,6 +22,7 @@ public final class GCOLORS_MAP {
 	
 	public final static COLOR FPlayer = new ColorImp(20, 127, 20);
 	public final static COLOR FAlly = new ColorImp(20, 20, 127);
+	public final static COLOR FNeutral = new ColorImp(120, 120, 20);
 	public final static COLOR FEnemy = new ColorImp(127, 20, 20);
 	public final static COLOR FRebel = new ColorImp(50, 50, 50);
 	public final static COLOR bestOverlay = new ColorImp(50, 120, 120);
@@ -32,8 +33,8 @@ public final class GCOLORS_MAP {
 			return FRebel;
 		if (f == FACTIONS.player())
 			return FPlayer;
-		if (FACTIONS.rel().war.get(FACTIONS.player(), f) == 0)
-			return FAlly;
+		if (!FACTIONS.DIP().war.is(FACTIONS.player(), f))
+			return FNeutral;
 		else
 			return FEnemy;
 	}

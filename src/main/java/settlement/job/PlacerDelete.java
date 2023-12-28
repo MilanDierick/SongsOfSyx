@@ -5,8 +5,8 @@ import static settlement.main.SETT.*;
 import init.D;
 import init.sprite.SPRITES;
 import settlement.main.SETT;
-import settlement.tilemap.TGrowable;
-import settlement.tilemap.Terrain.TerrainTile;
+import settlement.tilemap.terrain.TGrowable;
+import settlement.tilemap.terrain.Terrain.TerrainTile;
 import snake2d.util.datatypes.AREA;
 import view.tool.*;
 

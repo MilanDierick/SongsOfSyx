@@ -4,8 +4,7 @@ import static settlement.main.SETT.*;
 
 import game.GAME;
 import init.RES;
-import init.resources.RESOURCE;
-import init.resources.RESOURCES;
+import init.resources.*;
 import init.sound.SoundSettlement.Sound;
 import settlement.entity.humanoid.Humanoid;
 import settlement.main.SETT;
@@ -85,14 +84,14 @@ final class JobManager implements JOB_MANAGER{
 	}
 
 	@Override
-	public SETT_JOB reportResourceMissing(long resourceMask, int jx, int jy) {
+	public SETT_JOB reportResourceMissing(RBIT resourceMask, int jx, int jy) {
 		ins.missingLivestock = true;
 		ins.searchForLivestock = false;
 		return getReservableJob();
 	}
 	
 	@Override
-	public void reportResourceFound(long res) {
+	public void reportResourceFound(RESOURCE res) {
 		// TODO Auto-generated method stub
 		
 	}
@@ -195,7 +194,7 @@ final class JobManager implements JOB_MANAGER{
 		}
 
 		@Override
-		public long jobResourceBitToFetch() {
+		public RBIT jobResourceBitToFetch() {
 			return RESOURCES.LIVESTOCK().bit;
 		}
 
@@ -287,8 +286,8 @@ final class JobManager implements JOB_MANAGER{
 		}
 
 		@Override
-		public long jobResourceBitToFetch() {
-			return 0;
+		public RBIT jobResourceBitToFetch() {
+			return null;
 		}
 
 		@Override

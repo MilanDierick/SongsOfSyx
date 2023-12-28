@@ -1,9 +1,9 @@
 package init.race;
 
-import game.time.TIME;
+import game.boosting.BOOSTABLES;
 import init.D;
-import init.boostable.BOOSTABLES;
 import init.race.Bio.BIO_LINE;
+import init.religion.Religion;
 import settlement.army.Div;
 import settlement.entity.ENTITY;
 import settlement.entity.animal.Animal;
@@ -11,10 +11,10 @@ import settlement.entity.humanoid.HCLASS;
 import settlement.entity.humanoid.Humanoid;
 import settlement.main.SETT;
 import settlement.room.home.HOME;
-import settlement.room.main.RoomEmploymentSimple;
-import settlement.stats.CAUSE_ARRIVE;
+import settlement.room.main.employment.RoomEmploymentSimple;
 import settlement.stats.STATS;
-import settlement.stats.StatsTraits.StatTrait;
+import settlement.stats.colls.StatsTraits.StatTrait;
+import settlement.stats.util.CAUSE_ARRIVE;
 import snake2d.util.MATH;
 import snake2d.util.datatypes.COORDINATE;
 import snake2d.util.datatypes.DIR;
@@ -25,8 +25,8 @@ import snake2d.util.sprite.text.Str;
 import snake2d.util.sprite.text.StrInserter;
 import util.dic.DicGeo;
 import util.dic.DicMisc;
-import world.World;
-import world.map.regions.Region;
+import world.WORLD;
+import world.regions.Region;
 
 final class BioData {
 
@@ -50,6 +50,7 @@ final class BioData {
 		new BioLine(descs, json, "INFO_TITLE").nlSet();
 		
 		new BioLine(descs, json, "INFO_GENERAL2");
+		new BioLine(descs, json, "INFO_GENERAL3");
 		
 		new BioLine(descs, json, "TRAIT") {
 			
@@ -82,8 +83,8 @@ final class BioData {
 		houseP.add(new BioLine(descs, json, "HOME") {
 			@Override
 			protected boolean use(Humanoid a) {
-				if (a.indu().clas() == HCLASS.NOBLE)
-					return false;
+//				if (a.indu().clas() == HCLASS.NOBLE)
+//					return false;
 				HOME h = STATS.HOME().GETTER.get(a, this);
 				if (h == null)
 					return false;
@@ -106,12 +107,12 @@ final class BioData {
 			};
 		});
 		
-		houseP.add(new BioLine(descs, json, "HOME_NOBLE") {
-			@Override
-			protected boolean use(Humanoid a) {
-				return a.indu().clas() == HCLASS.NOBLE && STATS.HOME().GETTER.has(a);
-			};
-		});
+//		houseP.add(new BioLine(descs, json, "HOME_NOBLE") {
+//			@Override
+//			protected boolean use(Humanoid a) {
+//				return a.indu().clas() == HCLASS.NOBLE && STATS.HOME().GETTER.has(a);
+//			};
+//		});
 		
 		houseP.add(new BioLine(descs, json, "HOME_NONE_WORK") {
 			@Override
@@ -188,7 +189,7 @@ final class BioData {
 			protected boolean use(Humanoid a) {
 				if (super.use(a)) {
 					Humanoid b = (Humanoid) STATS.POP().FRIEND.get(a.indu());
-					return a.race().pref().other(b.indu().race()) >= 0.5;
+					return a.race().pref().race(b.indu().race()) >= 0.5;
 				}
 				return false;
 			};
@@ -199,7 +200,7 @@ final class BioData {
 			protected boolean use(Humanoid a) {
 				if (super.use(a)) {
 					Humanoid b = (Humanoid) STATS.POP().FRIEND.get(a.indu());
-					return a.race().pref().other(b.indu().race()) < 0.5;
+					return a.race().pref().race(b.indu().race()) < 0.5;
 				}
 				return false;
 			};
@@ -246,7 +247,7 @@ final class BioData {
 				return null;
 			if (!use(a))
 				return null;
-			int ran = a.indu().ran(index*5);
+			int ran = STATS.RAN().get(a.indu(), 9 + index*5, 5);
 			CharSequence s = strings[MATH.mod((int)ran, strings.length)];
 			str.clear().add(s);
 			for (init.race.BioData.Inserts.IInsert in : inserts.all) {
@@ -346,7 +347,7 @@ final class BioData {
 			new IInsert("AGE") {
 				@Override
 				public void set(Humanoid a, Str str) {
-					int i = (int)(STATS.POP().AGE.indu().get(a.indu())/TIME.years().bitConversion(TIME.days()));
+					int i = (int)(STATS.POP().age.years(a.indu()));
 					str.add(i);
 				}
 			}; 
@@ -359,10 +360,10 @@ final class BioData {
 			new IInsert("HEALTH") {
 				@Override
 				public void set(Humanoid a, Str str) {
-					double def = BOOSTABLES.PHYSICS().HEALTH.defAdd;
-					if (BOOSTABLES.PHYSICS().HEALTH.get(a) < def)
+					double def = BOOSTABLES.PHYSICS().HEALTH.baseValue;
+					if (BOOSTABLES.PHYSICS().HEALTH.get(a.indu()) < def)
 						str.add(¤¤poor);
-					else if (BOOSTABLES.PHYSICS().HEALTH.get(a) < 1.5)
+					else if (BOOSTABLES.PHYSICS().HEALTH.get(a.indu()) < 1.5)
 						str.add(¤¤good);
 					else
 						str.add(¤¤excellent);
@@ -413,25 +414,25 @@ final class BioData {
 			new IInsert("RND_REGION") {
 				@Override
 				public void set(Humanoid a, Str str) {
-					int ran = (int) a.indu().randomness2();
-					ran = MATH.mod(ran, World.TAREA());
-					int x = ran%World.TWIDTH();
-					int y = ran/World.THEIGHT();
+					int ran = (int) STATS.RAN().get(a.indu(), 128, 31);
+					ran = MATH.mod(ran, WORLD.TAREA());
+					int x = ran%WORLD.TWIDTH();
+					int y = ran/WORLD.THEIGHT();
 					
-					Region r = World.REGIONS().getter.get(x, y);
-					if (r == null || r.isWater()) {
+					Region r = WORLD.REGIONS().map.get(x, y);
+					if (r == null) {
 						outer:
-						for (int i = 0; i < World.TWIDTH(); i++) {
+						for (int i = 0; i < WORLD.TWIDTH(); i++) {
 							for (DIR d : DIR.ALL) {
-								r = World.REGIONS().getter.get(x+d.x()*i, y+d.y()*i);
-								if (r != null && !r.isWater()) {
+								r = WORLD.REGIONS().map.get(x+d.x()*i, y+d.y()*i);
+								if (r != null) {
 									break outer;
 								}
 							}
 						}
 					}
-					if (r != null && !r.isWater())
-						str.add(r.name());
+					if (r != null)
+						str.add(r.info.name());
 					else {
 						str.add('?');
 					}
@@ -536,6 +537,22 @@ final class BioData {
 						str.add(((Animal)b).species().name);
 				}
 			}; 
+			new IInsert("RELIGION_GOD") {
+				@Override
+				public void set(Humanoid a, Str str) {
+					Religion r = STATS.RELIGION().getter.get(a.indu()).religion;
+					str.add(r.diety);
+					
+				}
+			}; 
+			new IInsert("RELIGION") {
+				@Override
+				public void set(Humanoid a, Str str) {
+					Religion r = STATS.RELIGION().getter.get(a.indu()).religion;
+					str.add(r.info.name);
+					
+				}
+			}; 
 			new IInsert("RND_PROFESSION") {
 				@Override
 				public void set(Humanoid a, Str str) {
@@ -547,7 +564,7 @@ final class BioData {
 							m = a.race().pref().getWork(e);
 						}
 					}
-					int i = (int) a.indu().randomness2() & 0b1111;
+					int i = (int) STATS.RAN().get(a.indu(), 80, 4) & 0b1111;
 					if (i > 0)
 						for (RoomEmploymentSimple e : SETT.ROOMS().employment.ALLS()) {
 							

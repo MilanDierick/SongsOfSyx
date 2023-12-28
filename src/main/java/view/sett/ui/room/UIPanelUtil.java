@@ -2,14 +2,12 @@ package view.sett.ui.room;
 
 import static settlement.main.SETT.*;
 
-import init.sprite.SPRITES;
 import settlement.main.SETT;
 import settlement.room.main.RoomBlueprintImp;
 import settlement.room.main.RoomBlueprintIns;
 import settlement.room.main.category.RoomCategories.RoomCategoryMain;
 import settlement.room.main.category.RoomCategorySub;
 import snake2d.SPRITE_RENDERER;
-import snake2d.util.color.COLOR;
 import snake2d.util.datatypes.DIR;
 import snake2d.util.gui.GUI_BOX;
 import snake2d.util.gui.GuiSection;
@@ -52,7 +50,7 @@ final class UIPanelUtil extends ISidePanel {
 					}
 					
 				};
-				s.add(m.icon.huge, 0, 0);
+				s.add(m.icon.big, 0, 0);
 				add(s, m, i);
 				s.pad(8, 4);
 				add(s, (i % 3) * s.body().width(), (i / 3) * s.body().height());
@@ -210,17 +208,6 @@ final class UIPanelUtil extends ISidePanel {
 		
 		RoomRow(RoomBlueprintImp p){
 			this.p = p;
-			add(new RENDEROBJ.RenderImp(24, 24) {
-				
-				@Override
-				public void render(SPRITE_RENDERER r, float ds) {
-					SPRITES.icons().m.circle_frame.renderC(r, body().cX(), body().cY());
-					p.constructor().miniColor.bind();
-					SPRITES.icons().m.circle_inner.renderC(r, body().cX(), body().cY());
-					COLOR.unbind();
-				}
-			});
-			
 			addRightC(4, p.iconBig());
 			addRightC(8, new GHeader(p.info.names, 13).subify());
 			body().setWidth(280);

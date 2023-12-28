@@ -11,8 +11,8 @@ import settlement.room.main.RoomBlueprintIns;
 import settlement.room.main.category.RoomCategorySub;
 import settlement.room.main.furnisher.Furnisher;
 import settlement.room.main.util.RoomInitData;
-import settlement.room.service.module.RoomServiceDataAccess;
-import settlement.room.service.module.RoomServiceDataAccess.ROOM_SERVICE_ACCESS_HASER;
+import settlement.room.service.module.RoomServiceAccess;
+import settlement.room.service.module.RoomServiceAccess.ROOM_SERVICE_ACCESS_HASER;
 import snake2d.util.datatypes.DIR;
 import snake2d.util.file.FileGetter;
 import snake2d.util.file.FilePutter;
@@ -23,7 +23,7 @@ public final class ROOM_SCHOOL extends RoomBlueprintIns<SchoolInstance> implemen
 
 	final Industry industry;
 	final SchoolConstructor constructor;
-	final RoomServiceDataAccess service;
+	final RoomServiceAccess service;
 	final SchoolStation station = new SchoolStation(this);
 	public final double learningSpeed;
 	
@@ -31,7 +31,7 @@ public final class ROOM_SCHOOL extends RoomBlueprintIns<SchoolInstance> implemen
 
 	public ROOM_SCHOOL(String key, int index, RoomInitData init, RoomCategorySub block) throws IOException {
 		super(index, init, key, block);
-		service = new RoomServiceDataAccess(this, init) {
+		service = new RoomServiceAccess(this, init) {
 			
 			@Override
 			public FSERVICE service(int tx, int ty) {
@@ -98,7 +98,7 @@ public final class ROOM_SCHOOL extends RoomBlueprintIns<SchoolInstance> implemen
 	}
 
 	@Override
-	public RoomServiceDataAccess service() {
+	public RoomServiceAccess service() {
 		return service;
 	}
 	

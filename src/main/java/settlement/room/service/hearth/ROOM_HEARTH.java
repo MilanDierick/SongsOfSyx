@@ -2,51 +2,36 @@ package settlement.room.service.hearth;
 
 import java.io.IOException;
 
-import init.resources.RESOURCES;
 import settlement.misc.util.FSERVICE;
 import settlement.path.finder.SFinderRoomService;
-import settlement.room.industry.module.INDUSTRY_HASER;
-import settlement.room.industry.module.Industry;
 import settlement.room.main.RoomBlueprintIns;
 import settlement.room.main.category.RoomCategorySub;
 import settlement.room.main.furnisher.Furnisher;
 import settlement.room.main.util.RoomInitData;
-import settlement.room.service.module.RoomServiceDataAccess;
-import settlement.room.service.module.RoomServiceDataAccess.ROOM_SERVICE_ACCESS_HASER;
+import settlement.room.service.module.RoomServiceNeed;
+import settlement.room.service.module.RoomServiceNeed.ROOM_SERVICE_NEED_HASER;
 import snake2d.util.file.FileGetter;
 import snake2d.util.file.FilePutter;
-import snake2d.util.sets.ArrayList;
-import snake2d.util.sets.LIST;
 
-public final class ROOM_HEARTH extends RoomBlueprintIns<HearthInstance> implements ROOM_SERVICE_ACCESS_HASER, INDUSTRY_HASER{
+public final class ROOM_HEARTH extends RoomBlueprintIns<HearthInstance> implements ROOM_SERVICE_NEED_HASER {
 
-	final RoomServiceDataAccess data; 
+	final RoomServiceNeed data; 
 	
 	final Constructor constructor;
 	final Hearth bed;
-	private final Industry industry;
-	final LIST<Industry> indus;
 	
 	public ROOM_HEARTH(String key, int index, RoomInitData init, RoomCategorySub block) throws IOException {
 		super(index, init, key, block);
 		bed = new Hearth(this);
-		data = new RoomServiceDataAccess(this, init) {
+		data = new RoomServiceNeed(this, init) {
 			
 			@Override
 			public FSERVICE service(int tx, int ty) {
 				return bed.get(tx, ty);
 			}
-
-			@Override
-			public double totalMultiplier() {
-				return 8;
-			}
 		};
 		data.usesAccess = false;
 		constructor = new Constructor(this, init);
-		industry = new Industry(this, RESOURCES.WOOD(), 1.0, null, 0, null, null);
-
-		indus = new ArrayList<>(industry);
 	}
 	
 	@Override
@@ -85,13 +70,8 @@ public final class ROOM_HEARTH extends RoomBlueprintIns<HearthInstance> implemen
 	}
 	
 	@Override
-	public RoomServiceDataAccess service() {
+	public RoomServiceNeed service() {
 		return data;
-	}
-
-	@Override
-	public LIST<Industry> industries() {
-		return indus;
 	}
 
 }

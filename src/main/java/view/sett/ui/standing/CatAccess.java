@@ -4,15 +4,19 @@ import init.D;
 import init.race.RACES;
 import init.race.Race;
 import init.resources.*;
-import init.sprite.ICON;
+import init.sprite.UI.Icon;
 import settlement.entity.humanoid.HCLASS;
-import settlement.stats.*;
-import settlement.stats.StatsEquippables.StatEquippableCivic;
+import settlement.stats.STATS;
+import settlement.stats.colls.StatsFood;
+import settlement.stats.colls.StatsHome;
+import settlement.stats.equip.EquipCivic;
+import settlement.stats.equip.StatsEquip;
+import settlement.stats.stat.STAT;
+import settlement.stats.stat.StatCollection;
 import snake2d.SPRITE_RENDERER;
 import snake2d.util.color.COLOR;
 import snake2d.util.gui.GUI_BOX;
 import snake2d.util.gui.GuiSection;
-import snake2d.util.gui.clickable.CLICKABLE;
 import snake2d.util.gui.renderable.RENDEROBJ;
 import snake2d.util.sets.LIST;
 import snake2d.util.sets.LinkedList;
@@ -22,6 +26,7 @@ import util.data.DOUBLE;
 import util.data.INT.INTE;
 import util.dic.DicMisc;
 import util.gui.misc.*;
+import util.gui.misc.GButt.Checkbox;
 import util.gui.slider.GAllocator;
 import util.gui.slider.GTarget;
 import util.gui.table.GScrollRows;
@@ -57,17 +62,19 @@ class CatAccess extends Cat {
 				rens.add(new StatRow(st, c));
 			}
 			
-			GuiSection ss = new GuiSection();
 			
-			int ww = 6;
-			int w = rens.get(rens.size()-1).body().width();
+			
+			GuiSection ss = new GuiSection();
+
+			
+			int ww = 7;
 			
 			LIST<RESOURCE> ll = RESOURCES.EDI().res();
 			
 			for (int i = 0; i < ll.size(); i++) {
 				RESOURCE e = ll.get(i);
 				final int k = i;
-				CLICKABLE cl = new GButt.CheckboxTitle(e.icon()) {
+				Checkbox cl = new Checkbox(e.icon()) {
 					
 					@Override
 					protected void clickA() {
@@ -82,7 +89,7 @@ class CatAccess extends Cat {
 					@Override
 					protected void render(SPRITE_RENDERER r, float ds, boolean isActive, boolean isSelected, boolean isHovered) {
 						
-						if (CitizenMain.current != null && (CitizenMain.current.pref().foodMask & e.bit) != 0) {
+						if (CitizenMain.current != null && CitizenMain.current.pref().foodMask.has(e)) {
 							COLOR.WHITE100.render(r, body, 1);
 							COLOR.WHITE15.render(r, body, 0);
 						}
@@ -104,7 +111,7 @@ class CatAccess extends Cat {
 						b.NL();
 						if (RESOURCES.EDI().is(e)) {
 							for (Race r : RACES.all()) {
-								if (r.pref().food.contains(RESOURCES.EDI().toEdible(e))){
+								if (r.pref().food.contains(RESOURCES.EDI().get(e))){
 									b.add(r.appearance().iconBig);
 								}
 							}
@@ -114,45 +121,49 @@ class CatAccess extends Cat {
 					};
 					
 					
-				}.hoverTitleSet(e.name);
+				};
+				cl.hoverTitleSet(e.name);
+				cl.pad(8, 2);
 				
-				ss.add(cl, w*(i%ww)/ww, (i/ww)*30);
+				ss.add(cl, cl.body().width()*(i%ww), (i/ww)*cl.body().height());
 			}
 			
 			rens.add(ss);
 		}
 		
 		{
-			StatsEquippables s = STATS.EQUIP();
+			StatsEquip s = STATS.EQUIP();
 			rens.add(new StatRow.Title(s.info));
 			
-			for (StatEquippableCivic ss : s.civics()) {
+			for (EquipCivic ss : s.civics()) {
 				rens.add(new StatRowEquip(ss, c));
 			}
 		}
 		
 		{
 
-			LIST<RES_AMOUNT> rr = RACES.homeResMax(c);
+			LIST<RES_AMOUNT> rr = RACES.res().homeResMax(c);
 			
 			
 			StatsHome s = STATS.HOME();
 			rens.add(new StatRow.Title(s.info));
 			
 			for (STAT st : s.all()) {
-				rens.add(new StatRow(st, c));
+				if (st.key() != null)
+					rens.add(new StatRow(st, c));
 					
 			}
 			
-			GuiSection ss = new GuiSection();
-			
+			GuiSection ss = null;
 			for (int ri = 0; ri < rr.size(); ri++) {
-				ss.add(new StatHomeFurniture(ri, c, rr), (ri%3)*170, 38*(ri/3));
-				
+				if (ri % 3 == 0) {
+					ss = new GuiSection();
+					rens.add(ss);
+				}
+				ss.add(new StatHomeFurniture(ri, c, rr), (ri%3)*170, 0);
+
 				
 			}
-			
-			rens.add(ss);
 			
 		}
 		
@@ -203,7 +214,7 @@ class CatAccess extends Cat {
 			
 			GAllocator al = new GAllocator(COLOR.ORANGE100, tar, 6, 16, 16);
 			
-			add(new SPRITE.Imp(ICON.MEDIUM.SIZE) {
+			add(new SPRITE.Imp(Icon.M) {
 				
 				@Override
 				public void render(SPRITE_RENDERER r, int X1, int X2, int Y1, int Y2) {
@@ -282,17 +293,17 @@ class CatAccess extends Cat {
 	
 	static class StatRowEquip extends GuiSection{
 
-		private final StatEquippableCivic ss;
+		private final EquipCivic ss;
 		private final HCLASS cl;
 		
-		public StatRowEquip(StatEquippableCivic ss, HCLASS cl) {
+		public StatRowEquip(EquipCivic ss, HCLASS cl) {
 			this.ss = ss;
 			this.cl = cl;
 			
 			add(new StatRow.Arrow(ss.stat(), cl));
 			addRightC(4, ss.resource.icon());
 			
-			StatEquippableCivic s = ss;
+			EquipCivic s = ss;
 			INTE in = new INTE() {
 				
 				@Override
@@ -335,7 +346,7 @@ class CatAccess extends Cat {
 		@Override
 		public void hoverInfoGet(GUI_BOX text) {
 			if (!isHoveringAHoverElement()) {
-				StatRow.hoverStat(text, ss.stat(), cl);
+				//StatRow.hoverStat(text, ss.stat(), cl);
 				ss.hover(text, cl, CitizenMain.current);
 				text.NL();
 				StatRow.hoverStanding(text, ss.stat(), cl);

@@ -4,9 +4,16 @@ import static settlement.main.SETT.*;
 
 import init.RES;
 import settlement.main.SETT;
+import settlement.tilemap.terrain.Terrain.TerrainTile;
+import snake2d.LOG;
+import snake2d.util.datatypes.COORDINATE;
+import snake2d.util.datatypes.DIR;
 import snake2d.util.map.MAP_OBJECT;
+import snake2d.util.misc.ACTION;
+import snake2d.util.rnd.RND;
 import snake2d.util.sets.ArrayList;
 import snake2d.util.sets.LIST;
+import view.sett.IDebugPanelSett;
 
 public final class SCOMPONENTS {
 
@@ -17,7 +24,7 @@ public final class SCOMPONENTS {
 	public final LIST<SComponentLevel> all;
 	public final SCompFinder pather;
 	
-	
+	private boolean debug = false;
 	
 	public SCOMPONENTS(){
 		
@@ -54,6 +61,13 @@ public final class SCOMPONENTS {
 		new SCompTests(this);
 		new SCompUI(this);
 		
+		IDebugPanelSett.add("comp debug", new ACTION() {
+			
+			@Override
+			public void exe() {
+				debug = !debug;
+			}
+		});
 		
 	}
 	
@@ -72,6 +86,55 @@ public final class SCOMPONENTS {
 	
 	public void update() {
 	
+		if (debug) {
+			for (int k = 0; k < 10; k++) {
+				int x = RND.rInt(SETT.TWIDTH);
+				int y = RND.rInt(SETT.THEIGHT);
+				DIR d = DIR.ALL.rnd();
+				TerrainTile t = RND.rBoolean() ? SETT.TERRAIN().NADA : SETT.TERRAIN().BUILDINGS.all().get(0).wall;
+				
+				for (int i = 0; i < 8; i++) {
+					int tx = x + d.x()*i;
+					int ty = y + d.y()*i;
+					if (SETT.IN_BOUNDS(tx, ty))
+						t.placeFixed(tx, ty);
+				}
+			}
+			
+			for (int k = 0; k < 10; k++) {
+				int x = RND.rInt(SETT.TWIDTH);
+				int y = RND.rInt(SETT.THEIGHT);
+				DIR d = DIR.ALL.rnd();
+				
+				for (int i = 0; i < 8; i++) {
+					int tx = x + d.x()*i;
+					int ty = y + d.y()*i;
+					if (SETT.IN_BOUNDS(tx, ty))
+						updateService(tx, ty);
+				}
+			}
+			
+			for (SComponentLevel l : all)
+				l.update();
+			
+			for (COORDINATE c : SETT.TILE_BOUNDS) {
+				SComponent co = zero.get(c);
+				while(co != null) {
+					SComponentEdge e = co.edgefirst();
+					while(e != null) {
+						
+						if (e.to() != e.to().level().get(e.to().centreX(), e.to().centreY())) {
+							LOG.ln("eye!");
+						}
+						e = e.next();
+					}
+					co = co.superComp();
+				}
+				
+			}
+			
+		}
+		
 		for (SComponentLevel l : all)
 			l.update();
 	}

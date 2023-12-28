@@ -4,7 +4,7 @@ import game.faction.FACTIONS;
 import init.D;
 import init.race.RACES;
 import init.race.Race;
-import init.sprite.ICON;
+import init.sprite.UI.Icon;
 import settlement.entity.humanoid.HCLASS;
 import settlement.stats.STATS;
 import settlement.stats.standing.STANDINGS;
@@ -52,7 +52,7 @@ public final class UICitizens extends ISidePanel {
 					selectedSet(CitizenMain.current == null);
 				}
 			};
-			all.body().incrW(ICON.BIG.SIZE * 2);
+			all.body().incrW(Icon.L * 2);
 			GHeader h = new GHeader(¤¤all);
 			h.body().centerIn(all);
 			all.add(h);
@@ -60,7 +60,7 @@ public final class UICitizens extends ISidePanel {
 
 				@Override
 				public double getD() {
-					return STANDINGS.CITIZEN().main.getD(null);
+					return STANDINGS.CITIZEN().loyalty.getD(null);
 				}
 			};
 			all.addDownC(2, GMeter.sprite(GMeter.C_REDGREEN, d, all.body().width(), 16));
@@ -99,7 +99,7 @@ public final class UICitizens extends ISidePanel {
 				}
 
 			};
-			s.add(new SPRITE.Imp(ICON.BIG.SIZE*2, ICON.BIG.SIZE*2) {
+			s.add(new SPRITE.Imp(Icon.L*2, Icon.L*2) {
 				
 				@Override
 				public void render(SPRITE_RENDERER r, int X1, int X2, int Y1, int Y2) {
@@ -110,7 +110,7 @@ public final class UICitizens extends ISidePanel {
 
 				@Override
 				public double getD() {
-					return STANDINGS.CITIZEN().main.getD(FACTIONS.player().races.get(ri));
+					return STANDINGS.CITIZEN().loyalty.getD(FACTIONS.player().races.get(ri));
 				}
 			};
 			s.addDown(2, GMeter.sprite(GMeter.C_REDGREEN, d, s.body().width(), 16));

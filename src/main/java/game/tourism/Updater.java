@@ -7,14 +7,14 @@ import init.C;
 import init.D;
 import init.race.RACES;
 import init.race.Race;
-import settlement.entity.humanoid.HTYPE;
-import settlement.entity.humanoid.Humanoid;
+import settlement.entity.humanoid.*;
 import settlement.main.SETT;
+import settlement.room.main.RoomBlueprintImp;
 import settlement.room.main.RoomBlueprintIns;
 import settlement.room.main.throne.THRONE;
-import settlement.room.service.module.RoomServiceDataAccess.ROOM_SERVICE_ACCESS_HASER;
+import settlement.room.service.module.RoomServiceNeed;
 import settlement.stats.Induvidual;
-import settlement.stats.StatsNeeds.StatNeed;
+import settlement.stats.STATS;
 import snake2d.LOG;
 import snake2d.util.datatypes.COORDINATE;
 import snake2d.util.datatypes.Coo;
@@ -24,9 +24,9 @@ import snake2d.util.misc.ACTION;
 import snake2d.util.rnd.RND;
 import snake2d.util.sets.*;
 import util.updating.IUpdater;
-import view.main.MessageText;
 import view.main.VIEW;
 import view.sett.IDebugPanelSett;
+import view.ui.message.MessageText;
 
 final class Updater extends IUpdater{
 
@@ -62,7 +62,7 @@ final class Updater extends IUpdater{
 			@Override
 			public void exe() {
 				Race r = races.rnd().race;
-				int a = RND.rInt(r.tourism().attractions.size());
+				RoomBlueprintIns<?> a = r.tourism().attractions.rnd();
 				spawn(r, a);
 			}
 		});
@@ -72,9 +72,9 @@ final class Updater extends IUpdater{
 			@Override
 			public void exe() {
 				Race r = getRace();
-				int a = getAttraction(r);
-				LOG.ln(r + " " + (a >= 0 ? r.tourism().attractions.get(a) : null));
-				if (a >= 0)
+				RoomBlueprintIns<?> a = getAttraction(r);
+				LOG.ln(r + " " + a);
+				if (a != null)
 					LOG.ln(spawn(r, a));
 			}
 		});
@@ -123,9 +123,9 @@ final class Updater extends IUpdater{
 		}
 		
 		Race r = getRace();
-		int a = getAttraction(r);
+		RoomBlueprintIns<?> a = getAttraction(r);
 		
-		if (a >= 0) {
+		if (a != null) {
 			if (mI == 0 && !SETT.ROOMS().INN.service().finder.has(THRONE.coo())) {
 				mI = 1;
 				new MessageText(HTYPE.TOURIST.names, ¤¤MessageReady).send();
@@ -150,6 +150,17 @@ final class Updater extends IUpdater{
 		
 	}
 	
+	public static RoomServiceNeed getService(Induvidual in) {
+		int ri = STATS.RAN().get(in, 4)&0x0FFF;
+		for (int i = 0; i < SETT.ROOMS().SERVICE.needs().size(); i++) {
+			int k = ri+i;
+			RoomServiceNeed a = SETT.ROOMS().SERVICE.needs().getC(k);
+			if (a.stats().total().standing.definition(in.race()).get(HCLASS.CITIZEN).to > 0)
+				return a;
+		}
+		return null;
+	}
+	
 	private Race getRace() {
 		double d = RND.rFloat()-0.05;
 		for (TRace r : races) {
@@ -161,10 +172,10 @@ final class Updater extends IUpdater{
 		return null;
 	}
 	
-	private int getAttraction(Race race) {
+	private RoomBlueprintIns<?> getAttraction(Race race) {
 		int em = 0;
 		int most = 0;
-		int best = -1;
+		RoomBlueprintIns<?> best = null;
 		int tot = 0;
 		LIST<RoomBlueprintIns<?>> li = race.tourism().attractions;
 		
@@ -177,16 +188,16 @@ final class Updater extends IUpdater{
 				em += e;
 				if (e > most) {
 					most = e;
-					best = bi;
+					best = li.get(bi);
 				}
 			}
 		}
 		
 		if (most <= 0)
-			return -1;
+			return null;
 		
 		if (tot < TOURISM.MAX_EMPLOYEES*RND.rFloat())
-			return -1;
+			return null;
 		
 		if((em-most)/race.tourism().attractions.size() > RND.rInt(most)) {
 			int other = (int) (RND.rFloat()*(em-most));
@@ -195,7 +206,7 @@ final class Updater extends IUpdater{
 				if (e > 0) {
 					other -= e;
 					if (other <= 0)
-						return bi;
+						return li.get(bi);
 				}
 			}
 		}
@@ -205,16 +216,14 @@ final class Updater extends IUpdater{
 	private boolean canAttract() {
 		if (SETT.ENTRY().isClosed())
 			return false;
-		if (SETT.PATH().entryPoints.validate(entry))
-			return true;
-		COORDINATE c = SETT.PATH().entryPoints.rnd();
+		COORDINATE c = SETT.ENTRY().points.randomReachable();
 		if (c == null)
 			return false;
 		entry.set(c);
 		return true;
 	}
 	
-	private Humanoid spawn(Race race, int blue) {
+	private Humanoid spawn(Race race, RoomBlueprintIns<?> blue) {
 		
 		if (!canAttract())
 			return null;
@@ -224,34 +233,27 @@ final class Updater extends IUpdater{
 		if (h.isRemoved())
 			return null;
 		
-		long ran = h.indu().randomness();
-		long ran2 = h.indu().randomness2();
-		ran2 &= 0x0000_FFFF_FFFF_FFFFl;
-		ran2 |= ((long)blue) << 48;
-		
-		
+		STATS.WORK().profession.set(h.indu(), blue);
+		RoomServiceNeed s = getService(h.indu());
+		if (s != null) {
+			s.clearAccess(h);
+			s.group.need.stat().setPrio(h.indu(), 1.0);
+		}
 		
 		TOURISM.self.history.inc(1);
-		
-		int n = RND.rInt(TOURISM.self.needs.size());
-		ran2 &= 0xFFFF_00FF_FFFF_FFFFl;
-		ran2 |= ((long)n) << 40;
-		
-		h.indu().randomness(ran, ran2);
-		
-		StatNeed need = TOURISM.self.needs.rnd().a();
-		need.setPrio(h.indu(), 0.75);
+
 		return h;
 		
 		
 	}
 	
 	public static RoomBlueprintIns<?> attraction(Induvidual indu) {
-		return indu.race().tourism().getAttraction((indu.randomness2()>>48)&0x0FFFF);
+		RoomBlueprintImp r = STATS.WORK().profession.get(indu);
+		if (r == null || !(r instanceof RoomBlueprintIns<?>))
+			return indu.race().tourism().getAttraction(0);
+		return (RoomBlueprintIns<?>) r;
 	}
 	
-	public static Tuple<StatNeed, LIST<ROOM_SERVICE_ACCESS_HASER>> need(Induvidual indu) {
-		return TOURISM.self.needs.getC((int)((indu.randomness2()>>40)&0x0FF));
-	}
+
 	
 }

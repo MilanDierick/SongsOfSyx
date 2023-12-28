@@ -1,5 +1,6 @@
 package util.data;
 
+import game.GAME;
 import util.info.INFO;
 
 public interface DOUBLE_O<T> {
@@ -17,6 +18,26 @@ public interface DOUBLE_O<T> {
 	
 	public default INFO info() {
 		return null;
+	}
+	
+	public static abstract class DoubleOCached<T> implements DOUBLE_O<T> {
+		
+		private int upI = -1;
+		private T upR = null;
+		private double cache;
+		
+		@Override
+		public double getD(T t) {
+			if (upI != GAME.updateI() || upR != t) {
+				upI = GAME.updateI();
+				upR = t;
+				cache = getValue(t);
+			}
+			return cache;
+		}
+		
+		public abstract double getValue(T t);
+		
 	}
 	
 }

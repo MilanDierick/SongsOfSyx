@@ -7,9 +7,9 @@ import settlement.entity.humanoid.ai.main.*;
 import settlement.entity.humanoid.ai.main.AISUB.AISubActivation;
 import settlement.main.SETT;
 import settlement.room.law.slaver.SlaverStation;
-import settlement.stats.CAUSE_ARRIVE;
 import settlement.stats.STATS;
 import settlement.stats.law.LAW;
+import settlement.stats.util.CAUSE_ARRIVE;
 
 class Enslaved extends AIPLAN.PLANRES{
 

@@ -1,11 +1,22 @@
 package init.tech;
 
-import game.GAME;
+import java.io.IOException;
+
+import game.boosting.BoostSpecs;
+import game.faction.FACTIONS;
+import game.faction.Faction;
+import game.values.*;
+import init.sprite.UI.UI;
+import settlement.stats.Induvidual;
 import snake2d.util.file.Json;
 import snake2d.util.sets.*;
+import snake2d.util.sprite.SPRITE;
+import util.data.DOUBLE_O;
+import util.dic.DicMisc;
 import util.info.INFO;
+import world.regions.Region;
 
-public final class TECH extends Unlocks implements INDEXED{
+public final class TECH implements INDEXED{
 
 	private final int index;
 	public final int levelMax;
@@ -17,12 +28,22 @@ public final class TECH extends Unlocks implements INDEXED{
 	private LIST<TechRequirement> needs;
 	private LIST<TechRequirement> needsPruned;
 	public final INFO info;
-	public final String category;
+
+	public final BoostSpecs boosters;
+	public final Lockable<Faction> lockable;
+	public final Lockers lockers;
 	
-	TECH(LISTE<TECH> all, Json data, Json text){
-		super("", data);
+	private SPRITE icon = null;
+	
+	public final String key;
+	public final TechTree tree;
+	
+	Json requires;
+
+	TECH(String key, LISTE<TECH> all, Json data, Json text, TechTree tree) throws IOException{
+		this.key = key;
+		this.tree = tree;
 		info = new INFO(text);
-		category = text.text("CATEGORY");
 		index = all.add(this);
 		
 		order = data.has("TREE_ORDER") ? data.value("TREE_ORDER") : "ZZ";
@@ -30,19 +51,68 @@ public final class TECH extends Unlocks implements INDEXED{
 		levelCost = data.i("LEVEL_COST", 0, 100000);
 		levelCostInc = data.i("LEVEL_COST_INC", 0, 100000, 0);
 		levelCostMulInc = data.dTry("LEVEL_COST_INC_MUL", 1, 100000, 1);
-		if (bonuses.size() == 0 && roomUnlocks.size() == 0 && industryUnlocks.size() == 0 && upgrades.size() == 0 && unlocksRoads().size() == 0)
-			GAME.Warn("Worthless unlock. Needs to do something! " + data.path());
+		
+		lockable = GVALUES.FACTION.LOCK.push();
+		lockable.push(data);
+		lockers = new Lockers(DicMisc.¤¤TechnologyShort + ": " + info.name, UI.icons().s.vial);
+		
+		lockers.add(GVALUES.FACTION, data, new DOUBLE_O<Faction>() {
+
+			@Override
+			public double getD(Faction t) {
+				if (t == FACTIONS.player()) {
+					if (FACTIONS.player().tech.penalty().getD() < 0.75)
+						return 0;
+					return FACTIONS.player().tech.level(TECH.this) > 0 ? 1 : 0;
+				}
+				return 1;
+			}
+		
+		});
+		
+		lockers.add(GVALUES.INDU, data, new DOUBLE_O<Induvidual>() {
+
+			@Override
+			public double getD(Induvidual t) {
+				if (t.faction() == FACTIONS.player()) {
+					if (FACTIONS.player().tech.penalty().getD() < 0.75)
+						return 0;
+					return FACTIONS.player().tech.level(TECH.this) > 0 ? 1 : 0;
+				}
+				return 1;
+			}
+		
+		});
+		
+		lockers.add(GVALUES.REGION, data, new DOUBLE_O<Region>() {
+
+			@Override
+			public double getD(Region t) {
+				if (t.faction() == FACTIONS.player()) {
+					if (FACTIONS.player().tech.penalty().getD() < 0.75)
+						return 0;
+					return FACTIONS.player().tech.level(TECH.this) > 0 ? 1 : 0;
+				}
+				return 1;
+			}
+		
+		});
+		
+		boosters = new BoostSpecs(info.name, UI.icons().s.vial, false);
+		boosters.push(data, null);
+		
+		if (data.has("ICON"))
+			icon = UI.icons().get(data);
+		
+		requires = data;
+		
+		{
+			//convert(key, data, text);
+			
+			//new File(path).createNewFile();
+		}
 		
 	}
-	
-//	TECH(LIST_MUTALBLE<TECH> all, BOOSTABLE b){
-//		super(b, b.levelAmount);
-//		info = new INFO(b.name, b.desc);
-//		index = all.add(this);
-//		levelMax = b.levelMax;
-//		levelCost = b.levelCost;
-//		levelCostInc = b.levelCostInc;
-//	}
 
 	@Override
 	public int index() {
@@ -75,6 +145,13 @@ public final class TECH extends Unlocks implements INDEXED{
 					return true;
 		}
 		return false;
+	}
+	
+	public SPRITE icon() {
+		if (icon == null) {
+			icon = TechIcon.icon(this);
+		}
+		return icon;
 	}
 	
 	public static final class TechRequirement {

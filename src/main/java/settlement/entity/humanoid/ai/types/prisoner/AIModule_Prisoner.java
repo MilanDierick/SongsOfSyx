@@ -13,11 +13,11 @@ import settlement.entity.humanoid.ai.main.AISUB.AISubActivation;
 import settlement.main.SETT;
 import settlement.room.main.ROOMA;
 import settlement.room.main.RoomInstance;
-import settlement.stats.CAUSE_LEAVE;
 import settlement.stats.STATS;
 import settlement.stats.law.LAW;
 import settlement.stats.law.PRISONER_TYPE;
 import settlement.stats.law.Processing.Punishment;
+import settlement.stats.util.CAUSE_LEAVE;
 import snake2d.util.rnd.RND;
 import util.dic.DicMisc;
 
@@ -33,7 +33,7 @@ public final class AIModule_Prisoner extends AIModule{
 	private final Judged judged = new Judged();
 	private final Enslaved slave = new Enslaved();
 	private final Temple temple = new Temple();
-	private final Arena arena = new Arena();
+	private final Arena arenaDeath = new Arena();
 	private final Stocked stocked = new Stocked();
 	public static final byte PRISON_DAYS = (byte) (4*TIME.years().bitConversion(TIME.days()));
 	
@@ -44,7 +44,7 @@ public final class AIModule_Prisoner extends AIModule{
 	}
 	
 	@Override
-	protected AiPlanActivation getPlan(Humanoid a, AIManager d) {
+	public AiPlanActivation getPlan(Humanoid a, AIManager d) {
 
 		AiPlanActivation s = judge(a, d);
 		if (s != null)
@@ -52,10 +52,8 @@ public final class AIModule_Prisoner extends AIModule{
 		s = temple.activate(a, d);
 		if (s != null)
 			return s;
-		s = arena.activate(a, d);
-		if (s != null)
-			return s;
 		Punishment p = DATA().punishment.get(d);
+		
 		AIPLAN plan = plan(p, a.race());
 		s = plan.activate(a, d);
 		if (s != null)
@@ -70,6 +68,7 @@ public final class AIModule_Prisoner extends AIModule{
 	}
 	
 	private AIPLAN plan(Punishment p, Race race) {
+
 		if(p == LAW.process().execution)
 			return executed;
 		if (p == LAW.process().prison) {
@@ -85,6 +84,8 @@ public final class AIModule_Prisoner extends AIModule{
 		}
 		if (p == LAW.process().exile)
 			return exile;
+		if (p == LAW.process().arena)
+			return arenaDeath;
 		throw new RuntimeException(p + " " + p.name);
 	}
 	
@@ -103,6 +104,7 @@ public final class AIModule_Prisoner extends AIModule{
 	
 	@Override
 	protected void init(Humanoid a, AIManager d) {
+		STATS.MULTIPLIERS().PROSECUTION.mark(a, false);
 		DATA().init(a, d);
 	}
 	
@@ -128,7 +130,9 @@ public final class AIModule_Prisoner extends AIModule{
 		if ((DATA().judged.get(d) == 0 && DATA().noJudge.get(d) == 0)) {
 			LAW.process().judgement.inc(a.race(), false);
 		}
-		if (d.plan() != arena && d.plan() != temple) {
+		
+		
+		if (d.plan() != temple) {
 
 			if (DATA().reportedPunish.get(d) == 0) {
 				LAW.process().exile.inc(a.race());

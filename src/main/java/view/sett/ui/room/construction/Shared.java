@@ -3,7 +3,7 @@ package view.sett.ui.room.construction;
 import init.D;
 import init.sprite.SPRITES;
 import settlement.main.SETT;
-import settlement.tilemap.TBuilding;
+import settlement.tilemap.terrain.TBuilding;
 import snake2d.util.datatypes.DIR;
 import snake2d.util.gui.GUI_BOX;
 import snake2d.util.gui.GuiSection;

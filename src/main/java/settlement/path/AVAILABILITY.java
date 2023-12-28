@@ -8,6 +8,7 @@ public enum AVAILABILITY{
 	SOLID				(-1, 	0,	true, 	1, 		false),
 	NOT_ACCESSIBLE		(-1, 	0,	false, 	0.5, 	false),
 	NORMAL				(1,		0,	false, 	1, 		true),
+	NORMAL_ESOLID		(1,		0,	false, 	1, 		true, -1),
 	AVOID_PASS			(4,		5,	false, 	0.5, 	false),
 	AVOID_LIKE_FUCK		(32,	1,	false, 	0.25,	false),
 

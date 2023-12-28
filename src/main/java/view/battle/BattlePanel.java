@@ -2,8 +2,6 @@ package view.battle;
 
 import static settlement.main.SETT.*;
 
-import java.io.IOException;
-
 import game.battle.BattleState;
 import init.C;
 import init.D;
@@ -12,15 +10,16 @@ import init.settings.S;
 import init.sprite.SPRITES;
 import settlement.army.*;
 import settlement.army.ai.util.DivTDataStatus;
-import settlement.entity.humanoid.HTYPE;
+import settlement.entity.EntityIterator;
+import settlement.entity.humanoid.*;
 import settlement.main.SETT;
 import settlement.room.military.artillery.ROOM_ARTILLERY;
 import snake2d.util.datatypes.DIR;
-import snake2d.util.file.*;
 import snake2d.util.gui.GUI_BOX;
 import snake2d.util.gui.GuiSection;
 import snake2d.util.gui.clickable.CLICKABLE;
 import snake2d.util.misc.ACTION;
+import snake2d.util.sprite.SPRITE;
 import snake2d.util.sprite.text.Str;
 import snake2d.util.sprite.text.Text;
 import util.colors.GCOLOR;
@@ -32,9 +31,9 @@ import util.info.GFORMAT;
 import view.interrupter.ISidePanels;
 import view.main.VIEW;
 import view.subview.GameWindow;
-import view.ui.UIPanelTop;
+import view.ui.top.UIPanelTop;
 
-public final class BattlePanel implements SAVABLE{
+public final class BattlePanel {
 	
 	private final GuiSection section = new GuiSection();
 	private final UIPanelArtillery cards_cata;
@@ -50,7 +49,7 @@ public final class BattlePanel implements SAVABLE{
 		
 		GuiSection butts = new GuiSection();
 		
-		b = new GButt.Panel(SPRITES.icons().l.view_military) {
+		b = new GButt.Panel(new SPRITE.Wrap(SPRITES.icons().m.sword, 32,32)) {
 			@Override
 			protected void clickA() {
 				if (p.added(cards_player))
@@ -88,7 +87,7 @@ public final class BattlePanel implements SAVABLE{
 		
 		if (S.get().developer){
 			
-			b = new GButt.Panel(SPRITES.icons().l.view_military) {
+			b = new GButt.Panel(new SPRITE.Wrap(SPRITES.icons().m.sword, 32,32)) {
 				@Override
 				protected void clickA() {
 					if (p.added(cards_enemy))
@@ -383,6 +382,30 @@ public final class BattlePanel implements SAVABLE{
 				}
 			}.hh(SPRITES.icons().m.noble).hoverInfoSet(D.g("throneD","When enemies are standing by the throne, this timer will tick down, and once 0, the battle will be lost.")));
 			
+			if (S.get().developer) {
+				
+				r.addRightC(64, new GButt.ButtPanel("win") {
+				
+				
+				
+					@Override
+					protected void clickA() {
+						new EntityIterator.Humans() {
+							
+							@Override
+							protected boolean processAndShouldBreakH(Humanoid h, int ie) {
+								if (h.indu().clas() == HCLASS.OTHER) {
+									h.helloMyNameIsInigoMontoyaYouKilledMyFatherPrepareToDie();
+								}
+								return false;
+							}
+						}.iterate();;
+					}
+				
+				});
+				
+			}
+			
 			top.addRight(r);
 		}
 		
@@ -392,22 +415,6 @@ public final class BattlePanel implements SAVABLE{
 		
 	}
 
-	@Override
-	public void save(FilePutter file) {
-		cards_player.saver.save(file);
-		
-	}
-
-	@Override
-	public void load(FileGetter file) throws IOException {
-		cards_player.saver.load(file);
-		
-	}
-
-	@Override
-	public void clear() {
-		cards_player.saver.clear();
-	}
 	
 	
 	

@@ -4,8 +4,6 @@ import java.io.IOException;
 
 import game.GAME;
 import game.time.TIME;
-import init.boostable.BOOSTABLE;
-import init.boostable.BOOSTABLES;
 import settlement.entity.humanoid.Humanoid;
 import settlement.path.finder.SFinderRoomService;
 import settlement.room.industry.module.INDUSTRY_HASER;
@@ -31,7 +29,6 @@ public final class ROOM_LIBRARY extends RoomBlueprintIns<LibraryInstance> implem
 	final double degradePerSecond;
 	final double workValue;
 	final double workSpeed;
-	final BOOSTABLE bonus;
 	final Industry industry;
 	final Constructor constructor;
 	
@@ -52,12 +49,12 @@ public final class ROOM_LIBRARY extends RoomBlueprintIns<LibraryInstance> implem
 		workValue = work;
 		
 		constructor = new Constructor(this, init);
-		bonus = BOOSTABLES.ROOMS().pushRoom(this, init.data(), type);
+		pushBo(init.data(), type, true);
 		
 
 		industry = new Industry(this, init.data(), new RoomBoost[] {
 			constructor.efficiency
-		}, bonus);
+		}, bonus());
 
 		indus = new ArrayList<>(industry);
 	}

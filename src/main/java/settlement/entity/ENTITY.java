@@ -4,8 +4,10 @@ import static settlement.main.SETT.*;
 
 import java.io.IOException;
 
+import game.boosting.BOOSTABLES;
 import settlement.main.SETT;
-import settlement.stats.CAUSE_LEAVE;
+import settlement.stats.util.CAUSE_LEAVE;
+import snake2d.LOG;
 import snake2d.Renderer;
 import snake2d.util.color.COLOR;
 import snake2d.util.datatypes.*;
@@ -56,7 +58,7 @@ public abstract class ENTITY implements BODY_HOLDER, SETT_HOVERABLE{
 	protected abstract boolean willCollideWith(ENTITY other);
 	protected abstract boolean collides();
 	
-	protected abstract void setCollideDamage(ECollision coll);
+	protected abstract void setCollideDamage(ECollision coll, ECollision result);
 	
 	public abstract double getDefenceSkill(double dirDot);
 	
@@ -83,8 +85,8 @@ public abstract class ENTITY implements BODY_HOLDER, SETT_HOVERABLE{
 		return handlerId == -1;
 	}
 	
-	protected final void add(){
-		ENTITIES().add(this);
+	protected final void add(boolean collide){
+		ENTITIES().add(this, collide);
 	}
 
 	public final void helloMyNameIsInigoMontoyaYouKilledMyFatherPrepareToDie() {
@@ -131,7 +133,9 @@ public abstract class ENTITY implements BODY_HOLDER, SETT_HOVERABLE{
 	public static class ECollision {
 		public ENTITY other;
 		public CAUSE_LEAVE leave;
-		public double pierceDamage;
+		
+		public double damageStrength = 0;
+		public final double[] damage = new double[BOOSTABLES.BATTLE().DAMAGES.size()];
 		public double momentum;
 		/**
 		 * The x direction from other entity to you.
@@ -147,6 +151,18 @@ public abstract class ENTITY implements BODY_HOLDER, SETT_HOVERABLE{
 		public double dirDot;
 		public double dirDotOther;
 		public boolean speedHasChanged;
+		
+		public void debug() {
+			LOG.ln("other " + other);
+			LOG.ln("leave " + leave);
+			LOG.ln("mom " + momentum);
+			LOG.ln("strength " + damageStrength);
+			for (int i = 0; i < damage.length; i++) {
+				LOG.ln(BOOSTABLES.BATTLE().DAMAGES.get(i).key  + " " + damage[i]);
+				
+			}
+			LOG.ln("dir " + dirDot);
+		}
 	}
 	
 }

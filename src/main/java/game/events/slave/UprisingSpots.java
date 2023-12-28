@@ -3,6 +3,8 @@ package game.events.slave;
 import java.io.IOException;
 
 import init.config.Config;
+import init.race.RACES;
+import init.race.Race;
 import settlement.army.Div;
 import settlement.entity.humanoid.HTYPE;
 import settlement.entity.humanoid.Humanoid;
@@ -29,7 +31,7 @@ public final class UprisingSpots{
 		
 	}
 	
-	public int riot(int amount) { 
+	public int riot(double amountD) { 
 		
 		
 		
@@ -40,24 +42,33 @@ public final class UprisingSpots{
 			return 0;
 		
 		
-		int sp = (int) Math.ceil((double)amount/(Config.BATTLE.MEN_PER_DIVISION));
-		sp = CLAMP.i(sp, 0, spots.max());
-		
-		int menPerSpot = (int) Math.ceil((double)amount/sp);
 		SETT.ARMY_AI().pause();
-		for (int i = 0; i < sp; i++) {
+		for (int ri = 0; ri < RACES.all().size(); ri++) {
 			
-			int a = CLAMP.i(menPerSpot, 0, amount);
-			amount -= a;
+			Race r = RACES.all().get(ri);
+			int am = (int) (STATS.POP().pop(r, HTYPE.SLAVE)*amountD);
 			
-			UprisingSpot s = UprisingSpot.make(position.x(), position.y(), a);
 			
-			if (s != null) {
-				spots.add(s);
-				amountTotal += a;
+			if (am > 0) {
+				int sp = (int) Math.ceil((double)am/(Config.BATTLE.MEN_PER_DIVISION));
+				sp = CLAMP.i(sp, 0, spots.max());
+				
+				int menPerSpot = (int) Math.ceil((double)am/sp);
+				for (int i = 0; i < sp && spots.size() < Config.BATTLE.DIVISIONS_PER_ARMY; i++) {
+					
+					int a = CLAMP.i(menPerSpot, 0, am);
+					am -= a;
+					
+					UprisingSpot s = UprisingSpot.make(position.x(), position.y(), a, r);
+					if (s != null) {
+						spots.add(s);
+						amountTotal += a;
+					}
+					
+				}
 			}
-			
 		}
+
 		SETT.ARMY_AI().unpause();
 		
 		
@@ -108,7 +119,7 @@ public final class UprisingSpots{
 	
 	public int signUpUpriserPositionByte(Humanoid h) {
 		for (int i = 0; i < spots.size(); i++) {
-			if (spots.get(i).signedUp < spots.get(i).amountTotal) {
+			if (spots.get(i).race == h.race().index() && spots.get(i).signedUp < spots.get(i).amountTotal) {
 				spots.get(i).signedUp++;
 				signedUp ++;
 				return i;
@@ -157,11 +168,13 @@ public final class UprisingSpots{
 		}
 		
 		if (inposition >= amountTotal) {
+			SETT.ARMIES().enemy().resetMorale();
 			while(nextDivision() && spots.size() > 0) {
 				Div d = SETT.ARMIES().enemy().divisions().get(divI);
 				spots.removeLast().makeDiv(d, spots.size());
 			}
 			clear();
+			SETT.ARMIES().enemy().resetMorale();
 			return true;
 		}
 		

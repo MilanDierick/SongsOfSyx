@@ -36,8 +36,11 @@ abstract class EUpdater {
 		@Override
 		public void update(SettEnv s, RECTANGLE bounds, RECTANGLE area) {
 			for (COORDINATE c : area) {
-				s.map.set(c.x() + c.y() * SETT.TWIDTH, 0);
-				RES.flooder().setValue2(c, 0);
+				if (SETT.IN_BOUNDS(c)) {
+					s.map.set(c.x() + c.y() * SETT.TWIDTH, 0);
+					RES.flooder().setValue2(c, 0);
+				}
+				
 			}
 			
 			for (COORDINATE c : bounds) {
@@ -57,7 +60,8 @@ abstract class EUpdater {
 		@Override
 		public void addExtraView(RECTANGLE area, Flooder f, SettEnv thing, double value, double radius, int tx, int ty, int w, int h) {
 			for (COORDINATE c : area) {
-				RES.flooder().setValue2(c, 0);
+				if (SETT.IN_BOUNDS(c))
+					RES.flooder().setValue2(c, 0);
 			}
 			for (int y = 0; y < h; y++) {
 				for (int x = 0; x < w; x++) {
@@ -184,253 +188,253 @@ abstract class EUpdater {
 		return rays;
 	}
 	
-	public static EUpdater water = new EUpdater() {
-		
-		@Override
-		public void update(SettEnv s, RECTANGLE bounds, RECTANGLE area) {
-			RES.flooder().init(this);
-			for (COORDINATE c : area) {
-				s.map.set(c.x() + c.y() * SETT.TWIDTH, 0);
-				if (s.getBaseValue(c.x(), c.y()) == 0) {
-					RES.flooder().pushSloppy(c, 0);
-					RES.flooder().setValue2(c, 0);
-				}else {
-					RES.flooder().setValue2(c, s.max*s.getBaseValue(c.x(), c.y()));
-				}
-			}
-			
-			RES.coos().set(0);
-			
-			while(RES.flooder().hasMore()) {
-				PathTile t = RES.flooder().pollGreatest();
-				if (s.getBaseValue(t.x(), t.y()) > 0) {
-					RES.coos().get().set(t);
-					RES.coos().inc();
-					continue;
-				}
-				for (DIR d : DIR.ALL) {
-					if (bounds.holdsPoint(t, d)) {
-						RES.flooder().pushSloppy(t, d, 0);
-					}
-				}
-			}
-			RES.flooder().done();
-			
-			int k = RES.coos().getI();
-			
-			for (int ci = 0; ci < k; ci++) {
-				COORDINATE c = RES.coos().set(ci);
-				if (tracetest(area, s, c)) {
-					double v = s.getBaseValue(c.x(), c.y());
-					traces.checkInit();
-					for (Ray r : rays(c.x(), c.y(), area)){
-						double cost = 0;
-						for (int i = 0; i < r.size(); i++) {
-							COORDINATE d = r.get(i);
-							int dx = d.x()+c.x();
-							int dy = d.y()+c.y();
-							if (!SETT.IN_BOUNDS(dx, dy))
-								break;
-							
-							
-							if (r.radius(i) + cost >= MAXR)
-								break;
-							
-							if (area.holdsPoint(dx, dy)) {
-								if (traces.check(d)) {
-									double rv = (MAXR-r.radius(i)-cost)/MAXR;
-									v +=  s.getBaseValue(dx, dy)*rv;
-								}
-
-							}
-							cost+= s.getCost(dx, dy)-1;
-							
-						}
-						
-					}
-					
-					trace(c.x(), c.y(), s, v, s.getRadius(c.x(), c.y()), area);
-				}
-			}
-
-			
-			for (COORDINATE c : area) {
-				s.map.set(c.x()+c.y()*TWIDTH, CLAMP.i((int)Math.round(RES.flooder().getValue2(c.x(), c.y())), 0, s.max));
-			}
-			
-		}
-		
-		@Override
-		public void addExtraView(RECTANGLE area, Flooder f, SettEnv thing, double value, double radius, int tx, int ty,
-				int w, int h) {
-			double b = value;
-			double dr = maxRadiusI / (radius) * b;
-
-			if (b > 0) {
-				for (int y = 0; y < h; y++) {
-					for (int x = 0; x < w; x++) {
-						if (SETT.IN_BOUNDS(tx + x, ty + y)) {
-							RES.flooder().pushSloppy(tx + x, ty + y, b);
-							RES.flooder().setValue2(tx + x, ty + y, dr);
-						}
-					}
-				}
-
-			}
-			
-			while (f.hasMore()) {
-				PathTile t = f.pollGreatest();
-				dr = t.getValue2();
-				value = t.getValue();
-
-				for (DIR d : DIR.ALL) {
-					tx = t.x() + d.x();
-					ty = t.y() + d.y();
-					double v = value - dr * d.tileDistance() * thing.getCost(tx, ty);
-					if (v > 0) {
-						if (f.pushGreater(tx, ty, v) != null) {
-							f.setValue2(tx, ty, dr);
-						}
-					}
-				}
-			}
-
-			
-		}
-
-		@Override
-		public double getExtraValue(SettEnv s, double g, int tx, int ty) {
-			g = Math.max(g, RES.flooder().getValue(tx, ty));
-			return g;
-		}
-	};
-	
-	public static EUpdater water2 = new EUpdater() {
-		
-		@Override
-		public void update(SettEnv s, RECTANGLE bounds, RECTANGLE area) {
-			RES.flooder().init(this);
-			for (COORDINATE c : area) {
-				s.map.set(c.x() + c.y() * SETT.TWIDTH, 0);
-				if (s.getBaseValue(c.x(), c.y()) == 0) {
-					RES.flooder().pushSloppy(c, 0);
-					RES.flooder().setValue2(c, 0);
-				}else {
-					RES.flooder().setValue2(c, s.getBaseValue(c.x(), c.y()));
-				}
-			}
-			
-			
-			
-			while(RES.flooder().hasMore()) {
-				PathTile t = RES.flooder().pollGreatest();
-				if (s.getBaseValue(t.x(), t.y()) > 0) {
-					RES.coos().get().set(t);
-					RES.coos().inc();
-					continue;
-				}
-				for (DIR d : DIR.ALL) {
-					if (bounds.holdsPoint(t, d)) {
-						RES.flooder().pushSloppy(t, d, 0);
-					}
-				}
-			}
-			RES.flooder().done();
-			
-			int k = RES.coos().getI();
-			
-			for (COORDINATE c : area) {
-				if (s.getBaseValue(c.x(), c.y()) != 0)
-					continue;
-				rCheck.init();
-				double v = 0;
-				for (int ci = 0; ci < k && v < 1; ci++) {
-					COORDINATE so = RES.coos().set(ci);
-					
-					for (Ray r : traces.rays(c.x()-so.x(), c.y()-so.y())) {
-						if (rCheck.isSetAndSet(r.index)) {
-							continue;
-						}
-						if (v >= 1)
-							break;
-						
-						double cost = 0;
-						for (int i = 0; i < r.size() && v < 1; i++) {
-							COORDINATE d = r.get(i);
-							int dx = -d.x()+c.x();
-							int dy = -d.y()+c.y();
-							if (!SETT.IN_BOUNDS(dx, dy))
-								break;
-							
-							
-							if (r.radius(i) + cost >= MAXR)
-								break;
-							
-							double b = s.getBaseValue(dx, dy);
-							if (b > 0) {
-								double rv = (MAXR-r.radius(i)-cost)/MAXR;
-								v += b*rv;
-							}
-							cost+= s.getCost(dx, dy)-1;
-							
-						}
-						
-					}
-				}
-				RES.flooder().setValue2(c, v);
-					
-			}
-			
-			for (COORDINATE c : area) {
-				s.map.set(c.x()+c.y()*TWIDTH, CLAMP.i((int)Math.round(RES.flooder().getValue2(c.x(), c.y())*s.max), 0, s.max));
-			}
-			
-		}
-		
-		@Override
-		public void addExtraView(RECTANGLE area, Flooder f, SettEnv thing, double value, double radius, int tx, int ty,
-				int w, int h) {
-			double b = value;
-			double dr = maxRadiusI / (radius) * b;
-
-			if (b > 0) {
-				for (int y = 0; y < h; y++) {
-					for (int x = 0; x < w; x++) {
-						if (SETT.IN_BOUNDS(tx + x, ty + y)) {
-							RES.flooder().pushSloppy(tx + x, ty + y, b);
-							RES.flooder().setValue2(tx + x, ty + y, dr);
-						}
-					}
-				}
-
-			}
-			
-			while (f.hasMore()) {
-				PathTile t = f.pollGreatest();
-				dr = t.getValue2();
-				value = t.getValue();
-
-				for (DIR d : DIR.ALL) {
-					tx = t.x() + d.x();
-					ty = t.y() + d.y();
-					double v = value - dr * d.tileDistance() * thing.getCost(tx, ty);
-					if (v > 0) {
-						if (f.pushGreater(tx, ty, v) != null) {
-							f.setValue2(tx, ty, dr);
-						}
-					}
-				}
-			}
-
-			
-		}
-
-		@Override
-		public double getExtraValue(SettEnv s, double g, int tx, int ty) {
-			g = Math.max(g, RES.flooder().getValue(tx, ty));
-			return g;
-		}
-	};
+//	public static EUpdater water = new EUpdater() {
+//		
+//		@Override
+//		public void update(SettEnv s, RECTANGLE bounds, RECTANGLE area) {
+//			RES.flooder().init(this);
+//			for (COORDINATE c : area) {
+//				s.map.set(c.x() + c.y() * SETT.TWIDTH, 0);
+//				if (s.getBaseValue(c.x(), c.y()) == 0) {
+//					RES.flooder().pushSloppy(c, 0);
+//					RES.flooder().setValue2(c, 0);
+//				}else {
+//					RES.flooder().setValue2(c, s.max*s.getBaseValue(c.x(), c.y()));
+//				}
+//			}
+//			
+//			RES.coos().set(0);
+//			
+//			while(RES.flooder().hasMore()) {
+//				PathTile t = RES.flooder().pollGreatest();
+//				if (s.getBaseValue(t.x(), t.y()) > 0) {
+//					RES.coos().get().set(t);
+//					RES.coos().inc();
+//					continue;
+//				}
+//				for (DIR d : DIR.ALL) {
+//					if (bounds.holdsPoint(t, d)) {
+//						RES.flooder().pushSloppy(t, d, 0);
+//					}
+//				}
+//			}
+//			RES.flooder().done();
+//			
+//			int k = RES.coos().getI();
+//			
+//			for (int ci = 0; ci < k; ci++) {
+//				COORDINATE c = RES.coos().set(ci);
+//				if (tracetest(area, s, c)) {
+//					double v = s.getBaseValue(c.x(), c.y());
+//					traces.checkInit();
+//					for (Ray r : rays(c.x(), c.y(), area)){
+//						double cost = 0;
+//						for (int i = 0; i < r.size(); i++) {
+//							COORDINATE d = r.get(i);
+//							int dx = d.x()+c.x();
+//							int dy = d.y()+c.y();
+//							if (!SETT.IN_BOUNDS(dx, dy))
+//								break;
+//							
+//							
+//							if (r.radius(i) + cost >= MAXR)
+//								break;
+//							
+//							if (area.holdsPoint(dx, dy)) {
+//								if (traces.check(d)) {
+//									double rv = (MAXR-r.radius(i)-cost)/MAXR;
+//									v +=  s.getBaseValue(dx, dy)*rv;
+//								}
+//
+//							}
+//							cost+= s.getCost(dx, dy)-1;
+//							
+//						}
+//						
+//					}
+//					
+//					trace(c.x(), c.y(), s, v, s.getRadius(c.x(), c.y()), area);
+//				}
+//			}
+//
+//			
+//			for (COORDINATE c : area) {
+//				s.map.set(c.x()+c.y()*TWIDTH, CLAMP.i((int)Math.round(RES.flooder().getValue2(c.x(), c.y())), 0, s.max));
+//			}
+//			
+//		}
+//		
+//		@Override
+//		public void addExtraView(RECTANGLE area, Flooder f, SettEnv thing, double value, double radius, int tx, int ty,
+//				int w, int h) {
+//			double b = value;
+//			double dr = maxRadiusI / (radius) * b;
+//
+//			if (b > 0) {
+//				for (int y = 0; y < h; y++) {
+//					for (int x = 0; x < w; x++) {
+//						if (SETT.IN_BOUNDS(tx + x, ty + y)) {
+//							RES.flooder().pushSloppy(tx + x, ty + y, b);
+//							RES.flooder().setValue2(tx + x, ty + y, dr);
+//						}
+//					}
+//				}
+//
+//			}
+//			
+//			while (f.hasMore()) {
+//				PathTile t = f.pollGreatest();
+//				dr = t.getValue2();
+//				value = t.getValue();
+//
+//				for (DIR d : DIR.ALL) {
+//					tx = t.x() + d.x();
+//					ty = t.y() + d.y();
+//					double v = value - dr * d.tileDistance() * thing.getCost(tx, ty);
+//					if (v > 0) {
+//						if (f.pushGreater(tx, ty, v) != null) {
+//							f.setValue2(tx, ty, dr);
+//						}
+//					}
+//				}
+//			}
+//
+//			
+//		}
+//
+//		@Override
+//		public double getExtraValue(SettEnv s, double g, int tx, int ty) {
+//			g = Math.max(g, RES.flooder().getValue(tx, ty));
+//			return g;
+//		}
+//	};
+//	
+//	public static EUpdater water2 = new EUpdater() {
+//		
+//		@Override
+//		public void update(SettEnv s, RECTANGLE bounds, RECTANGLE area) {
+//			RES.flooder().init(this);
+//			for (COORDINATE c : area) {
+//				s.map.set(c.x() + c.y() * SETT.TWIDTH, 0);
+//				if (s.getBaseValue(c.x(), c.y()) == 0) {
+//					RES.flooder().pushSloppy(c, 0);
+//					RES.flooder().setValue2(c, 0);
+//				}else {
+//					RES.flooder().setValue2(c, s.getBaseValue(c.x(), c.y()));
+//				}
+//			}
+//			
+//			
+//			
+//			while(RES.flooder().hasMore()) {
+//				PathTile t = RES.flooder().pollGreatest();
+//				if (s.getBaseValue(t.x(), t.y()) > 0) {
+//					RES.coos().get().set(t);
+//					RES.coos().inc();
+//					continue;
+//				}
+//				for (DIR d : DIR.ALL) {
+//					if (bounds.holdsPoint(t, d)) {
+//						RES.flooder().pushSloppy(t, d, 0);
+//					}
+//				}
+//			}
+//			RES.flooder().done();
+//			
+//			int k = RES.coos().getI();
+//			
+//			for (COORDINATE c : area) {
+//				if (s.getBaseValue(c.x(), c.y()) != 0)
+//					continue;
+//				rCheck.init();
+//				double v = 0;
+//				for (int ci = 0; ci < k && v < 1; ci++) {
+//					COORDINATE so = RES.coos().set(ci);
+//					
+//					for (Ray r : traces.rays(c.x()-so.x(), c.y()-so.y())) {
+//						if (rCheck.isSetAndSet(r.index)) {
+//							continue;
+//						}
+//						if (v >= 1)
+//							break;
+//						
+//						double cost = 0;
+//						for (int i = 0; i < r.size() && v < 1; i++) {
+//							COORDINATE d = r.get(i);
+//							int dx = -d.x()+c.x();
+//							int dy = -d.y()+c.y();
+//							if (!SETT.IN_BOUNDS(dx, dy))
+//								break;
+//							
+//							
+//							if (r.radius(i) + cost >= MAXR)
+//								break;
+//							
+//							double b = s.getBaseValue(dx, dy);
+//							if (b > 0) {
+//								double rv = (MAXR-r.radius(i)-cost)/MAXR;
+//								v += b*rv;
+//							}
+//							cost+= s.getCost(dx, dy)-1;
+//							
+//						}
+//						
+//					}
+//				}
+//				RES.flooder().setValue2(c, v);
+//					
+//			}
+//			
+//			for (COORDINATE c : area) {
+//				s.map.set(c.x()+c.y()*TWIDTH, CLAMP.i((int)Math.round(RES.flooder().getValue2(c.x(), c.y())*s.max), 0, s.max));
+//			}
+//			
+//		}
+//		
+//		@Override
+//		public void addExtraView(RECTANGLE area, Flooder f, SettEnv thing, double value, double radius, int tx, int ty,
+//				int w, int h) {
+//			double b = value;
+//			double dr = maxRadiusI / (radius) * b;
+//
+//			if (b > 0) {
+//				for (int y = 0; y < h; y++) {
+//					for (int x = 0; x < w; x++) {
+//						if (SETT.IN_BOUNDS(tx + x, ty + y)) {
+//							RES.flooder().pushSloppy(tx + x, ty + y, b);
+//							RES.flooder().setValue2(tx + x, ty + y, dr);
+//						}
+//					}
+//				}
+//
+//			}
+//			
+//			while (f.hasMore()) {
+//				PathTile t = f.pollGreatest();
+//				dr = t.getValue2();
+//				value = t.getValue();
+//
+//				for (DIR d : DIR.ALL) {
+//					tx = t.x() + d.x();
+//					ty = t.y() + d.y();
+//					double v = value - dr * d.tileDistance() * thing.getCost(tx, ty);
+//					if (v > 0) {
+//						if (f.pushGreater(tx, ty, v) != null) {
+//							f.setValue2(tx, ty, dr);
+//						}
+//					}
+//				}
+//			}
+//
+//			
+//		}
+//
+//		@Override
+//		public double getExtraValue(SettEnv s, double g, int tx, int ty) {
+//			g = Math.max(g, RES.flooder().getValue(tx, ty));
+//			return g;
+//		}
+//	};
 	
 	public static EUpdater flooder = new EUpdater() {
 		

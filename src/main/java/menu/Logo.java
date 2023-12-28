@@ -1,6 +1,7 @@
 package menu;
 
 import init.C;
+import init.sprite.UI.UI;
 import snake2d.Renderer;
 import snake2d.util.color.COLOR;
 import snake2d.util.color.ColorImp;
@@ -8,9 +9,11 @@ import snake2d.util.datatypes.Pendulum;
 import snake2d.util.light.AmbientLight;
 import snake2d.util.light.PointLight;
 import snake2d.util.rnd.RND;
+import util.gui.misc.GText;
 
 final class Logo{
 
+	private double d = 0.25;
 	private final int startY;
 	private final int startX;
 	private int letterI = 1;
@@ -26,7 +29,7 @@ final class Logo{
 	private final AmbientLight light = new AmbientLight(1.2,1.2,1.2,45,45);
 	private final Pendulum lightD = new Pendulum().setZero(0.3).setFactor(1 + RND.rFloat1(0.3));
 	private final PointLight finish = new PointLight();
-	
+	private final GText pres = new GText(UI.FONT().H1, "presents").color(COLOR.WHITE65);
 	Logo(){
 		
 		int w = 0;
@@ -41,7 +44,7 @@ final class Logo{
 		
 		flashY1 = startY - (RESOURCES.s().logoFlash.height() - RESOURCES.s().logoGlyps[0].height())/2;
 		
-		presX1 = (C.WIDTH() - RESOURCES.s().logoPresents.width())/2;
+		presX1 = (C.WIDTH()/2 - pres.width()/2);
 		presY1 = startY + m + RESOURCES.s().logoGlyps[0].height();
 		finish.setRadius(RESOURCES.s().logoGlyps[0].height());
 		finish.setZ(40);
@@ -85,9 +88,12 @@ final class Logo{
 			presents = true;
 			presentsTimer += ds;
 			finTimer += ds;
-			if (presentsTimer > 3)
+			if (presentsTimer > 3) {
 				return false;
+			}
 		}
+		
+
 		
 		return true;
 	
@@ -95,7 +101,7 @@ final class Logo{
 
 	private final ColorImp co = new ColorImp();
 	
-	private double d = 0.25;
+
 	
 	protected void render(Renderer r, float ds) {
 	
@@ -136,9 +142,11 @@ final class Logo{
 		}
 		light.register(C.DIM());
 		x1 = startX;
+		int dx = RND.rInt0(64)/64;
+		int dy = RND.rInt0(64)/64;
 		for (int i = 0; i < letterI; i++) {
 			RESOURCES.s().logoColors[i].bind();
-			RESOURCES.s().logoGlyps[i].render(r, x1, startY);
+			RESOURCES.s().logoGlyps[i].render(r, x1+dx, startY+dy);
 			x1 += RESOURCES.s().logoGlyps[i].width();
 		}
 		COLOR.unbind();
@@ -146,7 +154,9 @@ final class Logo{
 		
 		
 		if (presents) {
-			RESOURCES.s().logoPresents.render(r, presX1, presY1);
+			pres.render(r, presX1+dx, presY1+dy);
+			
+			//RESOURCES.s().logoPresents.render(r, presX1, presY1);
 		}
 		
 		if (finTimer > 0) {

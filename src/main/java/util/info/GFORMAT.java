@@ -4,7 +4,7 @@ import game.time.TIME;
 import snake2d.util.color.COLOR;
 import snake2d.util.color.ColorImp;
 import snake2d.util.misc.CLAMP;
-import snake2d.util.sprite.text.Text;
+import snake2d.util.sprite.text.Str;
 import util.colors.GCOLOR;
 import util.gui.misc.GText;
 
@@ -20,6 +20,35 @@ public class GFORMAT {
 		return text;
 	}
 
+	public static GText iOrF(GText text, double v) {
+		
+		if ((int) v == v)
+			i(text, (int)v);
+		else
+			f(text, v);
+		return text;
+	}
+	
+	
+	
+	private static char iic[] = new char[] {
+		'T',
+		'B',
+		'M',
+		'K',
+	};
+	
+	private static double ii1[] = new double[] {
+		1_000_000_000_000d,
+		1_000_000_000d,
+		1_000_000d,
+		1_000d,
+	};
+	
+
+	
+
+	
 	public static GText i(GText text, long i) {
 		
 		text.color(GCOLOR.T().INORMAL);
@@ -27,31 +56,36 @@ public class GFORMAT {
 			text.add('-');
 			i = -i;
 		}
-		if (i > 999999999) {
-			long d = i % 1000000000;
-			i /= 1000000000;
-			text.add(i);
-			text.add('.');
-			text.add(d / 100000000);
-			text.add('B');
-		} else if (i > 999999) {
-			long d = i % 1000000;
-			i /= 1000000;
-			text.add(i);
-			text.add('.');
-			text.add(d / 100000);
-			text.add('M');
-		} else if (i > 999) {
-			long d = i % 1000;
-			i /= 1000;
-			text.add(i);
-			text.add('.');
-			text.add(d / 100);
-			text.add('K');
-		} else {
+		
+		if (i < 1000) {
 			formatI(text, i);
+			return text;
 		}
+		
+		for (int k = 0; k < ii1.length; k++) {
+			if (i >= ii1[k]) {
+				int dd = (int) Math.round(((double)i*100.0 /(ii1[k])));
+				int full = dd/100;
+				int rem = dd%100;
+				
+				text.add(full);
+				if (full >= 100) {
+					;
+				}else if (full >= 10) {
+					text.add('.');
+					text.add(rem/10);
+				}else {
+					text.add('.');
+					text.add(rem/10);
+					text.add(rem%10);
 
+				}
+				text.add(iic[k]);
+				return text;
+			}
+			
+		}
+		
 		return text;
 	}
 
@@ -106,7 +140,7 @@ public class GFORMAT {
 		return text;
 	}
 
-	private static void formatI(Text text, long i) {
+	public static void formatI(Str text, long i) {
 		if (i == 0) {
 			text.add(0);
 			return;
@@ -114,7 +148,7 @@ public class GFORMAT {
 		formatIR(text, i, 0);
 	}
 
-	private static long formatIR(Text text, long i, long r) {
+	private static long formatIR(Str text, long i, long r) {
 		if (i == 0) {
 			return r;
 		}
@@ -203,7 +237,7 @@ public class GFORMAT {
 		d = CLAMP.d(d, 0, 1);
 		text.color(ColorImp.TMP.interpolate(GCOLOR.T().IBAD, GCOLOR.T().INORMAL, d));
 
-		text.add(i, 2);
+		text.add(i, 1);
 		text.add('/');
 		formatI(text, k);
 		return text;
@@ -220,7 +254,10 @@ public class GFORMAT {
 
 		text.add(i, 2);
 		text.add('/');
-		text.add(k, 2);
+		if ((int)k == k)
+			text.add((int)k, 2);
+		else
+			text.add(k, 2);
 		return text;
 	}
 
@@ -351,26 +388,8 @@ public class GFORMAT {
 	 */
 	public static GText perc(GText text, double f) {
 
+		return perc(text, f, 0);
 		
-		
-		if (!Double.isFinite(f)) {
-			text.add('-').add('-').add('-');
-			text.color(GCOLOR.T().INACTIVE);
-			return text;
-		}
-
-		int p = (int) Math.round(f*100);
-		
-		if (p < 0) {
-			text.add('-');
-			text.color(GCOLOR.T().IBAD);
-			text.add(-p).add('%');
-			return text;
-		}
-
-		text.color(ColorImp.TMP.interpolate(GCOLOR.T().IBAD, GCOLOR.T().IGOOD, f > 1 ? 1 : f));
-		text.add(p).add('%');
-		return text;
 	}
 	
 	
@@ -383,45 +402,47 @@ public class GFORMAT {
 		}
 
 		if (f < 0) {
-			text.add('-');
 			text.color(GCOLOR.T().IBAD);
-			text.add((int) (-f * 100)).add('%');
-			return text;
+			text.add('-');
+			f = -f;
+		}else if (f > 0) {
+			text.color(ColorImp.TMP.interpolate(GCOLOR.T().IBAD, GCOLOR.T().IGOOD, f > 1 ? 1 : f));
+		}else {
+			text.color(GCOLOR.T().INACTIVE);
 		}
-		int k = (int) (f * 1000);
-		text.add((int) (k/10));
-		if (k%10 > 0) {
-			text.add('.').add(k%10);
-		}
+		text.add(f*100, decimals, true);
 		text.add('%');
-		text.color(ColorImp.TMP.interpolate(GCOLOR.T().IBAD, GCOLOR.T().IGOOD, f > 1 ? 1 : f));
+		
 		return text;
+
 	}
 
 	public static GText percInc(GText text, double f) {
-
-		int t = (int) Math.round(Math.abs(f)*100*100);
-		int full = t /100;
-		int rem = t-full*100;
+		return percInc(text, f, 2);
+	}
+	
+	public static GText percInc(GText text, double f, int decimals) {
+		if (!Double.isFinite(f)) {
+			text.add('-').add('-').add('-');
+			text.color(GCOLOR.T().INACTIVE);
+			return text;
+		}
+		
+		f*= 100;
 		
 		if (f < 0) {
 			text.color(GCOLOR.T().IBAD);
 			text.add('-');
 			f = -f;
-			text.add(full);
 		}else if (f > 0) {
 			text.color(GCOLOR.T().IGOOD);
 			text.add('+');
-			text.add(full);
 		}else {
 			text.color(GCOLOR.T().INACTIVE);
-			text.add('0');
 		}
-		//int remain = (int)(100*(f*100 - (int)(f*100)));
-		if (rem > 0) {
-			text.add('.').add(rem);
-		}
+		text.add(f, decimals, false);
 		text.add('%');
+		
 		return text;
 	}
 	
@@ -572,5 +593,38 @@ public class GFORMAT {
 		return text;
 
 	}
+	
+	private static final String[] hundreds = {"", "C", "CC", "CCC", "CD", "D", "DC", "DCC", "DCCC", "CM"};  
+	private static final String[] tens = {"", "X", "XX", "XXX", "XL", "L", "LX", "LXX", "LXXX", "XC"};  
+	private static final String[] units = {"", "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX"};  
+	private static final Str tmp = new Str(4);
+	
+	public static Str toNumeral(Str text, int num) {
+		
+		while (num > 1000) {
+			text.add('M');
+			num -= 1000;
+		}
+		
+		text.add(hundreds[num / 100]);
+		text.add(tens[(num % 100) / 10]);
+		text.add(units[num % 10]);  
 
+		return text;
+	}
+	
+	
+	
+	public static Str toNumeral(int num) {
+		tmp.clear();
+		return toNumeral(tmp, num);
+	}
+	
+	public static GText toNumeral(GText text, int num) {
+		
+		toNumeral((Str)text, num);
+		return text;
+	}
+	
+	
 }

@@ -4,7 +4,7 @@ import java.io.Serializable;
 import java.util.*;
 
 public class ArrayListResize<E> implements LISTE<E>, Serializable{
-
+	
 	private static final long serialVersionUID = 1L;
 	private Object[] es;
 	private final Iter<E> iterator = new Iter<E>();
@@ -26,7 +26,6 @@ public class ArrayListResize<E> implements LISTE<E>, Serializable{
 	private void increase(){
 		
 		if (last == es.length-1 && es.length != maxSize){
-			
 			int size = es.length*2;
 			if (size > maxSize)
 				size = maxSize;

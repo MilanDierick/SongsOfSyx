@@ -106,7 +106,7 @@ final class UtilPlacability {
 			return ¤¤Disconnected;
 		}
 		
-		if (p.autoWalls.isOn())
+		if (p.autoWalls.is())
 			return p.door.createProblem();
 		return null;
 	}
@@ -150,7 +150,7 @@ final class UtilPlacability {
 			if (instance.is(c)) {
 				for (DIR d : DIR.ORTHO) {
 					if (!instance.is(c, d)) {
-						if (!SETT.ROOMS().fData.blocking.is(c, d) && !SETT.PATH().solidity.is(c, d))
+						if (SETT.ROOMS().fData.availability.get(c, d).player > 0 && !SETT.PATH().solidity.is(c, d))
 							return true;
 					}
 				}

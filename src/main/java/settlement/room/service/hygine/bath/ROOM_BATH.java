@@ -16,44 +16,41 @@ import settlement.room.main.category.RoomCategorySub;
 import settlement.room.main.furnisher.Furnisher;
 import settlement.room.main.job.ROOM_EMPLOY_AUTO;
 import settlement.room.main.util.RoomInitData;
-import settlement.room.service.module.RoomServiceDataAccess;
-import settlement.room.service.module.RoomServiceDataAccess.ROOM_SERVICE_ACCESS_HASER;
-import settlement.stats.STATS;
+import settlement.room.service.module.RoomServiceNeed;
+import settlement.room.service.module.RoomServiceNeed.ROOM_SERVICE_NEED_HASER;
 import snake2d.util.datatypes.DIR;
 import snake2d.util.file.FileGetter;
 import snake2d.util.file.FilePutter;
 import snake2d.util.sets.*;
 import view.sett.ui.room.UIRoomModule;
 
-public final class ROOM_BATH extends RoomBlueprintIns<BathInstance> implements ROOM_SERVICE_ACCESS_HASER, INDUSTRY_HASER, ROOM_EMPLOY_AUTO{
+public final class ROOM_BATH extends RoomBlueprintIns<BathInstance> implements ROOM_SERVICE_NEED_HASER, INDUSTRY_HASER, ROOM_EMPLOY_AUTO{
 
-	final RoomServiceDataAccess data;
+	final RoomServiceNeed data;
 	final Constructor constructor;
 	final CharSequence sHeating;
 	final CharSequence sHeatingDesc;
 	final CharSequence sHeatingProblem;
+	final CharSequence sWaterProblem;
 	final Industry consumtion;
 	final LIST<Industry> indus;
 
 	public ROOM_BATH(String key, int index, RoomInitData init, RoomCategorySub block) throws IOException {
 		super(index, init, key, block);
 		
-		data = new RoomServiceDataAccess(this, init) {
+		data = new RoomServiceNeed(this, init) {
 			@Override
 			public FSERVICE service(int tx, int ty) {
 				return Bath.init(tx, ty, ROOM_BATH.this);
 			}
 
-			@Override
-			public double totalMultiplier() {
-				return 1.0/STATS.NEEDS().DIRTINESS.rate.get(null, null);
-			}
 		};
 		
 		constructor = new Constructor(this,init);
 		sHeating = init.text().text("HEATING");
 		sHeatingDesc = init.text().text("HEATING_DESC");
 		sHeatingProblem = init.text().text("HEATING_PROBLEM");
+		sWaterProblem = init.text().text("WATER_PROBLEM");
 		consumtion = new Industry(this, init.data(), new RoomBoost[0], null);
 		
 
@@ -83,7 +80,7 @@ public final class ROOM_BATH extends RoomBlueprintIns<BathInstance> implements R
 	}
 	
 	@Override
-	public RoomServiceDataAccess service() {
+	public RoomServiceNeed service() {
 		return data;
 	}
 	

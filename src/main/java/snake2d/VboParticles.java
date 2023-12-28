@@ -3,8 +3,11 @@ package snake2d;
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL20.*;
 
+import java.nio.IntBuffer;
+
 import org.lwjgl.opengl.GL11;
 
+import snake2d.VboSorter.Counts;
 import snake2d.util.color.COLOR;
 import snake2d.util.color.OPACITY;
 
@@ -13,161 +16,80 @@ class VboParticles extends VboAbs{
 	private final byte byteZero = 0;
 	private final byte byteFull = -1;
 	private final int[] size = new int[255];
-	private final VboShaderAbs shader;
-
+	private final Shader shader;
+	private final VboSorter sorter;
+	private final IntBuffer sBuff;
+	private int layer = 0;
+	
 	static VboParticles getDebug(SETTINGS sett) {
-		ShaderDebug shader = new ShaderDebug(sett.getNativeWidth(), sett.getNativeHeight());
+		Shader shader = new Shader(sett.getNativeWidth(), sett.getNativeHeight(), "Particle_debug", null, "Particle_debug");
 		return new VboParticles(shader);
 	}
 
 	static VboParticles getForTexture(int width, int height) {
-		ShaderTexture shader = new ShaderTexture(width, height);
+		Shader shader = new Shader(width-0.5, height+0.5, "Particle_texture", null, "Particle_texture");
 		return new VboParticles(shader);
 	}
-
+//
 	static VboParticles getDeffered(SETTINGS sett) {
-		ShaderDeffered shader = new ShaderDeffered(sett.getNativeWidth(), sett.getNativeHeight());
+		Shader shader = new Shader(sett.getNativeWidth(), sett.getNativeHeight(), "Particle", null, "Particle");
 		return new VboParticles(shader);
 	}
 
-	public VboParticles(VboShaderAbs shader) {
+	public VboParticles(Shader shader) {
 		super(GL_POINTS, 1 << 16, 
 				new VboAttribute(2, GL_SHORT, false, 2), // position		4
 				new VboAttribute(4, GL_UNSIGNED_BYTE, true, 1), // normal	4
 				new VboAttribute(4, GL_UNSIGNED_BYTE, true, 1));// color	4
 		
+		sorter = new VboSorter(MAX_ELEMENTS*3);
+		
+		
 		this.shader = shader;
+		sBuff = buffer.asIntBuffer();
 		size[0] = 1;
 
 	}
 
-	private static class ShaderDebug extends VboShaderAbs {
-
-		ShaderDebug(float width, float height) {
-
-			String VERTEX = "#version 330 core" + "\n"
-					+ getScreenVec(width, height)
-					+ "const vec2 trans = vec2(-1.0,1.0);" + "\n"
-
-					+ "layout(location = 0) in vec2 in_position;" + "\n" 
-					+ "layout(location = 2) in vec4 in_color;"
-					+ "\n"
-
-					+ "out vec4 vColor;" + "\n"
-
-					+ "void main(){" + "\n" + "vColor = vec4(in_color.xyz*2.0, in_color.w);" + "\n"
-					+ "gl_Position = vec4((in_position * screen)+trans, 0.0, 1.0);" + "\n" + "}";
-
-			String FRAGMENT = "#version 330 core" + "\n"
-
-					+ "in vec4 vColor;" + "\n"
-
-					+ "out vec4 out_diffuse;" + "\n"
-
-					+ "void main(){" + "\n" + "out_diffuse = vColor;" + "\n"
-
-					+ "}" + "\n";
-
-			super.compile(VERTEX, FRAGMENT);
-
-		}
-
-	}
-	
-	private static class ShaderTexture extends VboShaderAbs {
-
-		ShaderTexture(float width, float height) {
-
-			String VERTEX = "#version 330 core" + "\n"
-
-					+ getScreenVec(width-0.5f, height+0.5f) 
-					+ "const vec2 trans = vec2(-1.0,1.0);" + "\n"
-
-					+ "layout(location = 0) in vec2 in_position;" + "\n" 
-					+ "layout(location = 2) in vec4 in_color;"
-					+ "\n"
-
-					+ "out vec4 vColor;" + "\n"
-
-					+ "void main(){" + "\n" + "vColor = in_color;" + "\n"
-					+ "gl_Position = vec4((in_position * screen)+trans, 0.0, 1.0);" + "\n" + "}";
-
-			String FRAGMENT = "#version 330 core" + "\n"
-
-					+ "in vec4 vColor;" + "\n"
-
-					+ "out vec4 out_diffuse;" + "\n"
-
-					+ "void main(){" + "\n" + "out_diffuse = vColor;" + "\n"
-
-					+ "}" + "\n";
-
-			super.compile(VERTEX, FRAGMENT);
-
-		}
-
-	}
-
-	private static class ShaderDeffered extends VboShaderAbs {
-
-		ShaderDeffered(float width, float height) {
-
-			String VERTEX = "#version 330 core" + "\n"
-
-					+ getScreenVec(width, height)  
-					+ "const vec2 trans = vec2(-1.0,1.0);" + "\n"
-
-					+ "layout(location = 0) in vec2 in_position;" + "\n" 
-					+ "layout(location = 1) in vec4 in_normal;"
-					+ "\n" + "layout(location = 2) in vec4 in_color;" + "\n"
-
-					+ "out vec4 vColor;" + "\n" + "out vec4 vNormal;" + "\n"
-
-					+ "void main(){" + "\n" + "vColor = vec4(in_color.xyz*2.0, in_color.w);" + "\n"
-					+ "vNormal = in_normal;" + "\n" + "gl_Position = vec4((in_position * screen)+trans, 0.0, 1.0);"
-					+ "\n" + "}";
-
-			String FRAGMENT = "#version 330 core" + "\n"
-
-					+ "in vec4 vColor;" + "\n" + "in vec4 vNormal;" + "\n"
-
-					+ "layout(location = 0) out vec4 out_diffuse;" + "\n" + "layout(location = 1) out vec4 out_normal;"
-					+ "\n"
-
-					+ "void main(){" + "\n" + "out_diffuse = vColor;" + "\n" + "out_normal = vNormal;" + "\n"
-
-					+ "}" + "\n";
-
-			super.compile(VERTEX, FRAGMENT);
-
-		}
-
-	}
-
 	void setNew(int pointSize) {
-		vTo[current] = count;
-		current++;
-		vFrom[current] = count;
-		size[current] = pointSize;
+		layer++;
+		size[layer] = pointSize;
 	}
 
 	final void flush(int pointSize) {
-		bindAndUpload();
+		
+		bind();
 		shader.bind();
-		int i = 0;
-		vTo[current] = count;
-		while (i <= current) {
-			if (vFrom[i] != vTo[i]) {
+		sBuff.position(0);
+		Counts ss = sorter.fill(sBuff);
+		buffer.position(sBuff.position()*4);
+		upload();
+		
+		for (int i = 0; i <= layer; i++) {
+			
+			int fromI = ss.from[i];
+			int toI = ss.to[i];
+			if (toI > fromI) {
 				GlHelper.Stencil.setLEQUALreplaceOnPass(i);
-				flush(vFrom[i], vTo[i], size[i]);
+				flush(fromI/3, toI/3, size[i]);
 			}
-			i++;
+			
+			
+			
 		}
+
 		clear(pointSize);
-		glUseProgram(0); // puts an end to the goddamn nvidia errors
+		glUseProgram(0);
+		
 	}
 
+	public int count() {
+		return buffer.position();
+	}
+	
 	private void flush(int from, int to, int size) {
+		if (size < 1)
+			throw new RuntimeException();
 		glPointSize(size);
 		glDrawElements(GL11.GL_POINTS, (to - from), GL11.GL_UNSIGNED_INT, from * 4);
 	}
@@ -175,33 +97,27 @@ class VboParticles extends VboAbs{
 
 	public void clear(int pointSize) {
 		super.clear();
-		size[current] = pointSize;
+		layer = 0;
+		sorter.clear();
+		size[0] = pointSize;
 	}
 
 	public void render(short x, short y, byte nX, byte nY, byte nZ, byte nA, COLOR color, OPACITY opacity) {
-
-		if (count >= MAX_ELEMENTS) {
-			return;
-		}
-
-		buffer.putShort(x).putShort(y);
-		buffer.put(nX).put(nY).put(nZ).put(nA);
-		buffer.put(color.red()).put(color.green()).put(color.blue()).put(opacity.get());
-
-		count++;
+		VboSorter sorter = this.sorter;
+		
+		sorter.add(layer, ((y) << 16) | ((x & 0x0FFFF)));
+		sorter.add(layer, (((nA) << 24) | ((nZ&0x0FF) << 16) | ((nY&0x0FF) <<8) | ((nX&0x0FF))));
+		sorter.add(layer, (((opacity.get()) << 24) | ((color.blue()&0x0FF) << 16) | ((color.green()&0x0FF) <<8) | ((color.red()&0x0FF))));
+		
 	}
 
 	public void render(short x, short y, byte red, byte green, byte blue) {
 
-		if (count >= MAX_ELEMENTS) {
-			return;
-		}
-
-		buffer.putShort(x).putShort(y);
-		buffer.put(byteZero).put(byteZero).put(byteZero).put(byteZero);
-		buffer.put(red).put(green).put(blue).put(byteFull);
-
-		count++;
+		VboSorter sorter = this.sorter;
+		
+		sorter.add(layer, ((y) << 16) | ((x & 0x0FFFF)));
+		sorter.add(layer, (((byteZero) << 24) | ((byteZero&0x0FF) << 16) | ((byteZero&0x0FF) <<8) | ((byteZero&0x0FF))));
+		sorter.add(layer, (((byteFull) << 24) | ((blue&0x0FF) << 16) | ((green&0x0FF) <<8) | ((red&0x0FF))));
 	}
 
 

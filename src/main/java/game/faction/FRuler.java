@@ -31,7 +31,7 @@ public final class FRuler extends FactionResource{
 	}
 
 	@Override
-	protected void update(double ds) {
+	protected void update(double ds, Faction f) {
 		// TODO Auto-generated method stub
 		
 	}

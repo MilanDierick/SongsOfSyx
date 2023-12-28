@@ -3,6 +3,7 @@ package script;
 import java.io.*;
 
 import game.GAME.GameResource;
+import game.Profiler;
 import init.paths.PATHS;
 import script.SCRIPT.SCRIPT_INSTANCE;
 import snake2d.*;
@@ -15,8 +16,9 @@ import util.gui.misc.GBox;
 public class ScriptEngine extends GameResource {
 
 	private LIST<Script> loads = new ArrayList<Script>(0);
+	
 
-	public ScriptEngine(String... specialScripts) {
+	public ScriptEngine() {
 		
 		LIST<ScriptLoad> loads = ScriptLoad.getAll();
 		LinkedList<Script> all = new LinkedList<>();
@@ -42,21 +44,7 @@ public class ScriptEngine extends GameResource {
 		}
 	}
 	
-	public void appendScript(String jarfile) {
-		KeyMap<Script> map = new KeyMap<>();
-		for (Script s : loads) {
-			map.put(s.load.file+s.load.className, s);
-		}
-		LinkedList<Script> res = new LinkedList<>(loads);
-		LIST<ScriptLoad> ll = ScriptLoad.get(jarfile);
-		for (ScriptLoad l : ll) {
-			if (!map.containsKey(l.file+l.className)) {
-				l.script.initBeforeGameCreated();
-				res.add(new Script(l, l.script.createInstance()));
-			}
-		}
-		
-	}
+
 	
 	public String[] currentScripts() {
 		String[] scripts = new String[loads.size()];
@@ -112,8 +100,6 @@ public class ScriptEngine extends GameResource {
 			int size = (file.getPosition()-pos)-4;
 			file.setAtPosition(pos, size);
 		}
-		
-		
 	}
 
 	@Override
@@ -176,18 +162,18 @@ public class ScriptEngine extends GameResource {
 		}
 		this.loads = new ArrayList<Script>(res);
 		
-		
 	}
 
 	@Override
-	protected void update(float ds) {
-		
+	protected void update(float ds, Profiler prof) {
+		prof.logStart(ScriptEngine.class);
 		for(Script s : loads)
 			try {
 				s.ins.update(ds);
 			}catch(Exception e) {
 				error(s.load, e);
 			}
+		prof.logEnd(ScriptEngine.class);
 	}
 
 	public void hoverTimer(double mouseTimer, GBox text) {
@@ -197,7 +183,6 @@ public class ScriptEngine extends GameResource {
 			}catch(Exception e) {
 				error(s.load, e);
 			}
-			
 	}
 
 	public void render(Renderer r, float ds) {
@@ -207,7 +192,6 @@ public class ScriptEngine extends GameResource {
 			}catch(Exception e) {
 				error(s.load, e);
 			}
-			
 	}
 	
 	public void mouseClick(MButt button) {
@@ -217,7 +201,6 @@ public class ScriptEngine extends GameResource {
 			}catch(Exception e) {
 				error(s.load, e);
 			}
-			
 	}
 
 	public void hover(COORDINATE mCoo, boolean mouseHasMoved) {
@@ -227,7 +210,6 @@ public class ScriptEngine extends GameResource {
 			}catch(Exception e) {
 				error(s.load, e);
 			}
-			
 	}
 	
 	private static class Script {

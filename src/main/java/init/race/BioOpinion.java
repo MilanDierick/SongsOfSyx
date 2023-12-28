@@ -1,11 +1,13 @@
 package init.race;
 
 import settlement.entity.humanoid.HCLASS;
-import settlement.stats.*;
-import settlement.stats.STANDING.StandingDef.StandingData;
-import settlement.stats.StatsBurial.StatGrave;
-import settlement.stats.StatsService.StatService;
-import settlement.stats.StatsService.StatServiceGroup;
+import settlement.stats.Induvidual;
+import settlement.stats.STATS;
+import settlement.stats.colls.StatsBurial.StatGrave;
+import settlement.stats.colls.StatsService.StatService;
+import settlement.stats.colls.StatsService.StatServiceGroup;
+import settlement.stats.standing.StatStanding.StandingDef.StandingData;
+import settlement.stats.stat.STAT;
 import snake2d.util.sets.*;
 import snake2d.util.sprite.text.Str;
 
@@ -183,7 +185,9 @@ final class BioOpinion {
 		
 		BioOpinionData data = get(indu);
 		
-		long ran = indu.randomness();
+		long ran = STATS.RAN().get(indu, 0);
+		ran = ran << 32;
+		ran |= STATS.RAN().get(indu, 36);
 		
 		int index = 0;
 		if ((ran & 0x01F) == 0) {

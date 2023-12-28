@@ -1,5 +1,7 @@
 package init.sound;
 
+import java.util.Random;
+
 import game.time.TIME;
 import init.paths.PATH;
 import init.paths.PATHS;
@@ -21,6 +23,7 @@ public final class Music {
 	private int r = 0;
 	
 	private double fade = 0;
+	private double timeout = 0;
 	private boolean shuffle = false;
 	
 	Music() {
@@ -30,7 +33,7 @@ public final class Music {
 		
 		currentA = normal;
 		nextA = normal;
-		current = currentA[RND.rInt(currentA.length)];
+		current = currentA[0];
 		current.setGain(1f);
 		fade = 1f;
 		current.play();
@@ -72,17 +75,24 @@ public final class Music {
 					currentA = normal;
 					shuffle = false;
 					fade = 1;
+					timeout = 2 + RND.rInt(10);
 				}else {
 					current.setGain(fade);
 				}
 				fade -= ds;
 			}else if(!current.isPlaying()){
-				fade = CLAMP.d(fade+ds, 0, 1);
-				r++;
-				r %= currentA.length;
-				current = currentA[r];
-				current.setGain(fade);
-				current.play();
+				if (timeout > 0) {
+					timeout -= ds;
+				}else {
+					fade = CLAMP.d(fade+ds, 0, 1);
+					r++;
+					r %= currentA.length;
+					current = currentA[r];
+					current.setGain(fade);
+					current.play();
+				}
+				
+				
 			}
 		}else {
 			if (currentA == battle) {
@@ -108,9 +118,11 @@ public final class Music {
 		for (String s : p) {
 			res[i++] = CORE.getSoundCore().getStream(path.get(s), true);
 		}
+		Random ran = new Random();
+		ran.setSeed(System.currentTimeMillis());
 		for (int k = 0; k < res.length*4; k++) {
-			int i1 = RND.rInt(res.length);
-			int i2 = RND.rInt(res.length);
+			int i1 =ran.nextInt(res.length);
+			int i2 = ran.nextInt(res.length);
 			SoundStream s = res[i1];
 			res[i1] = res[i2];
 			res[i2] = s;

@@ -3,6 +3,8 @@ package settlement.army;
 import java.io.IOException;
 
 import game.GAME;
+import game.boosting.*;
+import init.C;
 import init.config.Config;
 import init.race.Race;
 import settlement.army.ai.fire.DivTrajectory;
@@ -11,16 +13,17 @@ import settlement.army.formation.DivFormation;
 import settlement.army.formation.DivPosition;
 import settlement.army.order.DivTData;
 import settlement.main.SETT;
-import settlement.stats.STATS;
-import settlement.stats.StatsBattle.HDivStat;
+import settlement.stats.colls.StatsBattle.HDivStat;
+import settlement.stats.equip.EquipRange;
 import snake2d.util.datatypes.*;
 import snake2d.util.file.*;
 import snake2d.util.sets.ArrayList;
 import snake2d.util.sets.Bitmap1D;
 import util.gui.misc.GBox;
 import view.main.VIEW;
+import world.army.AD;
 
-public final class Div {
+public final class Div implements BOOSTABLE_O{
 
 	private final short index;
 	private final short armyIndex;
@@ -33,8 +36,8 @@ public final class Div {
 	private double nextOrderTime = 0;
 	private byte state = 0;
 	private final DivPosition current;
-	
-
+	public double speed = 0.4*C.TILE_SIZE;;
+	public double aRef = 0;
 	public final DivInfo info;
 	public final DivSettings settings = new DivSettings(this);
 	public final DivTrajectory trajectory = new DivTrajectory();
@@ -76,6 +79,7 @@ public final class Div {
 			positions.save(file);
 			men.save(file);
 			file.d(nextOrderTime);
+			file.d(speed);
 			current.save(file);
 			morale.saver.save(file);
 			targets.saver().save(file);
@@ -91,6 +95,7 @@ public final class Div {
 			positions.load(file);
 			men.load(file);
 			nextOrderTime = file.d();
+			speed = file.d();
 			current.load(file);
 			morale.saver.load(file);
 			targets.saver().load(file);
@@ -113,6 +118,7 @@ public final class Div {
 			reporter.unreachablem.clear();
 			reporter.unreachable = 0;
 			trajectory.clear();
+			speed = 0.4*C.TILE_SIZE;
 		}
 	};
 	
@@ -223,24 +229,29 @@ public final class Div {
 	
 	private final static DivTDataStatus statustmp = new DivTDataStatus();
 	
-	void update(float ds) {
+	void update(double ds) {
 		
-		morale.update(ds);
-		nextOrderTime += ds;
-		if (settings.mustering() && nextOrderTime > 0.1) {
-			nextOrderTime = 0;
+		
+		if (settings.mustering() || settings.musteringChange) {
+			settings.musteringChange = false;
 			current.init(menNrOf());
 			order().update(this);
 			if (order().next.isNew(ni)) {
 				ni = (short) order().next.setI();
 				order().next.get(positions);
+
 				state++;
 			}
 			if (order().status.isNew(ii)) {
 				ii = (short) order().status.setI();
 				order().status.get(statustmp);
 				settings.isFighting = statustmp.enemyCollisions() > 0;
-				settings.power = (float) STATS.BATTLE_BONUS().power(this);
+				settings.power = (float) AD.UTIL().power.get(this);
+				EquipRange e = settings.ammo();
+				if (e != null)
+					settings.powerRanged = (float) AD.UTIL().power.rangedPower(e, e.stat().div().getD(this), e.boostable.get(this));
+				else
+					settings.powerRanged = 0;
 			}
 			if (order().trajectory.isNew(ti)) {
 				ti = (short) order().trajectory.setI();
@@ -248,35 +259,31 @@ public final class Div {
 			}
 			
 		}
-//		
-//		if (charge) {
-//			nextOrderTime += C.TILE_SIZE*3*ds/C.TILE_SIZE;
-//		}else {
-//			nextOrderTime += speed*ds/C.TILE_SIZE;
-//		}
-//		
-//		if (nextOrderTime > 1.0) {
-//			nextOrderTime = 1;
-//			if (orders.lock()) {
-//				DivFormation p = orders.consumeNextPosition();
-//				if (p != null) {
-//					nextOrderTime = 0;
-//					this.positions.copy(p);
-//					state++;
-//				}
-//				
-//				orders.unlock();
-//			}
-//		}
-//		
-//		if (currentChangesTimer <= 0) {
-//			current.init(menNrOf());
-//			if (currentChanges != 0 && orders.pushNewPosition(current)) {
-//				currentChanges = 0; 
-//				currentChangesTimer = 1;
-//			}
-//		}else
-//			currentChangesTimer -= ds;
+		
+		
+		
+		speed = 0.4; 
+		if (settings.charging)
+			speed = 0.9;
+		else if (settings.running)
+			speed = 0.7;
+		
+		nextOrderTime += ds;
+		if (nextOrderTime > 1) {
+			morale.update(ds);
+			nextOrderTime = 0;
+			
+			speed *= BOOSTABLES.PHYSICS().SPEED.get(this)*C.TILE_SIZE;
+			EquipRange am = settings.ammo();
+			if (am != null)
+				aRef = am.boostable.get(this);
+			else
+				settings.powerRanged = 0;
+			
+			if (DivMorale.PROJECTILES.getD(this) > (menNrOf()>>1) || settings.isFighting())
+				speed *= 0.75;
+		}
+		
 		
 	}
 
@@ -300,6 +307,11 @@ public final class Div {
 		res += "Current: " + current.deployed() + " " + " " + s;
 		
 		GAME.Notify(res);
+	}
+
+	@Override
+	public double boostableValue(Boostable bo, BValue v) {
+		return v.vGet(this);
 	}
 	
 }

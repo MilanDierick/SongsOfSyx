@@ -15,7 +15,7 @@ final class Optimizer implements SAVABLE {
 	final Tile s24;
 	final Tile s32;
 
-	private final TextureCoords.Imp coos = new TextureCoords.Imp();
+	private final TextureCoords coos = new TextureCoords();
 
 	Optimizer(FileGetter g, SnakeImage source) throws IOException{
 		i = this;
@@ -57,10 +57,12 @@ final class Optimizer implements SAVABLE {
 
 	}
 
-	class Tile implements SAVABLE {
+	final class Tile implements SAVABLE {
 
 		final int startY, tilesX, size;
-		private final byte[] offX1, widths, offY1, heights, opaques;
+		private final byte[] data;
+		private final byte[] opaques;
+		private final static int offX1 = 0, widths = 1, offY1 = 2, heights=3;
 		private final int tiles;
 		private final int tScroll;
 		private final int tMask;
@@ -78,33 +80,23 @@ final class Optimizer implements SAVABLE {
 			}
 			this.size = size;
 			int s = tilesX * rows;
-			offX1 = new byte[s];
-			widths = new byte[s];
-			offY1 = new byte[s];
-			heights = new byte[s];
+			data = new byte[4*s];
 			opaques = new byte[s];
 			tiles = s;
 			tScroll = Integer.numberOfTrailingZeros(tilesX);
 			tMask = tilesX - 1;
 		}
 
-		public void render(SPRITE_RENDERER r, int tile, int x1, int y1, int scale) {
+		public final void render(SPRITE_RENDERER r, int tile, int x1, int y1, int scale) {
 			if (tile < 0)
 				return;
 
-			// if (opaques[tile] == 1) {
-			// int tx = tile % tilesX;
-			// int ty = tile / tilesX;
-			// int px = (tx * size);
-			// int py = startY + (ty * size);
-			// CORE.renderer().renderTile(
-			// x1, x1+scale*size, y1, y1+scale*size,
-			// TextureCoords.Normal.get(px, py, size, size)
-			// );
-			// return;
-			// }
-
-			if (widths[tile] <= 0 || heights[tile] <= 0)
+			final int dtile = tile*4;
+			
+			final int wi = data[widths+dtile];
+			final int hi = data[heights+dtile];
+			
+			if (wi <= 0 ||hi <= 0)
 				return;
 
 			int tx = tile & tMask;
@@ -112,33 +104,32 @@ final class Optimizer implements SAVABLE {
 
 			int px = (tx * size);
 			int py = startY + (ty * size);
+			
+			final int ox = data[offX1+dtile];
+			final int oy = data[offY1+dtile];
+			
+			px += ox;
+			py += oy;
 
-			px += offX1[tile];
-			py += offY1[tile];
+			x1 = x1 + ox * scale;
+			int x2 = x1 + wi * scale;
 
-			x1 = x1 + offX1[tile] * scale;
-			int x2 = x1 + widths[tile] * scale;
+			y1 = y1 + oy * scale;
+			int y2 = y1 + hi * scale;
 
-			y1 = y1 + offY1[tile] * scale;
-			int y2 = y1 + heights[tile] * scale;
-
-			// if (opaques[tile] == 1) {
-			// r.renderTileOpaque(x1, x2, y1, y2, TextureCoords.Normal.get(px, py,
-			// widths[tile], heights[tile]));
-			// }else {
-			// r.renderTile(x1, x2, y1, y2, TextureCoords.Normal.get(px, py, widths[tile],
-			// heights[tile]));
-			// }
-
-			r.renderSprite(x1, x2, y1, y2, TextureCoords.Normal.get(px, py, widths[tile], heights[tile]));
+			r.renderSprite(x1, x2, y1, y2, TextureCoords.Normal.get(px, py, wi, hi));
 
 		}
 
-		public void renderTextured(TextureCoords t, int tile, int x1, int y1, int scale) {
+		public final void renderTextured(TextureCoords t, int tile, int x1, int y1, int scale) {
 			if (tile < 0)
 				return;
 
-			if (widths[tile] <= 0 || heights[tile] <= 0)
+			final int dtile = tile*4;
+			final int wi = data[widths+dtile];
+			final int hi = data[heights+dtile];
+			
+			if (wi <= 0 ||hi <= 0)
 				return;
 
 			int tx = tile & tMask;
@@ -146,17 +137,20 @@ final class Optimizer implements SAVABLE {
 
 			int px = (tx * size);
 			int py = startY + (ty * size);
+			
+			final int ox = data[offX1+dtile];
+			final int oy = data[offY1+dtile];
+			
+			px += ox;
+			py += oy;
 
-			px += offX1[tile];
-			py += offY1[tile];
+			x1 = x1 + ox * scale;
+			int x2 = x1 + wi * scale;
 
-			x1 = x1 + offX1[tile] * scale;
-			int x2 = x1 + widths[tile] * scale;
+			y1 = y1 + oy * scale;
+			int y2 = y1 + hi * scale;
 
-			y1 = y1 + offY1[tile] * scale;
-			int y2 = y1 + heights[tile] * scale;
-
-			coos.get(t.x1() + offX1[tile], t.y1() + offY1[tile], widths[tile], heights[tile]);
+			coos.get(t.x1 + ox, t.y1 + oy, wi, hi);
 
 			//
 			// if (opaques[tile] == 1) {
@@ -176,19 +170,21 @@ final class Optimizer implements SAVABLE {
 			// }
 
 			CORE.renderer().renderTextured(x1, x2, y1, y2, coos,
-					TextureCoords.Normal.get(px, py, widths[tile], heights[tile]));
+					TextureCoords.Normal.get(px, py, wi, hi));
 
 		}
 
-		private void optimize(SnakeImage source) {
+		private final void optimize(SnakeImage source) {
 
 			int o = 0;
 			int cropped = 0;
 
 			for (int t = 0; t < tiles; t++) {
 
+				int tile = t*4;
+				
 				searchx1: for (int x = 0; x < size; x++) {
-					offX1[t] = (byte) x;
+					data[offX1+tile] = (byte) x;
 					for (int y = 0; y < size; y++) {
 						int px = (t % tilesX) * size + x;
 						int py = (t / tilesX) * size + y + startY;
@@ -199,7 +195,7 @@ final class Optimizer implements SAVABLE {
 				}
 
 				searchW: for (int x = size - 1; x >= 0; x--) {
-					widths[t] = (byte) (x - offX1[t] + 1);
+					data[widths+tile] = (byte) (x - data[offX1+tile] + 1);
 					for (int y = 0; y < size; y++) {
 						int px = (t % tilesX) * size + x;
 						int py = (t / tilesX) * size + y + startY;
@@ -211,7 +207,7 @@ final class Optimizer implements SAVABLE {
 				}
 
 				search: for (int y = 0; y < size; y++) {
-					offY1[t] = (byte) y;
+					data[offY1+tile] = (byte) y;
 					for (int x = 0; x < size; x++) {
 						int px = (t % tilesX) * size + x;
 						int py = (t / tilesX) * size + y + startY;
@@ -223,7 +219,7 @@ final class Optimizer implements SAVABLE {
 				}
 
 				search: for (int y = size - 1; y >= 0; y--) {
-					heights[t] = (byte) (y - offY1[t] + 1);
+					data[heights+tile] = (byte) (y - data[offY1+tile] + 1);
 					for (int x = 0; x < size; x++) {
 						int px = (t % tilesX) * size + x;
 						int py = (t / tilesX) * size + y + startY;
@@ -236,10 +232,10 @@ final class Optimizer implements SAVABLE {
 
 				opaques[t] = 1;
 				o++;
-				search: for (int x = 0; x < widths[t]; x++) {
-					for (int y = 0; y < heights[t]; y++) {
-						int px = (t % tilesX) * size + x + offX1[t];
-						int py = (t / tilesX) * size + y + startY + offY1[t];
+				search: for (int x = 0; x < data[widths+tile]; x++) {
+					for (int y = 0; y < data[heights+tile]; y++) {
+						int px = (t % tilesX) * size + x + data[offX1+tile];
+						int py = (t / tilesX) * size + y + startY + data[offY1+tile];
 
 						if ((source.rgb.get(px, py) & 0x000000FF) != 0x0FF) {
 							opaques[t] = 0;
@@ -250,7 +246,7 @@ final class Optimizer implements SAVABLE {
 
 				}
 				
-				if (offX1[t] != 0 || widths[t] != size || offY1[t] != 0 || heights[t] != size)
+				if (data[offX1+tile] != 0 || data[widths+tile] != size || data[offY1+tile] != 0 || data[heights+tile] != size)
 					cropped++;
 
 			}
@@ -260,20 +256,14 @@ final class Optimizer implements SAVABLE {
 
 		@Override
 		public void save(FilePutter file) {
-			file.bs(offX1);
-			file.bs(widths);
-			file.bs(offY1);
-			file.bs(heights);
+			file.bs(data);
 			file.bs(opaques);
 
 		}
 
 		@Override
 		public void load(FileGetter file) throws IOException {
-			file.bs(offX1);
-			file.bs(widths);
-			file.bs(offY1);
-			file.bs(heights);
+			file.bs(data);
 			file.bs(opaques);
 		}
 

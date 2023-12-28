@@ -6,8 +6,6 @@ import static settlement.room.main.construction.ConstructionData.*;
 import java.io.IOException;
 
 import init.RES;
-import init.sprite.ICON.BIG;
-import settlement.main.RenderData.RenderIterator;
 import settlement.main.SETT;
 import settlement.maintenance.ROOM_DEGRADER;
 import settlement.path.AVAILABILITY;
@@ -22,6 +20,8 @@ import snake2d.util.datatypes.*;
 import snake2d.util.file.FileGetter;
 import snake2d.util.file.FilePutter;
 import snake2d.util.map.MAP_SETTER;
+import snake2d.util.sprite.SPRITE;
+import util.rendering.RenderData.RenderIterator;
 import util.rendering.ShadowBatch;
 
 public final class TmpArea implements MAP_SETTER, ROOMA {
@@ -295,7 +295,7 @@ public final class TmpArea implements MAP_SETTER, ROOMA {
 		}
 
 		@Override
-		public BIG icon() {
+		public SPRITE icon() {
 			SETT.ROOMS().tmpArea.error();
 			return null;
 		}

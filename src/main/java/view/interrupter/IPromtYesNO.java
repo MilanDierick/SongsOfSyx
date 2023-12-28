@@ -8,11 +8,10 @@ import snake2d.Renderer;
 import snake2d.util.datatypes.COORDINATE;
 import snake2d.util.datatypes.DIR;
 import snake2d.util.gui.GuiSection;
-import snake2d.util.gui.clickable.CLICKABLE;
 import snake2d.util.misc.ACTION;
 import util.dic.DicMisc;
 import util.gui.misc.*;
-import util.gui.panel.GPanelL;
+import util.gui.panel.GPanel;
 import view.keyboard.KEYS;
 
 /**
@@ -26,7 +25,8 @@ public class IPromtYesNO extends Interrupter {
 
 	private final GTextR text = new GTextR(UI.FONT().M, 1000, DIR.C);
 	private final GuiSection section = new GuiSection();
-	private final GPanelL box = new GPanelL(0.4, 0.3);
+	private final GPanel box = new GPanel().setDim(800, 400);
+	{}
 	private final ACTION close = new ACTION() {
 		@Override
 		public void exe() {
@@ -35,13 +35,13 @@ public class IPromtYesNO extends Interrupter {
 
 	};
 
-	private final CLICKABLE yes = new GButt.Panel(SPRITES.icons().m.ok) {
+	private final GButt.ButtPanel yes = new GButt.ButtPanel(SPRITES.icons().m.ok) {
 		@Override
 		protected void clickA() {
 			hide();
 		};
 	};
-	private final CLICKABLE no = new GButt.Panel(SPRITES.icons().m.cancel) {
+	private final GButt.ButtPanel no = new GButt.ButtPanel(SPRITES.icons().m.cancel) {
 		@Override
 		protected void clickA() {
 			hide();
@@ -55,15 +55,22 @@ public class IPromtYesNO extends Interrupter {
 		text.text().lablify();
 		section.add(box);
 		section.body().centerIn(C.DIM());
-
-		GuiSection butts = new GuiSection();
+		box.setBig();
+		
+		yes.body.setWidth(100);
+		no.body.setWidth(100);
 		yes.hoverInfoSet(DicMisc.¤¤Yes);
 		no.hoverInfoSet(DicMisc.¤¤No);
-		butts.add(yes).addRight(0, no);
-		box.centreNavButts(butts);
-		section.merge(butts);
+		
+		GuiSection butts = new GuiSection();
 
-		text.text().setMaxWidth(box.getInnerArea().width());
+		butts.add(yes).addRight(0, no);
+		
+		butts.body().centerX(section);
+		butts.body().moveY2(section.body().y2()-16);
+		section.add(butts);
+
+		text.text().setMaxWidth(800);
 		;
 		section.add(text);
 
@@ -76,15 +83,35 @@ public class IPromtYesNO extends Interrupter {
 
 		this.dismissable = dismissable;
 
-		box.setCloseAction(dismissable ? close : null);
-
+		section.clear();
 		text.text().set(message);
 		text.adjust();
-		text.body().centerIn(box.getInnerArea());
-
+		if (text.body().width() < 600)
+			section.body().setDim(600, 1);
+		section.addDownC(0, text);
 		yes.clickActionSet(yesAction);
-		no.clickActionSet(noAction);
-		no.visableSet(noAction != null);
+		
+		if (noAction != null) {
+			int cx = section.body().cX();
+			no.clickActionSet(noAction);
+			section.add(yes, cx-yes.body.width(), section.getLastY2()+16);
+			section.add(no, cx, section.getLastY1());
+		}else {
+			section.addDownC(16, yes);
+		}
+		
+		section.body().centerIn(C.DIM());
+		
+		box.setCloseAction(dismissable ? close : null);
+		box.inner().set(section.body());
+		section.add(box);
+		section.moveLastToBack();
+		
+//		text.body().centerIn(box.inner());
+//		text.body().incrY(-12);
+//		yes.clickActionSet(yesAction);
+//		no.clickActionSet(noAction);
+//		no.visableSet(noAction != null);
 
 	}
 

@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.lang.reflect.Modifier;
 import java.net.URL;
 import java.nio.file.Files;
-import java.nio.file.StandardCopyOption;
 import java.util.jar.JarEntry;
 import java.util.jar.JarInputStream;
 
@@ -23,7 +22,7 @@ final class ScriptLoad{
 	public final String className;
 	public final String file;
 	
-	private ScriptLoad(SCRIPT script, String cn, String file){
+	ScriptLoad(SCRIPT script, String cn, String file){
 		this.script = script;
 		this.className = cn;
 		this.file = file;
@@ -49,8 +48,6 @@ final class ScriptLoad{
 		}
 		
 		private LIST<ScriptLoad> compileScripts(String... files) {
-			
-			removePhysicalScripts();
 			
 			files = grabCachedScripts(files);
 			
@@ -83,8 +80,6 @@ final class ScriptLoad{
 			}
 			
 			loadScripts();
-			
-			removePhysicalScripts();
 			
 			cache.clear();
 			
@@ -121,20 +116,8 @@ final class ScriptLoad{
 		
 		private void loadScripts() {
 			LOG.ln("SCRIPTS");
-			if (!(ClassLoader.getSystemClassLoader() instanceof SyxClassLoader)) {
-				LOG.err("JVM is not run with argument: -Djava.system.class.loader=script.SyxClassLoader . Code mods can not be loaded.");
-				return;
-			}
 			
-			SyxClassLoader loader = (SyxClassLoader) ClassLoader.getSystemClassLoader();
-			
-			while(!urlList.isEmpty()) {
-				URL l = urlList.removeFirst();
-				LOG.ln("injecting: " + l.getPath());
-				loader.add(l);
-			}
-			
-			
+			ClassLoader loader = ClassLoader.getSystemClassLoader();
 			
 			for (String className : classToJar.keys()) {
 				Class<?> s;
@@ -168,9 +151,10 @@ final class ScriptLoad{
 			}
 			LOG.ln("loading script jar " + jarFile);
 			
-			java.nio.file.Path p = pathRoot.get(jarFile);
+			
+			
 			try {
-				p = Files.copy(p, PATHS.CACHE_SCRIPT().get().resolve(jarFile), StandardCopyOption.REPLACE_EXISTING);
+				java.nio.file.Path p = pathRoot.get(jarFile);
 				urlList.add(p.toUri().toURL());
 				return new JarInputStream(Files.newInputStream(p));
 			} catch (IOException e) {
@@ -201,17 +185,6 @@ final class ScriptLoad{
 				}
 				
 				classToJar.put(className, jarFile);
-			}
-		}
-		
-		/**
-		 * clear old physical scripts.
-		 * Scripts might be in a zip archive, and must be temporarily moved to a physical location before process.
-		 * Now we'll clear any old scripts laying about.
-		 */
-		private void removePhysicalScripts() {
-			for (String s : PATHS.CACHE_SCRIPT().getFiles()) {
-				PATHS.CACHE_SCRIPT().delete(s);
 			}
 		}
 		

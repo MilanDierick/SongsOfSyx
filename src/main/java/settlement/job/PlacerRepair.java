@@ -6,7 +6,7 @@ import init.D;
 import init.sprite.SPRITES;
 import settlement.room.main.Room;
 import settlement.tilemap.TILE_FIXABLE;
-import settlement.tilemap.Terrain.TerrainTile;
+import settlement.tilemap.terrain.Terrain.TerrainTile;
 import snake2d.SPRITE_RENDERER;
 import snake2d.util.datatypes.AREA;
 import view.tool.*;

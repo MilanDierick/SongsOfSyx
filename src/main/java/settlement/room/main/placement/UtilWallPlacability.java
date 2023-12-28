@@ -4,8 +4,8 @@ import static settlement.main.SETT.*;
 
 import settlement.job.Job;
 import settlement.main.SETT;
-import settlement.tilemap.TBuilding;
-import settlement.tilemap.Terrain.TerrainTile;
+import settlement.tilemap.terrain.TBuilding;
+import settlement.tilemap.terrain.Terrain.TerrainTile;
 import snake2d.util.map.MAP_BOOLEAN;
 
 public final class UtilWallPlacability{

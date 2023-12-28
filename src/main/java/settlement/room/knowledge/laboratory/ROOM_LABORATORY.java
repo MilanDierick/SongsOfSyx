@@ -4,8 +4,6 @@ import java.io.IOException;
 
 import game.GAME;
 import game.time.TIME;
-import init.boostable.BOOSTABLE;
-import init.boostable.BOOSTABLES;
 import settlement.entity.humanoid.Humanoid;
 import settlement.path.finder.SFinderRoomService;
 import settlement.room.main.RoomBlueprintIns;
@@ -30,7 +28,6 @@ public final class ROOM_LABORATORY extends RoomBlueprintIns<LaboratoryInstance> 
 	final double degradePerSecond;
 	final double workValue;
 	private final double workSpeed;
-	final BOOSTABLE bonus;
 	final Constructor constructor;
 
 	public ROOM_LABORATORY(String key, int index, RoomInitData init, RoomCategorySub block) throws IOException {
@@ -48,7 +45,7 @@ public final class ROOM_LABORATORY extends RoomBlueprintIns<LaboratoryInstance> 
 		workValue = work;
 		
 		constructor = new Constructor(this, init);
-		bonus = BOOSTABLES.ROOMS().pushRoom(this, init.data(), type);
+		pushBo(init.data(), type, true);
 		IDebugPanel.add("knowledge + 1000", new ACTION() {
 			
 			@Override

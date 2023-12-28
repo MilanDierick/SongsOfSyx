@@ -9,16 +9,18 @@ import view.main.VIEW;
 import view.subview.GameWindow;
 import view.tool.PlacableSimpleTile;
 import view.tool.ToolConfig;
-import world.World;
-import world.army.WARMYD;
+import world.WORLD;
+import world.army.AD;
 import world.entity.WEntity;
-import world.entity.WPathing;
 import world.entity.army.WArmy;
 import world.entity.army.WArmyState;
-import world.map.regions.Region;
+import world.regions.Region;
 
 class ToolMove extends PlacableSimpleTile {
 
+	private boolean can = false;
+	private Region bReg = null;
+	private WArmy incept = null;
 	
 	public ToolMove() {
 		super(DicArmy.¤¤Move, "");
@@ -28,32 +30,54 @@ class ToolMove extends PlacableSimpleTile {
 	@Override
 	public CharSequence isPlacable(int tx, int ty) {
 		
-		if (WARMYD.men(null).get(UIArmy.army) == 0) {
+		can = false;
+		bReg = null;
+		incept = null;
+		
+		if (AD.men(null).get(Army.army) == 0) {
 			return DicArmy.¤¤MoveCant;
 		}
 		
-		if (WPathing.regPath(World.REGIONS().getter.get(UIArmy.army.ctx(), UIArmy.army.cty()), World.REGIONS().getter.get(tx, ty), UIArmy.army.cost(), Integer.MAX_VALUE) == null)
-			return DicMisc.¤¤Unreachable;
+		if (Army.army.ctx() == tx && Army.army.cty() == ty)
+			return E;
 		
-		for (WEntity e : World.ENTITIES().fill(tx*C.TILE_SIZE+C.TILE_SIZEH, ty*C.TILE_SIZE+C.TILE_SIZEH)) {
-			if (e instanceof WArmy && e != UIArmy.army) {
-				World.OVERLAY().hover(e);
-				VIEW.mouse().setReplacement(SPRITES.icons().m.crossair);
-				VIEW.hoverBox().text(DicArmy.¤¤Intercept);
-				return null;
+		
+		if (!WORLD.FOW().is(tx, ty)) {
+			for (WEntity e : WORLD.ENTITIES().fill(tx*C.TILE_SIZE+C.TILE_SIZEH, ty*C.TILE_SIZE+C.TILE_SIZEH)) {
+				if (e instanceof WArmy && e != Army.army) {
+					incept = (WArmy) e;
+					if (WORLD.PATH().path(Army.army.ctx(), Army.army.cty(), tx, ty, Army.army.path().treaty()) == null) {
+						return DicMisc.¤¤Unreachable;
+					}
+					can = true;
+					WORLD.OVERLAY().hoverEntity(e);
+					VIEW.mouse().setReplacement(SPRITES.icons().m.crossair);
+					VIEW.hoverBox().text(DicArmy.¤¤Intercept);
+					return null;
+				}
 			}
 		}
 		
-		Region reg = World.REGIONS().getter.get(tx, ty);
-		if (reg != null && Math.abs(reg.cx()-tx) <= 1 && Math.abs(reg.cy()-ty) <= 1) {
-			if (WArmyState.canBesiege(UIArmy.army, reg)) {
-				World.OVERLAY().hoverRegion(reg);
-				VIEW.mouse().setReplacement(SPRITES.icons().m.sword);
+		
+		Region reg = WORLD.REGIONS().map.centre.get(tx, ty);
+		if (reg != null && WArmyState.canBesiege(Army.army, reg)) {
+			WORLD.OVERLAY().hoverBox(reg);
+			VIEW.mouse().setReplacement(SPRITES.icons().m.sword);
+			if (Army.army.besigeTile(reg) != null) {
 				VIEW.hoverBox().text(DicArmy.¤¤Besiege);
+				bReg = reg;
+				can = true;
+				return null;
+			}else {
+				return DicMisc.¤¤Unreachable;
 			}
-			
 		};
 		
+		if (WORLD.PATH().path(Army.army.ctx(), Army.army.cty(), tx, ty, Army.army.path().treaty()) == null) {
+			return DicMisc.¤¤Unreachable;
+		}
+		
+		can = true;
 		VIEW.mouse().setReplacement(SPRITES.icons().m.crossair);
 		VIEW.hoverBox().text(DicArmy.¤¤Move);
 		
@@ -62,34 +86,36 @@ class ToolMove extends PlacableSimpleTile {
 
 
 	@Override
-	public void renderOverlay(int x, int y, SPRITE_RENDERER r, float ds, GameWindow window) {
+	public void renderOverlay(GameWindow window) {
 		
-		World.OVERLAY().moveArmy(UIArmy.army);
+		WORLD.OVERLAY().hoverArmy(Army.army);
+
+	}
+	
+	@Override
+	public void renderPlaceHolder(SPRITE_RENDERER r, int tx, int ty, int cx, int cy, boolean isPlacable) {
 		
+		if (bReg != null || incept != null)
+			return;
 		
-		super.renderOverlay(x, y, r, ds, window);
+		super.renderPlaceHolder(r, tx, ty, cx, cy, isPlacable);
 	}
 	
 	@Override
 	public void place(int tx, int ty) {
 		
-		for (WEntity e : World.ENTITIES().fill(tx*C.TILE_SIZE+C.TILE_SIZEH, ty*C.TILE_SIZE+C.TILE_SIZEH)) {
-			if (e instanceof WArmy && e != UIArmy.army) {
-				UIArmy.army.intercept((WArmy) e);
-				return;
-			}
+		if (!can)
+			return;
+		
+		if (incept != null) {
+			Army.army.intercept(incept);
+			return;
+		}else if (bReg != null) {
+			Army.army.besiege(bReg);
+		}else {
+			Army.army.setDestination(tx, ty);
 		}
 		
-		Region reg = World.REGIONS().getter.get(tx, ty);
-		if (reg != null && Math.abs(reg.cx()-tx) <= 1 && Math.abs(reg.cy()-ty) <= 1) {
-			if (WArmyState.canBesiege(UIArmy.army, reg)) {
-				UIArmy.army.besiege(reg);
-				return;
-			}
-			
-		};
-		
-		UIArmy.army.setDestination(tx, ty);
 		
 	}
 	
@@ -108,7 +134,7 @@ class ToolMove extends PlacableSimpleTile {
 		
 		@Override
 		public boolean back() {
-//			VIEW.world().panels.remove(VIEW.world().UI.armies.army);
+			VIEW.world().panels.remove(VIEW.world().UI.armies.army);
 			return true;
 		};
 		

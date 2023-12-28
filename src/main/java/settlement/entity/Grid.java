@@ -15,7 +15,6 @@ class Grid{
 	private final static int max = 1;
 	private final ENTITY[][] ents = new ENTITY[THEIGHT][TWIDTH];
 
-
 	Grid(){
 		
 		
@@ -24,13 +23,19 @@ class Grid{
 	
 	void add(ENTITY e){
 		
+		add(e, true);
+	}
+	
+	void add(ENTITY e, boolean collide){
+		
 		if (e.gx != -1 && e.gy != -1)
 			throw new RuntimeException();
 				
 		int tx = e.tc().x();
 		int ty = e.tc().y();
 		
-		collide(e);
+		if (collide)
+			collide(e);
 		if (e.isRemoved())
 			return;
 		
@@ -76,7 +81,7 @@ class Grid{
 			
 			if (tx != e.gx || ty != e.gy) {
 				remove(e);
-				add(e);
+				add(e, true);
 			}else {
 				collide(e);
 			}

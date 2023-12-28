@@ -1,26 +1,29 @@
 package game.battle;
 
+import java.io.IOException;
+
 import game.GAME;
 import game.GameLoader;
 import init.C;
+import init.RES;
 import init.paths.PATHS;
-import init.sprite.SPRITES;
-import settlement.army.ArmyMorale;
+import init.sprite.UI.UI;
 import settlement.army.Div;
 import settlement.entity.ENTITY;
 import settlement.entity.humanoid.Humanoid;
 import settlement.main.SETT;
 import settlement.room.main.throne.THRONE;
-import snake2d.MButt;
-import snake2d.Renderer;
+import snake2d.*;
 import snake2d.util.datatypes.*;
 import snake2d.util.gui.renderable.RENDEROBJ;
 import snake2d.util.sets.LIST;
 import util.dic.DicArmy;
 import util.gui.misc.GBox;
+import util.gui.misc.GText;
 import view.interrupter.Interrupter;
 import view.main.VIEW;
 import view.subview.GameWindow;
+import world.battle.WBattles;
 
 public class BattleState {
 
@@ -29,32 +32,39 @@ public class BattleState {
 	private final Rec deploymentTiles = new Rec();
 	private double throneTimer = 0;
 	public static final int throneMax = 60*5;
+	private final PlayerBattleSpec resolve;
+	private final int ekilled;
+	
+	public BattleState(PlayerBattleSpec resolve){
+		save("__beforeBattle");
 
-	
-	
-	BattleState(Conflict conflict){
-		Util.save("__beforeBattle");
-		
-		
-		
-		new BattleStateGenerator().generate(this, conflict, deploymentTiles);
-		ArmyMorale.SUPPLIES.setD(SETT.ARMIES().player(), conflict.sideA.moraleBase);
-		ArmyMorale.SUPPLIES.setD(SETT.ARMIES().enemy(), conflict.sideB.moraleBase);
+		this.resolve = resolve;
+		new BattleStateGenerator().generate(this, resolve, deploymentTiles);
 		
 		VIEW.messages().hideAll();
 		deploying = true;
 		throneTimer = 60*5;
 		GAME.SPEED.speedSet(0);
-		Util.save("__battle");
+		save("__battle");
 		SETT.ARMY_AI().pause();
 		
 		VIEW.b().activate(this);
 		VIEW.b().getWindow().centererTile.set(THRONE.coo());
 		VIEW.b().getWindow().zoomoutmax();
-		
+		ekilled = GAME.count().ENEMIES_KILLED.current();
 	}
 	
-
+	public void save(String name) {
+		if (PATHS.local().SAVE.exists(name))
+			PATHS.local().SAVE.delete(name);
+		try {
+			RES.saver().save(name);
+		} catch (IOException e) {
+			e.printStackTrace();
+			throw new Errors.DataError(name, PATHS.local().SAVE.get(name));
+		}
+		
+	}
 	
 	
 	public void reloadBattle() {
@@ -67,7 +77,6 @@ public class BattleState {
 				throneTimer = 0;
 
 				SETT.ARMY_AI().pause();
-				
 				VIEW.b().activate(BattleState.this);
 				VIEW.b().getWindow().centererTile.set(THRONE.coo());
 				VIEW.b().getWindow().zoomoutmax();
@@ -97,14 +106,21 @@ public class BattleState {
 	
 	
 	void liveResolve(boolean retreat, boolean win) {
-		final Resolver.PlayerBattle res = new Resolver.PlayerBattle(throneTimer<= 0, retreat);
+		resolve.conclude(throneTimer<= 0, retreat);
+		int killed = GAME.count().ENEMIES_KILLED.current()-ekilled;
 		new GameLoader(PATHS.local().SAVE.get("__beforeBattle")){
 			
 			@Override
 			public void doAfterSet() {
-				GAME.battle().promptt = GAME.battle().pollField.resolve(res);
-				if (!win)
+				
+				resolve.finish();
+				if (!win) {
+					GAME.count().BATTLES_WON.inc(1);
 					SETT.INVADOR().decreaseWins();
+				}else {
+					GAME.count().BATTLES_LOST.inc(1);
+				}
+				GAME.count().ENEMIES_KILLED.inc(killed);
 			}
 			
 		}.set();
@@ -116,7 +132,7 @@ public class BattleState {
 	}
 	
 	public int liveRetreatLosses() {
-		int am = (int) Math.ceil(SETT.ARMIES().enemy().men()*Conflict.retreatPenalty);
+		int am = (int) Math.ceil(SETT.ARMIES().enemy().men()*WBattles.retreatPenalty);
 		for (Div d : SETT.ARMIES().player().divisions()) {
 			if (d.settings.isFighting()) {
 				am += d.menNrOf()*0.5;
@@ -128,7 +144,7 @@ public class BattleState {
 		return am;
 	}
 	
-	public void update(float ds) {
+	public void update(double ds) {
 		
 		if (concluded)
 			return;
@@ -181,7 +197,16 @@ public class BattleState {
 			pin();
 			persistantSet();
 			this.win = win;
-			thing = SPRITES.specials().getSprite(title);
+			
+			GText tt = new GText(UI.FONT().H1, title).lablify();
+			thing = new RENDEROBJ.RenderImp(tt.width(), 1) {
+				
+				@Override
+				public void render(SPRITE_RENDERER r, float ds) {
+					UI.PANEL().titleBoxes[UI.PANEL().titleBoxes.length-1].renderCY(r, body.x1(), body.cY(), body().width());
+					tt.renderC(r, body);
+				}
+			};
 			thing.body().centerIn(C.DIM());
 			this.retreat = retreat;
 			window.copy(VIEW.b().getWindow());
@@ -223,7 +248,6 @@ public class BattleState {
 		}
 		
 	}
-
 	
 	
 }

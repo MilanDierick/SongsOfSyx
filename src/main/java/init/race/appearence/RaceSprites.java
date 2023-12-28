@@ -15,8 +15,8 @@ public final class RaceSprites{
 	public final TILE_SHEET grit;
 	public final TILE_SHEET Lblood;
 	public final TILE_SHEET Lgrit;
-	public final TILE_SHEET pBlood;
-	public final TILE_SHEET pFilth;
+//	public final TILE_SHEET pBlood;
+//	public final TILE_SHEET pFilth;
 	public final TILE_SHEET gore_stencil;
 	public final TILE_SHEET gore_overlay;
 
@@ -62,27 +62,27 @@ public final class RaceSprites{
 			}
 		}.get();
 		
-		pFilth = new ITileSheet() {
-			
-			@Override
-			protected TILE_SHEET init(ComposerUtil c, ComposerSources s, ComposerDests d) {
-				s.full.init(s.singles.body().x2(), 0, 1, 4, RPortraitFrame.TILES_X, RPortraitFrame.TILES_Y, d.s8);
-				for (int i = 0; i < 4; i++)
-					s.full.setVar(i).paste(true);
-				return d.s8.save(1);
-			}
-		}.get();
-		
-		pBlood = new ITileSheet() {
-			
-			@Override
-			protected TILE_SHEET init(ComposerUtil c, ComposerSources s, ComposerDests d) {
-				s.full.init(s.full.body().x1(), s.full.body().y2(), 1, 4, RPortraitFrame.TILES_X, RPortraitFrame.TILES_Y, d.s8);
-				for (int i = 0; i < 4; i++)
-					s.full.setVar(i).paste(true);
-				return d.s8.save(1);
-			}
-		}.get();
+//		pFilth = new ITileSheet() {
+//			
+//			@Override
+//			protected TILE_SHEET init(ComposerUtil c, ComposerSources s, ComposerDests d) {
+//				s.full.init(s.singles.body().x2(), 0, 1, 4, RPortraitFrame.TILES_X, RPortraitFrame.TILES_Y, d.s8);
+//				for (int i = 0; i < 4; i++)
+//					s.full.setVar(i).paste(true);
+//				return d.s8.save(1);
+//			}
+//		}.get();
+//		
+//		pBlood = new ITileSheet() {
+//			
+//			@Override
+//			protected TILE_SHEET init(ComposerUtil c, ComposerSources s, ComposerDests d) {
+//				s.full.init(s.full.body().x1(), s.full.body().y2(), 1, 4, RPortraitFrame.TILES_X, RPortraitFrame.TILES_Y, d.s8);
+//				for (int i = 0; i < 4; i++)
+//					s.full.setVar(i).paste(true);
+//				return d.s8.save(1);
+//			}
+//		}.get();
 		
 		gore_stencil = new ITileSheet(PATHS.SPRITE().getFolder("race").getFolder("misc").get("Gore"), 316, 158) {
 			

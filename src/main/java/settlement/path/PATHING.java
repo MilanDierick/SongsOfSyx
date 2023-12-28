@@ -4,8 +4,10 @@ import static settlement.main.SETT.*;
 
 import java.io.IOException;
 
+import game.Profiler;
 import init.sprite.SPRITES;
-import settlement.main.*;
+import settlement.main.CapitolArea;
+import settlement.main.ON_TOP_RENDERABLE;
 import settlement.main.SETT.SettResource;
 import settlement.misc.util.DoubleGetter;
 import settlement.misc.util.SettTileIsser;
@@ -18,7 +20,10 @@ import snake2d.util.color.COLOR;
 import snake2d.util.datatypes.DIR;
 import snake2d.util.file.FileGetter;
 import snake2d.util.file.FilePutter;
-import snake2d.util.misc.TOGGLEBLE;
+import util.data.BOOLEAN;
+import util.data.BOOLEAN.BOOLEANImp;
+import util.data.BOOLEAN.BOOLEAN_MUTABLE;
+import util.rendering.RenderData;
 import util.rendering.ShadowBatch;
 import view.sett.IDebugPanelSett;
 
@@ -27,9 +32,8 @@ public final class PATHING extends SettResource {
 	public final CostMethods coster = new CostMethods();
 	public final SFINDERS finders = new SFINDERS();
 	
-	private TOGGLEBLE performanceTest = new TOGGLEBLE.Imp();
+	private BOOLEAN_MUTABLE performanceTest = new BOOLEAN.BOOLEANImp(false);
 
-	public final SettEntryPoints entryPoints = new SettEntryPoints();
 	public final PlayerHuristics huristics = new PlayerHuristics();
 
 	
@@ -40,14 +44,21 @@ public final class PATHING extends SettResource {
 		
 		new ON_TOP_RENDERABLE() {
 			{
-				IDebugPanelSett.add("availability", new TOGGLEBLE.Imp() {
+				IDebugPanelSett.add("availability", new BOOLEANImp() {
 					@Override
-					public void set(boolean bool) {
+					public BOOLEAN_MUTABLE set(boolean bool) {
 						if (bool)
 							add();
 						else
 							remove();
-						super.set(bool);
+						return super.set(bool);
+						
+					}
+
+					@Override
+					public boolean is() {
+						// TODO Auto-generated method stub
+						return false;
 					}
 				});
 			}
@@ -113,7 +124,7 @@ public final class PATHING extends SettResource {
 	
 	
 	@Override
-	protected void update(float ds) {
+	protected void update(float ds, Profiler profiler) {
 		thread.setStop();
 		huristics.update(ds);
 		finders.update(ds);

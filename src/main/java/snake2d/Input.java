@@ -87,14 +87,14 @@ public class Input extends CORE_RESOURCE{
 		}
 		
 
-		public final void del() {
+		public void del() {
 			text.clear();
 			change();
 		}
 		
 		protected abstract void change();
 		
-		public Str text() {
+		public final Str text() {
 			return text;
 		}
 		
@@ -106,12 +106,12 @@ public class Input extends CORE_RESOURCE{
 			return CORE.getInput().keyboard.listener == this;
 		}
 
-		public void left() {
+		public void left(boolean mod) {
 			// TODO Auto-generated method stub
 			
 		}
 
-		public void right() {
+		public void right(boolean mod) {
 			// TODO Auto-generated method stub
 			
 		}

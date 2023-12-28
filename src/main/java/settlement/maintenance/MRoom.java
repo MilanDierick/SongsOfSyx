@@ -3,8 +3,9 @@ package settlement.maintenance;
 import static settlement.main.SETT.*;
 
 import game.GAME;
+import game.boosting.BOOSTABLES;
 import game.faction.FACTIONS;
-import init.boostable.BOOSTABLES;
+import init.race.RACES;
 import settlement.main.SETT;
 import settlement.path.AVAILABILITY;
 import settlement.room.main.Room;
@@ -82,11 +83,12 @@ final class MRoom {
 			return;
 		}
 		
-		if (FACTIONS.player().locks.unlockText(room.blueprint()) != null)
+		if (!room.constructor().blue().reqs.passes(FACTIONS.player()))
 			return;
 
-		if (this.data.setter.is(tx, ty))
+		if (this.data.setter.is(tx, ty)) {
 			return;
+		}
 
 		if (jobsPlaced.isMaximum(data))
 			return;
@@ -135,7 +137,7 @@ final class MRoom {
 
 	public int getTileAmount(int tx, int ty, Room room) {
 		double v = 1.0 + (1.0 - room.isolation(tx, ty)) * 2;
-		double b = CLAMP.d(1.0/BOOSTABLES.CIVICS().MAINTENANCE.get(null, null), 0, 1000);;
+		double b = CLAMP.d(1.0/BOOSTABLES.CIVICS().MAINTENANCE.get(RACES.clP(null, null)), 0, 1000);;
 		v*= room.degrader(tx, ty).degRate();
 		
 		v *= degradePerDay;

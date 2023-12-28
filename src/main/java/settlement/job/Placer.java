@@ -109,6 +109,8 @@ class Placer extends PlacableMulti{
 			box.NL();
 			box.setResource(res, resAmount);
 		}
+		box.NL();
+		j.extraHovInfo(box);
 	}
 
 	
@@ -124,7 +126,7 @@ class Placer extends PlacableMulti{
 		D.ts(Placer.class);
 	}
 	
-	private final LIST<CLICKABLE> bOverwrite = new ArrayList<CLICKABLE>(new GButt.Panel(SPRITES.icons().m.overwrite) {
+	protected final LIST<CLICKABLE> bOverwrite = new ArrayList<CLICKABLE>(new GButt.Panel(SPRITES.icons().m.overwrite) {
 		
 		{
 			hoverInfoSet(¤¤overdesc);

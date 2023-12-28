@@ -4,17 +4,17 @@ import static settlement.main.SETT.*;
 
 import game.GAME;
 import game.faction.FACTIONS;
+import game.faction.FResources.RTYPE;
 import init.D;
 import init.sound.SOUND;
 import init.sound.SoundSettlement.Sound;
 import init.sprite.SPRITES;
 import settlement.entity.humanoid.Humanoid;
 import settlement.environment.SettEnvMap.SettEnv;
-import settlement.main.RenderData.RenderIterator;
 import settlement.main.SETT;
 import settlement.path.AVAILABILITY;
-import settlement.tilemap.Floors.Floor;
-import settlement.tilemap.Terrain.TerrainTile;
+import settlement.tilemap.floor.Floors.Floor;
+import settlement.tilemap.terrain.Terrain.TerrainTile;
 import snake2d.Renderer;
 import snake2d.SPRITE_RENDERER;
 import snake2d.util.datatypes.DIR;
@@ -25,6 +25,7 @@ import util.dic.DicMisc;
 import util.gui.misc.GBox;
 import util.gui.misc.GButt.Panel;
 import util.info.GFORMAT;
+import util.rendering.RenderData.RenderIterator;
 import util.rendering.ShadowBatch;
 import view.tool.*;
 
@@ -104,6 +105,11 @@ public final class JobBuildRoad extends JobBuild{
 
 		
 		placer = new Placer(this, floor.resource, floor.resAmount, floor.desc) {
+			
+			{
+				bs.add(bOverwrite);
+			}
+			
 			@Override
 			public void hoverDesc(GBox box) {
 				super.hoverDesc(box);
@@ -169,6 +175,9 @@ public final class JobBuildRoad extends JobBuild{
 		if (ROOMS().map.is(tx, ty))
 			return PlacableMessages.¤¤ROOM_BLOCK;
 		
+		if (SETT.TERRAIN().WATER.BRIDGE.is(tx, ty) || SETT.TERRAIN().WATER.DEEP.is(tx, ty))
+			return lockText();
+		
 		if (SETT.PATH().solidity.is(tx, ty))
 			return PlacableMessages.¤¤BLOCKED;
 		
@@ -185,7 +194,7 @@ public final class JobBuildRoad extends JobBuild{
 	
 	@Override
 	public CharSequence lockText() {
-		return FACTIONS.player().locks.unlockText(floor);
+		return floor.reqs.passes(FACTIONS.player()) ? null : DicMisc.¤¤Locked;
 	}
 	
 	
@@ -222,7 +231,7 @@ public final class JobBuildRoad extends JobBuild{
 	protected boolean construct(int tx, int ty) {
 		if (FLOOR().getter.get(tx, ty) != floor) {
 			if (floor.resource != null)
-				GAME.player().res().outConstruction.inc(floor.resource,  floor.resAmount);
+				GAME.player().res().inc(floor.resource, RTYPE.CONSTRUCTION,  -floor.resAmount);
 			floor.placeFixed(tx, ty);
 			FLOOR().degrade.set(tx, ty, 0);
 		}else

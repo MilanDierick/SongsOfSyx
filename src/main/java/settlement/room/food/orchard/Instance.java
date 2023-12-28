@@ -3,7 +3,6 @@ package settlement.room.food.orchard;
 import static settlement.main.SETT.*;
 
 import settlement.entity.animal.ANIMAL_ROOM_RUINER;
-import settlement.main.RenderData;
 import settlement.main.SETT;
 import settlement.maintenance.ROOM_DEGRADER;
 import settlement.misc.job.*;
@@ -17,6 +16,7 @@ import settlement.room.main.util.RoomInit;
 import snake2d.Renderer;
 import snake2d.util.datatypes.COORDINATE;
 import snake2d.util.rnd.RND;
+import util.rendering.RenderData;
 import util.rendering.ShadowBatch;
 
 final class Instance extends RoomInstance implements JOBMANAGER_HASER, ROOM_PRODUCER, ANIMAL_ROOM_RUINER {
@@ -83,8 +83,9 @@ final class Instance extends RoomInstance implements JOBMANAGER_HASER, ROOM_PROD
 		
 	}
 
+	
 	@Override
-	public TmpArea remove(int tx, int ty, boolean scatter, Object obj, boolean forced) {
+	protected boolean canRemoveAndRemoveAction(int tx, int ty, boolean scatter, Object obj, boolean forced) {
 		if (scatter) {
 			for (COORDINATE c : body()) {
 				if (is(c)) {
@@ -95,7 +96,7 @@ final class Instance extends RoomInstance implements JOBMANAGER_HASER, ROOM_PROD
 				
 			}
 		}
-		return super.remove(tx, ty, scatter, obj, forced);
+		return true;
 	}
 	
 	@Override
@@ -110,7 +111,8 @@ final class Instance extends RoomInstance implements JOBMANAGER_HASER, ROOM_PROD
 	
 	@Override
 	public boolean canBeGraced(int tx, int ty) {
-		return blueprintI().tile(tx, ty).destroyTileCan();
+		OTile t = blueprintI().tile(tx, ty);
+		return t != null && t.destroyTileCan();
 	}
 
 	@Override
@@ -160,7 +162,8 @@ final class Instance extends RoomInstance implements JOBMANAGER_HASER, ROOM_PROD
 
 	@Override
 	public boolean destroyTileCan(int tx, int ty) {
-		return blueprintI().tile(tx, ty).destroyTileCan();
+		OTile t = blueprintI().tile(tx, ty);
+		return t != null && t.destroyTileCan();
 	}
 
 	@Override

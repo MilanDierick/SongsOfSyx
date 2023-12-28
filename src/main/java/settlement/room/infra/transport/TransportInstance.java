@@ -2,10 +2,8 @@ package settlement.room.infra.transport;
 
 import static settlement.main.SETT.*;
 
-import init.boostable.BOOSTABLE;
-import init.resources.RESOURCE;
-import init.resources.RESOURCES;
-import settlement.main.RenderData;
+import game.boosting.Boostable;
+import init.resources.*;
 import settlement.main.SETT;
 import settlement.misc.job.*;
 import settlement.misc.util.TILE_STORAGE;
@@ -20,6 +18,7 @@ import snake2d.Renderer;
 import snake2d.util.datatypes.COORDINATE;
 import snake2d.util.datatypes.Coo;
 import snake2d.util.misc.CLAMP;
+import util.rendering.RenderData;
 import util.rendering.ShadowBatch;
 
 public final class TransportInstance extends RoomInstance implements JOBMANAGER_HASER, STORAGE_CRATE_HASSER, ROOM_RADIUS_INSTANCE{
@@ -141,7 +140,7 @@ public final class TransportInstance extends RoomInstance implements JOBMANAGER_
 		
 		if (hasStorage()) {
 			
-			RESOURCE r = SETT.PATH().finders.resource.find(resource().bit, getsMaximum(resource()) ? resource().bit : 0, 0, start, path, radius());
+			RESOURCE r = SETT.PATH().finders.resource.find(resource().bit, getsMaximum(resource()) ? resource().bit : RBIT.NONE, RBIT.NONE, start, path, radius());
 			if (r == null) {
 				resourceHas = false;
 				return null;
@@ -282,8 +281,8 @@ public final class TransportInstance extends RoomInstance implements JOBMANAGER_
 	}
 
 	@Override
-	public BOOSTABLE carryBonus() {
-		return SETT.ROOMS().STOCKPILE.bonus;
+	public Boostable carryBonus() {
+		return SETT.ROOMS().STOCKPILE.bonus();
 	}
 
 }

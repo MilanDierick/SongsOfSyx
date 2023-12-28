@@ -8,7 +8,7 @@ import init.race.Race;
 import settlement.entity.humanoid.HCLASS;
 import settlement.main.SETT;
 import settlement.room.main.*;
-import settlement.stats.StatsEquippables.StatEquippableWork;
+import settlement.room.main.employment.RoomEquip;
 import snake2d.util.gui.GuiSection;
 import snake2d.util.gui.clickable.CLICKABLE;
 import snake2d.util.misc.ACTION;
@@ -49,7 +49,7 @@ public final class UIRooms {
 		for (int i = 0; i < RACES.all().size(); i++) {
 			Race r = RACES.all().get(i);
 
-			CLICKABLE c = new GButt.ButtPanel(r.appearance().iconBig.huge) {
+			CLICKABLE c = new GButt.ButtPanel(r.appearance().iconBig.big) {
 				@Override
 				protected void clickA() {
 					VIEW.inters().popup.close();
@@ -63,6 +63,8 @@ public final class UIRooms {
 
 	}
 	
+	
+	
 	public ISidePanel main() {
 		
 		return main;
@@ -72,7 +74,7 @@ public final class UIRooms {
 		rooms[r.blueprint().index()].hover(box, r, rx, ry);
 	}
 	
-	public void open(StatEquippableWork w) {
+	public void open(RoomEquip w) {
 		main.open(w);
 	}
 	
@@ -84,6 +86,11 @@ public final class UIRooms {
 	}
 	
 	public void open(RoomBlueprint r, boolean disturb) {
+		if (rooms[r.index()].table == null)
+			return;
+		for (UIRoom rr : rooms)
+			if (rr.table != null && VIEW.s().panels.added(rr.table))
+				VIEW.s().panels.remove(rr.table);
 		VIEW.s().panels.add(rooms[r.index()].table.get(), disturb);
 	}
 	

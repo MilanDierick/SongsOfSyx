@@ -2,11 +2,12 @@ package settlement.room.service.nursery;
 
 import java.io.IOException;
 
-import init.boostable.BOOSTABLE;
-import init.boostable.BOOSTABLES;
+import game.GAME_LOAD_FIXER;
+import game.VERSION;
 import init.race.RACES;
 import init.race.Race;
 import settlement.entity.ENTETIES;
+import settlement.main.SETT;
 import settlement.path.finder.SFinderRoomService;
 import settlement.room.industry.module.INDUSTRY_HASER;
 import settlement.room.industry.module.Industry;
@@ -16,6 +17,7 @@ import settlement.room.main.RoomInstance;
 import settlement.room.main.category.RoomCategorySub;
 import settlement.room.main.furnisher.Furnisher;
 import settlement.room.main.util.RoomInitData;
+import settlement.stats.STATS;
 import snake2d.util.datatypes.COORDINATE;
 import snake2d.util.datatypes.DIR;
 import snake2d.util.file.FileGetter;
@@ -29,7 +31,6 @@ public final class ROOM_NURSERY extends RoomBlueprintIns<NurseryInstance> implem
 	public final String type = "NURSERY";
 	final NurseryConstructor constructor;
 	final Industry productionData;
-	final BOOSTABLE skill;
 	final int BABY_DAYS;
 	public final Race race;
 	final Station ss = new Station(this);
@@ -43,7 +44,7 @@ public final class ROOM_NURSERY extends RoomBlueprintIns<NurseryInstance> implem
 	public ROOM_NURSERY(int index, RoomInitData init, RoomCategorySub block, String key) throws IOException {
 		super(index, init, key, block);
 		constructor = new NurseryConstructor(this, init);
-		skill = BOOSTABLES.ROOMS().pushRoom(this, init.data(), type);
+		pushBo(init.data(), type, true);
 		productionData = new Industry(this, init.data(), new RoomBoost[] {new RoomBoost() {
 			
 			@Override
@@ -55,7 +56,7 @@ public final class ROOM_NURSERY extends RoomBlueprintIns<NurseryInstance> implem
 			public double get(RoomInstance r) {
 				return 0.25 + 0.75*constructor.coziness.get(r);
 			}
-		}}, skill);
+		}}, bonus());
 		if (productionData.ins().size() == 0) {
 			init.data().error("Nurseries must have an in resource (food)", "INDUSTRY");
 		}
@@ -63,6 +64,23 @@ public final class ROOM_NURSERY extends RoomBlueprintIns<NurseryInstance> implem
 		race = RACES.map().getByKey("RACE", init.data());
 
 		indus = new ArrayList<>(productionData);
+		
+		if (VERSION.versionIsBefore(65, 1))
+		new GAME_LOAD_FIXER() {
+			
+			@Override
+			protected void fix() {
+				babies = 0;
+				for (COORDINATE coo : SETT.TILE_BOUNDS) {
+					if (ss.init(coo.x(), coo.y())) {
+						if (ss.all.get(SETT.ROOMS().data.get(coo)) != 0)
+							babies ++;
+					}
+					
+				}
+				
+			}
+		};
 	}
 	
 	@Override
@@ -107,6 +125,16 @@ public final class ROOM_NURSERY extends RoomBlueprintIns<NurseryInstance> implem
 		babies = 0;
 		limit = ENTETIES.MAX;
 	}
+	
+	public int rmax() {
+		int m = (int) Math.ceil(STATS.POP().POP.data().get(race)*0.15);
+		return m;
+	}
+	
+	public int max() {
+		int m = (int) Math.ceil(STATS.POP().POP.data().get(race)*0.15);
+		return Math.min(m, limit);
+	}
 
 	@Override
 	public void appendView(LISTE<UIRoomModule> mm) {
@@ -145,7 +173,7 @@ public final class ROOM_NURSERY extends RoomBlueprintIns<NurseryInstance> implem
 	}
 	
 	public boolean childIsReservedAndUsableSpot(int tx, int ty, Race race) {
-		return childIsReservedSpot(tx, ty, race) && ss.amount.get() == ss.amount.max() && ss.job.jobResourceBitToFetch() == 0;
+		return childIsReservedSpot(tx, ty, race) && ss.amount.get() == ss.amount.max() && ss.job.jobResourceBitToFetch() == null;
 	}
 	
 	

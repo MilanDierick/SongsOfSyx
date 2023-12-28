@@ -2,7 +2,6 @@ package settlement.path;
 
 import static settlement.main.SETT.*;
 
-import init.C;
 import settlement.main.SETT;
 import settlement.path.components.SCOMPONENTS;
 import snake2d.util.datatypes.COORDINATE;
@@ -16,7 +15,7 @@ public final class AvailabilityMap implements MAP_OBJECTE<AVAILABILITY>{
 	
 	public AvailabilityMap(SCOMPONENTS comps) {
 		this.comps = comps;
-		for (int i = C.SETTLE_TSIZE*C.SETTLE_TSIZE-1; i >= 0; i--) {
+		for (int i = SETT.TWIDTH*SETT.TWIDTH-1; i >= 0; i--) {
 			costs[i] = (byte) AVAILABILITY.NORMAL.ordinal();
 		}
 	}

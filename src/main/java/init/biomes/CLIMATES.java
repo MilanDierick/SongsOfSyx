@@ -1,36 +1,45 @@
 package init.biomes;
 
 
+import java.io.IOException;
+import java.util.Arrays;
 import java.util.Set;
 
+import game.boosting.*;
+import game.faction.Faction;
+import game.faction.npc.NPCBonus;
+import game.faction.npc.ruler.Royalty;
+import game.values.GVALUES;
 import init.D;
-import init.boostable.BOOSTABLES;
 import init.paths.PATHS;
-import init.sprite.ICON;
-import init.sprite.SPRITES;
+import init.race.POP_CL;
+import init.race.Race;
+import init.sprite.UI.UI;
+import settlement.army.Div;
+import settlement.main.SETT;
+import settlement.stats.Induvidual;
 import snake2d.util.file.Json;
+import snake2d.util.misc.ACTION;
 import snake2d.util.sets.*;
+import util.data.BOOLEANO;
 import util.info.INFO;
 import util.keymap.KEY_COLLECTION;
+import world.WORLD;
+import world.regions.Region;
 
 public final class CLIMATES {
 
 	public final static String KEY = "CLIMATE";
 	private static Data d;
-	private static ClimateBonus bonus;
-
 	
 	private CLIMATES() {
 		
 	}
 	
-	public static void init() {
+	public static void init() throws IOException {
 		new Data();
 	}
 	
-	public static void initBonuses(BOOSTABLES bo, double[][] climates) {
-		bonus = new ClimateBonus(bo, climates);
-	}
 	
 	public static CLIMATE COLD() {
 		return d.COLD;
@@ -56,21 +65,41 @@ public final class CLIMATES {
 		return d.info;
 	}
 	
-	public static ClimateBonus BONUS() {
-		return bonus;
+	public static BoostSpecs BONUS() {
+		return d.boosters;
 	}
 	
-
-	static ICON.BIG icon(CLIMATE c){
-		switch(c.index()) {
-		case 0: return SPRITES.icons().l.season_winter;
-		case 1: return SPRITES.icons().l.season_spring;
-		case 2: return SPRITES.icons().l.season_summer;
+	public static void pushBonuses(Json json, Boostable bo) {
+		if (!json.has(KEY))
+			return;
+		double vv[] = new double[ALL().size()];
+		Arrays.fill(vv, 1.0);
+		CLIMATES.MAP().fill(vv, json, 0, 2000);
+		for (CLIMATE c : CLIMATES.ALL()) {
+			if (vv[c.index()] == 1.0)
+				continue;
+			c.boosters.pushPromise(bo, null, vv[c.index()], true);
 		}
-		return null;
+		
+		
+	}
+
+	public static BoostSpec pushIfDoesntExist(CLIMATE c, double v, Boostable bo, boolean isMul) {
+		String k = bo.key + isMul;
+		double none = isMul ? 1 : 0;
+		if (d.bvmap.containsKey(k) && d.bvmap.get(k).values[c.index()] == none)
+			return null;
+		
+		if (!d.bvmap.containsKey(k)) {
+			d.bvmap.put(k, new BV(d.boosters, bo, isMul));
+		}
+		
+		BV bv = d.bvmap.get(k);
+		bv.set(c, v);
+		c.boosters.push(bo, v, isMul);
+		return bv.spec;
 	}
 	
-
 	
 	private static final class Data implements KEY_COLLECTION<CLIMATE>{
 
@@ -80,9 +109,12 @@ public final class CLIMATES {
 		private final ArrayList<CLIMATE> all = new ArrayList<>(3);
 		private final KeyMap<CLIMATE> map = new KeyMap<CLIMATE>();
 		private final INFO info;
+		private final BoostSpecs boosters;
+		private final KeyMap<BV> bvmap = new KeyMap<BV>();
 		
-		Data(){
+		Data() throws IOException{
 			D.gInit(CLIMATES.class);
+			info = new INFO(D.g("Climate"), D.g("desc", "Climate zones have a range of bonuses and drawbacks. They also have different base temperatures, which can lead to exposure and death for your subjects depending on their natural resilience to hot and cold."));
 			d = this;
 			Json j = new Json(PATHS.CONFIG().get(KEY));
 			COLD = new CLIMATE(
@@ -100,10 +132,49 @@ public final class CLIMATES {
 					D.g("Warm"),
 					D.g("warm_desc", "Hot summers."),
 					j);
-			info = new INFO(D.g("Climate"), D.g("desc", "Climate zones have a range of bonuses and drawbacks. They also have different base temperatures, which can lead to exposure and death for your subjects depending on their natural resilience to hot and cold."));
+			
 			for (CLIMATE c : all)
 				map.put(c.key, c);
+			
+			boosters = new BoostSpecs(info.name, UI.icons().s.heat, true);
+			
+			ACTION a = new ACTION() {
+				
+				@Override
+				public void exe() {
+					
+					for (CLIMATE c : CLIMATES.ALL()) {
+						
+						for (BoostSpec s : c.boosters.all()) {
+							String k = s.boostable.key + s.booster.isMul;
+							if (!bvmap.containsKey(k)) {
+								bvmap.put(k, new BV(boosters, s.boostable, s.booster.isMul));
+							}
+							bvmap.get(k).set(c, s.booster.to());
+						}
+					}
+					
+				}
+			};
+			BOOSTING.connecter(a);
+			
+			for (CLIMATE c : all) {
+				GVALUES.FACTION.push("CLIMATE_" + c.key, info.name + ": " + c.name, new BOOLEANO<Faction>() {
+					
+					@Override
+					public boolean is(Faction t) {
+						if (t.capitolRegion() != null)
+							return WORLD.CLIMATE().getter.get(t.capitolRegion().cx(), t.capitolRegion().cy()) == c;
+						return false;
+					}
+				});
+				
+			}
+			
 		}
+		
+
+		
 		
 		@Override
 		public CLIMATE tryGet(String value) {
@@ -126,6 +197,112 @@ public final class CLIMATES {
 		}
 		
 	}
+	
+	private static class BV extends Booster{
+
+		private double from;
+		private double to;
+		private final double[] values = new double[CLIMATES.ALL().size()];
+		private final boolean isMul;
+		public final BoostSpec spec;
+		
+		BV(BoostSpecs bos, Boostable target, boolean isMul){
+			super(new BSourceInfo(CLIMATES.INFO().name, UI.icons().s.heat), isMul);
+			this.isMul = isMul;
+			if (isMul)
+				Arrays.fill(values, 1.0);
+			set();
+			spec = bos.push(this, target);
+		}
+		
+		void set(CLIMATE c, double value) {
+			values[c.index()] = value;
+			set();
+		}
+		
+		private void set() {
+			if (isMul) {
+				from = 1.0;
+				to = 1.0;
+			}else {
+				from = 0;
+				to = 0;
+			}
+			
+			for (double v : values) {
+				
+				from = Math.min(v, from);
+				to = Math.max(v, to);
+			}
+		}
+		
+		@Override
+		public double get(Boostable bo, BOOSTABLE_O o) {
+			return o.boostableValue(bo, this);
+		}
+		
+		@Override
+		public double vGet(Region reg) {
+			double res = 0;
+			for (int ci = 0; ci < CLIMATES.ALL().size(); ci++) {
+				res += values[ci]*reg.info.climate(CLIMATES.ALL().get(ci));
+			}
+			return res;
+		}
+		
+		@Override
+		public double vGet(NPCBonus f) {
+			return vGet(f.faction.capitolRegion());
+		}
+
+		@Override
+		public double vGet(Induvidual indu) {
+			return values[SETT.WORLD_AREA().climate().index()];
+		}
+
+		@Override
+		public double vGet(Div div) {
+			return values[SETT.WORLD_AREA().climate().index()];
+		}
+
+		@Override
+		public double vGet(Faction f) {
+			return values[WORLD.CLIMATE().getter.get(f.capitolRegion().cx(), f.capitolRegion().cy()).index()];
+		}
+
+		@Override
+		public double vGet(POP_CL reg) {
+			return values[SETT.WORLD_AREA().climate().index()];
+		}
+
+		@Override
+		public double vGet(Royalty roy) {
+			return values[WORLD.CLIMATE().getter.get(roy.court.faction.capitolRegion().cx(), roy.court.faction.capitolRegion().cy()).index()];
+		}
+
+		@Override
+		public boolean has(Class<? extends BOOSTABLE_O> b) {
+			return b != Race.class;
+		}
+
+		@Override
+		public double from() {
+			return from;
+		}
+
+		@Override
+		public double to() {
+			return to;
+		}
+
+		@Override
+		public double vGet(Race race) {
+			return 0;
+		}
+		
+		
+	}
+	
 	
 	
 }

@@ -12,7 +12,6 @@ public class SPRITES {
 
 	private static SPRITES self;
 	private final Settlement settlement;
-	private final Icons icons;
 	private final UIConses panelsOverlays;
 	private final Textures textures;
 
@@ -34,7 +33,6 @@ public class SPRITES {
 		CORE.checkIn();
 
 		CORE.checkIn();
-		icons = new Icons();
 		
 		panelsOverlays = new UIConses();
 		loadScreen = new LoadScreen();
@@ -77,7 +75,7 @@ public class SPRITES {
 	
 	
 	public static Icons icons(){
-		return self.icons;
+		return UI.icons();
 	}
 	
 	public static UIConses cons(){

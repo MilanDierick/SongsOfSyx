@@ -11,9 +11,12 @@ import snake2d.util.sets.LISTE;
 
 public class TransportFactory extends Factory<TransportEntity>{
 
-	public TransportFactory(LISTE<Factory<?>> all) {
+	public final Sprite sprite;
+	
+	
+	public TransportFactory(LISTE<Factory<?>> all) throws IOException {
 		super(all);
-		
+		sprite = new Sprite();
 	}
 
 	@Override

@@ -2,8 +2,7 @@ package settlement.room.law.slaver;
 
 import java.io.IOException;
 
-import init.sprite.SPRITES;
-import settlement.main.RenderData.RenderIterator;
+import settlement.main.SETT;
 import settlement.path.AVAILABILITY;
 import settlement.room.main.*;
 import settlement.room.main.furnisher.*;
@@ -13,9 +12,8 @@ import settlement.room.sprite.*;
 import snake2d.SPRITE_RENDERER;
 import snake2d.util.datatypes.DIR;
 import snake2d.util.file.Json;
-import snake2d.util.sprite.TILE_SHEET;
+import util.rendering.RenderData.RenderIterator;
 import util.rendering.ShadowBatch;
-import util.spritecomposer.*;
 
 final class Constructor extends Furnisher{
 
@@ -24,27 +22,10 @@ final class Constructor extends Furnisher{
 	final FurnisherStat prisoners = new FurnisherStat.FurnisherStatI(this, 1);
 	final static int codeService = 1;
 	final static int codeHead = 2;
-	
 
 	
 	private final RoomSprite table;
 	
-	private final RoomSpriteRot benchA = new RoomSpriteRot(sheet, 0, 2, SPRITES.cons().ROT.north_south) {
-		
-		@Override
-		protected boolean joinsWith(RoomSprite s, boolean outof, int dir, DIR test,int rx, int ry, FurnisherItem item) {
-			return s == table;
-		};
-	};
-	
-	private final RoomSpriteRot benchB = new RoomSpriteRot(sheet, 0, 2, SPRITES.cons().ROT.north_south) {
-		
-		@Override
-		protected boolean joinsWith(RoomSprite s, boolean outof, int dir, DIR test,int rx, int ry, FurnisherItem item) {
-			
-			return DIR.ORTHO.get(dir).perpendicular() == test;
-		};
-	};
 	
 	protected Constructor(ROOM_SLAVER blue, RoomInitData init)
 			throws IOException {
@@ -53,15 +34,33 @@ final class Constructor extends Furnisher{
 		
 		Json sp = init.data().json("SPRITES");
 	
-		table = new RoomSpriteComboN(sp, "TABLE_COMBO") {
+		final RoomSprite benchA = new RoomSprite1x1(sp, "BENCH_1X1") {
 			
 			@Override
-			public boolean render(SPRITE_RENDERER r, ShadowBatch s, int data, RenderIterator it, double degrade,
-					boolean isCandle) {
-				super.render(r, s, data, it, degrade, isCandle);
-				if (!isCandle)
-					sheet.render(r, 2*4 + (it.ran()&0x07), it.x(), it.y());
-				return false;
+			protected boolean joins(int tx, int ty, int rx, int ry, DIR d, FurnisherItem item) {
+				return item.sprite(rx, ry) == table;
+			}
+		};
+		
+		final RoomSprite benchB = new RoomSprite1x1(benchA) {
+			
+			@Override
+			protected boolean joins(int tx, int ty, int rx, int ry, DIR d, FurnisherItem item) {
+				return DIR.ORTHO.get(item.rotation).perpendicular() == d;
+			}
+			
+		};
+
+		
+		table = new RoomSpriteCombo(sp, "TABLE_COMBO") {
+			
+			final RoomSprite1x1 top = new RoomSprite1x1(sp, "NICKNACK_1X1");
+			
+			@Override
+			public void renderAbove(SPRITE_RENDERER r, ShadowBatch s, int data, RenderIterator it, double degrade) {
+				if (!SETT.ROOMS().fData.candle.is(it.tile())) {
+					top.render(r, s, data, it, degrade, false);
+				}
 			}
 			
 		};
@@ -102,17 +101,6 @@ final class Constructor extends Furnisher{
 		
 		flush(3);
 		
-	}
-	
-	@Override
-	protected TILE_SHEET sheet(ComposerUtil c, ComposerSources s, ComposerDests d, int y1) {
-		s.singles.init(0, y1, 1, 1, 2, 1, d.s16);
-		s.singles.paste(3, true);
-		
-		s.singles.init(0, s.singles.body().y2(), 1, 1, 4, 2, d.s16);
-		s.singles.paste(true);
-		
-		return d.s16.saveGame();
 	}
 
 	@Override

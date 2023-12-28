@@ -2,6 +2,8 @@ package settlement.room.main.job;
 
 import java.io.Serializable;
 
+import init.resources.RBIT;
+import init.resources.RBIT.RBITImp;
 import init.resources.RESOURCE;
 import settlement.misc.job.JOB_MANAGER;
 import settlement.misc.job.SETT_JOB;
@@ -16,8 +18,8 @@ public abstract class JobPositions<T extends RoomInstance> implements JOB_MANAGE
 	private boolean hasSearchedAll;
 	private final ArrayCooShort coos;
 	private int searchI = 0;
-	private long resNotFound;
-	private long resSearchmask;
+	private final RBITImp resNotFound = new RBITImp();
+	private final RBITImp resSearchmask = new RBITImp();
 	private boolean alwaysNew;
 	private final static long serialVersionUID = 2358456270243399328l;
 
@@ -55,37 +57,36 @@ public abstract class JobPositions<T extends RoomInstance> implements JOB_MANAGE
 	protected abstract SETT_JOB get(int tx, int ty);
 
 	@Override
-	public SETT_JOB reportResourceMissing(long resMask, int jx, int jy) {
-		resNotFound |= resMask;
-		resSearchmask |= resMask;
+	public SETT_JOB reportResourceMissing(RBIT resMask, int jx, int jy) {
+		resNotFound.or(resMask);
+		resSearchmask.or(resMask);
 		return getReservableJob();
 	}
 	
 	@Override
-	public void reportResourceFound(long res) {
-		resNotFound &= ~res;
-		resSearchmask &= ~res;
+	public void reportResourceFound(RESOURCE res) {
+		resNotFound.clear(res);
+		resSearchmask.clear(res);
 	}
 	
 	@Override
 	public boolean resourceShouldSearch(RESOURCE res) {
-		return (resSearchmask & res.bit) == 0;
+		return !resSearchmask.has(res);
 	}
 	
 	@Override
 	public boolean resourceReachable(RESOURCE res) {
-		return (resNotFound & res.bit) == 0;
+		return !resNotFound.has(res);
 	}
 
 	private boolean resourceCheck(SETT_JOB j) {
-		long f = j.jobResourceBitToFetch();
-		if (f == 0) {
+		RBIT f = j.jobResourceBitToFetch();
+		if (f == null) {
 			return true;
 		}
 //		if (!PATH().finders.resource.normal.has(f))
 //			return false;
-
-		return (f & ~resSearchmask) != 0;
+		return !resSearchmask.hasAll(f);
 
 	}
 
@@ -147,14 +148,14 @@ public abstract class JobPositions<T extends RoomInstance> implements JOB_MANAGE
 	}
 
 	public void searchAgain() {
-		resSearchmask = 0;
+		resSearchmask.clear();
 		this.hasSearchedAll = false;
 	}
 	
 	@Override
 	public void resetResourceSearch() {
-		resSearchmask = 0;
-		resNotFound = 0;
+		resSearchmask.clear();
+		resNotFound.clear();
 		
 	}
 	

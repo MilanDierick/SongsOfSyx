@@ -6,7 +6,6 @@ import java.util.Arrays;
 import game.faction.FACTIONS;
 import init.*;
 import init.paths.PATHS;
-import menu.screens.Screener;
 import snake2d.MButt;
 import snake2d.util.color.COLOR;
 import snake2d.util.file.FileManager;
@@ -95,7 +94,7 @@ class IMenuSave extends GuiSection implements STRING_RECIEVER{
 		CLICKABLE newButt = new Screener.ScreenButton(DicMisc.¤¤new) {
 			@Override
 			protected void clickA() {
-				String name = FACTIONS.player().appearence().name() + "-";
+				String name = FACTIONS.player().name + "-";
 				KeyMap<String> m = new KeyMap<>();
 				for (SaveFile f : saves) {
 					if (f.name.startsWith(name)) {

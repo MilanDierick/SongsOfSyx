@@ -6,6 +6,7 @@ import snake2d.util.datatypes.AREA;
 import snake2d.util.sprite.SPRITE;
 import util.gui.misc.GBox;
 import util.gui.misc.GText;
+import view.subview.GameWindow;
 
 public abstract class PlacableMulti implements PLACABLE{
 
@@ -32,6 +33,10 @@ public abstract class PlacableMulti implements PLACABLE{
 		this.icon = icon;
 		this.undo = undo;
 	}
+	
+	public void updateRegardless(GameWindow window) {
+		
+	};
 	
 	@Override
 	public SPRITE getIcon() {

@@ -3,6 +3,7 @@ package settlement.path.components;
 import static settlement.main.SETT.*;
 
 import init.RES;
+import settlement.entry.EntryPoints.EntryPoint;
 import settlement.main.SETT;
 import settlement.path.AVAILABILITY;
 import snake2d.PathTile;
@@ -34,9 +35,19 @@ final class SComp0 extends SComponent{
 	}
 
 	@Override
-	public byte edgeMask() {
-		return (byte) (edgeMask & 0x0F);
+	public boolean hasEdge() {
+		return (edgeMask & 1) != 0;
 	}
+	
+	@Override
+	public boolean hasEntry() {
+		return (edgeMask & 2) != 0;
+	}
+	
+//	@Override
+//	public byte edgeMask() {
+//		return (byte) (edgeMask & 0x0F);
+//	}
 	
 	@Override
 	protected void retire(){
@@ -48,39 +59,44 @@ final class SComp0 extends SComponent{
 	
 	@Override
 	public boolean retired() {
-		return (edgeMask & 0b010000) != 0;
+		return (edgeMask & 0b0001_0000) != 0;
 	}
 	
 	void retire(boolean b) {
 		if (b)
-			edgeMask |= 0b010000;
+			edgeMask |= 0b0001_0000;
 		else
-			edgeMask &= ~0b010000;
+			edgeMask &= ~0b0001_0000;
 	}
 	
 	boolean checked() {
-		return (edgeMask & 0b0100000) != 0;
+		return (edgeMask & 0b0010_0000) != 0;
 	}
 	
 	void checked(boolean b) {
 		if (b)
-			edgeMask |= 0b0100000;
+			edgeMask |= 0b0010_0000;
 		else
-			edgeMask &= ~0b0100000;
+			edgeMask &= ~0b0010_0000;
 	}
 	
 	void init(RECTANGLE bounds, int size, SComponentChecker neighbours){
 		
 		edgeMask = 0;
 		if (bounds.x1() == 0) {
-			edgeMask |= DIR.W.mask();
+			edgeMask |= 1;
 		}else if(bounds.x2() == TWIDTH) {
-			edgeMask |= DIR.E.mask();
+			edgeMask |= 1;
 		}
 		if (bounds.y1() == 0) {
-			edgeMask |= DIR.N.mask();
+			edgeMask |= 1;
 		}else if(bounds.y2() == THEIGHT) {
-			edgeMask |= DIR.S.mask();
+			edgeMask |= 1;
+		}
+		
+		for (EntryPoint p : SETT.ENTRY().points.active()) {
+			if (is(p.coo()))
+				edgeMask |= 2;
 		}
 		
 		
@@ -88,14 +104,16 @@ final class SComp0 extends SComponent{
 		int smallest = -1;
 		double smallestValue = 100000000;
 		for (COORDINATE c : bounds) {
-			if (is(c)) {
-				AVAILABILITY a = PATH().availability.get(c.x(), c.x());
+			int x = c.x();
+			int y = c.y();
+			if (is(x, y)) {
+				AVAILABILITY a = PATH().availability.get(x, y);
 				double v = (a.player + a.from);
 				if ( v < smallestValue) {
 					smallest = 1;
 					smallestValue = v;
-					this.cx = (short) c.x();
-					this.cy = (short) c.y();
+					this.cx = (short) x;
+					this.cy = (short) y;
 				}
 			}
 		}
@@ -177,7 +195,7 @@ final class SComp0 extends SComponent{
 			for (int i = 0; i < DIR.ALL.size(); i++) {
 				DIR d = DIR.ALL.get(i);
 				double v2 = PATH().coster.player.getCost(x, y, x + d.x(), y + d.y())*d.tileDistance();
-				if (v2 < 0)
+				if (v2 <= 0)
 					continue;
 				SComponent next =  PATH().comps.zero.get(x, y, d);
 				if (next == null)

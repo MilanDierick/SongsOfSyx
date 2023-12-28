@@ -82,6 +82,11 @@ public class Bitmap1D implements SAVABLE{
 		
 	}
 	
+	public void toggle(int bit){
+		set(bit, !get(bit));
+		
+	}
+	
 	@Override
 	public void clear() {
 		for (int i = 0; i < bits.length; i++)

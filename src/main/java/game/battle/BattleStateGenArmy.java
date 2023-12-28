@@ -6,18 +6,17 @@ import init.C;
 import init.config.Config;
 import init.race.RACES;
 import init.race.Race;
+import settlement.army.ArmyMorale;
 import settlement.army.Div;
 import settlement.entity.humanoid.HTYPE;
 import settlement.entity.humanoid.Humanoid;
 import settlement.main.SETT;
-import settlement.stats.CAUSE_ARRIVE;
 import settlement.stats.STATS;
-import settlement.stats.StatsEquippables.EQUIPPABLE_MILITARY;
+import settlement.stats.util.CAUSE_ARRIVE;
 import snake2d.util.datatypes.*;
-import snake2d.util.rnd.RND;
 import snake2d.util.sets.ArrayList;
 import snake2d.util.sets.Tree;
-import world.army.WINDU.WDivGeneration;
+import world.army.WDivGeneration;
 
 final class BattleStateGenArmy {
 
@@ -31,7 +30,7 @@ final class BattleStateGenArmy {
 		
 	};
 	
-	public static void genArmy(ArrayList<WDivGeneration> ss, boolean player, DIR d, int art, Race artrace) {
+	public static void genArmy(ArrayList<WDivGeneration> ss, boolean player, DIR d, int art, Race artrace, double moraleBase) {
 		
 		sort.clear();
 		int di = 0;
@@ -77,10 +76,18 @@ final class BattleStateGenArmy {
 		
 		depth += BattleStateArt.placeArt(cx, cy, depth, d, art, artrace, player);
 		
-		if (player)
+		SETT.ARMIES().player().resetMorale();
+		SETT.ARMIES().enemy().resetMorale();
+		
+		if (player) {
 			placeThrone(cx, cy, depth, d);
-		SETT.ARMIES().player().initMorale();
-		SETT.ARMIES().enemy().initMorale();
+			ArmyMorale.SUPPLIES.setD(SETT.ARMIES().player(), moraleBase);
+		}else {
+			ArmyMorale.SUPPLIES.setD(SETT.ARMIES().enemy(), moraleBase);
+		}
+		
+		
+		
 	}
 	
 	private static void placeThrone(int cx, int cy, int depth, DIR d) {
@@ -88,11 +95,12 @@ final class BattleStateGenArmy {
 		int x1 = cx + depth*d.x();
 		int y1 = cy + depth*d.y();
 		int dd = 0;
-		for (DIR ddd : DIR.ORTHO) {
-			if (ddd == d.perpendicular())
+		for (int di = 0; di < DIR.ORTHO.size(); di++) {
+			if (DIR.ORTHO.get(di) == d.perpendicular())
 				break;
 			dd++;
 		}
+		
 		SETT.ROOMS().THRONE.init.place(x1, y1, dd);
 	}
 	
@@ -157,15 +165,16 @@ final class BattleStateGenArmy {
 			
 			Humanoid h = SETT.HUMANOIDS().create(race, c.x(), c.y(), type, CAUSE_ARRIVE.SOLDIER_RETURN);
 			if (!h.isRemoved()) {
-				div.indus[men].paste(h);
+				h.indu().copyFrom(div.indus[men]);
+				STATS.BATTLE().basicTraining.setD(h.indu(), 1.0);
 				men ++;
-				for (EQUIPPABLE_MILITARY m : STATS.EQUIP().military_all()) {
-					double dd = div.supplies[m.indexMilitary()];
-					int amm = (int) dd;
-					if (dd-amm > RND.rFloat())
-						amm++;
-					m.set(h.indu(), amm);
-				}
+//				for (EquipBattle m : STATS.EQUIP().BATTLE_ALL()) {
+//					double dd = div.supplies[m.indexMilitary()];
+//					int amm = (int) dd;
+//					if (dd-amm > RND.rFloat())
+//						amm++;
+//					m.set(h.indu(), amm);
+//				}
 				h.setDivision(adiv);
 			}
 		}
@@ -185,6 +194,7 @@ final class BattleStateGenArmy {
 		ARMIES().placer.deploy(tmpDivs, x1, x2, y1, y2);
 		
 		adiv.initPosition();
+		
 		return true;
 		
 		

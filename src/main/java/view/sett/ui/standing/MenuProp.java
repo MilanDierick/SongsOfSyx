@@ -1,11 +1,12 @@
 package view.sett.ui.standing;
 
-import init.boostable.*;
+import game.boosting.*;
+import init.race.RACES;
 import init.sprite.UI.UI;
 import settlement.entity.humanoid.HCLASS;
 import settlement.stats.STATS;
-import settlement.stats.StatsTraits;
-import settlement.stats.StatsTraits.StatTrait;
+import settlement.stats.colls.StatsTraits;
+import settlement.stats.colls.StatsTraits.StatTrait;
 import snake2d.SPRITE_RENDERER;
 import snake2d.util.color.COLOR;
 import snake2d.util.gui.GUI_BOX;
@@ -27,11 +28,11 @@ class MenuProp extends ISidePanel {
 		this.c = c;
 		LinkedList<RENDEROBJ> rows = new LinkedList<>();
 		
-		for (BoostableCollection col : BOOSTABLES.colls()) {
+		for (BoostableCat col : BOOSTABLES.colls()) {
 			
 			rows.add(new GHeader(col.name));
 			
-			for (BOOSTABLE bo : col.all()) {
+			for (Boostable bo : col.all()) {
 				rows.add(new Row(bo));
 			}
 			
@@ -73,18 +74,18 @@ class MenuProp extends ISidePanel {
 	
 	private class Row extends GuiSection {
 		
-		private final BOOSTABLE bo;
+		private final Boostable bo;
 		
-		Row(BOOSTABLE bo){
+		Row(Boostable bo){
 			this.bo = bo;
 			
-			add(bo.icon(), 0, 0);
+			add(bo.icon, 0, 0);
 			addRightC(2, new GText(UI.FONT().M, bo.name));
 			addRightCAbs(250, new GStat() {
 				
 				@Override
 				public void update(GText text) {
-					GFORMAT.f(text, bo.get(c, CitizenMain.current));
+					GFORMAT.f(text, bo.get(RACES.clP(CitizenMain.current, c)));
 				}
 			});
 			body().incrW(64);
@@ -105,7 +106,7 @@ class MenuProp extends ISidePanel {
 			b.text(bo.desc);
 			b.NL(8);
 			
-			BoostHoverer.hover(text, bo, c, CitizenMain.current);
+			bo.hover(b, RACES.clP(CitizenMain.current, c), true);
 			
 		}
 		

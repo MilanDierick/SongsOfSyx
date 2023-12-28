@@ -5,26 +5,21 @@ import java.io.Serializable;
 
 import game.time.TIME;
 import init.race.Race;
-import init.sprite.ICON;
 import init.sprite.SPRITES;
+import init.sprite.UI.Icon;
 import init.sprite.UI.UI;
-import settlement.entity.humanoid.HCLASS;
 import settlement.main.SETT;
 import settlement.room.main.RoomBlueprintImp;
 import settlement.room.service.module.ROOM_SERVICER;
-import settlement.room.service.module.RoomServiceDataAccess.ROOM_SERVICE_ACCESS_HASER;
+import settlement.room.service.module.RoomServiceAccess;
 import settlement.stats.Induvidual;
 import settlement.stats.STATS;
-import settlement.stats.StatsNeeds.StatNeed;
-import settlement.stats.StatsService.StatService;
 import snake2d.SPRITE_RENDERER;
 import snake2d.util.color.COLOR;
 import snake2d.util.datatypes.COORDINATE;
 import snake2d.util.file.*;
 import snake2d.util.misc.CLAMP;
 import snake2d.util.rnd.RND;
-import snake2d.util.sets.LIST;
-import snake2d.util.sets.Tuple;
 import snake2d.util.sprite.text.Str;
 import snake2d.util.sprite.text.Str.StringReusableSer;
 import util.colors.GCOLOR;
@@ -130,37 +125,16 @@ public final class Review implements Serializable, SAVABLE{
 	
 	private void setService(Induvidual indu, Str tmp) {
 		Text da = indu.race().tourism().data;
-		for (Tuple<StatNeed, LIST<ROOM_SERVICE_ACCESS_HASER>> n : TOURISM.self.needs) {
-			if (n.a().getPrio(indu) > 0) {
-				tmp.add(da.service.get(0, indu, null, n.b().rnd()));
+		
+		RoomServiceAccess s = Updater.getService(indu);
+		if (s != null) {
+			if (s.stats().total(indu) == 0) {
+				tmp.add(da.service.get(0, indu, null, s));
 				tmp.s();
 				return;
 			}
-		}
-		
-		double v = 0;
-		double m = 0;
-		ROOM_SERVICE_ACCESS_HASER res = null;
-		for (Tuple<StatNeed, LIST<ROOM_SERVICE_ACCESS_HASER>> n : TOURISM.self.needs) {
-			for (ROOM_SERVICE_ACCESS_HASER ha : n.b()) {
-				StatService ser = ha.service().stats();
-				double t = ser.total(indu);
-				if (t > v) {
-					v = t;
-					res = ha;
-				}
-				m = Math.max(ser.total().standing().definition(indu.race()).get(HCLASS.CITIZEN).max, m);
-			}
-		}
-		
-		if (res != null) {
-			tmp.add(da.service.get(CLAMP.d(v+RND.rFloat0(0.15), 0, 1), indu, null, res));
-			v = v*(res.service().stats().total().standing().definition(indu.race()).get(HCLASS.CITIZEN).max/m);
 			
-			score += v;
-			tmp.s();
-		}else
-			tmp.add(da.service.get(0, indu, null, TOURISM.self.needs.rnd().b().rnd()));
+		}
 		
 	}
 	
@@ -168,20 +142,20 @@ public final class Review implements Serializable, SAVABLE{
 		
 		{
 			int icons = (int) (1 + 4*score);
-			int x = x1 + width/2 - ICON.SMALL.SIZE*icons/2;
+			int x = x1 + width/2 - Icon.S*icons/2;
 			for (int i = 0; i < icons; i++) {
 				SPRITES.icons().s.star.render(r, x, y1);
-				x+= ICON.SMALL.SIZE;
+				x+= Icon.S;
 			}
 			
 			Str.TMP.clear().add(credits);
 			x = x1+width-128;
 			SPRITES.icons().s.money.render(r, x, y1);
 			GCOLOR.T().H1.bind();
-			UI.FONT().S.render(r, Str.TMP, x+6+ICON.MEDIUM.SIZE, y1);
+			UI.FONT().S.render(r, Str.TMP, x+6+Icon.M, y1);
 			COLOR.unbind();
 			
-			y1 += ICON.SMALL.SIZE + 4;
+			y1 += Icon.S + 4;
 			
 		}
 		

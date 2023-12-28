@@ -4,7 +4,6 @@ import game.faction.FACTIONS;
 import init.D;
 import init.race.RACES;
 import init.race.Race;
-import init.sprite.SPRITES;
 import init.sprite.UI.UI;
 import snake2d.SPRITE_RENDERER;
 import snake2d.util.datatypes.DIR;
@@ -12,20 +11,22 @@ import snake2d.util.gui.GUI_BOX;
 import snake2d.util.gui.GuiSection;
 import snake2d.util.gui.clickable.CLICKABLE;
 import snake2d.util.gui.renderable.RENDEROBJ;
+import util.data.GETTER;
 import util.dic.DicMisc;
 import util.gui.misc.*;
+import util.gui.table.GTextScroller;
 
 class StagePickRace extends GuiSection{
 
-	private static CharSequence ¤¤title = "Select species";
-	private static CharSequence ¤¤desc = "All species have unique play styles, excel at different works, and have different likings and dislikes.";
+	static CharSequence ¤¤title = "Select species";
+	static CharSequence ¤¤desc = "All species have unique play styles, excel at different works, and have different likings and dislikes.";
 
 	private static CharSequence ¤¤challenge = "Initial Challenge";
 	static {
 		D.ts(StagePickRace.class);
 	}
 	
-	StagePickRace(Stages stages){
+	StagePickRace(WorldViewGenerator stages){
 	
 		stages.reset();
 		
@@ -37,29 +38,30 @@ class StagePickRace extends GuiSection{
 		}
 		
 		addRelBody(16, DIR.N, new GText(UI.FONT().M, ¤¤desc).setMaxWidth(600));
-		addRelBody(4, DIR.N, new GHeader(¤¤title));
+		//addRelBody(4, DIR.N, new GHeader(¤¤title));
+		
+		
+		GETTER<CharSequence> cc = new GETTER<CharSequence>() {
+
+			@Override
+			public CharSequence get() {
+				return FACTIONS.player().race().info.desc_long;
+			}
+			
+		};
+		
+		addRelBody(16, DIR.S, new GTextScroller(UI.FONT().M, cc, 650, 150));
 		
 		addRelBody(16, DIR.S, new GStat() {
 
 			@Override
 			public void update(GText text) {
-				text.lablify();
-				text.add(FACTIONS.player().race().info.name);
+				text.add(FACTIONS.player().race().info.initialChallenge);
 			}
 			
-		}.r(DIR.N));
+		}.increase().hv(¤¤challenge));
 		
-		addRelBody(4, DIR.S, new GStat() {
-
-			@Override
-			public void update(GText text) {
-				text.add(FACTIONS.player().race().info.desc);
-				text.setMaxWidth(600);
-			}
-			
-		}.r(DIR.N));
-		
-		add(new RENDEROBJ.RenderImp() {
+		addRelBody(16, DIR.S, new RENDEROBJ.RenderImp(650, 180) {
 			
 			private final GText t = new GText(UI.FONT().M, 64);
 			
@@ -68,50 +70,43 @@ class StagePickRace extends GuiSection{
 				Race rr = FACTIONS.player().race();
 				int x = body.x1();
 				int y = body.y1();
-				t.clear();
-				t.lablifySub();
-				t.add(¤¤challenge).add(':');
-				t.adjustWidth();
-				t.render(r, x, y);
-				int x2 = x + t.width()+48;
-				t.clear().add(rr.info.initialChallenge);
-				t.render(r, x2, y);
-				
-				y += t.height()*2;
-				
+				t.setMaxWidth(280);
+				t.setMultipleLines(true);
 				for (String s : rr.info.pros) {
-					t.clear().add('+').s().add(s);
+					t.clear().add('+').s().add(s).adjustWidth();
 					t.normalify2();
-					t.render(r, x, y);
+					t.render(r, x+16, y);
 					y+= t.height();
 				}
-				y+= t.height();
+				y = body.y1();
 				for (String s : rr.info.cons) {
-					t.clear().add('-').s().add(s);
-					t.warnify();
-					t.render(r, x, y);
+					t.clear().add('-').s().add(s).adjustWidth();
+					t.errorify();
+					t.render(r, x+325, y);
 					y+= t.height();
 				}
 				
 			}
-		}, body().x1()+80, body().y2()+80);
+		});
 		
 		
-		body().setHeight(700);
 		
 		int p = 650-body().width();
 		if (p > 0)
 			pad(p/2, 0);
 		
-		addRelBody(16, DIR.S, new GButt.ButtPanel(SPRITES.icons().m.arrow_right) {
+		addRelBody(16, DIR.S, new GButt.ButtPanel(DicMisc.¤¤confirm) {
 			@Override
 			protected void clickA() {
-				
-				stages.titles();
+				stages.hasSeletedRace = true;
+				stages.set();
 			}
 			
 		}.hoverInfoSet(DicMisc.¤¤confirm));
-		stages.dummy.add(this);
+		
+		pad(0, 8);
+		
+		stages.dummy.add(this, ¤¤title);
 		
 	}
 

@@ -1,24 +1,23 @@
 package settlement.main;
 
-import init.C;
 import snake2d.util.datatypes.*;
 import snake2d.util.misc.ACTION;
 import snake2d.util.misc.STRING_RECIEVER;
 import snake2d.util.sets.*;
 import view.main.VIEW;
 import view.sett.IDebugPanelSett;
-import world.map.regions.CapitolPlacablity;
+import world.regions.centre.WCentre;
 
 public class SettlementGrid {
 	
 	/**
 	 * Nr of tiles that makes up the settlement map
 	 */
-	public static int TILES = CapitolPlacablity.TILE_DIM;
+	public static int TILES = WCentre.TILE_DIM;
 	/**
 	 * size of one world tile on the worldmap
 	 */
-	public static int QUAD_SIZE = C.SETTLE_TSIZE / TILES;
+	public static int QUAD_SIZE = SETT.TWIDTH / TILES;
 	public static int QUAD_AREA = QUAD_SIZE * QUAD_SIZE;
 	public static int QUAD_HALF = QUAD_SIZE / 2;
 	public static int QUAD_QUATER = QUAD_HALF / 2;

@@ -1,19 +1,26 @@
 package view.ui.tech;
 
 import game.faction.FACTIONS;
-import init.boostable.BOOSTABLES;
+import init.sprite.UI.UI;
+import init.tech.TECH;
+import init.tech.TECHS;
+import snake2d.SPRITE_RENDERER;
 import snake2d.util.datatypes.DIR;
 import snake2d.util.gui.GuiSection;
+import snake2d.util.sprite.text.Str;
+import snake2d.util.sprite.text.StringInputSprite;
+import util.dic.DicMisc;
 import util.gui.misc.*;
 import util.info.GFORMAT;
-import view.main.VIEW;
 
 class Info extends GuiSection{
 
+	private final StringInputSprite sp = new StringInputSprite(16, UI.FONT().S);
+	private final UITechTree tree;
+	Info(UITechTree tree){
 
-	Info(){
-
-		body().setWidth(800);
+		this.tree = tree;
+		body().setWidth(1200);
 
 		{
 			GGrid g = new GGrid(this, 5);
@@ -77,22 +84,31 @@ class Info extends GuiSection{
 				};
 				
 			}.increase().hv(FACTIONS.player().tech().penalty().info().name));
-			InfoBonuses bonus = new InfoBonuses();
-			g.add(new GButt.ButtPanel(BOOSTABLES.INFO().name) {
-				@Override
-				protected void clickA() {
-					if (VIEW.UI().tech.last().added(bonus))
-						VIEW.UI().tech.last().remove(bonus);
-					else
-						VIEW.UI().tech.last().add(bonus, false);
-				}
-				@Override
-				protected void renAction() {
-					selectedSet(VIEW.UI().tech.last().added(bonus));
-				}
-			});
+			
+			
+			sp.placeHolder(DicMisc.¤¤Filter);
+			
+			GInput in = new GInput(sp);
+			
+			g.add(in);
+			
+			
 			
 		}
+	}
+	
+	@Override
+	public void render(SPRITE_RENDERER r, float ds) {
+		if (sp.text().length() > 0) {
+			for (TECH t : TECHS.ALL()) {
+				if (!Str.containsText(t.info.name, sp.text())) {
+					tree.filter(t);
+				}
+			}
+			
+			
+		}
+		super.render(r, ds);
 	}
 	
 }

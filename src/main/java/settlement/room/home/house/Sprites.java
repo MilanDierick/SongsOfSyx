@@ -6,7 +6,6 @@ import init.C;
 import init.race.home.RaceHomeClass;
 import init.sprite.SPRITES;
 import init.sprite.game.*;
-import settlement.main.RenderData.RenderIterator;
 import settlement.main.SETT;
 import settlement.room.home.house.Sprite.Rot;
 import settlement.room.main.Room;
@@ -18,6 +17,7 @@ import snake2d.util.datatypes.DIR;
 import snake2d.util.datatypes.Rec;
 import snake2d.util.file.Json;
 import snake2d.util.rnd.RND;
+import util.rendering.RenderData.RenderIterator;
 import util.rendering.ShadowBatch;
 
 class Sprites {
@@ -560,14 +560,14 @@ class Sprites {
 				new SpriteConfig(new Sprite[][] { 
 					{ bedN, nSta, stor }, 
 					{ bedS, null, nic1 }, 
-					{ bedN, null, chai }, 
-					{ bedS, null, tabl }, 
-					{ staD, _mat, staU }, }),
+					{ staD, null, chai }, 
+					{ bedN, null, tabl }, 
+					{ bedS, _mat, staU }, }),
 				new SpriteConfig(new Sprite[][] { 
 					{ nic1, nSta, bedN }, 
 					{ null, null, bedS }, 
-					{ chai, null, bedN }, 
-					{ tabl, null, bedS }, 
+					{ chai, null, bedS }, 
+					{ tabl, null, bedN }, 
 					{ staD, _mat, staU }, }),
 				new SpriteConfig(new Sprite[][] { 
 					{ bedN, stor, tabl }, 
@@ -584,14 +584,14 @@ class Sprites {
 				new SpriteConfig(new Sprite[][] { 
 					{ bedN, nSta, nic1 }, 
 					{ bedS, null, nic2 }, 
-					{ bedN, null, chai }, 
-					{ bedS, null, tabl }, 
+					{ bedS, null, chai }, 
+					{ bedN, null, tabl }, 
 					{ staD, _mat, staU }, }),
 				new SpriteConfig(new Sprite[][] { 
 					{ nic1, nSta, bedN }, 
 					{ chai, null, bedS }, 
-					{ nic2, null, bedN }, 
-					{ tabl, null, bedS }, 
+					{ nic2, null, bedS }, 
+					{ tabl, null, bedN }, 
 					{ staD, _mat, staU }, }),
 				new SpriteConfig(new Sprite[][] { 
 					{ bedN, stor, tabl }, 
@@ -681,8 +681,6 @@ class Sprites {
 					{ chai, null, null, null, tabl },
 					{ nic1, staU, _mat, staD, nic1 }, }),
 				
-				
-				
 				new SpriteConfig(new Sprite[][] {
 					{ nSta, bedN, bedN, bedN, nSta },
 					{ nic1, bedS, bedS, bedS, nic2 },
@@ -760,6 +758,7 @@ class Sprites {
 			});
 			
 			
+			
 
 		}
 		
@@ -784,6 +783,9 @@ class Sprites {
 				
 				res[i+o.length] = new SpriteConfig(nn);
 			}
+			
+			if (res.length > 0x0FF)
+				throw new RuntimeException();
 			
 			return res;
 			

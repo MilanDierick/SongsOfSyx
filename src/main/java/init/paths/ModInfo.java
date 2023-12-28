@@ -3,6 +3,7 @@ package init.paths;
 import java.nio.file.Path;
 
 import game.VERSION;
+import snake2d.LOG;
 import snake2d.util.file.Json;
 
 public final class ModInfo {
@@ -26,6 +27,8 @@ public final class ModInfo {
 			absolutePath = ""+g.get().toAbsolutePath();
 			j = new Json(g.get("_Info"));
 		}catch(Exception e){
+			LOG.ln("unable to load mod: " + dir + " reason: " + e.getMessage());
+			//e.printStackTrace();
 			throw new ModInfoException(e);
 		}
 		
@@ -45,7 +48,7 @@ public final class ModInfo {
 	}
 	
 
-	public int bestVersion(String mod) throws ModInfoException {
+	public static int bestVersion(String mod) throws ModInfoException {
 		int best = -1;
 		
 		for (String ss : PATHS.local().MODS.getFolder(mod).folders()) {

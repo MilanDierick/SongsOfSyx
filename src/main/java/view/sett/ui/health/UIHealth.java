@@ -1,9 +1,11 @@
 package view.sett.ui.health;
 
+import game.boosting.BOOSTABLES;
+import game.boosting.Boostable;
 import init.D;
-import init.boostable.*;
 import init.disease.DISEASE;
 import init.disease.DISEASES;
+import init.race.RACES;
 import init.sprite.UI.UI;
 import settlement.main.SETT;
 import settlement.stats.STATS;
@@ -49,7 +51,7 @@ public class UIHealth extends ISidePanel{
 				
 				@Override
 				public void update(GText text) {
-					GFORMAT.iofk(text, SETT.ROOMS().HOSPITAL.service().total()-SETT.ROOMS().HOSPITAL.service().available(), SETT.ROOMS().HOSPITAL.service().total());
+					GFORMAT.iofk(text, SETT.ROOMS().HOSPITAL.service().available(), SETT.ROOMS().HOSPITAL.service().total());
 				}
 				
 			}.hh(SETT.ROOMS().HOSPITAL.info.names, 200));
@@ -152,7 +154,7 @@ public class UIHealth extends ISidePanel{
 		
 	}
 	
-	private static RENDEROBJ stat(HISTORY_INT in, BOOSTABLE bo) {
+	private static RENDEROBJ stat(HISTORY_INT in, Boostable bo) {
 		return new GStat() {
 			
 			@Override
@@ -166,8 +168,8 @@ public class UIHealth extends ISidePanel{
 				b.text(in.info().desc);
 				b.NL(8);
 				if (bo != null)
-					BoostHoverer.hover(b, bo, null, null);
-				//BOOSTABLES.CIVICS().HYGINE.hover(b)
+					bo.hover(b, RACES.clP(null, null), true);
+					
 			};
 			
 		}.hh(in.info().name, 200);

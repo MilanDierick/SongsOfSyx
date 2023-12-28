@@ -7,7 +7,6 @@ import settlement.room.main.*;
 import snake2d.util.gui.GuiSection;
 import snake2d.util.sets.LISTE;
 import util.data.GETTER;
-import util.dic.DicMisc;
 import util.gui.misc.GBox;
 import util.gui.table.GTableSorter.GTFilter;
 import util.gui.table.GTableSorter.GTSort;
@@ -65,15 +64,7 @@ final class ModuleInstance implements ModuleMaker {
 
 		@Override
 		public void hover(GBox box, Room room, int rx, int ry) {
-			if (room instanceof RoomInstance && room.constructor().usesArea()) {
-				box.textLL(DicMisc.¤¤Shape);
-				RoomInstance ins = (RoomInstance) room;
-				if (ins.shape() < 0)
-					box.text(DicMisc.¤¤Round);
-				else
-					box.text(DicMisc.¤¤Square);
-				box.NL();
-			}
+
 			
 		}
 

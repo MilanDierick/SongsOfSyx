@@ -64,10 +64,10 @@ final class Crate {
 				public boolean debug(int px, int py, int tx, int ty) {
 					LOG.ln("here!");
 					if (job(tx, ty) != null) {
-						long r = ins.fetchMask();
+						RBIT r = ins.fetchMask();
 						LOG.ln(jobReserveCanBe());
-						for (Edible e : RESOURCES.EDI().all()) {
-							LOG.ln(e.resource.name + " " +  ((e.resource.bit & r) != 0) + " " + ins.uses(e));
+						for (ResG e : RESOURCES.EDI().all()) {
+							LOG.ln(e.resource.name + " " +  (e.resource.bit.has(r)) + " " + ins.uses(e));
 						}
 						return true;
 					}
@@ -93,8 +93,8 @@ final class Crate {
 		}
 		
 		@Override
-		public long jobResourceBitToFetch() {
-			return RESOURCES.EDI().mask & ins.fetchMask();
+		public RBIT jobResourceBitToFetch() {
+			return ins.fetchMask();
 		}
 		
 		@Override
@@ -106,7 +106,7 @@ final class Crate {
 		public boolean jobReservedIs(RESOURCE r) {
 			if (r == null)
 				return false;
-			Edible e = RESOURCES.EDI().toEdible(r);
+			ResG e = RESOURCES.EDI().get(r);
 			if (e == null)
 				return false;
 			return ins.jobReserved(e) > 0;
@@ -114,7 +114,7 @@ final class Crate {
 		
 		@Override
 		public void jobReserveCancel(RESOURCE r) {
-			Edible e = RESOURCES.EDI().toEdible(r);
+			ResG e = RESOURCES.EDI().get(r);
 			if (e == null)
 				return;
 			if (ins.jobReserved(e) > 0)
@@ -123,12 +123,12 @@ final class Crate {
 		
 		@Override
 		public boolean jobReserveCanBe() {
-			return ins.fetchMask() != 0;
+			return !ins.fetchMask().isClear();
 		}
 		
 		@Override
 		public void jobReserve(RESOURCE r) {
-			Edible e = RESOURCES.EDI().toEdible(r);
+			ResG e = RESOURCES.EDI().get(r);
 			ins.jobTally(e, 1, 0);
 		}
 		
@@ -139,7 +139,7 @@ final class Crate {
 		
 		@Override
 		public RESOURCE jobPerform(Humanoid skill, RESOURCE r, int ram) {
-			Edible e = RESOURCES.EDI().toEdible(r);
+			ResG e = RESOURCES.EDI().get(r);
 			if (e != null && ins.jobReserved(e) > 0) {
 				ins.jobTally(e, -1, ram);
 				service(coo.x(), coo.y());

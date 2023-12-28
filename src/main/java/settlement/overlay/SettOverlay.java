@@ -4,17 +4,17 @@ import init.C;
 import init.D;
 import init.resources.RESOURCE;
 import init.sprite.SPRITES;
+import init.sprite.UI.UI;
 import settlement.entity.ENTITY;
 import settlement.environment.SettEnvMap.SettEnv;
-import settlement.main.RenderData;
-import settlement.main.RenderData.RenderIterator;
+import settlement.job.Job;
 import settlement.main.SETT;
 import settlement.path.finder.SFinderFindable;
 import settlement.room.main.*;
-import settlement.room.service.module.RoomServiceDataAccess.ROOM_SERVICE_ACCESS_HASER;
+import settlement.room.service.module.RoomServiceAccess.ROOM_SERVICE_ACCESS_HASER;
 import settlement.thing.THINGS.Thing;
 import settlement.thing.halfEntity.HalfEntity;
-import settlement.tilemap.TGrowable;
+import settlement.tilemap.terrain.TGrowable;
 import snake2d.Renderer;
 import snake2d.util.color.COLOR;
 import snake2d.util.color.ColorImp;
@@ -23,6 +23,8 @@ import snake2d.util.misc.CLAMP;
 import snake2d.util.sets.*;
 import util.colors.GCOLORS_MAP;
 import util.dic.DicMisc;
+import util.rendering.RenderData;
+import util.rendering.RenderData.RenderIterator;
 
 public final class SettOverlay {
 
@@ -77,7 +79,23 @@ public final class SettOverlay {
 		@Override
 		public void renderBelow(Renderer r, RenderIterator it) {
 			double v = SETT.MINERALS().amountD.get(it.tile());
-			renderUnder(v, r, it, false);
+			if (!SETT.TERRAIN().CAVE.is(it.tile()))
+				renderUnder(v, r, it, false);
+		};
+	};
+	
+	
+	public Addable WATER_SWEET = new Addable(adders, "GROUND_WATER", D.g("GroundW", "Ground Water"), D.g("GroundWD", "Ground water of either sweet (blue) or salt (yellow). Natural water can be added or removed here."), true, false) {
+		
+		@Override
+		public void renderBelow(Renderer r, RenderIterator it) {
+			COLOR c = COLOR.WHITE05;
+			if (SETT.TERRAIN().WATER.groundWater.is(it.tile())) {
+				c = GCOLORS_MAP.bestOverlay;
+			}else if (SETT.TERRAIN().WATER.groundWaterSalt.is(it.tile())) {
+				c = COLOR.YELLOW100;
+			}
+			renderUnder(c, r, it);
 		};
 	};
 	
@@ -108,7 +126,7 @@ public final class SettOverlay {
 			double v = 0;
 			if (SETT.TERRAIN().get(it.tile()) instanceof TGrowable) {
 				TGrowable b= (TGrowable) SETT.TERRAIN().get(it.tile());
-				v = (double)b.size.DM.get(it.tile());
+				v = 0.5 + 0.5*(double)b.size.DM.get(it.tile());
 			}
 			renderUnder(v, r, it, false);
 		};
@@ -173,15 +191,27 @@ public final class SettOverlay {
 		
 	};
 	
-	public final Addable FISH = new Addable(adders, "FISH", D.g("Fish"), D.g("FishD", "Shows where fish is plentiful")) {
+	public final Addable FISH = new Addable(adders, "FISH", D.g("Fish"), D.g("FishD", "Found along the shorelines. Building fisheries on these spot allows for sending out boats, and allows for many more fishermen."), false, true) {
 		
-
 		@Override
 		public boolean render(Renderer r, RenderIterator it) {
-			if (SETT.TERRAIN().WATER.is(it.tile()) && !SETT.ROOMS().map.is(it.tile())) {
+			if (SETT.TERRAIN().WATER.SHALLOW.is(it.tile()) && SETT.TERRAIN().WATER.deepSeaFishSpot.is(it.tile())) {
+				GCOLORS_MAP.bestOverlay.bind();
+				UI.icons().s.fish.renderScaled(r, it.x(), it.y(), C.SCALE);
+			}
+			return false;
+		}
+	};
+	
+	public final Addable STONE = new Addable(adders, "MOUNTAIN", D.g("Mountain"), D.g("MountainD", "Shows the strength of mountains"), false, true) {
+		
+		@Override
+		public boolean render(Renderer r, RenderIterator it) {
+			if (SETT.TERRAIN().MOUNTAIN.is(it.tile()) && !SETT.JOBS().getter.has(it.tile())) {
 				
-				double v = SETT.ENV().fish.get(it.tile());
-				Addable.renderColor(v, r, it, true);
+				renderUnder(0.25 + 0.5*SETT.TERRAIN().MOUNTAIN.strength(it.tile()), r, it, false);
+				//renderPluses(SETT.TERRAIN().MOUNTAIN.strength(it.tile()), r, it);
+				//renderUnder(SETT.TERRAIN().MOUNTAIN.strength(it.tile()), r, it, true);
 			}
 			return false;
 		}
@@ -189,14 +219,16 @@ public final class SettOverlay {
 	
 	public Addable MAINTENANCE = new Addable(adders, "MAINTENANCE", D.g("Maintenance"), D.g("MaintenanceD", "Highlights what tiles need maintenance"), true, true) {
 		
-		private final ColorImp c = new ColorImp();
-		
+
 		@Override
 		public boolean render(Renderer r, RenderIterator it) {
 			if (SETT.MAINTENANCE().isser.is(it.tile())) {
 				COLOR c = GCOLORS_MAP.BAD;
 				if (SETT.MAINTENANCE().finder().getReserved(it.tx(), it.ty()) != null)
 					c = GCOLORS_MAP.SOSO;
+				if (SETT.MAINTENANCE().disabled.is(it.tile())) {
+					COLOR.WHITE50.bind();
+				}
 				c.bind();
 				SPRITES.cons().BIG.outline.render(r, 0, it.x(), it.y());
 				COLOR.unbind();
@@ -212,28 +244,59 @@ public final class SettOverlay {
 		@Override
 		public void renderBelow(Renderer r, RenderIterator it) {
 			Room room = SETT.ROOMS().map.get(it.tile());
+			COLOR c = COLOR.WHITE05;
 			
-			c.set(COLOR.WHITE05);
-			if (room != null) {
-				if (room.degrader(it.tx(), it.ty()) != null)
-					c.interpolate(GCOLORS_MAP.SOSO, GCOLORS_MAP.bestOverlay, 1.0-room.getDegrade(it.tx(), it.ty()));
+			if (SETT.MAINTENANCE().disabled.is(it.tile())) {
+				c = GCOLORS_MAP.map_not_ok;
+				return;
+			}else if (room != null) {
+				if (room.degrader(it.tx(), it.ty()) != null) {
+					if (room.getDegrade(it.tx(), it.ty()) > 0)
+						c = GCOLORS_MAP.SOSO;
+					else
+						c = GCOLORS_MAP.bestOverlay;
+				}
 			}else if (SETT.FLOOR().getter.is(it.tile())) {
-				c.interpolate(GCOLORS_MAP.SOSO, GCOLORS_MAP.bestOverlay, 1.0-SETT.FLOOR().degrade.get(it.tile()));
+				if (SETT.FLOOR().degrade.get(it.tile()) > 0)
+					c = GCOLORS_MAP.SOSO;
+				else
+					c = GCOLORS_MAP.bestOverlay;
 			}
 			Addable.renderUnder(c, r, it);
 		};
 		
 	};
 	
-
-	
-
-	
 	public Addable ROADING = new Addable(adders, "ROADING", D.g("Path-Usage"), D.g("Path-UsageD", "Highlights the tiles your subjects use when moving."), true, false) {
 		
 		@Override
 		public void renderBelow(Renderer r, RenderIterator it) {
-			renderUnder(CLAMP.d(SETT.PATH().huristics.getter.get(it.tile())*16, 0, 1), r, it);
+			if (SETT.ROOMS().map.is(it.tile()))
+				return;
+			if (SETT.JOBS().getter.get(it.tile()) != null)
+				return;
+			
+			double p = SETT.PATH().huristics.getter.get(it.tile())*16;
+			p = CLAMP.d(p, 0, 1);
+			if (SETT.FLOOR().getter.is(it.tile()) || SETT.JOBS().jobGetter.is(it.tile())) {
+				ColorImp.TMP.interpolate(COLOR.WHITE05, GCOLORS_MAP.bestOverlay, p).bind();;
+				renderPluses(p, r, it);
+				return;
+			}
+			boolean b = Job.overwrite;
+			Job.overwrite = false;
+			if (SETT.JOBS().roads.get(0).placer().isPlacable(it.tx(), it.ty(), null, null) != null) {
+				Job.overwrite = b;
+				return;
+			}
+			Job.overwrite = b;
+
+			
+			double d = 0.25 + SETT.PATH().huristics.getter.get(it.tile())*8;
+			d = CLAMP.d(d, 0, 1);
+			renderUnder(d, r, it, false);
+			ColorImp.TMP.interpolate(COLOR.WHITE05, GCOLORS_MAP.bestOverlay, p).bind();;
+			renderPluses(p, r, it);
 		};
 	};
 	
@@ -254,19 +317,6 @@ public final class SettOverlay {
 			}
 			renderUnder(c, r, it);
 		}
-	};
-	
-	public Addable SHAPE = new Addable(adders, "SHAPE", D.g("Shape"), D.g("ShapeD", "Most rooms get either a square or round shape when built. This overlay shows roundness as good, and square as bad."), true, false) {
-		
-		@Override
-		public void renderBelow(Renderer r, RenderIterator it) {
-			double v = 0;
-			RoomInstance ins = SETT.ROOMS().map.instance.get(it.tile());
-			if (ins != null && ins.shape() != 0)
-				v = ins.shape() < 0 ? 0 : 1;
-			renderUnder(v, r, it);
-		};
-
 	};
 	
 	private final ServiceRadius service = new ServiceRadius(adders);
@@ -443,8 +493,10 @@ public final class SettOverlay {
 	}
 	
 	public void add(int rx, int ry) {
-		rooms.set(rooms.getI()).set(rx, ry);
-		rooms.set(rooms.getI()+1);
+		if (rooms.getI() < rooms.size()-1) {
+			rooms.set(rooms.getI()).set(rx, ry);
+			rooms.set(rooms.getI()+1);
+		}
 	}
 	
 	public void add(ENTITY e) {

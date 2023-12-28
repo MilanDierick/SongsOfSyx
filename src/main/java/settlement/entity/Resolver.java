@@ -82,10 +82,10 @@ final class Resolver {
 		ca.norX = norX;
 		ca.norY = norY;
 		ca.momentum = 0;
-		ca.pierceDamage = 0;
+		ca.damageStrength = 0;
 		ca.speedHasChanged = false;
 		ca.leave = null;
-		a.setCollideDamage(ca);
+		
 		
 		
 		cb.other = a;
@@ -94,19 +94,13 @@ final class Resolver {
 		cb.norX = -norX;
 		cb.norY = -norY;
 		cb.momentum = 0;
-		cb.pierceDamage = 0;
+		cb.damageStrength = 0;
 		cb.speedHasChanged = false;
 		cb.leave = null;
-		b.setCollideDamage(cb);
 		
-		{
-			double aa = ca.momentum;
-			double bb = ca.pierceDamage;
-			ca.momentum = cb.momentum;
-			ca.pierceDamage = cb.pierceDamage;
-			cb.momentum = aa;
-			cb.pierceDamage = bb;
-		}
+		
+		a.setCollideDamage(ca, cb);
+		b.setCollideDamage(cb, ca);
 
 		if (mom > 0) {
 			

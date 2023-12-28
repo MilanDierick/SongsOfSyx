@@ -9,10 +9,11 @@ import init.race.Race;
 import settlement.entity.ENTETIES;
 import settlement.entity.humanoid.*;
 import settlement.main.SETT;
-import settlement.stats.CAUSE_ARRIVE;
 import settlement.stats.STATS;
-import settlement.stats.StatsService.StatService;
-import snake2d.util.datatypes.*;
+import settlement.stats.colls.StatsService.StatService;
+import settlement.stats.util.CAUSE_ARRIVE;
+import snake2d.util.datatypes.COORDINATE;
+import snake2d.util.datatypes.DIR;
 import snake2d.util.file.*;
 import snake2d.util.misc.ACTION;
 import snake2d.util.misc.CLAMP;
@@ -23,7 +24,7 @@ import view.sett.IDebugPanelSett;
 final class PeopleSpawner implements SAVABLE{
 
 	private static ArrayListShortResize queue = new ArrayListShortResize(128, ENTETIES.MAX);
-	private final Coo spot = new Coo(-1,-1);
+	private int rspot = RND.rInt();
 	private int currentAmount;
 	private int currentType;
 	private int currentRace;
@@ -43,7 +44,7 @@ final class PeopleSpawner implements SAVABLE{
 	@Override
 	public void save(FilePutter file) {
 		queue.save(file);
-		spot.save(file);
+		file.i(rspot);
 		file.i(currentAmount);
 		file.i(currentType);
 		file.i(currentRace);
@@ -56,7 +57,7 @@ final class PeopleSpawner implements SAVABLE{
 	@Override
 	public void load(FileGetter file) throws IOException {
 		queue.load(file);
-		spot.load(file);
+		rspot = file.i();
 		currentAmount = file.i();
 		currentType = file.i();
 		currentRace = file.i();
@@ -102,11 +103,8 @@ final class PeopleSpawner implements SAVABLE{
 				queue.remove(queue.size()-1);
 				queue.remove(queue.size()-1);
 				queue.remove(queue.size()-1);
-				COORDINATE c = SETT.PATH().entryPoints.rnd();
-				if (c == null)
-					spot.set(-1, -1);
-				else
-					spot.set(c);
+				rspot = RND.rInt();
+				
 			}
 		}
 		
@@ -118,14 +116,10 @@ final class PeopleSpawner implements SAVABLE{
 		while (time < 0) {
 			
 			if (currentAmount > 0) {
-				if (!SETT.PATH().entryPoints.validate(spot)) {
-					COORDINATE c = SETT.PATH().entryPoints.rnd();
-					if (c == null)
-						return;
-					spot.set(c);
-				}
-				
-				spawn();
+				COORDINATE c = SETT.ENTRY().points.randomReachable(rspot);
+				if (c == null)
+					return;
+				spawn(c);
 			}
 			time += 1;
 			
@@ -133,7 +127,7 @@ final class PeopleSpawner implements SAVABLE{
 			
 	}
 	
-	private boolean spawn() {
+	private boolean spawn(COORDINATE spot) {
 		
 		Race r = RACES.all().get(currentRace);
 		HTYPE t = HTYPE.ALL().get(currentType);
@@ -145,7 +139,7 @@ final class PeopleSpawner implements SAVABLE{
 		int tx = spot.x() + d.x()*RND.rInt(6);
 		int ty = spot.y() + d.y()*RND.rInt(6);
 		for (int dd = 0; dd <= 6; dd++) {
-			if (SETT.PATH().entryPoints.validate(tx, ty)) {
+			if (SETT.PATH().connectivity.is(tx, ty)) {
 				
 				
 				Humanoid h = SETT.HUMANOIDS().create(r, tx, ty, t, CAUSE_ARRIVE.IMMIGRATED);
@@ -170,6 +164,19 @@ final class PeopleSpawner implements SAVABLE{
 			return;
 		}
 		STATS.NEEDS().initNeeds(h);
+//		for (STAT s : STATS.all()) {
+//			if (s.indu().max(h.indu()) > 0){
+//				double d = s.data(h.indu().clas()).getD(h.race())*s.indu().max(h.indu());
+//				int ii = (int)d;
+//				d -= ii;
+//				if (RND.rFloat() < d)
+//					ii++;
+//				ii = CLAMP.i(ii, 0, s.indu().max(h.indu()));
+//				s.indu().set(h.indu(), ii);
+//			}
+//			
+//			
+//		}
 		HCLASS c = h.indu().clas();
 		Race r = h.race();
 		for (StatService  s : STATS.SERVICE().allE()) {

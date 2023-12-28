@@ -12,7 +12,7 @@ import settlement.army.order.DivTDataTask;
 import settlement.army.order.DivTDataTask.DIVTASK;
 import settlement.room.military.artillery.ArtilleryInstance;
 import settlement.stats.STATS;
-import settlement.stats.StatsEquippables.StatEquippableRange;
+import settlement.stats.equip.EquipRange;
 import snake2d.*;
 import snake2d.util.color.COLOR;
 import snake2d.util.color.OPACITY;
@@ -21,12 +21,12 @@ import snake2d.util.datatypes.DIR;
 import snake2d.util.gui.GUI_BOX;
 import snake2d.util.gui.GuiSection;
 import snake2d.util.gui.Hoverable.HOVERABLE;
-import snake2d.util.gui.clickable.CLICKABLE;
+import snake2d.util.misc.ACTION;
 import snake2d.util.sprite.text.Str;
 import snake2d.util.sprite.text.Text;
 import util.dic.DicArmy;
 import util.gui.misc.*;
-import util.gui.panel.GPanelS;
+import util.gui.panel.GPanel;
 import util.info.GFORMAT;
 import view.interrupter.InterManager;
 import view.interrupter.Interrupter;
@@ -46,9 +46,9 @@ public final class UISelection extends Interrupter{
 
 	private int iMopping;
 	private int iRangedHasAny;
-	private int[] iRangedHas = new int[STATS.EQUIP().ammo().size()];
-	private int[] iAmmoHas = new int[STATS.EQUIP().ammo().size()];
-	private int[] iRangedSelected = new int[STATS.EQUIP().ammo().size()];
+	private int[] iRangedHas = new int[STATS.EQUIP().RANGED().size()];
+	private int[] iAmmoHas = new int[STATS.EQUIP().RANGED().size()];
+	private int[] iRangedSelected = new int[STATS.EQUIP().RANGED().size()];
 	private int iInGuard;
 	private int ifiresAtWill;
 	private final DivTDataTask task = new DivTDataTask();
@@ -97,24 +97,24 @@ public final class UISelection extends Interrupter{
 		
 		section.addRelBody(C.SG*5, DIR.S, makeCommands(muster));
 		
-		GPanelS f = new GPanelS();
+		GPanel f = new GPanel();
 		f.inner().set(section);
 		
 		f.body().centerX(C.DIM());
 		f.body().moveY1(C.SG*80);
 		section.body().centerIn(f.inner());
-		f.setButtBg();
+		f.setButt();
 		section.add(f);
 		section.moveLastToBack();
 		
-		CLICKABLE c = new GButt.Panel(SPRITES.icons().m.exit) {
+		ACTION a = new ACTION() {
+			
 			@Override
-			protected void clickA() {
+			public void exe() {
 				selection.clear();
-			};
+			}
 		};
-		f.moveExit(c);
-		section.add(c);
+		f.clickActionSet(a);
 		
 		pin();
 		show(m);
@@ -187,7 +187,7 @@ public final class UISelection extends Interrupter{
 				iMopping++;
 			if (d.settings.guard)
 				iInGuard ++;
-			for (StatEquippableRange a : STATS.EQUIP().ammo()) {
+			for (EquipRange a : STATS.EQUIP().RANGED()) {
 				if (a.stat().div().get(d) > 0) {
 					iRangedHas[a.tIndex] ++;
 					iRangedHasAny ++;
@@ -399,7 +399,7 @@ public final class UISelection extends Interrupter{
 			}
 		}.hoverInfoSet(¤¤dFireAtWill));
 		
-		for (StatEquippableRange a : STATS.EQUIP().ammo()) {
+		for (EquipRange a : STATS.EQUIP().RANGED()) {
 			s.addRightC(0, new GButt.ButtPanel(a.resource.icon()) {
 				@Override
 				protected void clickA() {
@@ -430,7 +430,7 @@ public final class UISelection extends Interrupter{
 				@Override
 				public void hoverInfoGet(GUI_BOX text) {
 					text.title(a.resource.name);
-					if (iAmmoHas[a.tIndex] == 0) {
+					if ( iAmmoHas[a.tIndex] == 0) {
 						Str.TMP.clear().add(DicArmy.¤¤ReloadingXX);
 						Str.TMP.insert(0, a.ammoReplenishHours*TIME.secondsPerHour, 4);
 						text.text(Str.TMP);

@@ -1,13 +1,13 @@
 package settlement.thing.projectiles;
 
 import init.C;
-import settlement.main.RenderData;
 import settlement.main.SETT;
 import settlement.thing.projectiles.PData.Data;
 import snake2d.Renderer;
 import snake2d.util.color.COLOR;
 import snake2d.util.datatypes.Rec;
 import snake2d.util.sets.ArrayListInt;
+import util.rendering.RenderData;
 import util.rendering.ShadowBatch;
 
 final class PRenderer {
@@ -43,7 +43,9 @@ final class PRenderer {
 			double x = d.x()-offX;
 			double y = d.y()-offY;
 			int h = (int) d.z();
-			p.data.type(i).render(r, s, x, y, h, i, d.dx(), d.dy(), d.dz(), ds, zoomout);
+			Projectile pr = p.data.type(i);
+			double ref = p.data.ref(i);
+			pr.sprite().renderProj(pr, ref, r, s, x, y, h, i, d.dx(), d.dy(), d.dz(), ds, zoomout);
 			
 		}
 		COLOR.unbind();

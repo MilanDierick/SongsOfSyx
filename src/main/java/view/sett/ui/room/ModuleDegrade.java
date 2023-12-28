@@ -1,9 +1,10 @@
 package view.sett.ui.room;
 
+import game.boosting.BOOSTABLES;
 import game.faction.FACTIONS;
 import init.C;
 import init.D;
-import init.boostable.BOOSTABLES;
+import init.race.RACES;
 import init.sprite.SPRITES;
 import settlement.main.SETT;
 import settlement.room.main.*;
@@ -59,7 +60,7 @@ final class ModuleDegrade implements ModuleMaker {
 				box.text(¤¤DEGRADE);
 				box.add(GFORMAT.percInv(box.text(), room.getDegrade(rx, ry)));
 				box.NL(2);
-				if (FACTIONS.player().locks.unlockText(room.blueprint()) != null)
+				if (!room.constructor().blue().reqs.passes(FACTIONS.player()))
 					box.error(¤¤Lock);
 				box.NL(2);
 			}
@@ -200,11 +201,11 @@ final class ModuleDegrade implements ModuleMaker {
 						b.text(SETT.ROOMS().isolation.info.desc);
 						b.NL(4);
 					}
-					b.textL(BOOSTABLES.INFO().name);
+					b.textL(DicMisc.¤¤Boosts);
 					b.tab(6);
 					GText t = b.text();
 					t.add('/');
-					b.add(GFORMAT.f(t, CLAMP.d(1.0/BOOSTABLES.CIVICS().MAINTENANCE.get(null, null), 0, 1000)));
+					b.add(GFORMAT.f(t, CLAMP.d(1.0/BOOSTABLES.CIVICS().MAINTENANCE.get(RACES.clP(null, null)), 0, 1000)));
 					t.normalify2();
 					b.NL();
 				}

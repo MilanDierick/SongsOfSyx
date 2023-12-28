@@ -20,9 +20,11 @@ final class Intro{
 	private HOVERABLE head = GUI.getBigText(D.g("greeting", "HAIL MIGHTY DESPOT!"));
 	
 	private SPRITE[] greeting = new SPRITE[] {
-			GUI.getSmallText(D.g("1", "This is a EA and not a complete game, nor a complete demo.")),
-			GUI.getSmallText(D.g("2", "That means a lot of visual placeholders and unfinished, missing or broken features")),
-			GUI.getSmallText(D.g("3", "Feedback is much welcome!")),
+			GUI.getSmallText(D.g("1", "I'm Jake. Thank you for playing my game.")),
+			GUI.getSmallText(D.g("2", "This is still an active WIP. Features may get enhanced, removed, and improved. Saves might get broken, and I might mess up.")),
+			GUI.getSmallText(D.g("3", "My apologies for the inconvenience!")),
+			GUI.getSmallText(D.g("4", "If using mods, you play at your PC's own risk.")),
+			GUI.getSmallText(D.g("5", "Enjoy!")),
 	};
 	private final ScMain main;
 	private final Background bg;
@@ -47,7 +49,7 @@ final class Intro{
 			}
 			break;
 		case 1 :
-			if (timer > 15) {
+			if (timer > 11) {
 				timer = 0;
 				stage++;
 			}

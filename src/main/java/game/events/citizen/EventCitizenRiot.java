@@ -11,16 +11,16 @@ import init.race.Race;
 import settlement.entity.ENTITY;
 import settlement.entity.humanoid.*;
 import settlement.main.SETT;
-import settlement.stats.CAUSE_LEAVE;
 import settlement.stats.STATS;
+import settlement.stats.util.CAUSE_LEAVE;
 import snake2d.PathTile;
 import snake2d.util.datatypes.DIR;
 import snake2d.util.file.*;
 import snake2d.util.misc.ACTION;
 import snake2d.util.rnd.RND;
 import snake2d.util.sprite.text.Str;
-import view.main.MessageText;
 import view.sett.IDebugPanelSett;
+import view.ui.message.MessageText;
 
 final class EventCitizenRiot implements SAVABLE{
 
@@ -86,6 +86,7 @@ final class EventCitizenRiot implements SAVABLE{
 			return;
 		timer -= 10;
 		
+
 		
 		if (STATS.POP().pop(HTYPE.RIOTER) > 0) {
 			if ((double)STATS.POP().pop(HTYPE.RIOTER)/currentRioteers < 0.3) {
@@ -186,7 +187,7 @@ final class EventCitizenRiot implements SAVABLE{
 			
 			new MessageText(¤¤riot, ¤¤riotD).paragraph(t).send();
 			
-			GAME.stats().RIOTS.inc(1);
+			GAME.count().RIOTS.inc(1);
 			
 		}
 	}

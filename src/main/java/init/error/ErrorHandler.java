@@ -82,8 +82,8 @@ public class ErrorHandler implements ERROR_HANDLER {
 			dumpFile = "none";
 		
 		message = message.replaceAll("\"", "Quote");
-		if (message.length() > 16000)
-			message = message.substring(0, 16000);
+		if (message.length() > 30000)
+			message = message.substring(0, 30000);
 		
 		String eee = "unhandled " + System.currentTimeMillis();
 		if (ee != null)
@@ -102,7 +102,7 @@ public class ErrorHandler implements ERROR_HANDLER {
 			eee
 		};
 		
-		Proccesser.exec(ErrorMessage.class, new String[] {}, args);
+		Proccesser.exec(ErrorMessage.class, new String[] {}, args, new String[] {});
 		
 	}
 

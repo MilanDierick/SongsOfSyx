@@ -3,7 +3,6 @@ package view.ui.profile;
 import game.GAME;
 import game.faction.FACTIONS;
 import game.faction.player.PTitles.PTitle;
-import game.statistics.G_REQ;
 import init.D;
 import init.sprite.UI.UI;
 import snake2d.SPRITE_RENDERER;
@@ -15,9 +14,11 @@ import snake2d.util.gui.Hoverable.HOVERABLE;
 import snake2d.util.gui.renderable.RENDEROBJ;
 import snake2d.util.sets.ArrayList;
 import snake2d.util.sprite.text.Str;
+import snake2d.util.sprite.text.StringInputSprite;
 import util.colors.GCOLOR;
+import util.dic.DicMisc;
 import util.gui.misc.*;
-import util.gui.misc.GMeter.GGaugeColor;
+import util.gui.misc.GMeter.GMeterCol;
 import util.gui.table.GScrollRows;
 import util.info.GFORMAT;
 
@@ -34,20 +35,9 @@ final class Titles extends GuiSection{
 		D.ts(Titles.class);
 	}
 	
-	Titles(){
+	Titles(int HEIGHT){
 		
-		ArrayList<RENDEROBJ> rows = new ArrayList<>(FACTIONS.player().titles.all().size());
-		
-		
-		for (PTitle t : FACTIONS.player().titles.all()) {
-			rows.add(new Butt(t));
-		}
-		
-		add(new GScrollRows(rows, 500).view());
-		
-		
-		
-		addRelBody(8, DIR.N, new GStat() {
+		addRelBody(8, DIR.S, new GStat() {
 			
 			@Override
 			public void update(GText text) {
@@ -60,62 +50,108 @@ final class Titles extends GuiSection{
 			};
 		}.hh(¤¤spent));
 		
-		addRightC(64, new GStat() {
+		if (!GAME.achieving()) {
+			addRelBody(4, DIR.S, new GStat() {
+				
+				@Override
+				public void update(GText text) {
+					if (!GAME.achieving())
+						text.errorify().add(¤¤NotAchiving);
+				}
+				
+			});
+		}
+		
+		StringInputSprite filter = new StringInputSprite(18, UI.FONT().M).placeHolder(DicMisc.¤¤Search);
+		
+		addRelBody(8, DIR.S, new GInput(filter));
+		
+		
+		ArrayList<RENDEROBJ> rows = new ArrayList<>(FACTIONS.player().titles.all().size());
+		
+		
+		for (PTitle t : FACTIONS.player().titles.all()) {
+			rows.add(new Butt(t));
+		}
+		
+		int hi = HEIGHT-body().height()-16;
+		hi = rows.get(0).body().height()*(hi/rows.get(0).body().height());
+		
+		addRelBody(8, DIR.S, new GScrollRows(rows, hi) {
 			
 			@Override
-			public void update(GText text) {
-				if (!GAME.achieving())
-					text.errorify().add(¤¤NotAchiving);
-			}
+			protected boolean passesFilter(int i, RENDEROBJ o) {
+				if (filter.text().length() > 0)
+					return Str.containsText(((Butt)o).title.name,  filter.text());
+				return true;
+			};
 			
-		});
+		}.view());
+		
+		
+		
+		
+		
+
 		
 	}
 	
 	private static final class Butt extends HOVERABLE.HoverableAbs {
 
 		private final PTitle title;
+		private final GuiSection sec = new GuiSection();
 		
+		
+		private GText t = new GText(UI.FONT().H2, 24);
 		Butt(PTitle title){
-			body.setDim(700, 48);
+			body.setDim(800, title.icon.height()*2 + 16);
 			this.title = title;
+			int wi = 800-16-title.icon.width()*2-8;
+			t.setMaxWidth(wi);
+			t.set(title.name);
+			
+			sec.add(t, 0, 0);
+			sec.addDown(4, new RENDEROBJ.RenderImp(wi, 12) {
+				
+				@Override
+				public void render(SPRITE_RENDERER r, float ds) {
+					GMeterCol cc = GMeter.C_ORANGE;
+					if (title.selected())
+						cc = GMeter.C_BLUE;
+					else if (title.unlocked())
+						cc = GMeter.C_GREEN;
+					double d = 0;
+					if (title.unlocked()) {
+						d = 1;
+					}else {
+						d = title.lockable.progress(FACTIONS.player());
+					}
+					GMeter.render(r, cc, d,  body());
+				}
+			});
+			
+			sec.addRelBody(8, DIR.W, new RENDEROBJ.RenderImp(title.icon.width()*2, title.icon.height()*2) {
+				
+				@Override
+				public void render(SPRITE_RENDERER r, float ds) {
+					if (!title.unlocked())
+						GCOLOR.T().INACTIVE.bind();
+					title.icon.render(r, body);
+					COLOR.unbind();
+					
+				}
+			});
+			
 		}
 		
 		@Override
 		protected void render(SPRITE_RENDERER r, float ds, boolean isHovered) {
-			GCOLOR.UI().border().render(r, body.x1(), body().x2(), body().y1(), body().y2()-2);
-			GCOLOR.UI().bg(title.unlocked(), title.isNew(), title.selected()).render(r, body.x1()+1, body().x2()-1, body().y1()+1, body().y2()-3);
-			Str.TMP.clear().add(title.name);
-			if (title.selected())
-				GCOLOR.T().H2.bind();
-			else if (title.unlocked())
-				GCOLOR.T().H1.bind();
-			else if (title.isNew())
-				GCOLOR.T().HOVERED.bind();
-			else
-				GCOLOR.T().INACTIVE.bind();
+			GButt.ButtPanel.renderBG(r, title.unlocked(), title.isNew(), title.selected(), body);
+			GButt.ButtPanel.renderFrame(r, body);
 			
-			UI.FONT().H2.render(r, Str.TMP, body().x1()+8, body().y1()+2);
-			COLOR.unbind();
+			sec.body().centerIn(body);
+			sec.render(r, ds);
 			
-			double d = 0;
-			if (title.unlocked()) {
-				d = 1;
-			}else {
-				double am = 0;
-				for (G_REQ q : title.reqs) {
-					am += q.progress();
-				}
-				d = am/title.reqs.size();
-			}
-			
-			GGaugeColor cc = GMeter.C_ORANGE;
-			if (title.selected())
-				cc = GMeter.C_BLUE;
-			else if (title.unlocked())
-				cc = GMeter.C_GREEN;
-			
-			GMeter.render(r, cc, d, body.x1(), body().x2(), body().y2()-10, body().y2()-2);
 			
 			
 		}
@@ -135,17 +171,16 @@ final class Titles extends GuiSection{
 			}else {
 				b.text(¤¤Locked);
 			}
+			b.NL(6);
+			title.lockable.hover(text, FACTIONS.player());
 			
+			b.sep();
+			
+			title.lockers.hover(text);
 			b.NL(8);
 			
-			G_REQ.hover(title.reqs, b);
-			
-			
-
-			b.NL(16);
-			
-			title.unlock.hover(b);
-			
+			title.boosters.hover(text, FACTIONS.player());
+						
 			
 		}
 		

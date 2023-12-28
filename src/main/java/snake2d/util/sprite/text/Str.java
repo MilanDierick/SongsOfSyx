@@ -128,32 +128,53 @@ public class Str implements CharSequence{
 	
 	public Str add(double d, int decimals) {
 		
+		return add(d, decimals, true);
+	}
+	
+	public Str add(double d, int decimals, boolean alwaysDecimals) {
+		
 		if (!Double.isFinite(d)) {
 			return add('N').add('a').add('N');
 		}
 
 		if (d < 0) {
 			add('-');
-			d= -d;
+			d = -d;
 		}
-		
+	
 		int mm = (int) Math.pow(10, decimals);
 		
-		int full = (int) (Math.round(d*(mm*10)))/10;
+		d = Math.round(d*mm);
+		d/= mm;
 		
-		int f = full/mm;
+		long full = (long) (Math.round(d*(mm*10)))/10;
+		
+		if (full < 0)
+			System.out.println(d);
+		
+		long f = full/mm;
 		
 		add(f);
+		
+		int lastDig = length();
+		
 		add('.');
 		full -= f*mm;
+		
 		
 		while(decimals > 0) {
 			decimals--;
 			mm = (int) Math.pow(10, decimals);
 			f = full/mm;
+			
 			add(f);
+			lastDig = length();
 			full -= f*mm;
 		}
+		last = lastDig;
+		if (alwaysDecimals)
+			return this;
+		
 		
 		return this;
 	}
@@ -341,6 +362,23 @@ public class Str implements CharSequence{
 		return false;
 	}
 	
+	private static boolean matchesText(CharSequence s, CharSequence n, int i) {
+		if (i+n.length() > s.length())
+			return false;
+		if (i >= s.length())
+			return false;
+		char c = Character.toLowerCase(s.charAt(i));
+		if (Character.toLowerCase(n.charAt(0)) == c) {
+			for (int k = 0; k < n.length(); k++) {
+				int ki = k+i;
+				if (Character.toLowerCase(n.charAt(k)) != Character.toLowerCase(s.charAt(ki)))
+					return false;
+			}
+			return true;
+		}
+		return false;
+	}
+	
 	public Str insert(int index, char v) {
 		TMP3.clear().add(v);
 		return insert(index, TMP3);
@@ -463,5 +501,21 @@ public class Str implements CharSequence{
 		}
 		return false;
 	}
+
+	public boolean containsText(Str text) {
+		for (int i = 0; i < length()-text.length()+1; i++)
+			if (matchesText(this, text, i))
+				return true;
+		return false;
+	}
+	
+	public static boolean containsText(CharSequence a, CharSequence text) {
+		for (int i = 0; i < a.length()-text.length()+1; i++)
+			if (matchesText(a, text, i))
+				return true;
+		return false;
+	}
+	
+	
 
 }

@@ -83,13 +83,14 @@ public class TempleInstance extends RoomInstance implements ROOM_SERVICER{
 	
 	@Override
 	protected void updateAction(double updateInterval, boolean day, int daycount) {
+		resHas = true;
 		if (day) {
 			if ((byte)(TIME.years().bitsSinceStart()) != year) {
 				consumed = 0;
 				year = (byte)(TIME.years().bitsSinceStart());
 			}
 			service.updateDay();
-			resHas = true;
+			
 			
 			sacrifices = (short) Math.ceil(sacrifices/2.0);
 			sacrificesTotal = (short) Math.ceil(sacrificesTotal/2.0);

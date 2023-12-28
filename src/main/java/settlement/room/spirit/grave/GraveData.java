@@ -13,8 +13,8 @@ import settlement.main.SETT;
 import settlement.misc.util.FSERVICE;
 import settlement.room.main.*;
 import settlement.room.main.util.RoomInitData;
-import settlement.stats.STANDING.StandingDef;
 import settlement.stats.STATS;
+import settlement.stats.standing.StatStanding.StandingDef;
 import settlement.thing.ThingsCorpses.Corpse;
 import snake2d.util.datatypes.COORDINATE;
 import snake2d.util.file.*;
@@ -132,10 +132,8 @@ public abstract class GraveData {
 		
 		GRAVE_JOB j = (GRAVE_JOB) ((GraveInstance) ins).jobs.getReservableJob(null);
 		if (j == null) {
-			((GraveInstance) ins).reportWorkSuccess(false);
 			return null;
 		}else {
-			((GraveInstance) ins).reportWorkSuccess(true);
 			return j;
 		}
 	}

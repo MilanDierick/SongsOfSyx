@@ -3,7 +3,6 @@ package view.sett.ui.noble;
 import game.GAME;
 import game.nobility.Nobility;
 import init.C;
-import init.boostable.BBoost;
 import init.sprite.SPRITES;
 import init.sprite.UI.UI;
 import settlement.entity.humanoid.HCLASS;
@@ -79,9 +78,8 @@ public final class UINobles extends ISidePanel{
 				
 				b.NL(8);
 				
-				for (BBoost bo : res.BOOSTER.boosts()) {
-					bo.hover(text);
-				}
+				res.boosters.hover(text, 0.5+res.skill()*0.5, -1);
+				
 				
 				b.NL(8);
 //				

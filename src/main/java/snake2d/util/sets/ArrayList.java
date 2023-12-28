@@ -17,6 +17,8 @@ import snake2d.util.file.*;
  */
 public class ArrayList<E> implements LISTE<E>, SAVABLE, Serializable{
 
+
+	
 	private static final long serialVersionUID = 1L;
 	private final Object[] es;
 	private final Iter<E> iterator = new Iter<E>();
@@ -61,6 +63,14 @@ public class ArrayList<E> implements LISTE<E>, SAVABLE, Serializable{
 		this.es = es;
 		this.size = es.length;
 		last = size;
+	}
+	
+	public int indexOf(E t) {
+		for (int i = 0; i < last; i++){
+			if (es[i] == t)
+				return i;
+		}
+		return -1;
 	}
 	
 	@SuppressWarnings("unchecked")
@@ -290,7 +300,7 @@ public class ArrayList<E> implements LISTE<E>, SAVABLE, Serializable{
 			}
 		};
 		
-		Arrays.sort(es, 0, last-1, co);
+		Arrays.sort(es, 0, last, co);
 	}
 	
 	public void shiftLeft() {

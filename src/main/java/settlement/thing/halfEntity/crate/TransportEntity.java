@@ -9,9 +9,9 @@ import settlement.entity.ENTITY;
 import settlement.entity.humanoid.Humanoid;
 import settlement.entity.humanoid.ai.work.AIModule_Work;
 import settlement.main.SETT;
-import settlement.thing.halfEntity.Factory;
 import settlement.thing.halfEntity.HalfEntity;
 import snake2d.Renderer;
+import snake2d.SPRITE_RENDERER;
 import snake2d.util.datatypes.DIR;
 import snake2d.util.datatypes.VectorImp;
 import snake2d.util.file.FileGetter;
@@ -151,12 +151,17 @@ public final class TransportEntity extends HalfEntity {
 		SETT.ANIMALS().renderCaravan(r, s, mov/C.TILE_SIZE, cx, cy, null, 0, false, dir.id(), ran);
 		cx = (int) (x1-dir.xN()*C.TILE_SIZE) + bumpOff[bi];
 		cy = (int) (y1-dir.yN()*C.TILE_SIZE) + bumpOff[bi+1];
-		SETT.ROOMS().TRANSPORT.renderCart(r, s, dir.id(), cx, cy,ran, res(), am, mov/C.TILE_SIZE);
+		renderCart(r, s, dir.id(), cx, cy,ran, res(), am, mov/C.TILE_SIZE);
 		
 		
 		
 	}
 
+	public void renderCart(SPRITE_RENDERER r, ShadowBatch s, int rot, int cx, int cy, int ran, RESOURCE res, int resamount, double mov) {
+		constructor().sprite.renderBelow(r, s, rot, cx, cy, mov, ran, 0, res, resamount);
+		constructor().sprite.render(r, s, rot, cx, cy, 0);
+	}
+	
 
 	@Override
 	protected void removeAction() {
@@ -164,7 +169,7 @@ public final class TransportEntity extends HalfEntity {
 	}
 	
 	@Override
-	protected Factory<TransportEntity> constructor() {
+	protected TransportFactory constructor() {
 		return SETT.HALFENTS().transports;
 	}
 

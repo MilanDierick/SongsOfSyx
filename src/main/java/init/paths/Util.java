@@ -40,10 +40,6 @@ class Util {
 
 		if (!Files.exists(dir)) {
 			
-			if (!Files.isWritable(dir)) {
-				throw new Errors.DataError("The game could not write to its file directory. Please check permissions", dir);
-			}
-			
 			try {
 				Files.createDirectories(dir);
 			}catch(Exception e) {
@@ -74,7 +70,25 @@ class Util {
 	}
 
 	static boolean check(Path path) {
-		return Files.exists(path);
+		if (path == null)
+			return false;
+		if (!Files.exists(path))
+			return false;
+		
+		Path pa = path.getParent();
+
+		String cmp = ""+path.getFileName();
+		if (cmp.endsWith(File.pathSeparator))
+			cmp = cmp.substring(0, cmp.length()-File.pathSeparator.length());
+		for (Path p : listFiles(pa)) {
+
+			if ((""+p.getFileName()).startsWith(cmp)) {
+				return true;
+			}
+				
+		}
+		return false;
+
 		// if (f.isDirectory()) {
 		// return f.exists() && path.substring(0, path.length() -
 		// 1).equals(f.getAbsolutePath());

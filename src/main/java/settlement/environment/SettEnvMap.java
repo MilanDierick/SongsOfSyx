@@ -6,20 +6,20 @@ import java.io.IOException;
 import java.util.Arrays;
 
 import game.GAME;
+import game.boosting.BoostSpecs;
 import init.RES;
-import init.boostable.BBoost;
-import init.boostable.BOOSTABLES;
 import init.paths.PATH;
 import init.paths.PATHS;
+import init.sprite.UI.UI;
 import settlement.environment.ENVIRONMENT.EnvResource;
 import settlement.main.CapitolArea;
 import settlement.main.SETT;
 import settlement.path.AVAILABILITY;
 import settlement.path.AvailabilityListener;
 import settlement.room.main.Room;
-import settlement.stats.STANDING.StandingDef;
-import settlement.stats.STAT;
 import settlement.stats.STATS;
+import settlement.stats.standing.StatStanding.StandingDef;
+import settlement.stats.stat.STAT;
 import snake2d.Errors;
 import snake2d.PathUtilOnline.Flooder;
 import snake2d.util.datatypes.*;
@@ -38,6 +38,8 @@ public final class SettEnvMap extends EnvResource {
 	public final SettEnv WATER_SWEET;
 	public final SettEnv WATER_SALT;
 
+	public final SettEnvRoundness ROUNDNESS;
+	
 	public final RCollection<SettEnv> rmap;
 	private final ArrayList<SettEnv> all;
 
@@ -84,6 +86,7 @@ public final class SettEnvMap extends EnvResource {
 				return SETT.LIGHTS().los().get(toX, toY).blocksEnv(toX, toY) ? RADIUS : 1;
 			}
 		};
+		kmap.put(LIGHT.key, LIGHT);
 		SPACE = new SettEnv(all, "_SPACE", jp, tp, 4, EUpdater.flooder) {
 
 			@Override
@@ -111,7 +114,10 @@ public final class SettEnvMap extends EnvResource {
 				return 0.5;
 			}
 		};
-		kmap.put(LIGHT.key, LIGHT);
+		kmap.put(SPACE.key, SPACE);
+		
+		ROUNDNESS = new SettEnvRoundness(all, jp, tp, EUpdater.flooder);
+		kmap.put(ROUNDNESS.key, ROUNDNESS);
 		
 //		WATER_SWEET = new SettEnv(all, "_WATER_SWEET", jp, tp, 4, EUpdater.water2) {
 //
@@ -148,8 +154,8 @@ public final class SettEnvMap extends EnvResource {
 
 			@Override
 			double getBaseValue(int tx, int ty) {
-				if(SETT.TERRAIN().WATER.isWater(tx, ty))
-					return !SETT.TERRAIN().WATER.isSalty.is(tx, ty) ? SETT.TERRAIN().WATER.radius.get(tx, ty) : 0;
+				if (SETT.TERRAIN().WATER.groundWater.is(tx, ty))
+					return 1.0;
 				return super.getBaseValue(tx, ty);
 			}
 			
@@ -172,8 +178,8 @@ public final class SettEnvMap extends EnvResource {
 
 			@Override
 			double getBaseValue(int tx, int ty) {
-				if (SETT.TERRAIN().WATER.isWater(tx, ty))
-					return SETT.TERRAIN().WATER.isSalty.is(tx, ty) ? SETT.TERRAIN().WATER.radius.get(tx, ty) : 0;
+				if (SETT.TERRAIN().WATER.groundWaterSalt.is(tx, ty))
+					return 1.0;
 				return super.getBaseValue(tx, ty);
 			}
 
@@ -182,7 +188,7 @@ public final class SettEnvMap extends EnvResource {
 				return 1.0;
 			}
 		};
-		kmap.put(WATER_SWEET.key, WATER_SWEET);
+		kmap.put(WATER_SALT.key, WATER_SALT);
 
 		if (keys.length > 32 - all.size())
 			throw new Errors.DataError("Too many environments declared, max is " + (32 - all.size()), jp.get());
@@ -223,10 +229,7 @@ public final class SettEnvMap extends EnvResource {
 
 	@Override
 	protected void init() {
-		
-		long n = System.currentTimeMillis();
-		
-		//System.out.println("here");
+
 		
 		for (SettEnv s : all) {
 			s.map.clear();
@@ -248,7 +251,7 @@ public final class SettEnvMap extends EnvResource {
 			COORDINATE c = chunks.next();
 			updater.update(c.x(), c.y(), m);
 		}
-		//System.out.println("TIME: " + (System.currentTimeMillis()-n));
+
 	}
 	
 	public void initWater() {
@@ -300,13 +303,13 @@ public final class SettEnvMap extends EnvResource {
 		public double value;
 	}
 
-	public class SettEnv extends INFO implements MAP_DOUBLE, INDEXED {
+	public static class SettEnv extends INFO implements MAP_DOUBLE, INDEXED {
 
 		private final int index;
 		private int extraI = -1;
 		public final String key;
 		public final double declineSpeed;
-		public final LIST<BBoost> bonuses;
+		public final BoostSpecs bonuses;
 		public final StandingDef standing;
 		final Bitsmap1D map;
 		final int max;
@@ -321,7 +324,8 @@ public final class SettEnvMap extends EnvResource {
 			bit = 1 << index;
 			Json j = new Json(pj.get(key));
 			declineSpeed = j.d("DECLINE_VALUE", 0, 1);
-			bonuses = BOOSTABLES.boosts(j);
+			bonuses = new BoostSpecs(name, UI.icons().s.eye, false);
+			bonuses.push(j, null);
 			standing = new StandingDef(j);
 			map = new Bitsmap1D(0, bits, SETT.TAREA);
 			max = (1 << bits) - 1;
@@ -374,7 +378,7 @@ public final class SettEnvMap extends EnvResource {
 
 		public void addExtraView(double value, double radius, int tx, int ty, int w, int h) {
 			RES.flooder().init(this);
-			updater.addExtraView(RES.flooder(), this, value, radius, tx, ty, w, h);
+			SETT.ENV().environment.updater.addExtraView(RES.flooder(), this, value, radius, tx, ty, w, h);
 			RES.flooder().done();
 			
 			extraI = GAME.updateI();
@@ -545,7 +549,7 @@ public final class SettEnvMap extends EnvResource {
 			int y1 = CLAMP.i(ty - RADIUS, 0, SETT.THEIGHT);
 			int y2 = CLAMP.i(ty + RADIUS * 2, 0, SETT.THEIGHT);
 			bounds.set(x1, x2, y1, y2);
-			area.set(tx, CLAMP.i(tx + RADIUS, 0, SETT.TWIDTH), ty, CLAMP.i(ty + RADIUS, 0, SETT.THEIGHT));
+			area.set(tx, CLAMP.i(tx + RADIUS, 0, SETT.TWIDTH-1), ty, CLAMP.i(ty + RADIUS, 0, SETT.THEIGHT-1));
 			
 			for (SettEnv s : all) {
 				if ((s.bit & mask) == 0)
@@ -562,7 +566,7 @@ public final class SettEnvMap extends EnvResource {
 				return;
 			
 			int rr = (int) Math.ceil(radius*MAXR);
-			area.set(CLAMP.i(tx -rr, 0, SETT.TWIDTH), CLAMP.i(tx +rr+1, 0, SETT.TWIDTH), CLAMP.i(ty - rr, 0, SETT.THEIGHT), CLAMP.i(ty +1 + rr, 0, SETT.THEIGHT));
+			area.set(CLAMP.i(tx -rr, 0, SETT.TWIDTH), CLAMP.i(tx +rr+1, 0, SETT.TWIDTH-1), CLAMP.i(ty - rr, 0, SETT.THEIGHT-1), CLAMP.i(ty +1 + rr, 0, SETT.THEIGHT));
 			
 			thing.uper.addExtraView(area, f, thing, value, radius, tx, ty, w, h);
 			

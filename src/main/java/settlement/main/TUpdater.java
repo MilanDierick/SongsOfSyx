@@ -5,8 +5,11 @@ import static settlement.main.SETT.*;
 import java.io.IOException;
 
 import game.GAME;
+import game.Profiler;
+import game.boosting.BOOSTABLES;
+import game.faction.FResources.RTYPE;
 import game.time.TIME;
-import init.boostable.BOOSTABLES;
+import init.race.RACES;
 import init.resources.RESOURCE;
 import init.resources.RESOURCES;
 import settlement.main.SETT.SettResource;
@@ -64,7 +67,7 @@ class TUpdater extends SettResource{
 		double base = degradePerYear;
 		
 		
-		double bonus = CLAMP.d(1.0/(BOOSTABLES.CIVICS().SPOILAGE.get(null, null)), 0, 10);
+		double bonus = CLAMP.d(1.0/(BOOSTABLES.CIVICS().SPOILAGE.get(RACES.clP(null, null))), 0, 10);
 		
 		for (Thing t : SETT.THINGS().get(tx, ty)){
 			double b = base;
@@ -103,7 +106,7 @@ class TUpdater extends SettResource{
 		counts[res.bIndex()] += value*t.reservable();
 		int am = (int) counts[res.bIndex()];
 		counts[res.bIndex()]-= am;
-		GAME.player().res().outSpoilt.inc(t.resource(), am);
+		GAME.player().res().inc(t.resource(), RTYPE.SPOILAGE, -am);
 		
 		while(am > 0) {
 			t.findableReserve();
@@ -113,7 +116,7 @@ class TUpdater extends SettResource{
 	}
 	
 	@Override
-	protected void update(float ds) {
+	protected void update(float ds, Profiler profiler) {
 		updater.updateRandom(ds);
 	}
 	

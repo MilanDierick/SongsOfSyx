@@ -66,11 +66,14 @@ public final class ToolManager extends Interrupter{
 			return true;
 		
 		config.update(!hovered);
-		if (hovered){
-			current.updateHovered(ds, window);
-		}else{
-			current.update(ds, window);
+		if (current != null) {
+			if (hovered){
+				current.updateHovered(ds, window);
+			}else{
+				current.update(ds, window);
+			}
 		}
+		
 		return true;
 		
 	}

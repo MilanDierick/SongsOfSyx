@@ -2,14 +2,15 @@ package settlement.room.food.farm;
 
 import static settlement.main.SETT.*;
 
+import game.time.TIME;
 import init.resources.RESOURCE;
 import settlement.entity.animal.ANIMAL_ROOM_RUINER;
-import settlement.main.RenderData;
-import settlement.main.RenderData.RenderIterator;
+import settlement.entity.humanoid.Humanoid;
 import settlement.maintenance.ROOM_DEGRADER;
 import settlement.misc.job.*;
 import settlement.path.AVAILABILITY;
 import settlement.room.industry.module.Industry;
+import settlement.room.industry.module.Industry.IndustryResource;
 import settlement.room.industry.module.ROOM_PRODUCER;
 import settlement.room.main.RoomInstance;
 import settlement.room.main.TmpArea;
@@ -18,6 +19,8 @@ import settlement.room.main.job.JobIterator;
 import settlement.room.main.util.RoomInit;
 import snake2d.Renderer;
 import snake2d.util.datatypes.COORDINATE;
+import util.rendering.RenderData;
+import util.rendering.RenderData.RenderIterator;
 import util.rendering.ShadowBatch;
 
 final class FarmInstance extends RoomInstance implements JOBMANAGER_HASER, ROOM_PRODUCER,ANIMAL_ROOM_RUINER {
@@ -46,8 +49,9 @@ final class FarmInstance extends RoomInstance implements JOBMANAGER_HASER, ROOM_
 			
 		}
 		double w = Math.ceil(p.constructor.workers.get(this));
-		employees().maxSet((int) ((w+1)*1.25));
-		employees().neededSet((int) w);
+		int jobs = (int) Math.ceil(w);
+		employees().maxSet((int) (jobs*1.5));
+		employees().neededSet(jobs);
 		produceData = p.productionData.makeData();
 		activate();
 		
@@ -183,6 +187,13 @@ final class FarmInstance extends RoomInstance implements JOBMANAGER_HASER, ROOM_
 	public void reportWorkSuccess(boolean success) {
 		if (blueprintI().time.dayI() != blueprintI().time.dayOffWork)
 			super.reportWorkSuccess(success);
+	}
+	
+	@Override
+	public double productionRate(RoomInstance ins, Humanoid h, Industry in, IndustryResource oo) {
+		if (employees().employed() == 0)
+			return 0;
+		return Util.prospect((FarmInstance) ins)/(employees().employed()*TIME.days().bitConversion(TIME.days()));
 	}
 
 }

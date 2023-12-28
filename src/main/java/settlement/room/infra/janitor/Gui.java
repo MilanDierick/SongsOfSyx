@@ -3,7 +3,7 @@ package settlement.room.infra.janitor;
 import init.D;
 import init.resources.RESOURCE;
 import init.resources.RESOURCES;
-import init.sprite.ICON;
+import init.sprite.UI.Icon;
 import settlement.main.SETT;
 import settlement.room.main.RoomInstance;
 import snake2d.SPRITE_RENDERER;
@@ -47,7 +47,7 @@ class Gui extends UIRoomModuleImp<JanitorInstance, ROOM_JANITOR> {
 				GBox b = (GBox) text;
 				b.NL(8);
 				for (RESOURCE res : RESOURCES.ALL()) {
-					if ((res.bit & getter.get().resourcesMissing) != 0) {
+					if (getter.get().resourcesMissing.has(res)) {
 						b.add(b.text().errorify().add(res.name));
 						b.NL();
 					}
@@ -56,15 +56,15 @@ class Gui extends UIRoomModuleImp<JanitorInstance, ROOM_JANITOR> {
 		};
 		GHeader h = new GHeader(¤¤Missing);
 		s.add(h);
-		s.addRightC(8, new RENDEROBJ.RenderImp(ICON.MEDIUM.SIZE*8, ICON.MEDIUM.SIZE) {
+		s.addRightC(8, new RENDEROBJ.RenderImp(Icon.M*8, Icon.M) {
 			
 			@Override
 			public void render(SPRITE_RENDERER r, float ds) {
 				SETT.OVERLAY().MAINTENANCE.add();
 				int i = 0;
 				for (RESOURCE res : RESOURCES.ALL()) {
-					if ((res.bit & getter.get().resourcesMissing) != 0) {
-						res.icon().render(r, body().x1()+i*ICON.SMALL.SIZE, body().y1());
+					if (getter.get().resourcesMissing.has(res)) {
+						res.icon().render(r, body().x1()+i*Icon.S, body().y1());
 						i++;
 					}
 					if (i > 12)

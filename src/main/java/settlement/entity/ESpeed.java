@@ -350,7 +350,10 @@ public interface ESpeed extends VECTOR {
 		// }
 
 		public boolean magnitudeAdjust(float ds, double d, double bonus) {
+			double min = topMagnitude*0.25;
 			double target = targetMagnitude * bonus;
+			if (target >= min && magnitude < min)
+				magnitude = min;
 			if (magnitude < target) {
 				magnitude += acceleration * d * ds;
 				if (magnitude > target) {
@@ -367,6 +370,14 @@ public interface ESpeed extends VECTOR {
 				return false;
 			}
 			return true;
+		}
+		
+		public void brake(float ds) {
+//			double dec = ds*magnitude*0.25;
+//			dec = CLAMP.d(dec, 8*ds*C.TILE_SIZE, magnitude);
+			magnitude -= ds*(8*C.TILE_SIZE+magnitude*0.1);
+			if (magnitude < 0)
+				magnitude = 0;
 		}
 
 		protected static final double AIR_REDUCER = 0.0025;

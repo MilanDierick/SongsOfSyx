@@ -1,17 +1,16 @@
 package view.sett.ui.room;
 
 import init.C;
-import init.boostable.BOOSTABLES;
 import init.sprite.SPRITES;
-import settlement.main.SETT;
-import settlement.room.main.*;
+import settlement.room.main.RoomBlueprintImp;
+import settlement.room.main.RoomBlueprintIns;
 import settlement.room.main.category.RoomCategories.RoomCategoryMain;
-import settlement.stats.StatsEquippables.StatEquippableWork;
+import settlement.room.main.employment.RoomEquip;
 import snake2d.util.color.COLOR;
 import snake2d.util.datatypes.DIR;
 import snake2d.util.gui.GuiSection;
 import snake2d.util.gui.renderable.RENDEROBJ;
-import util.data.INT.INTE;
+import util.dic.DicMisc;
 import util.gui.misc.*;
 import util.gui.slider.GAllocator;
 import util.info.GFORMAT;
@@ -21,22 +20,13 @@ import view.sett.ui.room.UIPanelUtil.RoomRow;
 final class UIPanelWorkTools extends ISidePanel {
 	
 	
-	public UIPanelWorkTools(StatEquippableWork work) {
+	public UIPanelWorkTools(RoomEquip work) {
 		
 		section.add(new GStat() {
 
 			@Override
 			public void update(GText text) {
-				int a = SETT.ROOMS().STOCKPILE.tally().amountTotal(work.resource);
-				a += work.stat().data().get(null);
-				
-				int am = 0;
-				for (RoomEmployment p : SETT.ROOMS().employment.ALL()) {
-					if (work.target(p) > 0) {
-						am += work.target(p)*p.target.get();
-					}
-				}
-				GFORMAT.iofkInv(text, a, am);
+				GFORMAT.iofkInv(text, work.currentTotal(), work.neededTotal());
 			}
 		}.increase().r(DIR.N));
 		
@@ -44,7 +34,7 @@ final class UIPanelWorkTools extends ISidePanel {
 			
 			@Override
 			RENDEROBJ row(RoomBlueprintIns<?> bb) {
-				if (bb.employment() == null || work.max(bb.employment()) <= 0) {
+				if (bb.employment() == null || !work.has(bb.employment())) {
 					return null;
 				}
 				
@@ -54,8 +44,8 @@ final class UIPanelWorkTools extends ISidePanel {
 						super.hoverInfoGet(text);
 						GBox b = (GBox) text;
 						b.NL(8);
-						b.textL(BOOSTABLES.INFO().name);
-						b.add(GFORMAT.f0(b.text(), work. maxBoost(bb.employment())/work.max(bb.employment())));
+						b.textL(DicMisc.¤¤Boosts);
+						work.boost(bb.employment()).booster.hoverDetailed(b, (double)work.targetI(bb.employment())/(work.target(bb.employment()).max()*bb.employment().employed()));
 					};
 				};
 				
@@ -63,34 +53,11 @@ final class UIPanelWorkTools extends ISidePanel {
 					
 					@Override
 					public void update(GText text) {
-						GFORMAT.i(text, bb.employment().neededWorkers()*work.target(bb.employment()));
+						GFORMAT.i(text, work.targetI(bb.employment()));
 					}
 				});
 				
-				INTE in = new INTE() {
-					
-					@Override
-					public int min() {
-						return 0;
-					}
-					
-					@Override
-					public int max() {
-						return work.max(bb.employment());
-					}
-					
-					@Override
-					public int get() {
-						return work.target(bb.employment());
-					}
-					
-					@Override
-					public void set(int t) {
-						work.targetSet(bb.employment(), t);
-					}
-				};
-				
-				r.addRelBody(48, DIR.E, new GAllocator(COLOR.ORANGE100.makeSaturated(0.7), in, 6, 16));
+				r.addRelBody(48, DIR.E, new GAllocator(COLOR.ORANGE100.makeSaturated(0.7), work.target(bb.employment()), 6, 16));
 				r.body().incrW(420-r.body().width());
 				r.pad(6, 0);
 				return r;
@@ -104,15 +71,8 @@ final class UIPanelWorkTools extends ISidePanel {
 
 					@Override
 					public void update(GText text) {
-						int needed = 0;
-						for (RoomBlueprintImp b : cat.all()) {
-							if (b instanceof RoomBlueprintIns<?>) {
-								RoomBlueprintIns<?> bb = (RoomBlueprintIns<?>) b;
-								if (bb.employment() != null && work.target(bb.employment()) > 0) {
-									needed += bb.employment().neededWorkers()*work.target(bb.employment());
-								}
-							}
-						}
+						int needed = work.neededTotal();
+						
 						GFORMAT.i(text, needed);
 					}
 				}.r(DIR.N);
@@ -130,7 +90,7 @@ final class UIPanelWorkTools extends ISidePanel {
 								
 								RoomBlueprintIns<?> bb = (RoomBlueprintIns<?>) b;
 								if (bb.employment() != null) {
-									work.targetSet(bb.employment(), work.target(bb.employment())+1);
+									work.target(bb.employment()).inc(1);
 								}
 							}
 						}
@@ -152,7 +112,7 @@ final class UIPanelWorkTools extends ISidePanel {
 								
 								RoomBlueprintIns<?> bb = (RoomBlueprintIns<?>) b;
 								if (bb.employment() != null) {
-									work.targetSet(bb.employment(), work.target(bb.employment())-1);
+									work.target(bb.employment()).inc(-1);
 								}
 							}
 						}

@@ -89,6 +89,8 @@ class _WMap {
 		if (qy2 >= qMaxY)
 			qy2 = qMaxY -1;
 		
+		
+		
 		for (int y = qy1; y <= qy2; y++){
 			for (int x = qx1; x <= qx2; x++){
 				for (HalfEntity e : quadrants[y][x]) {

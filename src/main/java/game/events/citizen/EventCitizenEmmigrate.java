@@ -10,15 +10,16 @@ import settlement.entity.humanoid.HCLASS;
 import settlement.entity.humanoid.Humanoid;
 import settlement.main.SETT;
 import settlement.stats.STATS;
-import snake2d.util.file.*;
+import snake2d.util.file.FileGetter;
+import snake2d.util.file.FilePutter;
 import snake2d.util.misc.ACTION;
 import snake2d.util.rnd.RND;
 import snake2d.util.sprite.text.Str;
 import snake2d.util.sprite.text.StrInserter;
-import view.main.MessageText;
 import view.sett.IDebugPanelSett;
+import view.ui.message.MessageText;
 
-final class EventCitizenEmmigrate implements SAVABLE{
+final class EventCitizenEmmigrate implements EventCitizen.SMALL_EVENT{
 
 	private static CharSequence ¤¤emigration = "¤Emigrants!";
 	private static CharSequence ¤¤emigrationD = "¤A group of {RACE} have decided to leave your city, renouncing their citizenship, and your rule. This is a sign of weakness. Make sure you increase loyalty so that this will not happen again!";
@@ -44,7 +45,7 @@ final class EventCitizenEmmigrate implements SAVABLE{
 					Race r = RACES.all().getC(ri+i);
 					int am = (int) Math.ceil(STATS.POP().POP.data(HCLASS.CITIZEN).get(r)*RND.rFloat());
 					if (am > 0) {
-						emmigrate(am, r);
+						event(am, r);
 						return;
 					}
 				}
@@ -67,22 +68,6 @@ final class EventCitizenEmmigrate implements SAVABLE{
 		Arrays.fill(emmigrations, 0);
 	}
 	
-	public boolean emmigrate(int amH, Race hr) {
-		
-		if (SETT.ENTRY().isClosed())
-			return false;
-		
-		emmigrations[hr.index] = amH;
-		
-		Str t = Str.TMP;
-		t.clear();
-		t.add(¤¤emigrationD);
-		iRace.insert(hr, t);
-		new MessageText(¤¤emigration, t).send();
-		return true;
-		
-	}
-	
 	public boolean shouldEmigrate(Race r) {
 		if (STATS.POP().POP.data(HCLASS.CITIZEN).get(r) == 0) {
 			emmigrations[r.index()] = 0;
@@ -96,6 +81,27 @@ final class EventCitizenEmmigrate implements SAVABLE{
 		if (emmigrations[h.race().index] < 0) {
 			emmigrations[h.race().index] = 0;
 		}
+	}
+
+	@Override
+	public boolean event(int amH, Race hr) {
+		if (SETT.ENTRY().isClosed())
+			return false;
+		
+		emmigrations[hr.index] = amH;
+		
+		Str t = Str.TMP;
+		t.clear();
+		t.add(¤¤emigrationD);
+		iRace.insert(hr, t);
+		new MessageText(¤¤emigration, t).send();
+		return true;
+	}
+
+	@Override
+	public void update(double ds) {
+		// TODO Auto-generated method stub
+		
 	}
 
 

@@ -1,181 +1,134 @@
 
 package launcher;
 
-import static launcher.Resources.*;
-
 import java.io.IOException;
 import java.util.Locale;
 
 import game.VERSION;
+import init.D;
 import init.paths.PATHS;
-import launcher.Resources.GUI;
+import launcher.GUI.BText;
 import snake2d.CORE;
 import snake2d.SPRITE_RENDERER;
-import snake2d.util.color.COLOR;
+import snake2d.util.color.*;
 import snake2d.util.file.FileManager;
 import snake2d.util.gui.GuiSection;
 import snake2d.util.gui.clickable.CLICKABLE;
 import snake2d.util.gui.renderable.RENDEROBJ;
 import snake2d.util.misc.ACTION;
-import snake2d.util.sprite.SPRITE;
 import snake2d.util.sprite.text.Str;
 import snake2d.util.sprite.text.Text;
 
 class ScreenInfo extends GuiSection{
 	
 	private Str hoverInfo = new Str(200);
+	private final Launcher l;
 	
 	ScreenInfo(Launcher l){
+		D.gInit(this);
+		this.l = l;
 		
-		SPRITE[] panel = Sprites.smallPanel;
-		add(panel[0], 0, 0);
-		for (int i = 0; i <= 6; i++)
-			addDown(0, panel[1]);
-		addDown(0, panel[2]);
 		
-		String[] keys = new String[] {
-			"Game Version",
-			"Platform",
-			"JRE",
-			"Graphics Card",
-			"Graphics Driver"
-		};
-		String[] values = new String[]{
-			VERSION.VERSION_STRING,
-			System.getProperty("os.name", "generic").toLowerCase(Locale.ROOT),
-			System.getProperty("java.version") + " bits:" + System.getProperty("sun.arch.data.model"),
-			CORE.getGraphics().render(),
-			CORE.getGraphics().renderV(),
-		};
-		
-		int y1 = 60;
-		for (int i = 0; i < keys.length; i++){
-			RENDEROBJ r = new RENDEROBJ.Sprite(new Text(Sprites.font, keys[i]).setScale(1)).setColor(COLOR.BLUE100);
-			r.body().moveY1(y1+=r.body().height());
-			r.body().moveX1(40);
-			add(r);
-			r = new RENDEROBJ.Sprite(new Text(Sprites.font, values[i]).setScale(1));
-			addRight(10, r);
+		{
+			RENDEROBJ r = new GUI.Header(l.res, D.g("Version"));
+			CLICKABLE c = new BText(l.res, VERSION.VERSION_STRING, 200).clickActionSet(new ACTION() {
+				
+				@Override
+				public void exe() {
+					l.setLog();
+				}
+			});
+			
+			add(r, c, 0);
 		}
 		
 		{
-			RENDEROBJ r = new RENDEROBJ.Sprite(new Text(Sprites.font, "local Files").setScale(1)).setColor(COLOR.BLUE100);
-			r.body().moveY1(y1+=r.body().height());
-			r.body().moveX1(40);
-			add(r);
-			CLICKABLE c = new ClickableAbs() {
-				Text t = new Text(Sprites.font, ""+PATHS.local().ROOT.get()).setScale(1);
-				{
-					body.setDim(t);
-				}
-				@Override
-				protected void render(SPRITE_RENDERER r, float ds, boolean isActive, boolean isSelected, boolean isHovered) {
-					if (isHovered)
-						COLOR.GREEN100.bind();
-					else
-						COLOR.YELLOW100.bind();
-					t.render(r, body);
-					COLOR.unbind();
-				}
-				
-				@Override
-				protected void clickA() {
-					FileManager.openDesctop(""+PATHS.local().ROOT.get());
-				}
+			CharSequence[] keys = new CharSequence[] {
+				D.g("Platform"),
+				D.g("JRE"),
+				D.g("GPU"),
+				D.g("GPU-Driver"),
 			};
-			addRight(10, c);
-			r = new RENDEROBJ.Sprite(new Text(Sprites.font, "saves").setScale(1)).setColor(COLOR.BLUE100);
-			r.body().moveY1(y1+=r.body().height());
-			r.body().moveX1(40);
-			add(r);
-			c = new ClickableAbs() {
-				Text t = new Text(Sprites.font, ""+PATHS.local().SAVE.get()).setScale(1);
-				{
-					body.setDim(t);
-				}
-				@Override
-				protected void render(SPRITE_RENDERER r, float ds, boolean isActive, boolean isSelected, boolean isHovered) {
-					if (isHovered)
-						COLOR.GREEN100.bind();
-					else
-						COLOR.YELLOW100.bind();
-					t.render(r, body);
-					COLOR.unbind();
-				}
-				
-				@Override
-				protected void clickA() {
-					FileManager.openDesctop(""+PATHS.local().SAVE.get());
-				}
+			String[] values = new String[]{
+				System.getProperty("os.name", "generic").toLowerCase(Locale.ROOT),
+				System.getProperty("java.version") + " bits:" + System.getProperty("sun.arch.data.model"),
+				CORE.getGraphics().render(),
+				CORE.getGraphics().renderV(),
 			};
-			addRight(10, c);
-			r = new RENDEROBJ.Sprite(new Text(Sprites.font, "screenshots").setScale(1)).setColor(COLOR.BLUE100);
-			r.body().moveY1(y1+=r.body().height());
-			r.body().moveX1(40);
-			add(r);
-			c = new ClickableAbs() {
-				Text t = new Text(Sprites.font, ""+PATHS.local().SCREENSHOT.get()).setScale(1);
-				{
-					body.setDim(t);
-				}
-				@Override
-				protected void render(SPRITE_RENDERER r, float ds, boolean isActive, boolean isSelected, boolean isHovered) {
-					if (isHovered)
-						COLOR.GREEN100.bind();
-					else
-						COLOR.YELLOW100.bind();
-					t.render(r, body);
-					COLOR.unbind();
-				}
-				
-				@Override
-				protected void clickA() {
-					FileManager.openDesctop(""+PATHS.local().SCREENSHOT.get());
-				}
-			};
-			addRight(10, c);
 			
-			r = new RENDEROBJ.Sprite(new Text(Sprites.font, "mods").setScale(1)).setColor(COLOR.BLUE100);
-			r.body().moveY1(y1+=r.body().height());
-			r.body().moveX1(40);
-			add(r);
-			c = new ClickableAbs() {
-				Text t = new Text(Sprites.font, ""+PATHS.local().MODS.get()).setScale(1);
-				{
-					body.setDim(t);
-				}
-				@Override
-				protected void render(SPRITE_RENDERER r, float ds, boolean isActive, boolean isSelected, boolean isHovered) {
-					if (isHovered)
-						COLOR.GREEN100.bind();
-					else
-						COLOR.YELLOW100.bind();
-					t.render(r, body);
-					COLOR.unbind();
-				}
-				
-				@Override
-				protected void clickA() {
-					FileManager.openDesctop(""+PATHS.local().MODS.get());
-				}
+			for (int i = 0; i < keys.length; i++){
+				RENDEROBJ r = new GUI.Header(l.res, keys[i]);
+				add(r, new RENDEROBJ.Sprite(new Text(l.res.font, values[i]).setScale(1)), 2);
+			}
+		}
+		
+		
+		COLOR clink = new ColorImp(20, 100, 100);
+		COLOR clinkH = new ColorImp(20, 127, 127);
+		
+		{
+			CharSequence[] keys = new CharSequence[] {
+				D.g("localF", "Local Files"),
+				D.g("Saves"),
+				D.g("Screenshots"),
+				D.g("Mods"),
 			};
-			addRight(10, c);
+			String[] values = new String[]{
+				""+PATHS.local().ROOT.get(),
+				""+PATHS.local().SAVE.get(),
+				""+PATHS.local().SCREENSHOT.get(),
+				""+PATHS.local().MODS.get(),
+			};
 			
-			r = new RENDEROBJ.Sprite(new Text(Sprites.font, "contact").setScale(1)).setColor(COLOR.BLUE100);
-			r.body().moveY1(y1+=r.body().height());
-			r.body().moveX1(40);
-			add(r);
+			for (int i = 0; i < keys.length; i++){
+				final String v = values[i];
+				RENDEROBJ r =  new GUI.Header(l.res,keys[i]);
+				CLICKABLE c = new ClickableAbs() {
+					Text t = new Text(l.res.font, v).setScale(1);
+					{
+						body.setDim(t);
+					}
+					@Override
+					protected void render(SPRITE_RENDERER r, float ds, boolean isActive, boolean isSelected, boolean isHovered) {
+						if (isHovered)
+							clinkH.bind();
+						else
+							clink.bind();
+						t.render(r, body);
+						COLOR.unbind();
+					}
+					
+					@Override
+					protected void clickA() {
+						FileManager.openDesctop(v);
+					}
+				};
+				add(r, c, 2);
+			}
+		}
+
+		
+		
+		
+		{
+			RENDEROBJ r;
+			
+			
+			
+			CLICKABLE c;
+			
+			r = new GUI.Header(l.res, D.g("Contact"));
 			c = new ClickableAbs() {
-				Text t = new Text(Sprites.font, "info@songsofsyx.com").setScale(1);
+				Text t = new Text(l.res.font, "info@songsofsyx.com").setScale(1);
 				{
 					body.setDim(t);
 				}
 				@Override
 				protected void render(SPRITE_RENDERER r, float ds, boolean isActive, boolean isSelected, boolean isHovered) {
 					if (isHovered)
-						COLOR.GREEN100.bind();
+						clinkH.bind();
 					else
-						COLOR.YELLOW100.bind();
+						clink.bind();
 					t.render(r, body);
 					COLOR.unbind();
 				}
@@ -185,43 +138,21 @@ class ScreenInfo extends GuiSection{
 					FileManager.sendEmail("info@songsofsyx.com", "Greetings, oh great dev", "Inquiry");
 				}
 			};
-			addRight(10, c);
+			add(r, c, 2);
 			
-			r = new ClickableAbs() {
-				Text t = new Text(Sprites.font, "patch-notes").setScale(1);
+			
+			r = new GUI.Header(l.res, D.g("Road-map"));
+			c = new ClickableAbs() {
+				Text t = new Text(l.res.font, "https://trello.com/b/wF5RYqdF/songs-of-syx");
 				{
 					body.setDim(t);
 				}
 				@Override
 				protected void render(SPRITE_RENDERER r, float ds, boolean isActive, boolean isSelected, boolean isHovered) {
 					if (isHovered)
-						COLOR.GREEN100.bind();
+						clinkH.bind();
 					else
-						COLOR.YELLOW100.bind();
-					t.render(r, body);
-					COLOR.unbind();
-				}
-				
-				@Override
-				protected void clickA() {
-					l.setLog();
-				}
-			};
-			r.body().moveY1(y1+=r.body().height()+16);
-			r.body().moveX1(40);
-			add(r);
-			
-			r = new ClickableAbs() {
-				Text t = new Text(Sprites.font, "roadmap").setScale(1);
-				{
-					body.setDim(t);
-				}
-				@Override
-				protected void render(SPRITE_RENDERER r, float ds, boolean isActive, boolean isSelected, boolean isHovered) {
-					if (isHovered)
-						COLOR.GREEN100.bind();
-					else
-						COLOR.YELLOW100.bind();
+						clink.bind();
 					t.render(r, body);
 					COLOR.unbind();
 				}
@@ -236,18 +167,16 @@ class ScreenInfo extends GuiSection{
 					}
 				}
 			};
-			r.body().moveY1(y1+=r.body().height());
-			r.body().moveX1(40);
-			add(r);
+			add(r, c, 2);
 		}
 		
-		RENDEROBJ b = new GUI.Button.Text("CANCEL").clickActionSet(new ACTION() {
+		RENDEROBJ b = new BText(l.res, D.g("Back")).clickActionSet(new ACTION() {
 			@Override
 			public void exe() {
 				l.setMain();
 			}
 		});
-		b.body().moveX2(Sett.WIDTH - 40).moveY2(Sett.HEIGHT-100);
+		b.body().moveX2(Sett.WIDTH - 40).moveY1(body().y1());
 		add(b);
 		
 		
@@ -257,13 +186,23 @@ class ScreenInfo extends GuiSection{
 		
 	}
 
+	private void add(RENDEROBJ title, RENDEROBJ oo, int dy) {
+		title.body().moveY1(body().y2()+dy);
+		title.body().moveX2(150);
+		add(title);
+		addRightC(10, oo);
+	}
+	
 	
 	@Override
 	public void render(SPRITE_RENDERER r, float ds) {
+		OPACITY.O75.bind();
+		COLOR.BLACK.render(r, 0, Sett.WIDTH, 0, Sett.HEIGHT);
+		OPACITY.unbind();
 		super.render(r, ds);
 		if (hoverInfo.length() != 0) {
-			Gui.c_label.bind();
-			Sprites.font.render(r, hoverInfo, 40, 315, 450, 1);
+			GUI.c_label.bind();
+			l.res.font.render(r, hoverInfo, 40, 315, 450, 1);
 			hoverInfo.clear();
 		}
 		COLOR.unbind();

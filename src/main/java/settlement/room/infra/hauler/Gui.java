@@ -5,7 +5,7 @@ import init.resources.RESOURCE;
 import snake2d.util.datatypes.DIR;
 import snake2d.util.gui.GuiSection;
 import util.data.GETTER;
-import util.gui.common.GResSelector;
+import util.gui.common.UIPickerRes;
 import util.gui.misc.*;
 import util.info.GFORMAT;
 import view.sett.ui.room.UIRoomModule.UIRoomModuleImp;
@@ -25,11 +25,11 @@ class Gui extends UIRoomModuleImp<HaulerInstance, ROOM_HAULER> {
 			
 			@Override
 			public void update(GText text) {
-				GFORMAT.iofk(text, g.get().amount, Crate.size*g.get().crates);
+				GFORMAT.iofk(text, g.get().amount, Crate.size*g.get().sdata.length);
 			}
 		}.hv(D.g("hauled")));
 		
-		section.addRelBody(8, DIR.S, new GButt.CheckboxTitle(D.g("fetch")) {
+		section.addRelBody(8, DIR.S, new GButt.Checkbox(D.g("fetch")) {
 			
 			@Override
 			protected void clickA() {
@@ -43,7 +43,7 @@ class Gui extends UIRoomModuleImp<HaulerInstance, ROOM_HAULER> {
 			
 		}.hoverInfoSet(D.g("fetchDesc", "If this is enabled, haulers will take resources from Warehouses with Fetch disabled, as well as loose resources on the ground.")));
 		
-		section.addRelBody(8, DIR.S, new GResSelector() {
+		section.addRelBody(8, DIR.S, new UIPickerRes() {
 			
 			@Override
 			protected void select(RESOURCE r, int li) {
@@ -64,7 +64,7 @@ class Gui extends UIRoomModuleImp<HaulerInstance, ROOM_HAULER> {
 		super.hover(box, i);
 		if (i.resource() != null) {
 			box.add(i.resource().icon());
-			box.add(GFORMAT.iofk(box.text(), i.amount, i.crates*Crate.size));
+			box.add(GFORMAT.iofk(box.text(), i.amount, i.sdata.length*Crate.size));
 		}
 			
 	}

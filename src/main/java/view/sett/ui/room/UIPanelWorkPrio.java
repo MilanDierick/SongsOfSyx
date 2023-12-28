@@ -1,16 +1,15 @@
 package view.sett.ui.room;
 
 import init.D;
-import init.boostable.BOOSTABLE;
-import init.boostable.BOOSTABLES;
 import init.race.*;
-import init.sprite.ICON;
 import init.sprite.SPRITES;
+import init.sprite.UI.Icon;
 import settlement.entity.humanoid.HCLASS;
 import settlement.entity.humanoid.HTYPE;
 import settlement.main.SETT;
 import settlement.room.main.*;
 import settlement.room.main.category.RoomCategories.RoomCategoryMain;
+import settlement.room.main.employment.RoomEmployment;
 import settlement.stats.STATS;
 import snake2d.SPRITE_RENDERER;
 import snake2d.util.color.*;
@@ -252,8 +251,8 @@ final class UIPanelWorkPrio extends ISidePanel {
 		double f = 0;
 		int am = 0;
 		for (RoomEmployment p : SETT.ROOMS().employment.ALL()) {
-			for (BOOSTABLE b : BOOSTABLES.ROOMS().boosts(p.blueprint())) {
-				f += b.race(group.r) * p.target.group(group);
+			if (p.blueprint().bonus() != null) {
+				f += p.blueprint().bonus().get(group.r) * p.target.group(group);
 			}
 			am += p.target.group(group);
 		}
@@ -271,7 +270,7 @@ final class UIPanelWorkPrio extends ISidePanel {
 			
 			int x1 = 0;
 			for (Race r : RACES.all()) {
-				SPRITE s = new SPRITE.Imp(ICON.MEDIUM.SIZE) {
+				SPRITE s = new SPRITE.Imp(Icon.M) {
 					
 					@Override
 					public void render(SPRITE_RENDERER rr, int X1, int X2, int Y1, int Y2) {
@@ -405,7 +404,7 @@ final class UIPanelWorkPrio extends ISidePanel {
 		
 	}
 
-	private SPRITE underline = new SPRITE.Imp(ICON.MEDIUM.SIZE) {
+	private SPRITE underline = new SPRITE.Imp(Icon.M) {
 		
 		@Override
 		public void render(SPRITE_RENDERER r, int X1, int X2, int Y1, int Y2) {
@@ -441,7 +440,7 @@ final class UIPanelWorkPrio extends ISidePanel {
 			});
 			
 			
-			addRelBody(80, DIR.E, new SPRITE.Imp(ICON.SMALL.SIZE*4, ICON.SMALL.SIZE) {
+			addRelBody(80, DIR.E, new SPRITE.Imp(Icon.S*4, Icon.S) {
 				
 				@Override
 				public void render(SPRITE_RENDERER r, int X1, int X2, int Y1, int Y2) {
@@ -453,25 +452,25 @@ final class UIPanelWorkPrio extends ISidePanel {
 					ColorImp.TMP.bind();
 					int am = (int) Math.ceil(d*4);
 					for (int i = 0; i < am; i++) {
-						SPRITES.icons().s.arrowUp.render(r, X1+i*ICON.SMALL.SIZE/2, Y1);
+						SPRITES.icons().s.arrowUp.render(r, X1+i*Icon.S/2, Y1);
 					}
 					COLOR.unbind();
 				}
 			});
 
-			addRelBody(2, DIR.E, new SPRITE.Imp(ICON.SMALL.SIZE*4, ICON.SMALL.SIZE) {
+			addRelBody(2, DIR.E, new SPRITE.Imp(Icon.S*4, Icon.S) {
 				
 				@Override
 				public void render(SPRITE_RENDERER r, int X1, int X2, int Y1, int Y2) {
 					if (group == null)
 						return;
 					
-					double d = RACES.bonus().priorityCapped(group.r, p);
+					double d = RACES.boosts().getNorSkill(group.r, p);
 					GGaugeMutable.bad2Good(ColorImp.TMP, d);
 					ColorImp.TMP.bind();
 					int am = (int) Math.ceil(d*4);
 					for (int i = 0; i < am; i++) {
-						SPRITES.icons().s.hammer.render(r, X1+i*ICON.SMALL.SIZE/2, Y1);
+						SPRITES.icons().s.hammer.render(r, X1+i*Icon.S/2, Y1);
 						
 					}
 					COLOR.unbind();
@@ -576,7 +575,7 @@ final class UIPanelWorkPrio extends ISidePanel {
 				b.tab(7);
 				b.add(GFORMAT.perc(b.text(), r.pref().getWork(p)));
 				b.tab(10);
-				b.add(GFORMAT.perc(b.text(), RACES.bonus().priorityCapped(r, p)));
+				b.add(GFORMAT.perc(b.text(), RACES.boosts().getNorSkill(r, p)));
 				b.NL(2);
 				
 			}

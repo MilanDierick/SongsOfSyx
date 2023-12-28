@@ -3,7 +3,6 @@ package settlement.room.service.lavatory;
 import java.io.IOException;
 
 import init.RES;
-import settlement.main.RenderData.RenderIterator;
 import settlement.main.SETT;
 import settlement.path.AVAILABILITY;
 import settlement.room.main.*;
@@ -14,6 +13,7 @@ import settlement.room.sprite.*;
 import snake2d.SPRITE_RENDERER;
 import snake2d.util.datatypes.DIR;
 import snake2d.util.file.Json;
+import util.rendering.RenderData.RenderIterator;
 import util.rendering.ShadowBatch;
 
 class Constructor extends Furnisher {
@@ -36,7 +36,7 @@ class Constructor extends Furnisher {
 		
 		RoomSprite sNick = new RoomSprite1x1(sp, "NICKNACK_1X1");
 		
-		RoomSprite SToil = new RoomSpriteComboN(sp, "SIT_COMBO") {
+		RoomSprite SToil = new RoomSpriteCombo(sp, "SIT_COMBO") {
 			
 			private RoomSprite rim = new RoomSprite1x1(sp, "SHITHOLE_1X1") {
 				@Override
@@ -68,9 +68,9 @@ class Constructor extends Furnisher {
 			
 		};
 		
-		RoomSprite SCentre = new RoomSpriteComboN(SToil) {
+		RoomSprite SCentre = new RoomSpriteCombo(SToil) {
 			
-			private final RoomSprite top = new RoomSpriteComboN(sp, "SIT_ONTOP_COMBO") {
+			private final RoomSprite top = new RoomSpriteCombo(sp, "SIT_ONTOP_COMBO") {
 				
 				@Override
 				protected boolean joins(int tx, int ty, int rx, int ry, DIR d, FurnisherItem item) {
@@ -102,7 +102,7 @@ class Constructor extends Furnisher {
 			
 		}.sData(1);
 		
-		RoomSprite sCentreEdge = new RoomSpriteComboN(SToil) {
+		RoomSprite sCentreEdge = new RoomSpriteCombo(SToil) {
 			@Override
 			public void renderAbove(SPRITE_RENDERER r, ShadowBatch s, int data, RenderIterator it, double degrade) {
 				if (!SETT.ROOMS().fData.candle.is(it.tile()))
@@ -110,7 +110,7 @@ class Constructor extends Furnisher {
 			};
 		};
 		
-		RoomSprite sSink = new RoomSpriteComboN(sp, "TABLE_COMBO") {
+		RoomSprite sSink = new RoomSpriteCombo(sp, "TABLE_COMBO") {
 			
 			private RoomSprite water = new RoomSprite1x1(sp, "BASIN_WATER_1X1");
 			private RoomSprite basin = new RoomSprite1x1(sp, "BASIN_1X1") {
@@ -136,7 +136,7 @@ class Constructor extends Furnisher {
 			
 		};
 		
-		RoomSprite sTable = new RoomSpriteComboN(sSink) {
+		RoomSprite sTable = new RoomSpriteCombo(sSink) {
 			
 			@Override
 			public  void renderAbove(SPRITE_RENDERER r, ShadowBatch s, int data, RenderIterator it, double degrade) {

@@ -7,7 +7,7 @@ import settlement.entity.humanoid.Humanoid;
 import settlement.main.SETT;
 import settlement.room.main.RoomBlueprintImp;
 import settlement.room.main.RoomInstance;
-import settlement.room.service.module.RoomServiceDataAccess.ROOM_SERVICE_ACCESS_HASER;
+import settlement.room.service.module.RoomServiceAccess;
 import settlement.stats.Induvidual;
 import settlement.stats.STATS;
 import snake2d.util.MATH;
@@ -29,16 +29,16 @@ final class Text {
 	public Text(Json json){
 		rating = new Entry(0, json, "RATING") {
 			@Override
-			public Str get(double rating, Induvidual i, COORDINATE inn, ROOM_SERVICE_ACCESS_HASER service) {
+			public Str get(double rating, Induvidual i, COORDINATE inn, RoomServiceAccess service) {
 				Str str = super.get(rating, i, inn, null);
-				str.insert("CITY_NAME", FACTIONS.player().appearence().name());
+				str.insert("CITY_NAME", FACTIONS.player().name);
 				str.insert("RULER_NAME", FACTIONS.player().ruler().name);
 				return str;
 			}
 		};
 		attraction = new Entry(1, json, "ATTRACTION") {
 			@Override
-			public Str get(double rating, Induvidual i, COORDINATE inn, ROOM_SERVICE_ACCESS_HASER service) {
+			public Str get(double rating, Induvidual i, COORDINATE inn, RoomServiceAccess service) {
 				Str str = super.get(rating, i, inn, null);
 				RoomBlueprintImp att = TOURISM.attraction(i);
 				str.insert("ROOMS", att.info.names);
@@ -52,11 +52,11 @@ final class Text {
 		};
 		service = new Entry(2, json, "SERVICE") {
 			@Override
-			public Str get(double rating, Induvidual i, COORDINATE inn, ROOM_SERVICE_ACCESS_HASER service) {
+			public Str get(double rating, Induvidual i, COORDINATE inn, RoomServiceAccess service) {
 				
 				Str str = super.get(rating, i, inn, null);
 
-				RoomBlueprintImp s = service.service().room();
+				RoomBlueprintImp s = service.room();
 				
 				str.insert("SERVICE", s.info.name);
 				str.insert("SERVICES", s.info.names);
@@ -68,7 +68,7 @@ final class Text {
 		};
 		inn = new Entry(3, json, "INN") {
 			@Override
-			public Str get(double rating, Induvidual i, COORDINATE inn, ROOM_SERVICE_ACCESS_HASER service) {
+			public Str get(double rating, Induvidual i, COORDINATE inn, RoomServiceAccess service) {
 
 				Str str = super.get(rating, i, inn, null);
 				
@@ -116,10 +116,10 @@ final class Text {
 			}
 		}
 		
-		public Str get(double rating, Induvidual i, COORDINATE inn, ROOM_SERVICE_ACCESS_HASER service) {
+		public Str get(double rating, Induvidual i, COORDINATE inn, RoomServiceAccess service) {
 			int ri = (int) Math.round((rating*2 - 0.25));
 			ri = CLAMP.i(ri, 0, 2);
-			int r = (int) (i.randomness() >> (scroll));
+			int r = (int) (STATS.RAN().get(i, scroll));
 			str.clear().add(chars[ri][MATH.mod(r, chars[ri].length)]);
 			return str;	
 		}

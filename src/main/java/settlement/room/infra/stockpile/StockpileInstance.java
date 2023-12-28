@@ -3,10 +3,9 @@ package settlement.room.infra.stockpile;
 import static settlement.main.SETT.*;
 
 import game.GAME;
-import init.boostable.BOOSTABLE;
-import init.resources.RESOURCE;
-import init.resources.RESOURCES;
-import settlement.main.RenderData;
+import game.boosting.Boostable;
+import init.resources.*;
+import init.resources.RBIT.RBITImp;
 import settlement.main.SETT;
 import settlement.misc.util.RESOURCE_TILE;
 import settlement.misc.util.TILE_STORAGE;
@@ -24,6 +23,7 @@ import snake2d.Renderer;
 import snake2d.util.datatypes.COORDINATE;
 import snake2d.util.misc.CLAMP;
 import snake2d.util.sets.ArrayCooShort;
+import util.rendering.RenderData;
 import util.rendering.ShadowBatch;
 
 public final class StockpileInstance extends RoomInstance implements StorageCrate.STORAGE_CRATE_HASSER, ROOM_RADIUS_INSTANCE, ROOM_DELIVERY_INSTANCE {
@@ -35,13 +35,13 @@ public final class StockpileInstance extends RoomInstance implements StorageCrat
 	final int[] amountUnreserved = new int[RESOURCES.ALL().size()];
 	final int[] spaceReserved = new int[RESOURCES.ALL().size()];
 	
-	private long fetchMaximums = 0;
+	private RBITImp fetchMaximums = new RBITImp();
 	private final ArrayCooShort crates;
-
-	private long fetchMaskBig = 0;
-	private long fetchMask = 0;
-	private long hasMask = 0;
-	private long fetchOther = 0;
+	final StorageCrate.StorageData[] sdata;
+	private RBITImp fetchMaskBig = new RBITImp();
+	private RBITImp fetchMask = new RBITImp();
+	private RBITImp hasMask = new RBITImp();
+	private RBITImp fetchOther = new RBITImp();
 	private byte searchStatus = 0;
 	byte radius = 100;
 	private StockpileInstance emptyTo;
@@ -51,11 +51,13 @@ public final class StockpileInstance extends RoomInstance implements StorageCrat
 	StockpileInstance(ROOM_STOCKPILE p, TmpArea area, RoomInit init) {
 		super(p, area, init);
 
+		sdata = p.crate.make(this);
+		
 		int crateI = 0;
 		for (COORDINATE c : body()) {
 			if (!is(c))
 				continue;
-			StorageCrate cr = p.crate.get(c.x(), c.y(), this);
+			StorageCrate cr = p.crate.get(c.x(), c.y(), this, sdata);
 			if (cr != null) {
 				crateI++;
 			}
@@ -67,7 +69,7 @@ public final class StockpileInstance extends RoomInstance implements StorageCrat
 		for (COORDINATE c : body()) {
 			if (!is(c))
 				continue;
-			if (p.crate.get(c.x(), c.y(), this) != null) {
+			if (p.crate.get(c.x(), c.y(), this, sdata) != null) {
 				crates.set(crateI++).set(c.x(), c.y());
 			}
 		}
@@ -78,12 +80,12 @@ public final class StockpileInstance extends RoomInstance implements StorageCrat
 		
 		while(crates.hasNext()) {
 			ScatteredResource s = SETT.THINGS().resources.tGet.get(crates.get());
-			StorageCrate c = p.crate.get(crates.get().x(), crates.get().y(), this);
+			StorageCrate c = p.crate.get(crates.get().x(), crates.get().y(), this, sdata);
 			
 			if (s != null) {
 				
 				c.resourceSet(s.resource());
-				int am = CLAMP.i(s.amount(), 0, ROOM_STOCKPILE.CRATE_MAX - c.amount());
+				int am = CLAMP.i(s.amount(), 0, crateSize() - c.amount());
 				c.amountSet(c.amount() + am);
 				while(am-- > 0) {
 					if (!s.findableReservedIs())
@@ -100,17 +102,17 @@ public final class StockpileInstance extends RoomInstance implements StorageCrat
 	}
 	
 	private void updateMasks() {
-		fetchMask = 0;
-		fetchMaskBig = 0;
+		fetchMask.clear();
+		fetchMaskBig.clear();
 		for (RESOURCE r : RESOURCES.ALL()) {
-			int am = allocated[r.bIndex()]*ROOM_STOCKPILE.CRATE_MAX;
+			int am = allocated[r.bIndex()]*crateSize();
 			am -= amountTotal[r.bIndex()];
 			am -= spaceReserved[r.bIndex()];
 			if (am > 0) {
-				fetchMask |= r.bit;
+				fetchMask.or(r);
 			}
 			if (am > 64)
-				fetchMaskBig |= r.bit;
+				fetchMaskBig.or(r);
 		}
 	}
 
@@ -119,6 +121,31 @@ public final class StockpileInstance extends RoomInstance implements StorageCrat
 		super.render(r, shadowBatch, it);
 		it.lit();
 		return false;
+	}
+	
+	
+	private static boolean debugi = false;
+	void fixiFix() {
+		
+		for (int i = 0; i < RESOURCES.ALL().size(); i++) {
+			amountTotal[i] = 0;
+			amountUnreserved[i] = 0;
+			spaceReserved[i] = 0;
+			allocated[i] = 0;
+		}
+		usedCrates = 0;
+		boolean oo = debugi;
+		debugi = false;
+		for (COORDINATE c : body()) {
+			if (!is(c))
+				continue;
+			StorageCrate crate = blueprintI().crate.get(c.x(), c.y(), this, sdata);
+			if (crate != null && crate.resource() != null) {
+				crate.fix();
+				
+			}
+		}
+		debugi = oo;
 	}
 	
 	void addCrate(int res, int crates, int amountTot, int amountUnres, int spaceRes) {
@@ -130,6 +157,15 @@ public final class StockpileInstance extends RoomInstance implements StorageCrat
 		usedCrates += allocated[res];
 		
 		
+		
+		if (debugi && crates > 0) {
+			int xx = blueprintI().crate.x();
+			int yy = blueprintI().crate.y();
+			RESOURCE rr = RESOURCES.ALL().get(res);
+			debug(rr); 
+			blueprintI().crate.get(xx, yy, this, sdata);
+		}
+		
 		if (amountTotal[res] < 0)
 			throw new RuntimeException();
 		if (amountUnreserved[res] < 0)
@@ -138,24 +174,43 @@ public final class StockpileInstance extends RoomInstance implements StorageCrat
 			throw new RuntimeException();
 		if (allocated[res] < 0)
 			throw new RuntimeException();
-		ROOMS().STOCKPILE.tally(res, crates, amountTot, amountUnres, spaceRes, getsMaximum(RESOURCES.ALL().get(res)));
+
+		ROOMS().STOCKPILE.tally(res, crates, amountTot, amountUnres, spaceRes, crateSize(), getsMaximum(RESOURCES.ALL().get(res)));
 		
-		long bit = RESOURCES.ALL().get(res).bit;
+		RESOURCE bit = RESOURCES.ALL().get(res);
 		
-		fetchMask &= ~bit;
-		fetchMaskBig &= fetchMask;
-		int am = allocated[res]*ROOM_STOCKPILE.CRATE_MAX - amountTotal[res] - spaceReserved[res];
+		fetchMask.clear(bit);
+		fetchMaskBig.and(fetchMask);
+		int am = allocated[res]*crateSize() - amountTotal[res] - spaceReserved[res];
 		//GAME.Notify(RESOURCES.ALL().get(res).name + " " + am + " " + allocated[res]*ROOM_STOCKPILE.CRATE_MAX + " " + amountTotal[res] + " " + spaceReserved[res] + " " + spaceRes);
 
 		if (am > 5) {
-			fetchMask |= RESOURCES.ALL().get(res).bit;
+			fetchMask.or(bit);
 		}
 		if (am > 64)
-			fetchMaskBig |= RESOURCES.ALL().get(res).bit;
+			fetchMaskBig.or(bit);
 		if (amountUnreserved[res] > 0)
-			hasMask |= RESOURCES.ALL().get(res).bit;
+			hasMask.or(bit);
 		else
-			hasMask &= ~RESOURCES.ALL().get(res).bit;
+			hasMask.clear(bit);
+	}
+	
+	void debug(RESOURCE rr) {
+		int space = 0;
+		int amTot = 0;
+		int res = rr.index();
+		for (COORDINATE c : body()) {
+			if (!is(c))
+				continue;
+			StorageCrate crate = blueprintI().crate.get(c.x(), c.y(), this, sdata);
+			if (crate != null && crate.resource() == rr) {
+				space += crate.storageReserved();
+				amTot += crate.amount();
+			}
+		}
+		if ((space-spaceReserved[res]) != 0 || (amTot -amountTotal[res]) != 0) {
+			GAME.Notify(mX() + " " + mY() + " " + rr + " " + (space-spaceReserved[res]) + " " + (amTot -amountTotal[res]) + " ");
+		}
 	}
 
 	void allocateCrate(RESOURCE res, int amount){
@@ -165,7 +220,7 @@ public final class StockpileInstance extends RoomInstance implements StorageCrat
 			for (COORDINATE c : body()) {
 				if (!is(c))
 					continue;
-				StorageCrate crate = blueprintI().crate.get(c.x(), c.y(), this);
+				StorageCrate crate = blueprintI().crate.get(c.x(), c.y(), this, sdata);
 				if (crate == null)
 					continue;
 				if (crate.resource() != res)
@@ -180,7 +235,7 @@ public final class StockpileInstance extends RoomInstance implements StorageCrat
 				for (COORDINATE c : body()) {
 					if (!is(c))
 						continue;
-					StorageCrate crate = blueprintI().crate.get(c.x(), c.y(), this);
+					StorageCrate crate = blueprintI().crate.get(c.x(), c.y(), this, sdata);
 					if (crate == null)
 						continue;
 					if (crate.resource() != res)
@@ -197,7 +252,7 @@ public final class StockpileInstance extends RoomInstance implements StorageCrat
 			for (COORDINATE c : body()) {
 				if (!is(c))
 					continue;
-				StorageCrate crate = blueprintI().crate.get(c.x(), c.y(), this);
+				StorageCrate crate = blueprintI().crate.get(c.x(), c.y(), this, sdata);
 				
 				if (crate == null)
 					continue;
@@ -229,7 +284,7 @@ public final class StockpileInstance extends RoomInstance implements StorageCrat
 	}
 
 	public int storageGet(RESOURCE r) {
-		return allocated[r.bIndex()] * ROOM_STOCKPILE.CRATE_MAX;
+		return allocated[r.bIndex()] * crateSize();
 	}
 	
 	public int cratesGet(RESOURCE r) {
@@ -241,30 +296,46 @@ public final class StockpileInstance extends RoomInstance implements StorageCrat
 	}
 
 	void setGetMaximum(RESOURCE r, boolean get) {
-		boolean now = (fetchMaximums & r.bit) == r.bit;
+		boolean now = fetchMaximums.has(r);
 		
 		
 		if (now != get) {
 			
 			for (int i = 0; i < crates.size(); i++) {
-				blueprintI().crate.get(crates.get().x(), crates.get().y(), this).remove();
+				blueprintI().crate.get(crates.get().x(), crates.get().y(), this, sdata).remove();
 				crates.inc();
 			}
 			
-			fetchMaximums ^= r.bit;
+			if (get)
+				fetchMaximums.or(r);
+			else
+				fetchMaximums.clear(r);
 			
 			for (int i = 0; i < crates.size(); i++) {
-				blueprintI().crate.get(crates.get().x(), crates.get().y(), this).add();
+				blueprintI().crate.get(crates.get().x(), crates.get().y(), this, sdata).add();
 				crates.inc();
 			}
 		}
 		
 		updateMasks();
 	}
+	
+	@Override
+	public void upgradeSet(int upgrade) {
+		for (int i = 0; i < crates.size(); i++) {
+			blueprintI().crate.get(crates.get().x(), crates.get().y(), this, sdata).remove();
+			crates.inc();
+		}
+		super.upgradeSet(upgrade);
+		for (int i = 0; i < crates.size(); i++) {
+			blueprintI().crate.get(crates.get().x(), crates.get().y(), this, sdata).add();
+			crates.inc();
+		}
+	}
 
 	@Override
 	public boolean getsMaximum(RESOURCE r) {
-		return (fetchMaximums & r.bit) == r.bit;
+		return fetchMaximums.has(r);
 	}
 	
 	public boolean getsMaximum(int r) {
@@ -279,6 +350,9 @@ public final class StockpileInstance extends RoomInstance implements StorageCrat
 		searchStatus = 0;
 	}
 
+	private static final RBITImp btmp1 = new RBITImp();
+	private static final RBITImp btmp2 = new RBITImp();
+	
 	@Override
 	public TILE_STORAGE job(COORDINATE start, SPath path) {
 		
@@ -288,26 +362,30 @@ public final class StockpileInstance extends RoomInstance implements StorageCrat
 		
 		
 		RESOURCE res = null;
-		if (fetchOther == 0)
-			fetchOther = -1;
-		if (searchStatus == 0 && (fetchOther & fetchMask) != 0) {
-			res = PATH().finders.resource.find((fetchOther & fetchMask), fetchOther & fetchMask & fetchMaximums, 0, start, path, radius());
+		if (fetchOther.isClear())
+			fetchOther.setAll();
+		btmp1.clearSet(fetchOther).and(fetchMask);
+		if (searchStatus == 0 && !btmp1.isClear()) {
+			btmp2.clearSet(btmp1).and(fetchMaximums);
+			res = PATH().finders.resource.find(btmp1, btmp2, RBIT.NONE, start, path, radius());
 			if (res != null)
-				fetchOther &= ~res.bit;
+				fetchOther.clear(res);
 			else
-				fetchOther = -1;
+				fetchOther.setAll();
 		}else {
-			fetchOther = -1;
+			fetchOther.setAll();
 		}
 		
-		if (res == null && searchStatus == 0 && fetchMaskBig != 0) {
-			res = PATH().finders.resource.find(fetchMaskBig, fetchMaskBig & fetchMaximums, 0, start, path, radius());
+		if (res == null && searchStatus == 0 && !fetchMaskBig.isClear()) {
+			btmp1.clearSet(fetchMaskBig).and(fetchMaximums);
+			res = PATH().finders.resource.find(fetchMaskBig, btmp1, RBIT.NONE, start, path, radius());
 			if (res == null)
 				searchStatus = 1;
 		}
 		
 		if (res == null) {
-			res = PATH().finders.resource.find(fetchMask, fetchMask & fetchMaximums, 0, start,  path, radius());
+			btmp1.clearSet(fetchMask).and(fetchMaximums);
+			res = PATH().finders.resource.find(fetchMask, btmp1, RBIT.NONE, start,  path, radius());
 		}
 		
 		if (res == null) {
@@ -318,7 +396,7 @@ public final class StockpileInstance extends RoomInstance implements StorageCrat
 		
 		for (int i = 0; i < crates.size(); i++) {
 			crates.inc();
-			TILE_STORAGE c = blueprintI().crate.get(crates.get().x(), crates.get().y(), this);
+			TILE_STORAGE c = blueprintI().crate.get(crates.get().x(), crates.get().y(), this, sdata);
 			if (c.resource() == res && c.storageReservable() > 0) {
 				return c; 
 			}
@@ -338,7 +416,7 @@ public final class StockpileInstance extends RoomInstance implements StorageCrat
 	@Override
 	public TILE_STORAGE job(int tx, int ty) {
 		if (is(tx, ty))
-			return blueprintI().crate.get(tx, ty, this);
+			return blueprintI().crate.get(tx, ty, this, sdata);
 		return null;
 	}
 	
@@ -349,16 +427,17 @@ public final class StockpileInstance extends RoomInstance implements StorageCrat
 		if (e == null)
 			return null;
 		
-		long m = hasMask & e.fetchMaskBig & ~fetchMaximums;
 		
-		if (m == 0)
+		RBIT m = btmp1.clearSet(hasMask).and(fetchMaskBig).clear(fetchMaximums);
+		
+		if (m.isClear())
 			return null;
 		
 		RESOURCE_TILE c = null;
 		for (int i = 0; i < crates.size(); i++) {
 			crates.inc();
-			RESOURCE_TILE c2 = blueprintI().crate.get(crates.get().x(), crates.get().y(), this);
-			if (c2.resource() != null && (c2.resource().bit & m) != 0 && c2.findableReservedCanBe()) {
+			RESOURCE_TILE c2 = blueprintI().crate.get(crates.get().x(), crates.get().y(), this, sdata);
+			if (c2.resource() != null && m.has(c2.resource()) && c2.findableReservedCanBe()) {
 				c = c2;
 				break;
 			}
@@ -378,7 +457,7 @@ public final class StockpileInstance extends RoomInstance implements StorageCrat
 		
 		for (int i = 0; i < e.crates.size(); i++) {
 			e.crates.inc();
-			TILE_STORAGE s = blueprintI().crate.get(e.crates.get().x(), e.crates.get().y(), this);
+			TILE_STORAGE s = blueprintI().crate.get(e.crates.get().x(), e.crates.get().y(), e, e.sdata);
 			if (s.resource() == r && s.storageReservable() > 0) {
 				return s;
 			}
@@ -393,7 +472,7 @@ public final class StockpileInstance extends RoomInstance implements StorageCrat
 	protected void dispose() {
 		
 		for (int i = 0; i < crates.size(); i++) {
-			StorageCrate crate = blueprintI().crate.get(crates.get().x(), crates.get().y(), this);
+			StorageCrate crate = blueprintI().crate.get(crates.get().x(), crates.get().y(), this, sdata);
 			crate.dispose();
 			crates.inc();
 		}
@@ -413,12 +492,12 @@ public final class StockpileInstance extends RoomInstance implements StorageCrat
 	
 	@Override
 	public RESOURCE_TILE resourceTile(int tx, int ty) {
-		return blueprintI().crate.get(tx, ty, this);
+		return blueprintI().crate.get(tx, ty, this, sdata);
 	}
 	
 	@Override
 	public TILE_STORAGE storage(int tx, int ty) {
-		return blueprintI().crate.get(tx, ty, SETT.ROOMS().STOCKPILE.get(tx, ty));
+		return blueprintI().crate.get(tx, ty, this, sdata);
 	}
 	
 	public double getUsedSpace() {
@@ -430,7 +509,7 @@ public final class StockpileInstance extends RoomInstance implements StorageCrat
 		}
 		if (c == 0)
 			return 0;
-		return d/(c*ROOM_STOCKPILE.CRATE_MAX);
+		return d/(c*crateSize());
 	}
 
 	@Override
@@ -466,28 +545,28 @@ public final class StockpileInstance extends RoomInstance implements StorageCrat
 		emptyTo = ins;
 	}
 	
-	public long getMask() {
+	public RBIT getMask() {
 		return fetchMaskBig;
 	}
 	
-	public long hasMask() {
+	public RBIT hasMask() {
 		return fetchMaskBig;
 	}
 
 	@Override
 	public int deliverCapacity() {
-		return ROOM_STOCKPILE.CRATE_MAX;
+		return crateSize();
 	}
 
 	@Override
-	public TILE_STORAGE getDeliveryCrate(long okMask, int minAmount) {
-		if ((fetchMask & okMask) == 0)
+	public TILE_STORAGE getDeliveryCrate(RBIT okMask, int minAmount) {
+		if (!fetchMask.has(okMask))
 			return null;
 		
 		for (int i = 0; i < crates.size(); i++) {
 			crates.inc();
-			TILE_STORAGE s = blueprintI().crate.get(crates.get().x(), crates.get().y(), this);
-			if (s.resource() != null && (s.resource().bit & okMask) != 0 && s.storageReservable() >= minAmount) {
+			TILE_STORAGE s = blueprintI().crate.get(crates.get().x(), crates.get().y(), this, sdata);
+			if (s.resource() != null && okMask.has(s.resource()) && s.storageReservable() >= minAmount) {
 				return s;
 			}
 		}
@@ -537,8 +616,12 @@ public final class StockpileInstance extends RoomInstance implements StorageCrat
 	}
 
 	@Override
-	public BOOSTABLE carryBonus() {
-		return blueprintI().bonus;
+	public Boostable carryBonus() {
+		return blueprintI().bonus();
+	}
+	
+	public int crateSize() {
+		return (int) (blueprintI().upgrades().boost(upgrade())-1);
 	}
 
 }

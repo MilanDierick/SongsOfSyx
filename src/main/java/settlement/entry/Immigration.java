@@ -3,6 +3,7 @@ package settlement.entry;
 import java.io.IOException;
 
 import game.GAME;
+import game.boosting.BOOSTABLES;
 import game.faction.FACTIONS;
 import game.time.TIME;
 import init.D;
@@ -13,7 +14,6 @@ import settlement.entity.ENTITY;
 import settlement.entity.humanoid.*;
 import settlement.main.SETT;
 import settlement.stats.STATS;
-import settlement.stats.StatsMultipliers.StatMultiplier;
 import settlement.stats.standing.STANDINGS;
 import settlement.stats.standing.StandingCitizen;
 import snake2d.util.file.*;
@@ -23,7 +23,7 @@ import util.data.INT.INTE;
 import util.gui.misc.GBox;
 import util.info.GFORMAT;
 import util.updating.IUpdater;
-import world.World;
+import world.WORLD;
 
 public class Immigration {
 
@@ -104,7 +104,7 @@ public class Immigration {
 	}
 	
 	public int maxPop(Race race) {
-		return (int) (MAX_POPULATION*race.population().maxCity);
+		return (int) (MAX_POPULATION*race.population().max);
 	}
 	
 	public double secondsTillNext(Race race) {
@@ -152,7 +152,7 @@ public class Immigration {
 		
 		Immigrator(Race race) {
 			this.race = race;
-			if (race.population().maxCity == 0)
+			if (race.population().max == 0)
 				autoAdmit = ENTETIES.MAX;
 		}
 		
@@ -167,9 +167,10 @@ public class Immigration {
 		
 			
 			double speed = rate;
-			if (World.BUILDINGS().camp.available(race)) {
-				speed *= World.BUILDINGS().camp.factions.replenishPerDay(FACTIONS.player(), race);
+			if (WORLD.BUILDINGS().camp.available(race)) {
+				speed *= WORLD.BUILDINGS().camp.factions.replenishPerDay(FACTIONS.player(), race);
 			}else {
+				speed*= BOOSTABLES.CIVICS().IMMIGRATION.get(RACES.clP());
 				double boost = (8*(1.0-CLAMP.i(wanted, 0, 1000)/1000.0));
 				speed *= (1.0 + boost)*race.population().immigrantsPerDay*race.population().climate(SETT.ENV().climate());
 			}
@@ -241,7 +242,7 @@ public class Immigration {
 		public void clear() {
 			timer = 0;
 			autoAdmit = 0;
-			if (race.population().maxCity == 0)
+			if (race.population().max == 0)
 				autoAdmit = ENTETIES.MAX;
 		}
 		
@@ -282,12 +283,10 @@ public class Immigration {
 		
 		
 		HCLASS cl = HCLASS.CITIZEN;
-		double pop = STATS.POP().POP.data(cl).get(r, 0)+World.ARMIES().cityDivs().total(r);
+		double pop = STATS.POP().POP.data(cl).get(r, 0)+WORLD.ARMIES().cityDivs().total(r);
 		if (pop == 0) {
-			double hap = 1;
-			for (StatMultiplier m : STATS.MULTIPLIERS().get(cl)) {
-				hap*= m.multiplier(cl, r, 0);
-			}
+			double hap = BOOSTABLES.BEHAVIOUR().HAPPI.get(RACES.clP(r, HCLASS.CITIZEN));
+			
 			return (int) hap;
 		}
 		
@@ -295,16 +294,14 @@ public class Immigration {
 			double ful = STANDINGS.CITIZEN().fullfillment.getD(r);
 			double exp = StandingCitizen.expectation(r, pop, STATS.POP().POP.data(cl).get(null, 0)-pop);
 			double hap = ful/exp;
-			for (StatMultiplier m : STATS.MULTIPLIERS().get(cl)) {
-				hap*= m.multiplier(cl, r, 0);
-			}
+			hap*= BOOSTABLES.BEHAVIOUR().HAPPI.get(RACES.clP(r, HCLASS.CITIZEN));
 			hap = CLAMP.d(hap, 0, 2);
 
 			hap -= threshold; 
 			if (hap <= 0)
 				return (int) (pop*hap/threshold);
 			hap*= 0.5;
-			double am = hap*r.population().maxCity*pop;
+			double am = hap*r.population().max*pop;
 			if (am > 1) {
 				double d = am / (am+pop);
 				am = am*(1-d) + d*Math.pow(am, 1/STANDINGS.CITIZEN().fullPow(r));
@@ -312,8 +309,8 @@ public class Immigration {
 			
 			int res = (int) Math.ceil(am);
 			
-			if (World.BUILDINGS().camp.available(r)) {
-				res = CLAMP.i(res, 0, World.BUILDINGS().camp.factions.max(FACTIONS.player(), r));
+			if (WORLD.BUILDINGS().camp.available(r)) {
+				res = CLAMP.i(res, 0, WORLD.BUILDINGS().camp.factions.max(FACTIONS.player(), r));
 			}
 			
 			return (int) res;
@@ -345,10 +342,10 @@ public class Immigration {
 		b.text(¤¤immigrantD);
 		b.NL(4);
 		
-		if (World.BUILDINGS().camp.available(r)) {
+		if (WORLD.BUILDINGS().camp.available(r)) {
 			b.textL(¤¤camp);
 			b.tab(7);
-			b.add(GFORMAT.iBig(b.text(), World.BUILDINGS().camp.factions.max(FACTIONS.player(), r)));
+			b.add(GFORMAT.iBig(b.text(), WORLD.BUILDINGS().camp.factions.max(FACTIONS.player(), r)));
 			b.NL();
 		}
 		

@@ -1,6 +1,6 @@
 package settlement.entity.humanoid.ai.main;
 
-import util.data.BOOLEAN_OBJECT.BOOLEAN_OBJECTE;
+import util.data.BOOLEANO.BOOLEAN_OBJECTE;
 import util.data.DataOL;
 
 public final class AIData extends DataOL<AIManager>{

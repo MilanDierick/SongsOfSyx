@@ -6,10 +6,11 @@ import game.faction.FACTIONS;
 import game.time.TIME;
 import game.time.TIMECYCLE;
 import init.D;
+import init.resources.RBIT.RBITImp;
 import init.resources.RESOURCE;
 import init.resources.RESOURCES;
-import init.sprite.ICON;
 import init.sprite.SPRITES;
+import init.sprite.UI.Icon;
 import settlement.misc.job.JOBMANAGER_HASER;
 import settlement.misc.util.RESOURCE_TILE;
 import settlement.room.industry.module.*;
@@ -25,6 +26,8 @@ import snake2d.util.gui.clickable.CLICKABLE;
 import snake2d.util.gui.renderable.RENDEROBJ;
 import snake2d.util.sets.*;
 import util.data.GETTER;
+import util.dic.DicMisc;
+import util.dic.DicTime;
 import util.gui.misc.*;
 import util.gui.table.GScrollRows;
 import util.gui.table.GTableSorter.GTFilter;
@@ -38,7 +41,7 @@ final class ModuleIndustry implements ModuleMaker {
 
 	private final GChart chart = new GChart();
 	private final boolean[] rCheck = new boolean[RESOURCES.ALL().size()];
-
+	private final boolean[] rHas = new boolean[RESOURCES.ALL().size()];
 	private static CharSequence ¤¤Production = "¤Production";
 	private static CharSequence ¤¤ProductionDesc = "¤The amount that is estimated to be produced each day. The actual production can vary greatly depending on a number of factors.";
 	private static CharSequence ¤¤Consumption = "¤Consumption";
@@ -46,10 +49,12 @@ final class ModuleIndustry implements ModuleMaker {
 	private static CharSequence ¤¤Recipes = "¤Change Recipe";
 	private static CharSequence ¤¤RecipesWarning = "¤Note that changing recipe will reset the room.";
 
+	private static CharSequence ¤¤ProducedDay = "¤Produced today";
 	private static CharSequence ¤¤ProducedNow = "¤Produced This Year";
 	private static CharSequence ¤¤ProducedEstimate = "¤Estimated this year";
 	private static CharSequence ¤¤ProducedPrevious = "¤Produced last year";
 
+	private static CharSequence ¤¤ConsumedDay = "¤Consumed today";
 	private static CharSequence ¤¤ConsumedNow = "¤Consumed This Year";
 	private static CharSequence ¤¤ConsumedPrevious = "¤Consumed last year";
 
@@ -74,7 +79,7 @@ final class ModuleIndustry implements ModuleMaker {
 
 		private final LIST<Industry> ins;
 		private final INDUSTRY_HASER indu;
-
+		private final RBITImp m = new RBITImp();
 		I(RoomBlueprintIns<?> blue, LIST<Industry> ins) {
 			this.ins = ins;
 			indu = (INDUSTRY_HASER) blue;
@@ -83,16 +88,16 @@ final class ModuleIndustry implements ModuleMaker {
 
 		@Override
 		public void appendManageScr(GGrid grid, GGrid r, GuiSection sExta) {
-
+			
 			int y1 = r.section.body().y2() + 32;
 
 			LinkedList<RESOURCE> ress = new LinkedList<RESOURCE>();
-			long m = 0;
+			m.clear();
 			for (Industry i : ins) {
 				for (IndustryResource res : i.outs()) {
-					if ((res.resource.bit & m) == 0) {
+					if (!m.has(res.resource)) {
 						ress.add(res.resource);
-						m |= res.resource.bit;
+						m.or(res.resource);
 					}
 				}
 
@@ -113,7 +118,7 @@ final class ModuleIndustry implements ModuleMaker {
 						public void update(GText text) {
 							int am = 0;
 							for (IndustryResource r : os)
-								am += r.history().get();
+								am += r.history().getPeriodSum(-(int)TIME.years().bitConversion(TIME.days()), 0);
 							GFORMAT.iIncr(text, am);
 						}
 					};
@@ -156,8 +161,29 @@ final class ModuleIndustry implements ModuleMaker {
 					ins.add(new GHeader.HeaderHorizontal(res.icon(), s) {
 						@Override
 						public void hoverInfoGet(GUI_BOX text) {
-							text.title(res.name);
-							text.add(text.text().add(¤¤Production));
+							GBox b = (GBox) text;
+							
+							b.title(res.name);
+							b.add(text.text().add(¤¤Production).s().add('(').add(DicMisc.¤¤Total).add(')'));
+							b.NL(4);
+							
+							b.textLL(¤¤ProducedDay);
+							b.tab(7);
+							b.add(GFORMAT.i(b.text(), hi.get(0)));
+							b.NL();
+							
+							b.textLL(¤¤ProducedNow);
+							b.tab(7);
+							b.add(GFORMAT.i(b.text(), hi.getPeriodSum(-(int)TIME.years().bitConversion(TIME.days()), 0)));
+							b.NL();
+							
+							b.textLL(¤¤ProducedPrevious);
+							b.tab(7);
+							b.add(GFORMAT.i(b.text(), hi.getPeriodSum(-(int)TIME.years().bitConversion(TIME.days())*2, -(int)TIME.years().bitConversion(TIME.days()))));
+							b.NL();
+							
+							b.NL(8);
+							b.textLL(DicTime.¤¤Days);
 							chart.clear();
 							chart.add(hi);
 							text.NL();
@@ -172,16 +198,17 @@ final class ModuleIndustry implements ModuleMaker {
 			}
 
 			ress = new LinkedList<RESOURCE>();
-			m = 0;
+			m.clear();
 			for (Industry i : ins) {
 				for (IndustryResource res : i.ins()) {
-					if ((res.resource.bit & m) == 0) {
+					if (!m.has(res.resource)) {
 						ress.add(res.resource);
-						m |= res.resource.bit;
+						m.or(res.resource);
 					}
 				}
 
 			}
+			
 
 			if (ress.size() > 0) {
 
@@ -193,15 +220,7 @@ final class ModuleIndustry implements ModuleMaker {
 					IndustryResource[] os = resourcesIn(res);
 					if (os == null)
 						continue;
-					GStat s = new GStat() {
-						@Override
-						public void update(GText text) {
-							int am = 0;
-							for (IndustryResource r : os)
-								am += r.history().get();
-							GFORMAT.iIncr(text, -am);
-						}
-					};
+
 					HISTORY_INT hi = new HISTORY_INT() {
 
 						@Override
@@ -237,16 +256,47 @@ final class ModuleIndustry implements ModuleMaker {
 							return am;
 						}
 					};
+					
+					GStat s = new GStat() {
+						@Override
+						public void update(GText text) {
+							int am = hi.getPeriodSum(-(int)TIME.years().bitConversion(TIME.days()), 0);
+							GFORMAT.iIncr(text, -am);
+						}
+					};
 
 					ins.add(new GHeader.HeaderHorizontal(res.icon(), s) {
 						@Override
 						public void hoverInfoGet(GUI_BOX text) {
-							text.title(res.name);
-							text.add(text.text().add(¤¤Consumption));
+
+							GBox b = (GBox) text;
+							
+							b.title(res.name);
+							b.add(text.text().add(¤¤Consumption).s().add('(').add(DicMisc.¤¤Total).add(')'));
+							b.NL(4);
+							
+							b.textLL(¤¤ConsumedDay);
+							b.tab(7);
+							b.add(GFORMAT.i(b.text(), hi.get(0)));
+							b.NL();
+							
+							b.textLL(¤¤ConsumedNow);
+							b.tab(7);
+							b.add(GFORMAT.i(b.text(), hi.getPeriodSum(-(int)TIME.years().bitConversion(TIME.days()), 0)));
+							b.NL();
+							
+							b.textLL(¤¤ConsumedPrevious);
+							b.tab(7);
+							b.add(GFORMAT.i(b.text(), hi.getPeriodSum(-(int)TIME.years().bitConversion(TIME.days())*2, -(int)TIME.years().bitConversion(TIME.days()))));
+							b.NL();
+							
+							b.NL(8);
+							b.textLL(DicTime.¤¤Days);
 							chart.clear();
 							chart.add(hi);
 							text.NL();
 							text.add(chart.sprite);
+							
 						}
 					}, (ri % 3) * 90, (ri / 3) * 26);
 					ri++;
@@ -342,25 +392,30 @@ final class ModuleIndustry implements ModuleMaker {
 			RoomInstance room = (RoomInstance) rr;
 
 			Arrays.fill(rCheck, false);
-			boolean any = false;
+			Arrays.fill(rHas, false);
 			for (COORDINATE c : room.body()) {
 				if (room.is(c)) {
 					RESOURCE_TILE t = room.resourceTile(c.x(), c.y());
 					if (t != null && t.resource() != null && !t.hasRoom()) {
 						rCheck[t.resource().index()] = true;
-						any = true;
+						if (t.hasRoom())
+							rHas[t.resource().index()] = true;
 					}
 				}
 			}
 			
-			if (!any)
-				return;
+			boolean title = false;
 			
-			box.NL(8);
-			box.add(box.text().errorify().add(¤¤NoStore));
-			box.NL();
+		
 			for (RESOURCE r : RESOURCES.ALL()) {
-				if (rCheck[r.index()]) {
+				if (rCheck[r.index()] && !rHas[r.index()]) {
+					if (!title) {
+						title = true;
+						box.NL(8);
+						box.add(box.text().errorify().add(¤¤NoStore));
+						box.NL();
+					}
+						
 					box.add(r.icon());
 				}	
 			}
@@ -424,7 +479,7 @@ final class ModuleIndustry implements ModuleMaker {
 
 						@Override
 						protected void clickA() {
-							if (FACTIONS.player().locks.unlockText(i) == null) {
+							if (i.lockable().passes(FACTIONS.player())) {
 								ROOM_PRODUCER p = ((ROOM_PRODUCER) g(get));
 								p.setIndustry(k);
 								VIEW.inters().popup.close();
@@ -456,20 +511,13 @@ final class ModuleIndustry implements ModuleMaker {
 								b.text(r.resource.name);
 							b.NL(8);
 
-							CharSequence e = FACTIONS.player().locks.unlockText(i);
-
-							if (e != null) {
-
-								GText t = b.text();
-								t.add(e);
-								t.errorify();
-								b.add(t);
-							}
+							i.lockable().hover(text, FACTIONS.player());
+							
 						}
 
 						@Override
 						public void renAction() {
-							activeSet(FACTIONS.player().locks.unlockText(i) == null);
+							activeSet(i.lockable().passes(FACTIONS.player()));
 						}
 
 					};
@@ -548,7 +596,7 @@ final class ModuleIndustry implements ModuleMaker {
 				if (outs) {
 					b.text(¤¤ConsumptionD);
 					b.NL(8);
-					IndustryUtil.hoverConsumptionRate(text, i.rate, p.industry(), (RoomInstance) get.get());
+					IndustryUtil.hoverConsumptionRate(text, i.rate, p.industry(), (RoomInstance) get.get(), i.resource);
 				}
 				b.NL(8);
 				b.textLL(¤¤ConsumedNow);
@@ -571,7 +619,7 @@ final class ModuleIndustry implements ModuleMaker {
 					super.render(r, ds);
 			}
 		};
-		s.add(new RENDEROBJ.RenderImp(ICON.MEDIUM.SIZE) {
+		s.add(new RENDEROBJ.RenderImp(Icon.M) {
 
 			@Override
 			public void render(SPRITE_RENDERER r, float ds) {
@@ -659,7 +707,7 @@ final class ModuleIndustry implements ModuleMaker {
 			}
 
 		};
-		s.add(new RENDEROBJ.RenderImp(ICON.MEDIUM.SIZE) {
+		s.add(new RENDEROBJ.RenderImp(Icon.M) {
 
 			@Override
 			public void render(SPRITE_RENDERER r, float ds) {

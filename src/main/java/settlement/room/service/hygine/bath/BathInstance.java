@@ -3,7 +3,7 @@ package settlement.room.service.hygine.bath;
 import static settlement.main.SETT.*;
 
 import game.time.TIME;
-import settlement.main.RenderData;
+import settlement.main.SETT;
 import settlement.misc.job.*;
 import settlement.room.industry.module.Industry;
 import settlement.room.industry.module.ROOM_PRODUCER;
@@ -15,7 +15,9 @@ import settlement.room.service.module.ROOM_SERVICER;
 import settlement.room.service.module.RoomServiceInstance;
 import snake2d.Renderer;
 import snake2d.util.datatypes.COORDINATE;
+import snake2d.util.misc.CLAMP;
 import snake2d.util.sets.ArrayCooShort;
+import util.rendering.RenderData;
 import util.rendering.ShadowBatch;
 
 public final class BathInstance extends RoomInstance implements JOBMANAGER_HASER, ROOM_SERVICER, ROOM_PRODUCER{
@@ -34,6 +36,10 @@ public final class BathInstance extends RoomInstance implements JOBMANAGER_HASER
 	private final long[] pData;
 	boolean auto = true;
 	
+	float water;
+	private short waterTiles = 0;
+	private short waterCount = 0;
+	
 	protected BathInstance(ROOM_BATH blue, TmpArea area, RoomInit init) {
 		super(blue, area, init);
 		int s = 0;
@@ -48,10 +54,15 @@ public final class BathInstance extends RoomInstance implements JOBMANAGER_HASER
 				if ((d & Bits.BITS) == Bits.BENCH)
 					b++;
 			}
-			
+			if (SETT.ENV().environment.WATER_SWEET.get(c) > 0)
+				water ++;
 			
 			
 		}
+		
+		water *= 1.5;
+		water /= area();
+		water = (float) CLAMP.d(water, 0, 1);
 		
 		jobs = new Jobs(this);
 		
@@ -94,6 +105,19 @@ public final class BathInstance extends RoomInstance implements JOBMANAGER_HASER
 			heat = 0;
 		
 		jobs.searchAgain();
+	}
+	
+	@Override
+	public void updateTileDay(int tx, int ty) {
+		waterCount++;
+		waterTiles += SETT.ENV().environment.WATER_SWEET.get(tx, ty) > 0 ? 1 : 0;
+		if (waterTiles >= area()) {
+			water = (float) CLAMP.d((1.5*waterCount)/waterTiles, 0, 1);
+			waterCount = 0;
+			waterTiles = 0;
+		}
+		
+		super.updateTileDay(tx, ty);
 	}
 
 	@Override
@@ -164,8 +188,9 @@ public final class BathInstance extends RoomInstance implements JOBMANAGER_HASER
 	@Override
 	public double quality() {
 		double h = 0.5 + 0.5*getHeat();
+		double w = 0.5 + 0.5*water;
 		double b = 0.5 + 0.5*blueprintI().constructor.relaxation.get(this);
-		return ROOM_SERVICER.defQuality(this, b*h);
+		return ROOM_SERVICER.defQuality(this, b*h*w);
 	}
 
 

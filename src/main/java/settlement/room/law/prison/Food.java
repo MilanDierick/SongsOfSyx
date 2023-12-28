@@ -1,8 +1,8 @@
 package settlement.room.law.prison;
 
 import game.faction.FACTIONS;
-import init.resources.RESOURCE;
-import init.resources.RESOURCES;
+import game.faction.FResources.RTYPE;
+import init.resources.*;
 import init.sound.SoundSettlement.Sound;
 import settlement.entity.humanoid.Humanoid;
 import settlement.main.SETT;
@@ -76,7 +76,7 @@ final class Food implements SETT_JOB, FSERVICE {
 	}
 
 	@Override
-	public long jobResourceBitToFetch() {
+	public RBIT jobResourceBitToFetch() {
 		return RESOURCES.EDI().mask;
 	}
 	
@@ -99,7 +99,7 @@ final class Food implements SETT_JOB, FSERVICE {
 	public RESOURCE jobPerform(Humanoid skill, RESOURCE r, int ri) {
 		int d = food_amount.inc(SETT.ROOMS().data.get(coo), ri);
 		SETT.ROOMS().data.set(ins, coo, d);
-		FACTIONS.player().res().outConsumed.inc(r, ri);
+		FACTIONS.player().res().inc(r, RTYPE.CONSUMED, -ri);
 		jobReserveCancel(null);
 		return null;
 	}

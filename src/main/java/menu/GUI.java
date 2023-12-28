@@ -117,7 +117,7 @@ abstract class GUI{
 	
 	
 	static CLICKABLE getNavButt(CharSequence name){
-		return new Button(UI.FONT().H1S.getText(name));
+		return new Button(UI.FONT().H1.getText(name));
 	}
 	
 
@@ -143,7 +143,7 @@ abstract class GUI{
 	}
 	
 	static CLICKABLE getBackArrow(){
-		Button b = new Button(UI.FONT().H1S.getText(¤¤back));
+		Button b = new Button(UI.FONT().H1.getText(¤¤back));
 		b.body().moveX2(bounds.x2()-80);
 		b.body().moveY2(bounds.y1()-25);
 		return b;
@@ -167,7 +167,7 @@ abstract class GUI{
 		
 		OptionLine(INTE ii, CharSequence l) {
 	
-			label = getSmallText(l);
+			label = UI.FONT().H2.getText(l);
 			left = new Button(getBigTexts("<<")) {
 				@Override
 				protected void render(SPRITE_RENDERER r, float ds, boolean isActive, boolean isSelected,

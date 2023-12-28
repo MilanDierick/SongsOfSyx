@@ -3,27 +3,49 @@ package game.time;
 import snake2d.CORE;
 import snake2d.util.color.RGB;
 import snake2d.util.datatypes.RECTANGLE;
+import snake2d.util.gui.GuiSection;
 import snake2d.util.light.AmbientLight;
+import snake2d.util.misc.ACTION;
+import util.data.DOUBLE;
+import util.data.INT;
+import util.gui.slider.GSliderInt;
+import view.interrupter.IDebugPanel;
+import view.main.VIEW;
 
 public final class Light {
 
-	private boolean isDay = false;
 	private boolean isNight = false;
-
-	private double secondsTotal;
-	private double secondsPassed;
-	private double secondsLeft;
 	private double partOf;
 	private double partOfCircular;
-	private double secondsDay;
 	
-	private final LightSun sun = new LightSun();
-	private final LightMoon moon = new LightMoon();
+	private final Ambient abient = new Ambient();
 	public final LightShadows shadow = new LightShadows();
 	private final AmbientLight room = new AmbientLight(0.7, 0.5, 0.3, 0, 20);
 	private final Gui gui = new Gui();
 	
+	DOUBLE time = new DOUBLE() {
+		
+		@Override
+		public double getD() {
+			return TIME.days().bitPartOf();
+		}
+	};
+	
 	Light(){
+		
+		ACTION a = new ACTION() {
+			
+			@Override
+			public void exe() {
+				INT.IntImp in = new INT.IntImp(0, 300);
+				time = in;
+				GuiSection s = new GuiSection();
+				s.add(new GSliderInt(in, 300, true));
+				VIEW.inters().popup.show(s, s, true);
+				
+			}
+		};
+		IDebugPanel.add("Light Test", a);
 		
 	}
 	
@@ -57,8 +79,7 @@ public final class Light {
 	}
 	
 	public void apply(int x1, int x2, int y1, int y2, RGB mask) {
-		moon.apply(x1, x2, y1, y2);
-		sun.apply(x1, x2, y1, y2, mask);
+		abient.apply(x1, x2, y1, y2, mask);
 	}
 	
 	public void applyGuiLight(float ds, RECTANGLE rec) {
@@ -70,7 +91,7 @@ public final class Light {
 	}
 	
 	public boolean dayIs() {
-		return isDay;
+		return !isNight;
 	}
 	
 	public boolean nightIs() {
@@ -85,58 +106,33 @@ public final class Light {
 		return partOfCircular;
 	}
 	
-	public double secondOf() {
-		return secondsPassed;
-	}
-	
-	public double secondsLeft() {
-		return secondsLeft;
-	}
-	
-	public double secondsTotal() {
-		return secondsTotal;
-	}
-	
-	public double secondsDay() {
-		return secondsDay;
-	}
-	
+
 	void update(double ds) {
 
+		double dayL = TIME.seasons().currentDay.dayLength();
+		double nightL = 1.0-dayL;
+		double now = time.getD();
 		
-		double ratio = TIME.seasons().currentDay.dayLength();
-		double dawn = (1.0-ratio)/2;
-		double dusk = dawn + ratio;
-		double now = TIME.days().bitPartOf();
+		double dawn = nightL/2.0;
+		double dusk = dawn + dayL;
 		
-		secondsDay = (dusk-dawn)*TIME.secondsPerDay;
-		
-		isDay = now > dawn && now < dusk;
-		isNight = !isDay;
-		
-		if (isDay) {
-			double total = dusk-dawn;
-			secondsTotal = TIME.secondsPerDay*total;
-			partOf = (now-dawn)/total;
-		}else if (now <= dawn){
-			double prev = (1.0 - TIME.seasons().previousDay.dayLength())/2;
-			double total = dawn + prev;
-			secondsTotal = TIME.secondsPerDay*total;
-			partOf = (prev+now)/total;
+		if (now <= dawn) {
+			partOf = 0.5+0.5*now/dawn;
+			isNight = true;
+		}else if (now <= dusk) {
+			partOf = (now-dawn)/dayL;
+			isNight = false;
 		}else {
-			double next = (1.0 - TIME.seasons().nextDay.dayLength())/2;
-			double total = (1.0-dusk) + next;
-			secondsTotal = TIME.secondsPerDay*total;
-			partOf = (now-dusk)/total;
+			partOf = 0.5*(now-dusk)/(nightL/2);
+			isNight = true;
 		}
 		
-		if (partOf > 0.5) {
-			partOfCircular = 1.0 - (partOf-0.5)*2;
+		if (partOf <= 0.5) {
+			partOfCircular = partOf*2.0;
 		}else {
-			partOfCircular = partOf*2;
+			partOfCircular = 1.0 - (partOf-0.5)*2.0;
 		}
-		secondsPassed = partOf *secondsTotal;
-		secondsLeft = secondsTotal - secondsPassed;
+		
 		shadow.update(this);
 		gui.update(this, ds);
 

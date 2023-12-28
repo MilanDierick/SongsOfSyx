@@ -8,7 +8,6 @@ import snake2d.util.gui.GUI_BOX;
 import snake2d.util.gui.clickable.CLICKABLE;
 import snake2d.util.misc.ACTION;
 import util.dic.DicMisc;
-import util.gui.misc.GBox;
 import util.gui.misc.GButt;
 import view.interrupter.ISidePanel;
 import view.keyboard.KEYS;
@@ -98,16 +97,15 @@ public class UIHomes extends ISidePanel{
 				
 				@Override
 				protected void renAction() {
-					activeSet(FACTIONS.player().locks.maxUpgrade(SETT.ROOMS().HOMES.HOME) > 0);
+					activeSet(SETT.ROOMS().HOMES.HOME.reqs.passes(FACTIONS.player()));
 				}
 				
 				@Override
 				public void hoverInfoGet(GUI_BOX text) {
 					super.hoverInfoGet(text);
-					GBox b = (GBox) text;
 					text.NL(8);
-					if (FACTIONS.player().locks.maxUpgrade(SETT.ROOMS().HOMES.HOME) == 0)
-						b.error(FACTIONS.player().locks.unlockTextUpgrade(SETT.ROOMS().HOMES.HOME));
+					if (!SETT.ROOMS().HOMES.HOME.reqs.passes(FACTIONS.player()))
+						SETT.ROOMS().HOMES.HOME.reqs.hover(text, FACTIONS.player());
 				}
 				
 			};

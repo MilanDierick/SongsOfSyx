@@ -2,9 +2,9 @@ package settlement.weather;
 
 import java.io.IOException;
 
+import game.Profiler;
 import game.time.TIME;
 import init.D;
-import settlement.main.RenderData;
 import settlement.main.SETT.SettResource;
 import snake2d.Renderer;
 import snake2d.util.color.RGB.RGBImp;
@@ -14,6 +14,7 @@ import snake2d.util.file.FilePutter;
 import snake2d.util.misc.CLAMP;
 import snake2d.util.sets.LIST;
 import snake2d.util.sets.LinkedList;
+import util.rendering.RenderData;
 
 public final class SWEATHER extends SettResource{
 
@@ -50,7 +51,7 @@ public final class SWEATHER extends SettResource{
 	}
 	
 	@Override
-	protected void update(float ds) {
+	protected void update(float ds, Profiler profiler) {
 		lightColor.set(1, 1, 1);
 		if (temp.cold() > 0 && TIME.light().dayIs()) {
 			double d = 0.2*CLAMP.d(temp.cold()*2, 0, 1);

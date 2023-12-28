@@ -5,7 +5,6 @@ import static settlement.main.SETT.*;
 import game.GAME;
 import init.resources.RESOURCE;
 import init.resources.RESOURCES;
-import settlement.main.RenderData;
 import settlement.room.main.RoomInstance;
 import settlement.room.main.TmpArea;
 import settlement.room.main.job.ROOM_RADIUS.ROOM_RADIUS_INSTANCE;
@@ -14,6 +13,7 @@ import settlement.room.main.util.RoomState;
 import snake2d.Renderer;
 import snake2d.util.datatypes.COORDINATE;
 import snake2d.util.datatypes.DIR;
+import util.rendering.RenderData;
 import util.rendering.ShadowBatch;
 
 public final class ExportInstance extends RoomInstance implements ROOM_RADIUS_INSTANCE {

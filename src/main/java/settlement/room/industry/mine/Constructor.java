@@ -1,13 +1,9 @@
 package settlement.room.industry.mine;
 
-import static settlement.main.SETT.*;
-
 import java.io.IOException;
 
 import init.C;
 import init.D;
-import init.sprite.ICON;
-import settlement.main.RenderData.RenderIterator;
 import settlement.main.SETT;
 import settlement.path.AVAILABILITY;
 import settlement.room.main.*;
@@ -15,16 +11,18 @@ import settlement.room.main.furnisher.*;
 import settlement.room.main.util.RoomInit;
 import settlement.room.main.util.RoomInitData;
 import settlement.room.sprite.*;
-import settlement.tilemap.Floors.Floor;
+import settlement.tilemap.floor.Floors.Floor;
 import snake2d.CORE;
 import snake2d.SPRITE_RENDERER;
-import snake2d.util.color.OPACITY;
+import snake2d.util.color.*;
 import snake2d.util.datatypes.*;
 import snake2d.util.file.Json;
 import snake2d.util.map.MAP_BOOLEAN;
+import snake2d.util.sprite.SPRITE;
 import snake2d.util.sprite.text.Str;
 import util.gui.misc.GText;
 import util.info.GFORMAT;
+import util.rendering.RenderData.RenderIterator;
 import util.rendering.ShadowBatch;
 
 final class Constructor extends Furnisher{
@@ -48,7 +46,7 @@ final class Constructor extends Furnisher{
 				if (area.is(c) && SETT.MINERALS().getter.get(c) == blue.minable && SETT.MINERALS().amountD.get(c) > 0)
 					am++;
 			}
-			return Math.floor(am/2); 
+			return Math.floor(am/1.5); 
 		}
 		
 		@Override
@@ -96,7 +94,7 @@ final class Constructor extends Furnisher{
 			}
 		};
 		
-		floor = SETT.FLOOR().get(init.data());
+		floor = SETT.FLOOR().map.get(init.data());
 		this.blue = blue;
 
 		
@@ -170,7 +168,7 @@ final class Constructor extends Furnisher{
 					boolean isCandle) {
 				super.render(r, s, data, it, degrade, isCandle);
 				if (!isCandle) {
-					ICON.MEDIUM i = blue.minable.resource.icon();
+					SPRITE i = blue.minable.resource.icon();
 					OPACITY.O99.bind();
 					i.render(r, it.x()+8, it.x()+C.TILE_SIZE-8, it.y()+8, it.y()+C.TILE_SIZE-8);
 					OPACITY.unbind();
@@ -382,10 +380,14 @@ final class Constructor extends Furnisher{
 		return null;
 	}
 
+	private COLOR bb = new ColorImp(0, 200, 200);
+	
 	@Override
 	public void renderEmbryo(SPRITE_RENDERER r, int mask, RenderIterator it, boolean isFloored, AREA area) {
 		super.renderEmbryo(r, mask, it, isFloored, area);
-		GROUND().renderMinerals(CORE.renderer(), it.tile(), it.ran(), it.x(), it.y());
+		bb.bind();
+		SETT.GROUND().renderMinerals(CORE.renderer(), it.tile(), it.ran(), it.x(), it.y());
+		COLOR.unbind();
 	}
 	
 	@Override
@@ -459,11 +461,6 @@ final class Constructor extends Furnisher{
 
 		}
 		return 0;
-	}
-	
-	@Override
-	public boolean hasShape() {
-		return false;
 	}
 
 

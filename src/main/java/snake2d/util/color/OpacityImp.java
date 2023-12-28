@@ -5,6 +5,8 @@ import snake2d.CORE;
 
 public class OpacityImp implements OPACITY{
 	
+	public static final OpacityImp TMP = new OpacityImp(0);
+	
 	private byte opacity;
 	
 	public OpacityImp(int op){

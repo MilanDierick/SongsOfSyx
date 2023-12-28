@@ -28,12 +28,12 @@ public final class SFinderEntity{
 				int max = 100;
 				enemies = s().people(true);
 				SComponent s = PATH().comps.superComp.get(sx, sy);
-				if (s != null && s.edgeMask() != 0) {
+				if (s != null) {
 					SCompPath p = PATH().comps.pather.find(sx, sy, findSafety, max, 16);
 					if (p != null) {
 						SPathUtilResult r = SETT.PATH().finders.finder().find(sx, sy, findSafety, max, p);
 						if (r != null)
-						LOG.ln("yay " + sx + " " + sy + " " + r.destX + " " + r.destY);
+							LOG.ln("yay " + sx + " " + sy + " " + r.destX + " " + r.destY);
 							
 					}
 				}
@@ -53,7 +53,7 @@ public final class SFinderEntity{
 				s.reportAbsence(e.ssx(), e.ssy());
 		}else if (e instanceof Animal) {
 			
-			if (((Animal)e).reservable()) {
+			if (((Animal)e).huntReservable()) {
 
 				if (delta == 1) {
 					s().reservableAnimals.reportPresence(e.ssx(), e.ssy());
@@ -93,7 +93,7 @@ public final class SFinderEntity{
 		
 		enemies = s().people(asker.indu().hostile());
 		SComponent s = PATH().comps.superComp.get(sx, sy);
-		if (s != null && s.edgeMask() != 0) {
+		if (s != null && s.hasEdge()) {
 			SCompPath p = PATH().comps.pather.find(sx, sy, rout, max, 16);
 			if (p != null) {
 				SPathUtilResult r = SETT.PATH().finders.finder().find(sx, sy, rout, max, p);
@@ -112,7 +112,7 @@ public final class SFinderEntity{
 		
 		enemies = s().people(asker.indu().hostile());
 		SComponent s = PATH().comps.superComp.get(sx, sy);
-		if (s != null && s.edgeMask() != 0) {
+		if (s != null) {
 			SCompPath p = PATH().comps.pather.find(sx, sy, findSafety, max, 16);
 			if (p != null) {
 				SPathUtilResult r = SETT.PATH().finders.finder().find(sx, sy, findSafety, max, p);
@@ -164,7 +164,7 @@ public final class SFinderEntity{
 		
 		@Override
 		public boolean isInComponent(SComponent c, double distance) {
-			return c.edgeMask() != 0;
+			return c.hasEdge();
 		}
 		
 		@Override

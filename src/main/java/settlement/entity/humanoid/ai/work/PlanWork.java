@@ -39,10 +39,10 @@ abstract class PlanWork extends AIPLAN.PLANRES{
 				if (j.jobReservedIs(r))
 					return true;
 				if (j.jobReserveCanBe()) {
-					if (j.jobResourceBitToFetch() == 0) {
+					if (j.jobResourceBitToFetch() == null) {
 						j.jobReserve(null);
 						return jobGet(a, d) != null;
-					}else if (r != null && r.isInMask(j.jobResourceBitToFetch())){
+					}else if (r != null && r.bit.has(j.jobResourceBitToFetch())){
 						j.jobReserve(r);
 						return jobGet(a, d) != null;
 					}
@@ -64,9 +64,6 @@ abstract class PlanWork extends AIPLAN.PLANRES{
 					j.jobReserveCancel(r);
 				
 			}
-			
-			
-			
 		}
 		
 	}

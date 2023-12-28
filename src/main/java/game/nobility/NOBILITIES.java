@@ -1,24 +1,26 @@
 package game.nobility;
 
 import java.io.IOException;
-import java.util.Arrays;
 
 import game.GAME;
 import game.GAME.GameResource;
+import game.Profiler;
+import game.boosting.*;
+import game.faction.npc.FactionNPC;
+import game.faction.player.BoostCompound;
 import init.D;
-import init.boostable.*;
-import init.boostable.BOOST_LOOKUP.BOOSTER_LOOKUP_IMP;
-import init.boostable.BOOST_LOOKUP.SIMPLE;
-import settlement.entity.humanoid.HTYPE;
+import init.sprite.UI.UI;
+import settlement.entity.humanoid.HCLASS;
 import settlement.entity.humanoid.Humanoid;
 import snake2d.Errors;
 import snake2d.util.file.FileGetter;
 import snake2d.util.file.FilePutter;
+import snake2d.util.misc.CLAMP;
 import snake2d.util.sets.ArrayList;
 import snake2d.util.sets.LIST;
 import snake2d.util.sprite.text.Str;
 import util.updating.IUpdater;
-import view.main.MessageText;
+import view.ui.message.MessageText;
 
 public final class NOBILITIES extends GameResource{
 
@@ -26,10 +28,15 @@ public final class NOBILITIES extends GameResource{
 	private final IUpdater upper;
 	private int active;
 	
-	private final Boost boost;
-	public final SIMPLE BOOSTER;
+	public final BoostSpecs boosters;
+	public final Boostable MAX;
+	private final BoostCompound<Nobility> bos;
 	
 	public NOBILITIES() {
+		MAX = BOOSTING.push("NOBLES_MAX", 0, HCLASS.NOBLE.names, HCLASS.NOBLE.names, UI.icons().s.noble, BOOSTABLES.START());
+		boosters = new BoostSpecs(HCLASS.NOBLE.names, UI.icons().s.noble, true);
+		
+		
 		Init init = new Init();
 		for (String k : init.pData.getFiles()) {
 			new Nobility(k, init);
@@ -37,10 +44,7 @@ public final class NOBILITIES extends GameResource{
 		all = new ArrayList<>(init.all);
 		if (all.size() > 64)
 			throw new Errors.DataError("Too many nobilities declared", init.pData.get());
-		
-		boost = new Boost(all);
-		BOOSTER = boost;
-		
+
 		upper = new IUpdater(all.size(), 10) {
 			
 			@Override
@@ -49,6 +53,31 @@ public final class NOBILITIES extends GameResource{
 			}
 		};
 
+		bos = new BoostCompound<Nobility>(boosters, all) {
+
+			double npc = CLAMP.d(all.size()/20.0, 0, 1);
+			
+			@Override
+			protected BoostSpecs bos(Nobility t) {
+				return t.boosters;
+			}
+
+			@Override
+			protected double get(Boostable bo, FactionNPC f, boolean isMul) {
+				return npc*super.get(bo, f, isMul);
+			}
+			
+			@Override
+			protected double getValue(Nobility t) {
+				if (t.subject() != null) {
+					return 0.5 + t.skill()*0.5;
+				}
+				return 0;
+			}
+			
+			
+		};
+		
 	}
 	
 	@Override
@@ -57,7 +86,6 @@ public final class NOBILITIES extends GameResource{
 			n.saver.save(file);
 		upper.save(file);
 		file.i(active);
-		boost.setBonuses();
 	}
 
 	@Override
@@ -66,13 +94,14 @@ public final class NOBILITIES extends GameResource{
 			n.saver.load(file);
 		upper.load(file);
 		active = file.i();
-		boost.setBonuses();
+		bos.clearChache();
 	}
 
 	@Override
-	protected void update(float ds) {
+	protected void update(float ds, Profiler prof) {
+		prof.logStart(NOBILITIES.class);
 		upper.update(ds);
-		
+		prof.logEnd(NOBILITIES.class);
 	}
 
 	public LIST<Nobility> ALL(){
@@ -85,7 +114,7 @@ public final class NOBILITIES extends GameResource{
 		}
 		e.assign(h);
 		active++;
-		boost.setBonuses();
+		bos.clearChache();
 		return (byte) e.index();
 	}
 	
@@ -97,7 +126,7 @@ public final class NOBILITIES extends GameResource{
 		
 		e.saver.clear();
 		active--;
-		boost.setBonuses();
+		bos.clearChache();
 	}
 	
 	public int active() {
@@ -110,48 +139,5 @@ public final class NOBILITIES extends GameResource{
 	static {
 		D.ts(NOBILITIES.class);
 	}
-	
-	private class Boost extends BOOSTER_LOOKUP_IMP implements SIMPLE {
-
-		private final double[] add = new double[BOOSTABLES.all().size()];
-		private final double[] mul = new double[BOOSTABLES.all().size()];
-		
-		protected Boost(LIST<Nobility> titles) {
-			super(HTYPE.NOBILITY.names);
-			for (Nobility t : titles)
-				init(t.BOOSTER);
-			setBonuses();
-			makeBoosters(this, true, false, true);
-			
-		}
-
-		@Override
-		public double add(BOOSTABLE b) {
-			return add[b.index()];
-		}
-
-		@Override
-		public double mul(BOOSTABLE b) {
-			return mul[b.index()];
-		}
-		
-		private void setBonuses() {
-			Arrays.fill(add, 0);
-			Arrays.fill(mul, 1);
-			
-			for (Nobility t : all) {
-				if (t.subject() != null) {
-					for (BBoost b : t.BOOSTER.boosts()) {
-						if (b.isMul())
-							mul[b.boostable.index()] *= b.value();
-						else
-							add[b.boostable.index()] += b.value();
-					}
-				}
-			}
-		}
-	}
-	
-	
 	
 }

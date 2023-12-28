@@ -11,11 +11,18 @@ import view.keyboard.KEYS;
 public final class GameSpeed{
 
 	private boolean tmpPaused;
-	private int speed;
-	private int prevSpeed;
-	private int actualSpeed;
+	private double speed;
+	private double prevSpeed;
+	private double actualSpeed;
 	private double actualSpeedI;
 	private boolean updateOnce;
+	
+	public final int speed0 = 0;
+	public final double speed05 = 0.25;
+	public final int speed1 = 1;
+	public final int speed2 = 5;
+	public final int speed3 = 25;
+	public final int speed4 = 250;
 	
 	GameSpeed(){
 		
@@ -28,9 +35,9 @@ public final class GameSpeed{
 		if (updateOnce)
 			return clearAndReturn(1);
 		
-		int s = speed;
+		double s = speed;
 		if (SETT.ARMIES().enemy().men() > 0)
-			s = CLAMP.i(s, 0, 25);
+			s = CLAMP.d(s, 0, 25);
 		
 		if (actualSpeed < s && slowTheFuckDown < 1) {
 			actualSpeed++;
@@ -38,7 +45,7 @@ public final class GameSpeed{
 			actualSpeed /= 1.0 + (slowTheFuckDown-1.0)*0.5;
 		}
 		
-		actualSpeed = CLAMP.i(actualSpeed, 1, s);
+		actualSpeed = CLAMP.d(actualSpeed, 1, s);
 		if (actualSpeed > s)
 			actualSpeed = s;
 		if (actualSpeed < 1 && s >= 1)
@@ -50,7 +57,7 @@ public final class GameSpeed{
 		
 	}
 	
-	private int clearAndReturn(int i) {
+	private double clearAndReturn(double i) {
 		tmpPaused = false;
 		updateOnce = false;
 		return i;
@@ -60,7 +67,7 @@ public final class GameSpeed{
 		return speed == 0 || tmpPaused;
 	}
 	
-	public int speedTarget() {
+	public double speedTarget() {
 		return tmpPaused ? 0 : speed;
 	}
 	
@@ -86,7 +93,7 @@ public final class GameSpeed{
 		actualSpeedI = 1.0/CLAMP.d(actualSpeed, 1, 1000);
 	}
 	
-	public int speed() {
+	public double speed() {
 		return actualSpeed;
 	}
 	
@@ -94,7 +101,7 @@ public final class GameSpeed{
 		return actualSpeedI;
 	}
 	
-	public void speedSet(int speed) {
+	public void speedSet(double speed) {
 		this.prevSpeed = this.speed;
 		this.speed = speed;
 		this.actualSpeed = speed;
@@ -102,11 +109,11 @@ public final class GameSpeed{
 	}
 
 	void save(FilePutter file) {
-		file.i(speed);
+		file.d(speed);
 	}
 
 	void load(FileGetter file) throws IOException {
-		prevSpeed = file.i();
+		prevSpeed = file.d();
 		clear();
 		
 	}
@@ -120,19 +127,22 @@ public final class GameSpeed{
 	
 	public void poll() {
 		if (KEYS.MAIN().SPEED0.consumeClick()) {
-			speedSet(0);
+			speedSet(speed0);
 		}
 		if(KEYS.MAIN().SPEED1.consumeClick()) {
-			speedSet(1);
+			if (speed == speed1)
+				speedSet(speed05);
+			else
+				speedSet(speed1);
 		}
 		if(KEYS.MAIN().SPEED2.consumeClick()) {
-			speedSet(3);
+			speedSet(speed2);
 		}
 		if(KEYS.MAIN().SPEED3.consumeClick()) {
 			if (speed == 25)
-				speedSet(200);
+				speedSet(speed4);
 			else
-				speedSet(25);
+				speedSet(speed3);
 		}
 		if (KEYS.MAIN().PAUSE.consumeClick()){
 			togglePause();

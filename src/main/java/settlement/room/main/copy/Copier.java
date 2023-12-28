@@ -2,10 +2,9 @@ package settlement.room.main.copy;
 
 import static settlement.main.SETT.*;
 
-import game.GAME;
+import game.faction.FACTIONS;
 import init.C;
 import init.D;
-import init.sprite.ICON.MEDIUM;
 import init.sprite.SPRITES;
 import settlement.job.Job;
 import settlement.main.SETT;
@@ -15,7 +14,7 @@ import settlement.room.main.furnisher.*;
 import settlement.room.main.placement.PLACEMENT;
 import settlement.room.main.placement.UtilWallPlacability;
 import settlement.room.main.util.RoomAreaWrapper;
-import settlement.tilemap.TBuilding;
+import settlement.tilemap.terrain.TBuilding;
 import snake2d.SPRITE_RENDERER;
 import snake2d.util.color.COLOR;
 import snake2d.util.datatypes.*;
@@ -24,6 +23,8 @@ import snake2d.util.gui.GuiSection;
 import snake2d.util.gui.clickable.CLICKABLE;
 import snake2d.util.gui.renderable.RENDEROBJ;
 import snake2d.util.sets.*;
+import snake2d.util.sprite.SPRITE;
+import util.dic.DicMisc;
 import util.gui.misc.GBox;
 import util.gui.misc.GButt;
 import view.main.VIEW;
@@ -130,7 +131,9 @@ class Copier extends PlacableSingle{
 		if (r != null && r.constructor() != null && r.constructor().usesArea() && r.constructor().canBeCopied()) {
 			if (pppp == null)
 				pppp = r.constructor().blue();
-			return GAME.player().locks.unlockText(r.blueprint());
+			if (!pppp.reqs.passes(FACTIONS.player()))
+				return DicMisc.¤¤Locked;
+			return null;
 		}
 		
 			
@@ -166,7 +169,7 @@ class Copier extends PlacableSingle{
 	}
 	
 	@Override
-	public MEDIUM getIcon() {
+	public SPRITE getIcon() {
 		return SPRITES.icons().m.copy;
 	}
 	

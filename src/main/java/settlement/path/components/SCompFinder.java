@@ -12,14 +12,14 @@ import snake2d.util.datatypes.DIR;
 import snake2d.util.datatypes.Rec;
 import snake2d.util.map.MAP_BOOLEAN;
 import snake2d.util.sets.*;
-import util.data.BOOLEAN_OBJECT;
+import util.data.BOOLEANO;
 
 public final class SCompFinder {
 
 	private final SCOMPONENTS comps;
 	private final SComponentChecker checker;
 	private final SComponentChecker[] checkers;
-	private final BOOLEAN_OBJECT<SComponent> checkerDummy = new BOOLEAN_OBJECT<SComponent>() {
+	private final BOOLEANO<SComponent> checkerDummy = new BOOLEANO<SComponent>() {
 
 		@Override
 		public boolean is(SComponent t) {
@@ -187,7 +187,6 @@ public final class SCompFinder {
 		
 		f.init(this);
 		f.pushSloppy(start.centreX(), start.centreY(), 0);
-		f.setValue2(start.centreX(), start.centreY(), 0);
 		
 		while(f.hasMore()) {
 			PathTile t = f.pollSmallest();
@@ -198,7 +197,7 @@ public final class SCompFinder {
 				return true;
 			}
 			
-			if (t.getValue2() > maxDistance) {
+			if (t.getValue() > maxDistance) {
 				continue;
 			}
 			
@@ -208,6 +207,7 @@ public final class SCompFinder {
 				if (!fi.canCross(e.to()))
 					continue;
 				f.pushSmaller(e.to().centreX(), e.to().centreY(), t.getValue()+e.distance(), t);
+				
 				e = e.next();
 			}
 		}
@@ -374,7 +374,7 @@ public final class SCompFinder {
 	
 	private final Rec rBounds = new Rec();
 	
-	private PathTile find(RoomInstance startRoom, SCompPatherFinder fi, int maxDistance, SComponentLevel l, BOOLEAN_OBJECT<SComponent> checker, SComponentChecker marker) {
+	private PathTile find(RoomInstance startRoom, SCompPatherFinder fi, int maxDistance, SComponentLevel l, BOOLEANO<SComponent> checker, SComponentChecker marker) {
 		
 		final SComponent start = l.get(startRoom.mX(), startRoom.mY());
 		if (start == null)
@@ -463,7 +463,7 @@ public final class SCompFinder {
 		
 	}
 	
-	private PathTile find(int startX, int startY, SCompPatherFinder fi, int maxDistance, SComponentLevel l, BOOLEAN_OBJECT<SComponent> checker, SComponentChecker marker) {
+	private PathTile find(int startX, int startY, SCompPatherFinder fi, int maxDistance, SComponentLevel l, BOOLEANO<SComponent> checker, SComponentChecker marker) {
 		
 		final SComponent start = l.get(startX, startY);
 		if (start == null)
@@ -623,7 +623,7 @@ public final class SCompFinder {
 		return false;
 	}
 	
-	private PathTile findDest(int startX, int startY, int destX, int destY, SComponentLevel l, BOOLEAN_OBJECT<SComponent> checker) {
+	private PathTile findDest(int startX, int startY, int destX, int destY, SComponentLevel l, BOOLEANO<SComponent> checker) {
 		
 		final SComponent start = l.get(startX, startY);
 		if (start == null)

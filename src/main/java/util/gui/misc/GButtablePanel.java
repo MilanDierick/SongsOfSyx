@@ -7,16 +7,16 @@ import snake2d.util.gui.GUI_BOX;
 import snake2d.util.gui.GuiSection;
 import snake2d.util.gui.clickable.CLICKABLE;
 import snake2d.util.gui.clickable.CLICKABLE.ClickableAbs;
-import util.gui.panel.GPanelS;
+import util.gui.panel.GPanel;
 
 public final class GButtablePanel extends ClickableAbs{
 
 	private final GuiSection s = new GuiSection();
 	private boolean visable = false;
-	private GPanelS box = new GPanelS();
+	private GPanel box = new GPanel();
 	private int buttI;
 	public GButtablePanel() {
-		box.setButtBg();
+		box.setButt();
 	}
 
 	public void addTitle(CharSequence s) {
@@ -55,7 +55,7 @@ public final class GButtablePanel extends ClickableAbs{
 		s.clear();
 		visable = false;
 		buttI = 0;
-		box.titleClear();
+		box.title().clear();
 	}
 
 	@Override

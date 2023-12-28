@@ -1,85 +1,122 @@
 package menu;
 
+import static menu.GUI.*;
+
 import init.D;
 import init.paths.PATHS;
 import init.sprite.UI.UI;
-import menu.screens.Screener;
 import snake2d.SPRITE_RENDERER;
-import snake2d.util.color.COLOR;
 import snake2d.util.datatypes.COORDINATE;
 import snake2d.util.file.Json;
 import snake2d.util.gui.GuiSection;
 import snake2d.util.gui.clickable.CLICKABLE;
-import snake2d.util.gui.clickable.Scrollable;
-import snake2d.util.gui.clickable.Scrollable.ScrollRow;
 import snake2d.util.gui.renderable.RENDEROBJ;
-import snake2d.util.sets.ArrayList;
-import util.gui.table.GScrollable;
+import snake2d.util.misc.ACTION;
+import snake2d.util.sets.LinkedList;
+import snake2d.util.sprite.text.Font;
+import util.gui.table.GScrollRows;
 
-class ScCredits implements SCREEN{
+class ScCredits implements SC{
 
 	
 	private final GuiSection current;	
 	final CharSequence ¤¤name = "¤credits";
-	private final ArrayList<CredCollection> all = new ArrayList<>(16);
-	
+	private final SC fame;
 	ScCredits(Menu menu) {
 		
 		D.t(this);
 		GuiSection main = new GuiSection();
 		
-		main.add(new Screener(¤¤name, GUI.labelColor) {
+		Screener sc = new Screener(¤¤name, GUI.labelColor) {
 			
 			@Override
 			protected void back() {
 				menu.switchScreen(menu.main);
 			}
-		});
+		};
+		
+		main.add(sc);
 		
 		Json json = new Json(PATHS.BASE().DATA.get("Credits"));
 		
+		
+		
+		int width = Screener.inner.width();
+		
+		LinkedList<RENDEROBJ> rows = new LinkedList<>();
+		
 		for (String s : json.keys()) {
 			Json jj = json.json(s);
-			new CredCollection(jj.text("TITLE"), 
-					jj.texts("CREDS"));
+			rows.add(new RENDEROBJ.RenderImp(width, 48) {
+				
+				@Override
+				public void render(SPRITE_RENDERER r, float ds) {
+					GUI.COLORS.copper.bind();
+					UI.FONT().H2.renderCX(r, body().cX(), body().y2()-24,jj.text("TITLE"));
+				}
+			});
+			
+			String[] nn = jj.texts("CREDS");
+			for (int i = 0; i < nn.length; i++) {
+				
+				final int from = i;
+				int w = 0;
+				for (; i < nn.length; i++) {
+					if (w > 0 && w + 50 + UI.FONT().M.getDim(nn[i]).x() > width)
+						break;
+					w += 50 + UI.FONT().M.getDim(nn[i]).x();
+					
+				}
+				final int wi = w;
+				final int to = i;
+				rows.add(new RENDEROBJ.RenderImp(width, 32) {
+					
+					@Override
+					public void render(SPRITE_RENDERER r, float ds) {
+						GUI.COLORS.label.bind();
+						Font f = UI.FONT().M;
+						int x = body().cX()-wi/2 + 25;
+						for (int i = from; i < to; i++) {
+							f.render(r, nn[i], x, body().y1());
+							x += f.getDim(nn[i]).x() + 50;
+						}
+						
+						
+					}
+				});
+				
+			}
+//			
+//			for (String n : jj.texts("CREDS")) {
+//				rows.add(new RENDEROBJ.RenderImp(width, 32) {
+//					
+//					@Override
+//					public void render(SPRITE_RENDERER r, float ds) {
+//						GUI.COLORS.label.bind();
+//						UI.FONT().M.renderCX(r, body().cX(), body().y1(),n);
+//					}
+//				});
+//			}
+			
 		}
 		
-		int size = 0;
-		for (CredCollection c : all)
-			size += c.creds.length+2;
+		RENDEROBJ ta = new GScrollRows(rows, 32*13).view();
 		
-		final int z = size;
-		
-		ScrollRow[] butts = new ScrollRow[] {
-			new Savebutt(),
-			new Savebutt(),
-			new Savebutt(),
-			new Savebutt(),
-			new Savebutt(),
-			new Savebutt(),
-			new Savebutt(),
-			new Savebutt(),
-			new Savebutt(),
-			new Savebutt(),
-			new Savebutt(),
-			new Savebutt(),
-			new Savebutt(),
-		};
-		
-		Scrollable s = new GScrollable(butts) {
-			
-			@Override
-			public int nrOFEntries() {
-				return z;
-			}
-		};
-		
-		CLICKABLE c = s.getView();
-		c.body().centerIn(main.body());
-		main.add(c);
+		ta.body().centerIn(main.body());
+		main.add(ta);
 		
 		current = main;
-		
+		fame = new ScCreditsFame(menu);
+		CLICKABLE cl = getNavButt(ScCreditsFame.¤¤name);
+		cl.clickActionSet(new ACTION() {
+			
+			@Override
+			public void exe() {
+				menu.switchScreen(fame);
+			};
+			
+		});
+		sc.addButt(cl);
 	}
 
 	
@@ -100,74 +137,6 @@ class ScCredits implements SCREEN{
 	public void render(SPRITE_RENDERER r, float ds) {
 		
 		current.render(r, ds);
-		
-	}
-	
-	
-	
-	private class CredCollection {
-		
-		private final CharSequence title;
-		private final CharSequence[] creds;
-		
-		
-		CredCollection(CharSequence title, CharSequence... creds){
-			this.title = title;
-			this.creds = creds;
-			all.add(this);
-		}
-		
-	}
-	
-	private class Savebutt extends RENDEROBJ.RenderImp implements ScrollRow {
-
-		int index = -1;
-		
-		public Savebutt() {
-			body.setWidth(1000);
-			body.setHeight(32);
-		}
-		
-		@Override
-		public void init(int index) {
-			this.index = index;
-		}
-
-		@Override
-		public void render(SPRITE_RENDERER r, float ds) {
-			int i = index;
-			if (index < 0)
-				return;
-			CredCollection cr = null;
-			
-			for (CredCollection c : all) {
-				if (i - c.creds.length-2 > 0) {
-					i -= c.creds.length+2;
-					
-				}else {
-					cr = c;
-					break;
-				}
-			}
-			
-			if (cr == null)
-				return;
-			
-			if (i == 0)
-				return;
-			
-			if (i == 1) {
-				GUI.COLORS.copper.bind();
-				UI.FONT().H2.renderCX(r, body().cX(), body().y1(),cr.title);
-			}else if (i-2 < cr.creds.length){
-				GUI.COLORS.label.bind();
-				UI.FONT().H2.renderCX(r, body().cX(), body().y1(),cr.creds[i-2]);
-				//UI.FONT().M.render(r, cr.creds[i-2], body().cX(), body().y1());
-			}
-			COLOR.unbind();
-			
-			
-		}
 		
 	}
 	

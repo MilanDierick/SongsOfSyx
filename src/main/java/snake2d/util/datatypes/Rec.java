@@ -379,6 +379,14 @@ public class Rec extends RecFacade implements SAVABLE{
 		width = 0;
 		height = 0;
 	}
+	
+	public double dx1() {
+		return x;
+	}
+	
+	public double dy1() {
+		return x;
+	}
 
 	public static class RecThreadSafe extends Rec {
 		/**

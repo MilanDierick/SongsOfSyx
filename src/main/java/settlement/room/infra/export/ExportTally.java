@@ -1,16 +1,20 @@
 package settlement.room.infra.export;
 
+import static util.dic.DicRes.*;
+
 import java.io.IOException;
 
 import game.GAME;
 import game.faction.FACTIONS;
-import game.faction.trade.FACTION_EXPORTER;
-import game.faction.trade.TradeManager;
+import game.faction.FCredits.CTYPE;
+import game.faction.Faction;
+import game.faction.trade.*;
+import init.D;
 import init.resources.RESOURCE;
 import init.resources.RESOURCES;
 import settlement.main.SETT;
 import snake2d.util.file.*;
-import util.data.BOOLEAN_OBJECT;
+import util.data.BOOLEANO;
 import util.data.INT_O;
 import util.data.INT_O.INT_OE;
 import util.statistics.IntResource;
@@ -24,6 +28,25 @@ public final class ExportTally implements FACTION_EXPORTER{
 	private final IntResource pCapacity = new IntResource();
 	public final INT_O<RESOURCE> amount = pAmount;
 	public final INT_O<RESOURCE> capacity = pCapacity;
+	public final IntResource priceCapsI = new IntResource() {
+		
+		@Override
+		public int max(RESOURCE t) {
+			return 1000000;
+		};
+		
+		@Override
+		public int min(RESOURCE t) {
+			return 1;
+		};
+		
+		@Override
+		public void clear() {
+			for (RESOURCE r : RESOURCES.ALL())
+				set(r, 1);
+		};
+		
+	};
 	
 	public final INT_OE<RESOURCE> exportWhenUnder = new IntResource() {
 		@Override
@@ -68,17 +91,14 @@ public final class ExportTally implements FACTION_EXPORTER{
 			return true;
 		}else {
 			double exp = exportWhenUnder.get(res)/(exportWhenUnder.max(res)-1.0);
-			double to = tot*(1-exp);
-			am = am - to;
+			exp = 1.0-exp;
+			double to = am - exp*tot;
+			return to > 0;
 		}
-		if (am > 0) {
-			return true;
-		}
-		return false;
 		
 	}
 	
-	public final BOOLEAN_OBJECT<RESOURCE> exporting = new BOOLEAN_OBJECT<RESOURCE>() {
+	public final BOOLEANO<RESOURCE> exporting = new BOOLEANO<RESOURCE>() {
 
 		
 		@Override
@@ -90,7 +110,7 @@ public final class ExportTally implements FACTION_EXPORTER{
 	
 	ExportTally() {
 		for (RESOURCE r : RESOURCES.ALL())
-			exportWhenUnder.set(r, exportWhenUnder.max(r));
+			exportWhenUnder.set(r, 1);
 	}
 	
 	final SAVABLE saver = new SAVABLE() {
@@ -100,7 +120,9 @@ public final class ExportTally implements FACTION_EXPORTER{
 			pAmount.save(file);
 			pCapacity.save(file);
 			attempting.save(file);
+			priceCapsI.save(file);
 			file.d(timer);
+			
 			((IntResource) exportWhenUnder).save(file);
 
 		}
@@ -111,6 +133,7 @@ public final class ExportTally implements FACTION_EXPORTER{
 			pAmount.load(file);
 			pCapacity.load(file);
 			attempting.load(file);
+			priceCapsI.load(file);
 			timer = file.d();
 			((IntResource) exportWhenUnder).load(file);
 			
@@ -122,10 +145,11 @@ public final class ExportTally implements FACTION_EXPORTER{
 			pAmount.clear();
 			pCapacity.clear();
 			attempting.clear();
+			priceCapsI.clear();
 			timer = 0;
 			((IntResource) exportWhenUnder).clear();
 			for (RESOURCE r : RESOURCES.ALL())
-				exportWhenUnder.set(r, exportWhenUnder.max(null));
+				exportWhenUnder.set(r, 1);
 		}
 	};
 	
@@ -141,23 +165,31 @@ public final class ExportTally implements FACTION_EXPORTER{
 	}
 	
 	@Override
-	public void sell(RESOURCE res, int amount, int price) {
-		promised.inc(res, amount);
+	public void sell(RESOURCE res, int amount, int price, Faction buyer) {
 		sellFake(res, amount, price);
 	}
 	
+	@Override
+	public void remove(RESOURCE res, int amount, ITYPE type) {
+		FACTIONS.player().res().inc(res, type.rtype, -amount);
+		promised.inc(res, amount);
+	}
+	
 	public void sellFake(RESOURCE res, int amount, int price) {
-		FACTIONS.player().credits().inExported.inc(res, (int)price);
-		FACTIONS.player().res().outExported.inc(res, amount);
-		GAME.stats().TRADE_SALES.inc(price);
+		FACTIONS.player().credits().inc(price, CTYPE.TRADE, res);
+		remove(res, amount, ITYPE.trade);
+		GAME.count().TRADE_SALES.inc(price);
 	}
 	
 	@Override
 	public int forSale(RESOURCE res) {
+		int aa = (amount.get(res) - (promised.get(res)));
+		if (aa < 0)
+			return aa;
 		if (SETT.ENTRY().isClosed())
 			return 0;
 		
-		return (amount.get(res) - (promised.get(res)));
+		return aa;
 			
 	}
 	
@@ -182,15 +214,60 @@ public final class ExportTally implements FACTION_EXPORTER{
 	public double prio(RESOURCE r) {
 		if (pCapacity.get(r) == 0)
 			return 0;
+		
+		
 		double am = amount.get(r)-promised.get(r);
 		return am/pCapacity.get(r);
 	}
+	
+	public boolean okPrice(RESOURCE r, int price) {
+		if (price >= priceCapsI.get(r))
+			return true;
+		return false;
+	}
 
+	
+	private static CharSequence ¤¤ExportProblem = "¤You don't have any export depots set to this resource. No exporting can be done.";
+	private static CharSequence ¤¤ExportFull = "¤Our export depots are full. We must increase their space if we are to export at full capacity";
+	private static CharSequence ¤¤priceCapProblem = "The current price is below your price cap. To trade, you must disable or decrease the price cap.";
+	private static CharSequence ¤¤NoPrice = "¤There is no one willing to buy this resource. You must increase either the tariff or the toll.";
+	static {
+		D.ts(ExportTally.class);
+	}
+	
+	public CharSequence problem(RESOURCE res, boolean storage){
+		
+		if (storage && capacity.get(res) == 0) {
+			return ¤¤ExportProblem;
+		}
+		
+		if (FACTIONS.pRel().neighs().size() == 0) {
+			return ¤¤noTrade;
+		}
 
+		if (FACTIONS.pRel().traders().size() == 0)
+			return ¤¤noTradePartners;
+		
+		if (FACTIONS.pRel().pricesSell.get(res) <= 0) {
+			return ¤¤NoPrice;
+		}
+		
+		return null;
+	}
 
-
-
-
+	public CharSequence warning(RESOURCE res) {
+		
+		if (capacity.get(res) > 0 && amount.get(res) >= capacity.get(res)) {
+			return ¤¤ExportFull;
+		}
+		
+		if (FACTIONS.pRel().pricesSell.get(res) > 0 && FACTIONS.pRel().pricesSell.get(res) < priceCapsI.get(res)) {
+			return ¤¤priceCapProblem;
+		}
+			
+		
+		return null;
+	}
 	
 
 }

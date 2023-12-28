@@ -5,6 +5,7 @@ import snake2d.Input.CHAR_LISTENER;
 import snake2d.util.color.COLOR;
 import snake2d.util.datatypes.DIR;
 import snake2d.util.gui.clickable.CLICKABLE;
+import snake2d.util.misc.CLAMP;
 import snake2d.util.sprite.SPRITE;
 import snake2d.util.sprite.TextureCoords;
 
@@ -16,6 +17,8 @@ public class StringInputSprite extends CHAR_LISTENER implements SPRITE{
 	public int marker = 0;
 	private static final Str tmp = new Str(512);
 	
+	private int selectedI = -1;
+
 	public StringInputSprite(int size, Font font) {
 		super(size);
 		this.f = font;
@@ -31,13 +34,31 @@ public class StringInputSprite extends CHAR_LISTENER implements SPRITE{
 		return this;
 	}
 	
+	public Font font() {
+		return f;
+	}
+	
 	@Override
 	protected void acceptChar(char c) {
-
-		if (text().spaceLeft() > 0 && listening()) {
-			
-			if (marker == text().length()) {
+		if (!listening())
+			return;
+		if (selectedI >= 0 && selectedI != marker()) {
+			int s = Math.min(selectedI, marker);
+			int e = Math.max(selectedI, marker);
+			tmp.clear().add(text());
+			Str tt = text();
+			tt.clear();
+			for (int i = 0; i < tmp.length(); i++) {
+				if (i == s) {
+					tt.add(c);
+				}else if (i < s || i > e)
+					tt.add(tmp.charAt(i));
+			}
+			marker = s+1;
+		}else if (text().spaceLeft() > 0) {
+			if (marker() == text().length()) {
 				text().add(c);
+				
 			}else {
 				tmp.clear().add(text());
 				text().clear();
@@ -53,47 +74,183 @@ public class StringInputSprite extends CHAR_LISTENER implements SPRITE{
 			}
 			marker++;
 			
-			change();
 		}
+		change();
+		
+		selectedI = -1;
 	}
 
 	@Override
 	protected void backspace() {
 		
-		if (marker > text().length())
-			marker = text().length();
-		
-		if (marker > 0 && text().length() > 0 && listening()) {
+		if (!listening())
+			return;
+		if (text().length() == 0)
+			return;
+		int m = marker();
+		if (removeSelected()) {
+			;
+		}else if (m > 0) {
 			
 			tmp.clear().add(text());
-			text().clear();
+			Str tt = text();
+			tt.clear();
 			for (int i = 0; i < tmp.length(); i++) {
-				if (i+1 == marker) {
+				if (i+1 ==m) {
 					;
 				}else {
-					text().add(tmp.charAt(i));
+					tt.add(tmp.charAt(i));
 				}
 			}
 			marker--;
 			
 		}
+		selectedI = -1;
 		change();
 	}
 	
 	@Override
-	public void left() {
-		marker --;
-		if (marker < 0)
-			marker = 0;
+	public void del() {
+		if (!listening())
+			return;
+		if (text().length() == 0)
+			return;
+		int m = marker();
+		if (removeSelected()) {
+			;
+		}else if (m > 0) {
+			
+			tmp.clear().add(text());
+			Str tt = text();
+			tt.clear();
+			for (int i = 0; i < tmp.length(); i++) {
+				if (i == m) {
+					;
+				}else {
+					tt.add(tmp.charAt(i));
+				}
+			}
+		}
+		selectedI = -1;
+		change();
+	}
+	
+	private boolean removeSelected() {
+		if (!listening())
+			return false;
+		if (text().length() == 0)
+			return false;
+		int m = marker();
+		if (selectedI >= 0 && selectedI != m) {
+			int s = Math.min(selectedI, marker);
+			int e = Math.max(selectedI, marker);
+			tmp.clear().add(text());
+			Str tt = text();
+			tt.clear();
+			for (int i = 0; i < tmp.length(); i++) {
+				if (i < s || i >= e)
+					tt.add(tmp.charAt(i));
+			}
+			return true;
+		}
+		return false;
+	}
+	
+	@Override
+	public void left(boolean mod) {
+		if (mod) {
+			if (selectedI >= 0)
+				selectedI --;
+			else
+				selectedI = marker-1;
+			if (selectedI < 0)
+				selectedI = 0;
+		}else if (selectedI >= 0) {
+			marker = selectedI;
+			selectedI = -1;
+		}else {
+			selectedI = -1;
+			marker --;
+			if (marker < 0)
+				marker = 0;
+		}
 	}
 
 	@Override
-	public void right() {
-		marker ++;
-		if (marker > text().length())
-			marker = text().length();
+	public void right(boolean mod) {
+		if (mod) {
+			if (selectedI >= 0)
+				selectedI ++;
+			else
+				selectedI = marker+1;
+			if (selectedI > text().length())
+				selectedI = text().length();
+		}else if (selectedI >= 0) {
+			marker = selectedI;
+			selectedI = -1;
+		}else {
+			
+			marker ++;
+			if (marker > text().length())
+				marker = text().length();
+		}
+		
 	}
 	
+	public void click(int x1){
+		marker = findX(x1);
+		selectedI = -1;
+	}
+	
+	public void select(int x){
+		selectedI = -1;
+		selectedI = findX(x);
+	}
+	
+	public void selectAll(){
+		marker = 0;
+		selectedI = text().length();
+	}
+	
+	private int findX(int x1) {
+		int x = 0;
+		int m = marker();
+		
+		if (text().length() == 0)
+			return 0;
+		
+		
+		
+		for (int i = 0; i < m; i++) {
+			int w = width(i);
+			x +=  w;
+			if (x - w/2 >= x1) {
+				return i;
+			}
+		}
+		if (selectedI < 0) {
+			x += f.width(promt.charAt(0), 1.0)+8;
+			if (x > x1) {
+				return m;
+			}
+		}
+		
+		for (int i = m; i < text().length(); i++) {
+			int w = width(i);
+			x +=  w;
+			if (x - w/2 >= x1) {
+				return i;
+			}
+		}
+		return text().length();
+	}
+	
+	private int width(int index) {
+		int w = f.width(text().charAt(index), 1.0);
+		if (index > 0)
+			w -= f.getBack(text().charAt(index-1), text().charAt(index), 1.0);
+		return w;
+	}
 
 	
 	@Override
@@ -117,29 +274,72 @@ public class StringInputSprite extends CHAR_LISTENER implements SPRITE{
 		return f.height();
 	}
 
-	@Override
-	public void render(SPRITE_RENDERER r, int X1, int X2, int Y1, int Y2) {
+	private int marker() {
 		if (marker > text().length())
 			marker = text().length();
+		if (marker < 0)
+			marker = 0;
+		return marker;
+	}
+	
+	@Override
+	public void render(SPRITE_RENDERER r, int X1, int X2, int Y1, int Y2) {
+
+		int marker = marker();
+		tmp.clear().add(text());
+		selectedI = CLAMP.i(selectedI, -1, tmp.length());
+
 		renAction();
-		if (text().length() == 0 && !listening()) {
-			if (placeholder != null)
+	
+		
+		if (!listening()) {
+			if (tmp.length() == 0 && placeholder != null){
+				COLOR.WHITE65.bind();
 				f.render(r, placeholder, X1, Y1, X2-X1, 1);
-		}else if (listening()) {
-			f.render(CORE.renderer(), text(),X1, Y1,0,marker,  1);
+				COLOR.unbind();
+			}else {
+				f.render(r, tmp, X1, Y1, X2-X1, 1);
+			}
+		}else if (selectedI >= 0 && selectedI != marker) {
+			int i1 = Math.min(marker, selectedI);
+			int i2 = Math.max(marker, selectedI);
 			
-			X1 += f.getDim(text(), 0, marker, Integer.MAX_VALUE, 1.0).x();
+			int sx1 = X1 + f.getDim(tmp, 0, i1, Integer.MAX_VALUE, 1.0).x()-2;
+			int sx2 = sx1 + f.getDim(tmp, i1, i2, Integer.MAX_VALUE, 1.0).x()+2;
+			COLOR.WHITE50.render(r, sx1, sx2, Y1, Y2);
+			f.render(r, tmp, X1, Y1, X2-X1, 1);
+		}else {
+			f.render(CORE.renderer(), tmp, X1, Y1,0, marker,  1);
+			
+			X1 += f.getDim(text(), 0, marker, Integer.MAX_VALUE, 1.0).x()+4;
 			COLOR.BLACK2WHITE.bind();
 			f.render(r, promt, X1, Y1);
 			COLOR.unbind();
-			X1 += 8;
-			if (marker < text().length()) {
-				f.render(CORE.renderer(), text(),X1, Y1,marker,text().length(),  1);
+			X1 += 4;
+			if (marker() < tmp.length()) {
+				f.render(CORE.renderer(), tmp,X1, Y1,marker,text().length(),  1);
 			}
-			
-		}else {
-			f.render(r, text(), X1, Y1, X2-X1, 1);
 		}
+//		
+//		
+//		if (text().length() == 0 && !listening() && selectedII < 0) {
+//			if (placeholder != null)
+//				f.render(r, placeholder, X1, Y1, X2-X1, 1);
+//		}else if (listening() && selectedII < 0) {
+//			f.render(CORE.renderer(), text(), X1, Y1,0, marker,  1);
+//			
+//			X1 += f.getDim(text(), 0, marker, Integer.MAX_VALUE, 1.0).x()+4;
+//			COLOR.BLACK2WHITE.bind();
+//			f.render(r, promt, X1, Y1);
+//			COLOR.unbind();
+//			X1 += 4;
+//			if (marker < text().length()) {
+//				f.render(CORE.renderer(), text(),X1, Y1,marker,text().length(),  1);
+//			}
+//			
+//		}else {
+//			f.render(r, text(), X1, Y1, X2-X1, 1);
+//		}
 	}
 	
 	public void renAction() {
@@ -148,7 +348,6 @@ public class StringInputSprite extends CHAR_LISTENER implements SPRITE{
 	
 	@Override
 	protected void change() {
-		// TODO Auto-generated method stub
 		
 	}
 

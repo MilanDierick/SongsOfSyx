@@ -3,9 +3,8 @@ package view.sett.ui.bottom;
 import game.faction.FACTIONS;
 import init.C;
 import init.D;
-import init.sprite.ICON;
-import init.sprite.ICON.MEDIUM;
 import init.sprite.SPRITES;
+import init.sprite.UI.Icon;
 import init.sprite.UI.UI;
 import settlement.main.SETT;
 import settlement.room.main.*;
@@ -18,11 +17,11 @@ import snake2d.util.gui.GuiSection;
 import snake2d.util.gui.renderable.RENDEROBJ;
 import snake2d.util.misc.STRING_RECIEVER;
 import snake2d.util.sets.LISTE;
-import snake2d.util.sprite.text.Text;
+import snake2d.util.sprite.SPRITE;
 import util.data.GETTER;
 import util.dic.DicMisc;
 import util.gui.misc.*;
-import util.gui.panel.GPanelS;
+import util.gui.panel.GPanel;
 import util.gui.table.GTableBuilder;
 import util.gui.table.GTableBuilder.GRowBuilder;
 import view.main.VIEW;
@@ -84,7 +83,7 @@ class UISavedRooms extends GuiSection{
 		Row(GETTER<Integer> ier){
 			this.ier = ier;
 			
-			add(new RENDEROBJ.Sprite(ICON.SMALL.SIZE) {
+			add(new RENDEROBJ.Sprite(Icon.S) {
 				@Override
 				public void render(SPRITE_RENDERER r, float ds) {
 					setSprite(p().blue.iconBig().small);
@@ -148,7 +147,7 @@ class UISavedRooms extends GuiSection{
 		
 		@Override
 		protected void clickA() {
-			if (FACTIONS.player().locks.unlockText(p().blue) != null)
+			if (!p().blue.reqs.passes(FACTIONS.player()))
 				return;
 			
 			SETT.ROOMS().copy.savedPlacer.place(p());
@@ -165,11 +164,8 @@ class UISavedRooms extends GuiSection{
 		
 		@Override
 		public void hoverInfoGet(GUI_BOX text) {
-			CharSequence p = FACTIONS.player().locks.unlockText(p().blue);
-			if (p != null && !isHoveringAHoverElement()) {
-				Text t = text.text();
-				t.add(p);
-				text.add(t);
+			if (!isHoveringAHoverElement()) {
+				p().blue.reqs.hover(text, FACTIONS.player());
 			}
 				
 		}
@@ -190,7 +186,7 @@ class UISavedRooms extends GuiSection{
 				
 				
 				if (last != null) {
-					last.blueprintI().constructor().icon().render(r, body.x1(), body.x1()+24, body.y1(), body.y1()+24);
+					last.blueprintI().iconBig().render(r, body.x1(), body.x1()+24, body.y1(), body.y1()+24);
 					timer +=ds;
 					if(timer < 2)
 						COLOR.WHITE202WHITE100.bind();
@@ -201,7 +197,7 @@ class UISavedRooms extends GuiSection{
 		
 		final ToolConfig config = new ToolConfig() {
 		
-			final GPanelS panel = new GPanelS();
+			final GPanel panel = new GPanel();
 			@Override
 			public void addUI(LISTE<RENDEROBJ> uis) {
 				panel.setTitle(¤¤save);
@@ -254,7 +250,7 @@ class UISavedRooms extends GuiSection{
 		}
 		
 		@Override
-		public MEDIUM getIcon() {
+		public SPRITE getIcon() {
 			return SPRITES.icons().m.crossair;
 		}
 		

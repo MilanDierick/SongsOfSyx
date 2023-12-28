@@ -2,7 +2,6 @@ package settlement.room.infra.transport;
 
 import java.io.IOException;
 
-import init.resources.RESOURCE;
 import settlement.path.finder.SFinderRoomService;
 import settlement.room.main.Room;
 import settlement.room.main.RoomBlueprintIns;
@@ -11,11 +10,9 @@ import settlement.room.main.furnisher.Furnisher;
 import settlement.room.main.job.ROOM_EMPLOY_AUTO;
 import settlement.room.main.job.ROOM_RADIUS.ROOM_RADIUSE;
 import settlement.room.main.util.RoomInitData;
-import snake2d.SPRITE_RENDERER;
 import snake2d.util.file.FileGetter;
 import snake2d.util.file.FilePutter;
 import snake2d.util.sets.LISTE;
-import util.rendering.ShadowBatch;
 import view.sett.ui.room.UIRoomModule;
 
 public final class ROOM_TRANSPORT extends RoomBlueprintIns<TransportInstance> implements ROOM_EMPLOY_AUTO, ROOM_RADIUSE{
@@ -62,11 +59,6 @@ public final class ROOM_TRANSPORT extends RoomBlueprintIns<TransportInstance> im
 	@Override
 	public void appendView(LISTE<UIRoomModule> mm) {
 		mm.add(new Gui(this).make());
-	}
-	
-	public void renderCart(SPRITE_RENDERER r, ShadowBatch s, int rot, int cx, int cy, int ran, RESOURCE res, int resamount, double mov) {
-		constructor.cart.renderBelow(r, s, rot, cx, cy, mov, ran, 0, res, resamount);
-		constructor.cart.render(r, s, rot, cx, cy, 0);
 	}
 
 	@Override

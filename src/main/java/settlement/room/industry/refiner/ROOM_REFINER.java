@@ -2,12 +2,11 @@ package settlement.room.industry.refiner;
 
 import java.io.IOException;
 
-import init.boostable.BOOSTABLE;
-import init.boostable.BOOSTABLES;
 import settlement.path.finder.SFinderRoomService;
 import settlement.room.industry.module.INDUSTRY_HASER;
 import settlement.room.industry.module.Industry;
 import settlement.room.industry.module.Industry.RoomBoost;
+import settlement.room.main.BonusExp.RoomExperienceBonus;
 import settlement.room.main.Room;
 import settlement.room.main.RoomBlueprintIns;
 import settlement.room.main.category.RoomCategorySub;
@@ -34,10 +33,10 @@ public class ROOM_REFINER extends RoomBlueprintIns<RefinerInstance> implements R
 
 		
 		constructor = new Constructor(init, this);
-		BOOSTABLE skill = BOOSTABLES.ROOMS().pushRoom(this, init.data(), type);
-
-		indus = INDUSTRY_HASER.createIndustries(this, init, new RoomBoost[] {constructor.efficiency}, skill);
+		pushBo(init.data(), type, true);
+		indus = INDUSTRY_HASER.createIndustries(this, init, new RoomBoost[] {constructor.efficiency}, bonus());
 		job = new Job(this);
+		new RoomExperienceBonus(this, init.data(), bonus());
 	}
 	
 	@Override

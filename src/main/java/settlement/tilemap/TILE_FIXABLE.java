@@ -1,7 +1,7 @@
 package settlement.tilemap;
 
 import settlement.job.Job;
-import settlement.tilemap.Terrain.TerrainTile;
+import settlement.tilemap.terrain.Terrain.TerrainTile;
 
 public interface TILE_FIXABLE {
 	

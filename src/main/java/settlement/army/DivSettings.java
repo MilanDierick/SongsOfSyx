@@ -6,7 +6,7 @@ import java.util.concurrent.ThreadLocalRandom;
 import init.C;
 import settlement.army.formation.DIV_FORMATION;
 import settlement.stats.STATS;
-import settlement.stats.StatsEquippables.StatEquippableRange;
+import settlement.stats.equip.EquipRange;
 import snake2d.util.datatypes.DIR;
 import snake2d.util.file.FileGetter;
 import snake2d.util.file.FilePutter;
@@ -19,6 +19,7 @@ public final class DivSettings {
 	private int speed = C.TILE_SIZE;
 	public boolean fireAtWill;
 	public boolean shouldFire;
+	public boolean shouldbreak = true;
 	public short ammoI = 0;
 	private final Div div;
 	private boolean mustering = false;
@@ -27,6 +28,8 @@ public final class DivSettings {
 	boolean isFighting = false;
 	public byte enemyDirMask;
 	public float power;
+	public float powerRanged;
+	public boolean musteringChange = true;
 	
 	DivSettings(Div div) {
 		this.div = div;
@@ -68,6 +71,7 @@ public final class DivSettings {
 		div.current().init(div.menNrOf());
 		div.order().update(div);
 		mustering = must;
+		musteringChange = true;
 	}
 	
 	public void moppingSet(boolean must) {
@@ -81,12 +85,12 @@ public final class DivSettings {
 		return isFighting;
 	}
 	
-	public StatEquippableRange ammo() {
-		if (STATS.EQUIP().ammo().get(ammoI).ammunition.div().get(div) > 0)
-			return STATS.EQUIP().ammo().get(ammoI);
-		for (int k = 0; k < STATS.EQUIP().ammo().size(); k++) {
-			StatEquippableRange a = STATS.EQUIP().ammo().get(k);
-			if (a.ammunition.div().get(div) > 0) {
+	public EquipRange ammo() {
+		if (STATS.EQUIP().RANGED().get(ammoI).stat().div().get(div) > 0 && STATS.EQUIP().RANGED().get(ammoI).ammunition.div().get(div) > 0)
+			return STATS.EQUIP().RANGED().get(ammoI);
+		for (int k = 0; k < STATS.EQUIP().RANGED().size(); k++) {
+			EquipRange a = STATS.EQUIP().RANGED().get(k);
+			if (a.stat().div().get(div) > 0 && a.ammunition.div().get(div) > 0) {
 				ammoI = a.tIndex;
 				return a;
 			}
@@ -95,10 +99,10 @@ public final class DivSettings {
 	}
 	
 	public void setBestAmmo() {
-		int i = ThreadLocalRandom.current().nextInt(STATS.EQUIP().ammo().size());
-		for (int k = 0; k < STATS.EQUIP().ammo().size(); k++) {
-			StatEquippableRange a = STATS.EQUIP().ammo().getC(i+k);
-			if (a.ammunition.div().get(div) > 0) {
+		int i = ThreadLocalRandom.current().nextInt(STATS.EQUIP().RANGED().size());
+		for (int k = 0; k < STATS.EQUIP().RANGED().size(); k++) {
+			EquipRange a = STATS.EQUIP().RANGED().getC(i+k);
+			if (a.stat().div().get(div) > 0 && a.ammunition.div().get(div) > 0) {
 				ammoI = a.tIndex;
 			}
 		}
@@ -123,6 +127,7 @@ public final class DivSettings {
 		file.bool(isFighting);
 		file.bool(shouldFire);
 		file.bool(charging);
+		file.bool(shouldbreak);
 		file.f(power);
 	}
 
@@ -138,7 +143,9 @@ public final class DivSettings {
 		isFighting = file.bool();
 		shouldFire = file.bool();
 		charging = file.bool();
+		shouldbreak = file.bool();
 		power = file.f();
+		musteringChange = true;
 	}
 	
 	void clear() {
@@ -152,7 +159,9 @@ public final class DivSettings {
 		isFighting = false;
 		shouldFire = false;
 		charging = false;
+		shouldbreak = false;
 		power = 0;
+		musteringChange = true;
 	}
 	
 }

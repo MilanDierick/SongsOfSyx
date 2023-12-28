@@ -19,6 +19,17 @@ final class ModOnly extends PATH {
 		f = new VirtualFolder(new ArrayList<Path>(p), path);
 	}
 	
+	ModOnly(String patha, String path, String filetype, boolean create) {
+		super(filetype);
+		
+		Path p = PATHS.i.paths.get(0);
+		if (PATHS.currentMods().size() == 0)
+			p = PATHS.i.paths.get(PATHS.i.paths.size()-1);
+		if (create)
+			Util.makeDirs(p.resolve(path));
+		f = new VirtualFolder(new ArrayList<Path>(p), path);
+	}
+	
 	private ModOnly(VirtualFolder f, String filetype) {
 		super(filetype);
 		this.f = f;
@@ -58,6 +69,11 @@ final class ModOnly extends PATH {
 	@Override
 	public Path get() {
 		return f.getExistingFile(null);
+	}
+	
+	@Override
+	public boolean existsFolder(CharSequence folder) {
+		return f.exists(folder, "");
 	}
 
 }

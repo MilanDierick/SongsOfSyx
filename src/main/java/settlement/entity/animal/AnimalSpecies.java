@@ -2,15 +2,18 @@ package settlement.entity.animal;
 
 import java.io.IOException;
 
+import game.boosting.BOOSTABLES;
+import game.boosting.BOOSTABLES.BDamage;
 import init.C;
 import init.biomes.*;
 import init.paths.PATH;
 import init.paths.PATHS;
-import init.resources.RESOURCE;
-import init.resources.RESOURCES;
+import init.resources.*;
+import init.resources.RBIT.RBITImp;
 import init.sound.SOUND;
 import init.sound.SoundSettlement;
-import init.sprite.ICON;
+import init.sprite.SPRITES;
+import init.sprite.UI.Icon;
 import snake2d.Errors;
 import snake2d.Renderer;
 import snake2d.util.color.*;
@@ -22,7 +25,6 @@ import util.keymap.KEY_COLLECTION;
 import util.keymap.RCollection;
 import util.rendering.ShadowBatch;
 import util.spritecomposer.*;
-import util.spritecomposer.ComposerThings.IIcon;
 
 public class AnimalSpecies extends INFO implements INDEXED{
 	
@@ -34,14 +36,18 @@ public class AnimalSpecies extends INFO implements INDEXED{
 	private final transient int spriteOff;
 	public final transient TILE_SHEET sheet;
 	public final transient SoundSettlement.Sound sounds;
-	public final ICON.BIG icon;
+	public final Icon icon;
 	private final int index;
 	public final boolean caravanable;
 	public final COLOR color;
 	private final LIST<RESOURCE> resources;
+	public final RBIT rBit;
 	private final double[] resAmounts;
 	private final double[] climates;
 	private final double[] terrains;
+	
+	public final double[] damage = new double[BOOSTABLES.BATTLE().DAMAGES.size()];
+	
 	public final boolean pack;
 	public final boolean grazes;
 	public final COLOR blood = new ColorImp(127, 15, 15);
@@ -73,27 +79,16 @@ public class AnimalSpecies extends INFO implements INDEXED{
 				Json text = new Json(gText.get(key));
 				String sKey = data.value("SPRITE");
 				TILE_SHEET sheet;
-				ICON.BIG icon;
 				if (sprites.containsKey(sKey)) {
 					sheet = sprites.get(sKey).sheet;
-					icon = sprites.get(sKey).icon;
 				}else {
-					new ComposerThings.IInit(gSprite.get(sKey), 132, 410);
-					icon = IIcon.LARGE.get(new ComposerThings.ISpriteData() {
-
-						@Override
-						protected SpriteData init(ComposerUtil c, ComposerSources s, ComposerDests d) {
-							s.singles.init(0, 0, 1, 1, 1, 1, d.s32);
-							s.singles.paste(true);
-							return d.s32.saveSprite();
-						}
-						
-					}.get());
+					new ComposerThings.IInit(gSprite.get(sKey), 132, 366);
+					
 					sheet = new ComposerThings.ITileSheet() {
 						
 						@Override
 						protected TILE_SHEET init(ComposerUtil c, ComposerSources s, ComposerDests d) {
-							s.singles.init(0, s.singles.body().y2(), 1, 1, 2, 12, d.s24);
+							s.singles.init(0, 0, 1, 1, 2, 12, d.s24);
 							for (int i = 0; i < 12; i++) {
 								s.singles.setSkip(i * 2, 2).paste(3, true);
 							}
@@ -101,7 +96,7 @@ public class AnimalSpecies extends INFO implements INDEXED{
 						}
 					}.get();
 				}
-				AnimalSpecies s = new AnimalSpecies(all.size(), data, text, sheet, icon);
+				AnimalSpecies s = new AnimalSpecies(all.size(), data, text, sheet);
 				all.add(s);
 				map.put(key, s);
 				if (!sprites.containsKey(sKey))
@@ -130,9 +125,10 @@ public class AnimalSpecies extends INFO implements INDEXED{
 		}
 	}
 	
-	private AnimalSpecies(int index, Json data, Json text, TILE_SHEET sheet, ICON.BIG icon){
+	private AnimalSpecies(int index, Json data, Json text, TILE_SHEET sheet) throws IOException{
 		super(text, null);
 		this.index = index;
+		icon = SPRITES.icons().get(data);
 		caravanable = data.bool("CARAVAN");
 		massMin = data.i("MASS", 1, 500); 
 		acceleration = data.i("SPEED", 1, 31)*C.TILE_SIZE;
@@ -140,11 +136,26 @@ public class AnimalSpecies extends INFO implements INDEXED{
 		hitboxSize = 11*C.SCALE;
 		spriteOff = (24*C.SCALE - hitboxSize)/2;
 		this.sheet = sheet;
-		this.icon = icon;
 		sounds = SOUND.sett().animal.get(data);
 		color = new ColorImp(data);
 		resources = RESOURCES.map().getMany(data);
 		resAmounts = data.ds("RESOURCE_AMOUNT", resources.size());
+		
+		RBITImp bb = new RBITImp();
+		for (RESOURCE res : resources) {
+			bb.or(res);
+		}
+		this.rBit = bb;
+		
+		BOOSTABLES.BATTLE().DAMAGE_COLL . new KJson(data) {
+			
+			@Override
+			protected void process(BDamage s, Json j, String key, boolean isWeak) {
+				damage[s.index()] = j.d(key, 0, 10000);
+			}
+		};
+		
+
 		CLIMATES.MAP();
 		climates = KEY_COLLECTION.fill(CLIMATES.MAP(), data, 1);
 		terrains = KEY_COLLECTION.fill(TERRAINS.MAP(), data, 1);
@@ -186,7 +197,7 @@ public class AnimalSpecies extends INFO implements INDEXED{
 
 	public void renderCorpse(Renderer r, ShadowBatch shadows, float ds, int x, int y, int state, int rot, int ran, double statef, COLOR decay) {
 
-		
+		shadows.setHeight(2).setDistance2Ground(0);
 		if (state == 0) {
 			int t = Sprite.bodypart1;
 			if ((ran & 1) == 1) {
@@ -194,10 +205,11 @@ public class AnimalSpecies extends INFO implements INDEXED{
 			}
 			t += rot;
 			sheet.render(r, t, x, y);
-			
+			sheet.render(shadows, t, x, y);
 		}else if(state == 1) {
 			int t = Sprite.laying + rot;
 			sheet.render(r, t, x, y);
+			sheet.render(shadows, t, x, y);
 			int bloodI = (int) ((statef)*Sprite.BLOOD.length);
 			
 			if (bloodI > 0) {
@@ -209,11 +221,13 @@ public class AnimalSpecies extends INFO implements INDEXED{
 			decay.bind();
 			int t = Sprite.rotten + rot;
 			sheet.render(r, t, x, y);
+			sheet.render(shadows, t, x, y);
 			COLOR.unbind();
 			
 		}else if(state == 3) {
 			int t = Sprite.bones + rot;
 			sheet.render(r, t, x, y);
+			sheet.render(shadows, t, x, y);
 		}else {
 			throw new RuntimeException();
 		}

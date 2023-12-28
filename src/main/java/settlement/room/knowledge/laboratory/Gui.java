@@ -40,14 +40,14 @@ class Gui extends UIRoomModuleImp<LaboratoryInstance, ROOM_LABORATORY> {
 				
 				GBox b = (GBox) text;
 				b.text(¤¤TargetD);
-				double p = IndustryUtil.calcProductionRate(blueprint.workValue, null, blueprint.bonus, getter.get());
+				double p = IndustryUtil.calcProductionRate(blueprint.workValue, null, blueprint.bonus(), getter.get());
 				double v = p/blueprint.workValue;
 				int am = (int) (blueprint.knowledgePerStation()*getter.get().employees().employed()*v);
 				b.NL();
 				b.add(GFORMAT.f(b.text(), am));
 				b.NL(8);
 				
-				IndustryUtil.hoverProductionRate(b, 1, null, blueprint.bonus, getter.get());
+				IndustryUtil.hoverProductionRate(b, 1, null, blueprint.bonus(), getter.get());
 			}
 			
 		};
@@ -56,7 +56,7 @@ class Gui extends UIRoomModuleImp<LaboratoryInstance, ROOM_LABORATORY> {
 			
 			@Override
 			public void update(GText text) {
-				double p = IndustryUtil.calcProductionRate(1, null, blueprint.bonus, getter.get());
+				double p = IndustryUtil.calcProductionRate(1, null, blueprint.bonus(), getter.get());
 				GFORMAT.perc(text, p, 1);
 				
 			}
@@ -66,7 +66,7 @@ class Gui extends UIRoomModuleImp<LaboratoryInstance, ROOM_LABORATORY> {
 			
 			@Override
 			public void update(GText text) {
-				double p = IndustryUtil.calcProductionRate(blueprint.workValue, null, blueprint.bonus, getter.get());
+				double p = IndustryUtil.calcProductionRate(blueprint.workValue, null, blueprint.bonus(), getter.get());
 				double v = p/blueprint.workValue;
 				int am = (int) (blueprint.knowledgePerStation()*getter.get().employees().employed()*v);
 				GFORMAT.i(text, am);

@@ -3,6 +3,8 @@ package settlement.path.finder;
 import static settlement.main.SETT.*;
 
 import game.GAME;
+import init.resources.RBIT;
+import init.resources.RBIT.RBITImp;
 import init.resources.RESOURCE;
 import settlement.main.SETT;
 import settlement.misc.util.TILE_STORAGE;
@@ -12,10 +14,12 @@ import settlement.room.main.Room;
 import settlement.room.main.throne.THRONE;
 import snake2d.util.datatypes.COORDINATE;
 import snake2d.util.map.MAP_OBJECT;
+import snake2d.util.sets.Tuple;
+import snake2d.util.sets.Tuple.TupleImp;
 
 public final class SFinderResourceStorage {
 
-	private long mask;
+	private final RBITImp mask = new RBITImp();
 	private RESOURCE result;
 
 	SFinderResourceStorage() {
@@ -40,11 +44,11 @@ public final class SFinderResourceStorage {
 	
 	
 	
-	public boolean has(int sx, int sy, long mask) {
+	public boolean has(int sx, int sy, RBIT mask) {
 		return s().has(sx, sy, mask);
 	}
 
-	public long hasMask(int sx, int sy) {
+	public RBIT hasMask(int sx, int sy) {
 		return s().bits(sx, sy);
 	}
 	
@@ -63,10 +67,10 @@ public final class SFinderResourceStorage {
 		return reserve(start, r.bit, path, maxdistance) == r;
 	}
 	
-	public RESOURCE reserve(COORDINATE start, long resMask, SPath path, int maxdistance) {
+	public RESOURCE reserve(COORDINATE start, RBIT resMask, SPath path, int maxdistance) {
 		
 		if (has(start.x(), start.y(), resMask)) {
-			mask = resMask;
+			mask.clearSet(resMask);
 			
 			if (path.request(start.x(), start.y(), fin, maxdistance)) {
 				reserve(path.destX(), path.destY());
@@ -88,7 +92,7 @@ public final class SFinderResourceStorage {
 			Room res = ROOMS().map.get(tx, ty);
 			if (res != null) {
 				TILE_STORAGE s = res.storage(tx, ty);
-				if (s != null && s.resource() != null && s.storageReservable() > 0 && (s.resource().bit & mask) != 0) {
+				if (s != null && s.resource() != null && s.storageReservable() > 0 && mask.has(s.resource())) {
 					result = s.resource();
 					return true;
 				}
@@ -102,13 +106,26 @@ public final class SFinderResourceStorage {
 	}
 	
 	public COORDINATE reserve(int sx, int sy, RESOURCE r, int maxdistance) {
-		mask = r.bit;
+		mask.clearSet(r.bit);
+		if (reserve(sx, sy, r.bit, maxdistance) != null)
+			return fres.a;
+		return null;
+	}
+	
+	private final TupleImp<COORDINATE, RESOURCE> fres = new TupleImp<>(); 
+	
+	public Tuple<COORDINATE, RESOURCE> reserve(int sx, int sy, RBIT r, int maxdistance) {
+		if (!has(sx, sy, r))
+			return null;
+		mask.clearSet(r);
 		COORDINATE c = SETT.PATH().finders.finder().findDest(sx, sy, fin, maxdistance);
 		if (c != null) {
 			reserve(c.x(), c.y());
-			return c;
+			fres.a = c;
+			fres.b = result;
+			return fres;
 		}
-		return SETT.PATH().finders.finder().findDest(sx, sy, fin, maxdistance);
+		return null;
 	}
 	
 	public boolean isReservedAndAvailable(COORDINATE reserved, RESOURCE r) {
@@ -167,7 +184,7 @@ public final class SFinderResourceStorage {
 		Room res = ROOMS().map.get(tx, ty);
 		if (res != null) {
 			TILE_STORAGE s = res.storage(tx, ty);
-			if (s != null && s.storageReservable() > 0 && (s.resource().bit & result.bit) != 0) {
+			if (s != null && s.storageReservable() > 0 && s.resource() == result) {
 				s.storageReserve(1);
 				return;
 			}

@@ -1,8 +1,11 @@
 package init.race;
 
 import settlement.entity.humanoid.HCLASS;
-import settlement.stats.*;
-import settlement.stats.StatsMultipliers.StatMultiplier;
+import settlement.stats.Induvidual;
+import settlement.stats.STATS;
+import settlement.stats.muls.StatsMultipliers.StatMultiplier;
+import settlement.stats.stat.STAT;
+import settlement.stats.util.StatsJson;
 import snake2d.util.MATH;
 import snake2d.util.file.Json;
 import snake2d.util.sprite.text.Str;
@@ -39,7 +42,7 @@ final class BioOpinionData {
 		new StatsJson(json) {
 
 			@Override
-			public void doWithTheJson(StatCollection col, STAT s, Json j, String key) {
+			public void doWithTheJson(STAT s, Json j, String key) {
 				Opinion i = new Opinion(j, key);
 				all[s.index()] = i;
 			}
@@ -68,10 +71,10 @@ final class BioOpinionData {
 	
 	public CharSequence title(Induvidual h, double value) {
 		if (value > 0.95)
-			return get(titles[0], h.randomness());
+			return get(titles[0], STATS.RAN().getL(h, 0));
 		if (value > 0.8)
-			return get(titles[1], h.randomness());
-		return get(titles[2], h.randomness());
+			return get(titles[1], STATS.RAN().getL(h, 0));
+		return get(titles[2], STATS.RAN().getL(h, 0));
 	}
 	
 	public CharSequence funny(long ran) {

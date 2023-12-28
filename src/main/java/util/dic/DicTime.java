@@ -15,7 +15,7 @@ public class DicTime {
 	public static CharSequence ¤¤Years = "¤Years";
 	public static CharSequence ¤¤Age = "¤Age";
 	public static CharSequence ¤¤Ages = "¤Ages";
-	
+	public static CharSequence ¤¤Hours = "¤Hours";
 	public static CharSequence ¤¤Today = "¤Today";
 	public static CharSequence ¤¤now = "¤now";
 	
@@ -26,6 +26,8 @@ public class DicTime {
 	public static CharSequence ¤¤MoreOfSomething = "¤{0} {1}";
 
 	private static CharSequence ¤¤dateFormat = "¤Day {0} of {1}, Year {2} of the {3}";
+	private static CharSequence ¤¤dateFormatShort = "¤{0}/{1} - {2} {3}";
+	
 	private static CharSequence ¤¤2SomethingAgo = "{0}, {1} ago";
 	private static CharSequence ¤¤1SomethingAgo = "{0} ago";
 	private static CharSequence ¤¤2Something = "{0}, {1}";
@@ -50,18 +52,50 @@ public class DicTime {
 		return text;
 	}
 	
+	public static Str setDateShort(Str text, int second) {
+		
+		int age = (second % (int)TIME.age().cycleSeconds()) / (int)TIME.age().bitSeconds();
+		int year = (second % (int)TIME.years().cycleSeconds())  / (int)TIME.years().bitSeconds();
+		int season = (second % (int)TIME.seasons().cycleSeconds())  / (int)TIME.seasons().bitSeconds();
+		int day = (second % (int)TIME.days().cycleSeconds())  / (int)TIME.days().bitSeconds();
+		text.clear().add(¤¤dateFormatShort);
+		text.insert(0, day+1);
+		text.insert(1, TIME.seasons().bitName(season));
+		text.insert(2, year+1);
+		CharSequence aa = TIME.age().bitName(age);
+		f.clear();
+		f.add(Character.toUpperCase(aa.charAt(0)));
+		f.add('.');
+		for (int i = 1; i < aa.length(); i++) {
+			if (aa.charAt(i-1) == ' ')
+				f.add(Character.toUpperCase(aa.charAt(i))).add('.');
+		}
+		
+		text.insert(3, f);
+		return text;
+	}
+	
 	public static void setTime(Str text, int second) {
 		int s = second % TIME.secondsPerDay;
 		int h = s / TIME.secondsPerHour;
 		s = s % TIME.secondsPerHour;
 		
-		if (h == 12)
-			text.add(DicTime.¤¤TimeFormatAM).insert(0, TIME.hours().bitCurrent());
-		else if (TIME.hours().bitCurrent() > 12)
-			text.add(DicTime.¤¤TimeFormatPM).insert(0, TIME.hours().bitCurrent()-12);
-		else
-			text.add(DicTime.¤¤TimeFormatAM).insert(0, TIME.hours().bitCurrent());
-		text.insert(1, (int)(TIME.currentSecond()%TIME.secondsPerHour));
+		s = 60*s/TIME.secondsPerHour;
+		
+		if (h < 10)
+			text.add('0');
+		text.add(h);
+		text.add(':');
+		if (s < 10)
+			text.add('0');
+		text.add(s);
+//		if (h == 12)
+//			text.add(DicTime.¤¤TimeFormatAM).insert(0, TIME.hours().bitCurrent());
+//		else if (TIME.hours().bitCurrent() > 12)
+//			text.add(DicTime.¤¤TimeFormatPM).insert(0, TIME.hours().bitCurrent()-12);
+//		else
+//			text.add(DicTime.¤¤TimeFormatAM).insert(0, TIME.hours().bitCurrent());
+//		text.insert(1, (int)(TIME.currentSecond()%TIME.secondsPerHour));
 	}
 	
 	

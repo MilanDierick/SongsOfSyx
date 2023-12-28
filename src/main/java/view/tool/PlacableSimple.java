@@ -1,9 +1,9 @@
 package view.tool;
 
-import init.sprite.ICON.MEDIUM;
 import init.sprite.SPRITES;
 import snake2d.SPRITE_RENDERER;
 import snake2d.util.color.COLOR;
+import snake2d.util.sprite.SPRITE;
 import util.colors.GCOLORS_MAP;
 import util.gui.misc.GBox;
 import view.subview.GameWindow;
@@ -29,7 +29,7 @@ public abstract class PlacableSimple implements PLACABLE{
 	}
 	
 	@Override
-	public MEDIUM getIcon() {
+	public SPRITE getIcon() {
 		return SPRITES.icons().m.cancel;
 	}
 

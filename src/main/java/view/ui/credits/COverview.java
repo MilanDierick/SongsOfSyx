@@ -1,7 +1,7 @@
 package view.ui.credits;
 
 import game.GAME;
-import game.faction.FCredits.CredHistory;
+import game.faction.player.PCredits.CredHistory;
 import init.sprite.UI.UI;
 import snake2d.SPRITE_RENDERER;
 import snake2d.util.color.COLOR;
@@ -25,8 +25,8 @@ import util.info.GFORMAT;
 final class COverview extends GuiSection{
 
 	private int hi;
-	private static int w = 8;
-	private int am = GAME.player().credits().saved;
+	private static int w = 16;
+	private int am = GAME.player().credits().creditsH().historyRecords();
 	
 	private int loCredits;
 	private double maxin, maxout;
@@ -48,7 +48,7 @@ final class COverview extends GuiSection{
 			@Override
 			public void update(GText text) {
 				int am = 0;
-				for (CredHistory h : GAME.player().credits().ALL()) {
+				for (CredHistory h : GAME.player().credits().all()) {
 					am += h.IN.get(1);
 					am -= h.OUT.get(1);
 				}
@@ -71,7 +71,7 @@ final class COverview extends GuiSection{
 			int m = 0;
 			int o = 0;
 			
-			for (CredHistory h : GAME.player().credits().ALL()) {
+			for (CredHistory h : GAME.player().credits().all()) {
 				m += h.IN.get(i);
 				o += h.OUT.get(i);
 			}
@@ -92,7 +92,7 @@ final class COverview extends GuiSection{
 			int si = am-hi-1;
 			{
 				GText t = b.text();
-				DicTime.setAgo(t, si*GAME.player().credits().time.bitSeconds());
+				DicTime.setAgo(t, si*GAME.player().credits().creditsH().time().bitSeconds());
 				b.add(t);
 				b.NL();
 				b.textL(DicRes.¤¤Treasury);
@@ -109,8 +109,8 @@ final class COverview extends GuiSection{
 				b.textL(DicRes.¤¤Net);
 				b.NL();
 				
-				for (CredHistory h : GAME.player().credits().ALL()) {
-					b.textL(h.info.name);
+				for (CredHistory h : GAME.player().credits().all()) {
+					b.textL(h.type.name);
 					b.tab(4);
 					b.add(GFORMAT.iIncr(b.text(), h.IN.get(si)));
 					b.tab(7);
@@ -163,7 +163,7 @@ final class COverview extends GuiSection{
 			}
 		};
 		s.body().setWidth(w*am);
-		s.body().setHeight(48);
+		s.body().setHeight(78);
 		return s;
 		
 	}
@@ -174,7 +174,7 @@ final class COverview extends GuiSection{
 		
 		Profits(){
 			body.setWidth(w*am);
-			body().setHeight(64);
+			body().setHeight(112);
 		}
 
 		@Override
@@ -198,11 +198,11 @@ final class COverview extends GuiSection{
 				int si = am - x-1;
 				
 				int y2 = body().y2();
-				for (CredHistory h : GAME.player().credits().ALL()) {
+				for (CredHistory h : GAME.player().credits().all()) {
 					
 					double d = h.IN.get(si)/maxin;
 					int hig = (int) Math.ceil(body().height()*d);
-					ColorImp.TMP.set(h.color);
+					ColorImp.TMP.set(COLOR.UNIQUE.getC(h.type.ordinal()));
 					if (x == hi) {
 						ColorImp.TMP.shadeSelf(1.5);
 					}else {
@@ -211,7 +211,7 @@ final class COverview extends GuiSection{
 					ColorImp.TMP.render(r, x1, x1+w, y2-hig, y2);
 					
 					if (hig > 1)
-						h.color.render(r, x1+1, x1+w-1, y2-hig+1, y2);
+						COLOR.UNIQUE.getC(h.type.ordinal()).render(r, x1+1, x1+w-1, y2-hig+1, y2);
 					if (hig > 0)
 						hig--;
 					y2-= hig;
@@ -240,7 +240,7 @@ final class COverview extends GuiSection{
 		
 		Losses(){
 			body.setWidth(w*am);
-			body().setHeight(64);
+			body().setHeight(112);
 		}
 
 		@Override
@@ -264,11 +264,11 @@ final class COverview extends GuiSection{
 				int si = am - x-1;
 				
 				int y1 = body().y1();
-				for (CredHistory h : GAME.player().credits().ALL()) {
+				for (CredHistory h : GAME.player().credits().all()) {
 					
 					double d = h.OUT.get(si)/maxout;
 					int hig = (int) Math.ceil(body().height()*d);
-					ColorImp.TMP.set(h.color);
+					ColorImp.TMP.set(COLOR.UNIQUE.getC(h.type.ordinal()));
 					if (x == hi) {
 						ColorImp.TMP.shadeSelf(1.5);
 					}else {
@@ -277,7 +277,7 @@ final class COverview extends GuiSection{
 					ColorImp.TMP.render(r, x1, x1+w, y1, y1+hig);
 					
 					if (hig > 1)
-						h.color.render(r, x1+1, x1+w-1, y1-1, y1+hig);
+						COLOR.UNIQUE.getC(h.type.ordinal()).render(r, x1+1, x1+w-1, y1-1, y1+hig);
 					if (hig > 0)
 						hig--;
 					y1+= hig;
@@ -308,14 +308,14 @@ final class COverview extends GuiSection{
 		
 		int i = 0;
 		
-		for (CredHistory h : GAME.player().credits().ALL()) {
+		for (CredHistory h : GAME.player().credits().all()) {
 			HOVERABLE hh = new HOVERABLE.Sprite(new SDetail(h) {
 				
 				@Override
 				void up(GText text) {
 					GFORMAT.iIncr(text, h.IN.get(1)-h.OUT.get(1));
 				}
-			}).hoverTitleSet(h.info.name).hoverInfoSet(h.info.desc);
+			}).hoverTitleSet(h.type.name).hoverInfoSet(h.type.desc);
 			
 			hh.body().moveX1Y1((i%1)*(hh.body().width()+32), (i/1)*(hh.body().height()+2));
 			s.add(hh);
@@ -359,12 +359,12 @@ final class COverview extends GuiSection{
 
 		@Override
 		public void render(SPRITE_RENDERER r, int X1, int X2, int Y1, int Y2) {
-			ColorImp.TMP.set(cr.color).shadeSelf(0.5);
+			ColorImp.TMP.set(COLOR.UNIQUE.getC(cr.type.ordinal())).shadeSelf(0.5);
 			ColorImp.TMP.render(r, X1, X1+height(), Y1, Y1+height());
-			ColorImp.TMP.set(cr.color);
+			ColorImp.TMP.set(COLOR.UNIQUE.getC(cr.type.ordinal()));
 			ColorImp.TMP.render(r, X1+2, X1+height()-2, Y1+2, Y1+height()-2);
 			
-			t.clear().add(cr.info.name);
+			t.clear().add(cr.type.name);
 			
 			t.render(r, X1+height()*2, Y1);
 			

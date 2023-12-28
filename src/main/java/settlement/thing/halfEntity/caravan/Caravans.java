@@ -80,7 +80,7 @@ public class Caravans extends Factory<Caravan>{
 	}
 	
 	private boolean create(RESOURCE res, int amount, Type type) {
-		COORDINATE coo = SETT.PATH().entryPoints.rnd();
+		COORDINATE coo = SETT.ENTRY().points.randomReachable();
 		if (coo == null)
 			return false;
 		

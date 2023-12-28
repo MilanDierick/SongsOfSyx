@@ -3,25 +3,16 @@ import static settlement.main.SETT.*;
 
 import game.GAME;
 import init.C;
-import init.D;
-import init.resources.RESOURCE;
-import init.resources.RESOURCES;
-import settlement.entity.ENTITY;
-import settlement.entity.animal.Animal;
-import settlement.entity.humanoid.*;
-import settlement.entity.humanoid.HEvent.HEventData;
-import settlement.entity.humanoid.HPoll.HPollData;
-import settlement.entity.humanoid.ai.main.AI;
-import settlement.entity.humanoid.ai.main.AIManager;
+import settlement.entity.animal.AnimalSpecies;
+import settlement.entity.humanoid.Humanoid;
+import settlement.entity.humanoid.ai.main.*;
 import settlement.entity.humanoid.ai.main.AISUB.AISubActivation;
 import settlement.main.SETT;
-import settlement.misc.job.SETT_JOB;
-import settlement.room.food.hunter.HunterInstance;
-import settlement.room.food.hunter.ROOM_HUNTER;
-import settlement.room.industry.module.Industry.IndustryResource;
+import settlement.room.food.hunter2.ROOM_HUNTER;
+import settlement.room.main.RoomInstance;
 import settlement.stats.STATS;
-import settlement.thing.THINGS.Thing;
 import settlement.thing.ThingsCadavers.Cadaver;
+import snake2d.util.datatypes.COORDINATE;
 import snake2d.util.datatypes.DIR;
 import snake2d.util.rnd.RND;
 import snake2d.util.sprite.text.Str;
@@ -30,275 +21,176 @@ final class WorkHunter extends PlanBlueprint {
 
 	private final ROOM_HUNTER b;
 	
-	protected WorkHunter(AIModule_Work module, PlanBlueprint[] map) {
+	protected WorkHunter(ROOM_HUNTER b, AIModule_Work module, PlanBlueprint[] map) {
 		
-		super(module, ROOMS().HUNTER, map);
-		b = SETT.ROOMS().HUNTER;
+		super(module, b, map);
+		this.b = b;
 	}
 	
 	@Override
 	public AISubActivation init(Humanoid a, AIManager d) {
-		HunterInstance in = (HunterInstance) work(a);
+		RoomInstance in = work(a);
 		
-		SETT_JOB j = in.getWork();
+		if (!PATH().finders.entryPoints.anyHas(a.tc().x(), a.tc().y()))
+			return null;
 		
+
+		COORDINATE j = b.reserveWork(in, a);
 		
 		if (j == null) {
 			GAME.Notify("Weird " + in.mX() + " " + in.mY());
 			return null;
 		}
+		d.planTile.set(j);
 		
-		d.planTile.set(j.jobCoo());
-		
-		for (Thing t : SETT.THINGS().get(j.jobCoo().x(), j.jobCoo().y())) {
-			if (t instanceof Cadaver) {
-				Cadaver c = (Cadaver) t;
-				if (c.resHas()) {
-					d.planObject = c.index();
-					in.getWork(d.planTile).jobReserve(null);
-					
-					return butcher_walk.set(a, d);
-				}
-			}
+		if (getCadaver(a, d) != null) {
+			AISubActivation s = walk.set(a, d);
+			
+			if (s == null)
+				b.workFinish(d.planTile);
+			else
+				return s;
 		}
 		
-		if (!in.searching())
-			return null;
-		
-		Animal prey = SETT.PATH().finders.prey.findAndReserve(a.physics.tileC(), d.path, in.radius());
-		
-		if (prey == null) {
-			in.stopSearching();
-			return null;
+		if (STATS.WORK().WORK_TIME.indu().getD(a.indu()) < 0.5) {
+			AISubActivation s = leave.set(a, d);
+			return s;
+			
 		}
-		j.jobReserve(null);
-		d.planObject = prey.id();
 		
-		return stalk.set(a,d);
+		
+		AISubActivation s = walk.set(a, d);
+		
+		if (s == null)
+			b.workFinish(d.planTile);
+		return s;
 		
 	}
 	
-	{
-		D.gInit(this);
-	}
-	
-	
-	final Resumer stalk = new Resumer(D.g("Stalking", "Stalking prey")) {
-		
-
-		@Override
-		public double poll(Humanoid a, AIManager d, HPollData e) {
-			if (e.type == HPoll.SCARE_ANIMAL_NOT)
-				return 1;
-			return super.poll(a, d, e);
-		}
-		
-		@Override
-		public boolean event(Humanoid a, AIManager d, HEventData e) {
-			if (e.event == HEvent.COLLISION_SOFT && (work(a) instanceof HunterInstance)) {
-				
-				if (e.other instanceof Animal) {
-					Animal prey = getPrey(a, d);
-					Animal an = ((Animal)e.other);
-					if (prey != an) {
-						if (an.reservable()) {
-							if (prey != null)
-								prey.reserveCancel();;
-							prey = an;
-							prey.reserve();
-							d.planObject = prey.id();
-						}
-					}
-					
-					if (prey == an) {
-						a.speed.magnitudeInit(0);
-						if (((HunterInstance)work(a)).countHunt()) {
-							AISubActivation s = drag_back.trySet(a, d);
-							if (s != null) {
-								d.overwrite(a, s);
-								return false;
-							}	
-						}else {
-							AISubActivation s = drag_back_failed.trySet(a, d);
-							if (s != null) {
-								prey.reserveCancel();
-								d.overwrite(a, s);
-								prey.scare(a, true);
-								return false;
-							}
-						}
-					}
-						
-						
-					
-				}
-			}
-			return super.event(a, d, e);
-		}
+	final Resumer walk = new Resumer() {
 		
 		@Override
 		public AISubActivation setAction(Humanoid a, AIManager d) {
-			AISubActivation ac = AI.SUBS().walkTo.path(a, d);
+			return AI.SUBS().walkTo.coo(a, d, d.planTile);
+		}
+		
+		@Override
+		public AISubActivation res(Humanoid a, AIManager d) {
+			return butcher.set(a, d);
+		}
+		
+		@Override
+		public void can(Humanoid a, AIManager d) {
+			b.workFinish(d.planTile);
+		}
+
+		@Override
+		public boolean con(Humanoid a, AIManager d) {
+			return work(a) != null && work(a).blueprint() == b;
+		}
+
+	};
+	
+	final Resumer leave = new Resumer() {
+		
+		@Override
+		public AISubActivation setAction(Humanoid a, AIManager d) {
+			if (PATH().finders.entryPoints.any(a.tc().x(), a.tc().y(), d.path, Integer.MAX_VALUE)) {
+				b.reportSkill(work(a), a);
+				return AI.SUBS().walkTo.pathFull(a, d);
+			}
+			return null;
+		}
+		
+		@Override
+		public AISubActivation res(Humanoid a, AIManager d) {
+			return hunt.set(a, d);
+		}
+		
+		@Override
+		public void can(Humanoid a, AIManager d) {
+			b.workFinish(d.planTile);
+		}
+
+		@Override
+		public boolean con(Humanoid a, AIManager d) {
+			return work(a) != null && work(a).blueprint() == b;
+		}
+
+	};
+	
+	final Resumer hunt = new Resumer() {
+		
+		@Override
+		public AISubActivation setAction(Humanoid a, AIManager d) {
+			SETT.ENTITIES().moveIntoTheTheUnknown(a);
+			a.speed.magnitudeInit(0);
+			return AI.SUBS().STAND.activate(a, d);
+		}
+		
+		@Override
+		public AISubActivation res(Humanoid a, AIManager d) {
+			b.reportSkill(work(a), a);
+			if (STATS.WORK().WORK_TIME.indu().getD(a.indu()) > 0.5 || !AIModules.current(d).moduleCanContinue(a, d)) {
+				can(a, d);
+				return drag.set(a, d);
+			}
+			return AI.SUBS().STAND.activate(a, d);
+		}
+		
+		@Override
+		public void can(Humanoid a, AIManager d) {
+			SETT.ENTITIES().returnFromTheTheUnknown(a);
+			b.workFinish(d.planTile);
+		}
+
+		@Override
+		public boolean con(Humanoid a, AIManager d) {
+			return work(a) != null && work(a).blueprint() == b;
+		}
+
+	};
+	
+	final Resumer drag = new Resumer() {
+		
+		@Override
+		public AISubActivation setAction(Humanoid a, AIManager d) {
+			
+			AnimalSpecies ss = spe();
+			Cadaver c = SETT.THINGS().cadavers.normal(a.tc().x(), a.tc().y(), ss.mass()*RND.rFloat1(1.1), 1, ss, 2);
+			if (c == null)
+				return null;
+			
+			d.planObject = c.index();
+			RoomInstance in = work(a);
+			
+			COORDINATE j = b.reserveWork(in, a);
+			
+			if (j == null) {
+				GAME.Notify("Weird " + in.mX() + " " + in.mY());
+				return null;
+			}
+			d.planTile.set(j);
+			
+			AISubActivation ac = AI.SUBS().walkTo.drag(a, d, THINGS().cadavers.draggable, c.index(), d.planTile);
 			if (ac != null)
 				return ac;
+			
 			can(a, d);
 			return null;
+			
 		}
 		
-		@Override
-		public AISubActivation res(Humanoid a, AIManager d) {
+		private Cadaver getCadaver(Humanoid a, AIManager d) {
+			if (d.planObject == -1)
+				return null;
+			Cadaver e = THINGS().cadavers.getByIndex(d.planObject);
 			
-			Animal prey = getPrey(a, d);
-			int dx = prey.physics.tileC().x() - a.physics.tileC().x();
-			int dy = prey.physics.tileC().y() - a.physics.tileC().y();
-			
-			if (Math.abs(dx) + Math.abs(dy) == 1) {
-				if (((HunterInstance)work(a)).countHunt()) {
-					return drag_back.set(a, d);
-				}else {
-					prey.reserveCancel();
-					prey.scare(a, true);
-					return drag_back_failed.set(a, d);
-				}
-				
-			}else {
-				
-				AISubActivation ac = AI.SUBS().walkTo.coo(a, d, prey.physics.tileC());
-				if (ac != null)
-					return ac;
-				can(a, d);
+			if (e == null || e.isRemoved() || !e.resHas()) {
+				d.planObject = -1;
 				return null;
 			}
-		}
-		
-		@Override
-		public boolean con(Humanoid a, AIManager d) {
-			return getPrey(a, d) != null && work(a) != null && ((HunterInstance)work(a)).getWork(d.planTile).jobReservedIs(null);
-		}
-		
-		@Override
-		public void can(Humanoid a, AIManager d) {
-			Animal prey  = getPrey(a, d);
-			if (prey != null)
-				prey.reserveCancel();
-			butcher_walk.can(a, d);
-		}
-
-	};
-	
-	final Resumer butcher = new Resumer(D.g("Butchering")) {
-		
-		@Override
-		public AISubActivation res(Humanoid a, AIManager d) {
-			Cadaver prey = getCadaver(a, d);
-			if (prey == null) {
-				can(a,d);
-				return null;
-			}
-			if (prey.resHas() && work(a) != null) {
-				RESOURCE r = prey.resRemove();
-				produce(r, a, d);
-			}
-			
-			if (prey.resHas()) {
-				init.RES.sound().settlement.action.squish.rnd(a.body());
-				return AI.SUBS().WORK_HANDS.activate(a, d, 5);
-			}else {
-				if (RND.oneIn(6))
-					produce(RESOURCES.LIVESTOCK(), a, d);
-				can(a, d);
-				return null;
-			}
-			
-		}
-		
-		private void produce(RESOURCE res, Humanoid a,  AIManager d) {
-			HunterInstance in = (HunterInstance) work(a);
-			
-
-			
-			int kk = 0;
-			for (IndustryResource r : b.industries().get(0).outs()) {
-				if (r.resource == res) {
-					r.inc(in, 1);
-					break;
-				}
-				kk++;
-			}
-			in.gore(d.planTile);
-			
-			DIR dd = a.speed.dir().next(kk == 0 ? -1 : 1);
-			THINGS().resources.create(a.tc().x()+dd.x(), a.tc().y()+dd.y(), res,1);
-		}
-		
-		@Override
-		public boolean con(Humanoid a, AIManager d) {
-			return butcher_walk.con(a, d);
-		}
-		
-		@Override
-		public void can(Humanoid a, AIManager d) {
-			butcher_walk.can(a, d);
-		}
-
-		@Override
-		public AISubActivation setAction(Humanoid a, AIManager d) {
-			HunterInstance in = (HunterInstance) work(a);
-			in.resetGore(d.planTile);
-			return AI.SUBS().WORK_HANDS.activate(a, d, 12);
-		}
-	};
-	
-	final Resumer butcher_walk = new Resumer(D.g("Buthering2", "butchering prey")) {
-		
-		@Override
-		public AISubActivation res(Humanoid a, AIManager d) {
-			AISubActivation s = butcher.set(a, d);
-			if (s == null)
-				can(a, d);
-			return s;
-		}
-		
-
-		
-		@Override
-		public boolean con(Humanoid a, AIManager d) {
-			HunterInstance in = (HunterInstance) work(a);
-			if (in == null)
-				return false;
-			if (in.getWork(d.planTile) == null || !in.getWork(d.planTile).jobReservedIs(null))
-				return false;
-			return getCadaver(a, d) != null;
-		}
-		
-		@Override
-		public void can(Humanoid a, AIManager d) {
-			HunterInstance in = (HunterInstance) work(a);
-			if (in != null) {
-				SETT_JOB j = in.getWork(d.planTile);
-				if (j != null)
-					j.jobReserveCancel(null);
-			}
-		}
-
-		@Override
-		public AISubActivation setAction(Humanoid a, AIManager d) {
-			AISubActivation s = AI.SUBS().walkTo.coo(a, d, d.planTile);
-			if (s == null) {
-				can(a, d);
-				return null;
-			}
-			return s;
-		}
-	};
-	
-	final Resumer drag_back = new Resumer(D.g("Back", "dragging back")) {
-		
-		@Override
-		public double poll(Humanoid a, AIManager d, HPollData e) {
-			if (e.type == HPoll.SCARE_ANIMAL_NOT)
-				return 1;
-			return super.poll(a, d, e);
+			return e;
 		}
 		
 		@Override
@@ -312,118 +204,80 @@ final class WorkHunter extends PlanBlueprint {
 		}
 		
 		@Override
-		public boolean con(Humanoid a, AIManager d) {
-			return getCadaver(a, d) != null && work(a) != null && ((HunterInstance)work(a)).getWork(d.planTile).jobReservedIs(null);
-		}
-		
-		@Override
 		public void can(Humanoid a, AIManager d) {
-			butcher_walk.can(a, d);
+			b.workFinish(d.planTile);
 		}
 
 		@Override
-		public AISubActivation setAction(Humanoid a, AIManager d) {
-			Cadaver c = getPrey(a, d).slaugher();
-			if (c != null) {
-				AISubActivation ac = AI.SUBS().walkTo.drag(a, d, THINGS().cadavers.draggable, c.index(), d.planTile);
-				if (ac != null)
-					return ac;
-			}
-			can(a, d);
-			return null;
+		public boolean con(Humanoid a, AIManager d) {
+			return work(a) != null && work(a).blueprint() == b && getCadaver(a, d) != null;
 		}
+
+		private AnimalSpecies spe() {
+			double tot = 0;
+			for (AnimalSpecies s : SETT.ANIMALS().sett()) {
+				tot += s.occurence(SETT.WORLD_AREA().climate());
+			}
+			tot *= RND.rFloat();
+			for (AnimalSpecies s : SETT.ANIMALS().sett()) {
+				tot -= s.occurence(SETT.WORLD_AREA().climate());
+				if (tot <= 0)
+					return s;
+			}
+			return SETT.ANIMALS().sett().rnd();
+		}
+		
 	};
 	
-	final Resumer drag_back_failed = new Resumer(D.g("failed", "failed to catch prey")) {
-		
-		@Override
-		public double poll(Humanoid a, AIManager d, HPollData e) {
-			if (e.type == HPoll.SCARE_ANIMAL_NOT)
-				return 1;
-			return super.poll(a, d, e);
-		}
+	final Resumer butcher = new Resumer() {
 		
 		@Override
 		public AISubActivation res(Humanoid a, AIManager d) {
-			if (d.planByte1 == 0) {
-				d.planByte1++;
-				return AI.SUBS().STAND.activateRndDir(a, d, 15+RND.rInt(15));
-			}
 			
-			
-			double w = STATS.WORK().WORK_TIME.indu().getD(a.indu());
-			
-				
-			if (w > 0.6) {
-				if (w == 1) {
-					can(a, d);
-					return null;
+			if (AIModules.current(d).moduleCanContinue(a, d)) {
+				Cadaver prey = getCadaver(a, d);
+				if (prey != null) {
+					b.work(work(a), d.planTile, a, true);
+					can(a,d);
+					if (prey.resHas())
+						prey.resRemove();
+					init.RES.sound().settlement.action.squish.rnd(a.body());
+					return AI.SUBS().WORK_HANDS.activate(a, d, 25);
+				}else {
+					b.work(work(a), d.planTile, a, false);
+					return AI.SUBS().STAND.activateRndDir(a, d);
 				}
-				return AI.SUBS().STAND.activateRndDir(a, d, 10+RND.rInt(5));
 			}
 			
-			can(a, d);
+			b.workFinish(d.planTile);
 			return null;
+			
+						
 		}
+		
+
 		
 		@Override
 		public boolean con(Humanoid a, AIManager d) {
-			return work(a) != null && ((HunterInstance)work(a)).getWork(d.planTile).jobReservedIs(null);
+			return work(a) != null && work(a).blueprint() == b;
 		}
 		
 		@Override
 		public void can(Humanoid a, AIManager d) {
-			butcher_walk.can(a, d);
+			b.workFinish(d.planTile);
 		}
 
 		@Override
 		public AISubActivation setAction(Humanoid a, AIManager d) {
-			d.planByte1 = 0;
-			AISubActivation ac = AI.SUBS().walkTo.coo(a, d, d.planTile);
-			if (ac != null)
-				return ac;
-			can(a, d);
-			return null;
+			b.reportSkill(work(a), a);
+			return AI.SUBS().STAND.activate(a, d);
 		}
 	};
-	
-	
-	double progress = 0;
-	
 
-
-	
-	private Animal getPrey(Humanoid a, AIManager d) {
-		if (d.planObject == -1)
-			return null;
-		ENTITY e = ENTITIES().getByID(d.planObject);
-		
-		if (e == null || !(e instanceof Animal) || !((Animal) e).reserved()) {
-			d.planObject = -1;
-			return null;
-		}
-		return (Animal) e;
-	}
-	
 	private Cadaver getCadaver(Humanoid a, AIManager d) {
-		if (d.planObject == -1)
-			return null;
-		Cadaver e = THINGS().cadavers.getByIndex(d.planObject);
-		
-		if (e == null || e.isRemoved() || !e.resHas()) {
-			d.planObject = -1;
-			return null;
-		}
-		return e;
+		return THINGS().cadavers.tGet.get(d.planTile);
 	}
 
-	@Override
-	public double poll(Humanoid a, AIManager d, HPollData e) {
-		if (e.type == HPoll.SCARE_ANIMAL_NOT)
-			return 1;
-		return super.poll(a, d, e);
-	}
-	
 	@Override
 	protected void name(Humanoid a, AIManager d, Str string) {
 		string.add(b.employment().verb);

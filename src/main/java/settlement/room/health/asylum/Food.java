@@ -1,5 +1,6 @@
 package settlement.room.health.asylum;
 
+import init.resources.RBIT;
 import init.resources.RESOURCE;
 import init.sound.SoundSettlement.Sound;
 import settlement.entity.humanoid.Humanoid;
@@ -81,10 +82,10 @@ final class Food implements SETT_JOB {
 	}
 
 	@Override
-	public long jobResourceBitToFetch() {
+	public RBIT jobResourceBitToFetch() {
 		if (amount.get(SETT.ROOMS().data.get(coo)) < 1 && ins.jobs.resourceShouldSearch(b().consumtion.ins().get(0).resource))
 			return b().consumtion.ins().get(0).resource.bit;
-		return 0;
+		return null;
 	}
 	
 	@Override

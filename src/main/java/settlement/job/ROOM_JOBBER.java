@@ -2,12 +2,12 @@ package settlement.job;
 
 import init.resources.RESOURCE;
 import init.sprite.SPRITES;
-import settlement.main.RenderData;
 import settlement.main.SETT;
 import settlement.room.main.Room;
 import snake2d.Renderer;
 import snake2d.util.color.COLOR;
 import snake2d.util.datatypes.AREA;
+import util.rendering.RenderData;
 import util.rendering.ShadowBatch;
 
 public interface ROOM_JOBBER extends AREA {

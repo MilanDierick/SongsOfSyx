@@ -7,6 +7,7 @@ import java.util.Iterator;
 
 import game.GAME;
 import game.faction.FACTIONS;
+import game.faction.FResources.RTYPE;
 import game.faction.Faction;
 import init.config.Config;
 import init.race.Race;
@@ -18,19 +19,17 @@ import settlement.entity.humanoid.Humanoid;
 import settlement.main.SETT;
 import settlement.misc.util.RESOURCE_TILE;
 import settlement.room.main.Room;
-import settlement.stats.CAUSE_LEAVE;
+import settlement.stats.Induvidual;
 import settlement.stats.STATS;
-import settlement.stats.StatsEquippables.EQUIPPABLE_MILITARY;
+import settlement.stats.colls.StatsBattle.StatTraining;
+import settlement.stats.equip.EquipBattle;
+import settlement.stats.util.CAUSE_LEAVE;
 import snake2d.util.datatypes.COORDINATE;
 import snake2d.util.file.*;
 import snake2d.util.misc.CLAMP;
 import snake2d.util.rnd.RND;
 import snake2d.util.sets.*;
-import util.gui.misc.GBox;
-import world.World;
-import world.army.WINDU.WDivGeneration;
-import world.army.WINDU.WInduStored;
-import world.entity.army.WArmy;
+import world.WORLD;
 
 final class WDivsCapitol implements LIST<WDIV>, SAVABLE {
 
@@ -69,9 +68,9 @@ final class WDivsCapitol implements LIST<WDIV>, SAVABLE {
 		list.clear();
 
 		for (int di = 0; di < ARMIES().player().divisions().size(); di++) {
-			Div d = ARMIES().player().divisions().get(di);
-			if ((World.ARMIES().cityDivs().attachedArmy(d) == null && STATS.BATTLE().DIV.stat().div().get(d) > 0)) {
-				list.add(all[di]);
+			Div d = ARMIES().player().ordered().get(di);
+			if ((WORLD.ARMIES().cityDivs().attachedArmy(d) == null && STATS.BATTLE().DIV.stat().div().get(d) > 0)) {
+				list.add(all[d.indexArmy()]);
 			}
 		}
 	}
@@ -108,14 +107,14 @@ final class WDivsCapitol implements LIST<WDIV>, SAVABLE {
 			upI = GAME.updateI();
 			int[] suppliesHave = new int[RESOURCES.ALL().size()];
 			int[] suppliesNeeded = new int[RESOURCES.ALL().size()];
-			supplies = new double[STATS.EQUIP().military_all().size()];
+			supplies = new double[STATS.EQUIP().BATTLE_ALL().size()];
 
 			for (ENTITY e : SETT.ENTITIES().getAllEnts()) {
 				if (e instanceof Humanoid) {
 					Humanoid a = (Humanoid) e;
 					Div d = STATS.BATTLE().DIV.get(a);
 					if (d != null && d.army() == SETT.ARMIES().player()) {
-						for (EQUIPPABLE_MILITARY s : STATS.EQUIP().military_all()) {
+						for (EquipBattle s : STATS.EQUIP().BATTLE_ALL()) {
 							suppliesNeeded[s.resource().index()] += s.target(d);
 							suppliesHave[s.resource().index()] += s.stat().indu().get(a.indu());
 						}
@@ -125,7 +124,7 @@ final class WDivsCapitol implements LIST<WDIV>, SAVABLE {
 
 			}
 
-			for (EQUIPPABLE_MILITARY s : STATS.EQUIP().military_all()) {
+			for (EquipBattle s : STATS.EQUIP().BATTLE_ALL()) {
 				if (suppliesNeeded[s.resource().index()] != 0) {
 					suppliesHave[s.resource().index()] += SETT.ROOMS().STOCKPILE.tally().amountReservable(s.resource());
 					supplies[s.indexMilitary()] = (double) (suppliesHave[s.resource().index()]) / (suppliesNeeded[s.resource().index()]);
@@ -145,7 +144,7 @@ final class WDivsCapitol implements LIST<WDIV>, SAVABLE {
 				continue;
 			RESOURCE_TILE cr = (RESOURCE_TILE) r.storage(c.x(), c.y());
 			if (cr != null) {
-				for (EQUIPPABLE_MILITARY s : STATS.EQUIP().military_all()) {
+				for (EquipBattle s : STATS.EQUIP().BATTLE_ALL()) {
 					if (amounts[s.indexMilitary()] <= 0)
 						continue;
 					if (cr.resource() == s.resource()) {
@@ -153,7 +152,7 @@ final class WDivsCapitol implements LIST<WDIV>, SAVABLE {
 							cr.findableReserve();
 							cr.resourcePickup();
 							amounts[s.index()]--;
-							FACTIONS.player().res().outTribute.inc(cr.resource(), 1);
+							FACTIONS.player().res().inc(cr.resource(), RTYPE.SPOILS, -1);
 						}
 					}
 				}
@@ -165,7 +164,7 @@ final class WDivsCapitol implements LIST<WDIV>, SAVABLE {
 				Humanoid a = (Humanoid) e;
 				Div d = STATS.BATTLE().DIV.get(a);
 				if (d != null && d.army() == SETT.ARMIES().player()) {
-					for (EQUIPPABLE_MILITARY s : STATS.EQUIP().military_all()) {
+					for (EquipBattle s : STATS.EQUIP().BATTLE_ALL()) {
 						if (amounts[s.indexMilitary()] <= 0)
 							continue;
 						if (s.stat().indu().get(a.indu()) > 0) {
@@ -188,6 +187,8 @@ final class WDivsCapitol implements LIST<WDIV>, SAVABLE {
 		return list.get(index);
 	}
 
+	
+	
 	@Override
 	public boolean contains(int i) {
 		init();
@@ -218,6 +219,7 @@ final class WDivsCapitol implements LIST<WDIV>, SAVABLE {
 		private final int di;
 
 		WDivCity(Div div) {
+		
 			this.di = div.index();
 
 		}
@@ -242,22 +244,22 @@ final class WDivsCapitol implements LIST<WDIV>, SAVABLE {
 		}
 
 		@Override
-		public double training_melee() {
-			return STATS.BATTLE().TRAINING_MELEE.div().getD(div());
+		public double training(StatTraining tr) {
+			return tr.div().getD(div());
+		}
+		
+		@Override
+		public double trainingTarget(StatTraining tr) {
+			return div().info.trainingD(tr.room).getD();
 		}
 
 		@Override
-		public double training_ranged() {
-			return STATS.BATTLE().TRAINING_ARCHERY.div().getD(div());
-		}
-
-		@Override
-		public int equipTarget(EQUIPPABLE_MILITARY e) {
+		public int equipTarget(EquipBattle e) {
 			return e.target(div());
 		}
 		
 		@Override
-		public double equip(EQUIPPABLE_MILITARY e) {
+		public double equip(EquipBattle e) {
 			initSupplies();
 			return e.target(div())*supplies[e.indexMilitary()];
 		}
@@ -268,17 +270,29 @@ final class WDivsCapitol implements LIST<WDIV>, SAVABLE {
 		}
 
 		@Override
-		public void disband() {
-			throw new RuntimeException();
+		public WDivGeneration generate() {
+
+			ArrayList<Induvidual> inus = new ArrayList<Induvidual>(men());
+			for (ENTITY e : SETT.ENTITIES().getAllEnts()) {
+				if (e instanceof Humanoid) {
+					Humanoid a = (Humanoid) e;
+					Div d = STATS.BATTLE().DIV.get(a);
+					if (d == div()) {
+						inus.add(a.indu());
+					}
+				}
+
+			}
+			WDivGeneration res = new WDivGeneration(this, inus);
+			return res;
 		}
-
+		
 		@Override
-		public void resolve(WInduStored[] hs) {
-
+		public void resolve(Induvidual[] hs) {
 			
-			KeyMap<WInduStored> map = new KeyMap<>();
-			for (WInduStored ii : hs) {
-				String k = "" + ii.randomness;
+			KeyMap<Induvidual> map = new KeyMap<>();
+			for (Induvidual ii : hs) {
+				String k = "" + STATS.RAN().getL(ii, 0);
 				if (!map.containsKey(k))
 					map.put(k, ii);
 			}
@@ -286,9 +300,9 @@ final class WDivsCapitol implements LIST<WDIV>, SAVABLE {
 				if (e instanceof Humanoid) {
 					Humanoid a = (Humanoid) e;
 					if (STATS.BATTLE().DIV.get(a) == div()) {
-						String k = "" + a.indu().randomness();
+						String k = "" + STATS.RAN().getL(a.indu(), 0);
 						if (map.containsKey(k)) {
-							map.get(k).paste(a);
+							a.indu().copyFrom(map.get(k));
 						} else {
 							STATS.POP().COUNT.reg(a.indu(), CAUSE_LEAVE.SLAYED);
 							a.helloMyNameIsInigoMontoyaYouKilledMyFatherPrepareToDie();
@@ -333,46 +347,13 @@ final class WDivsCapitol implements LIST<WDIV>, SAVABLE {
 		}
 
 		@Override
-		public void menSet(int amount) {
-
-			throw new RuntimeException();
-
-		}
-
-		@Override
 		public int daysUntilMenArrives() {
 			return 0;
 		}
 
 		@Override
-		public int amountOfMenThatWillArrive() {
-			return 0;
-		}
-
-		@Override
-		public void hover(GBox box) {
-			World.ARMIES().hoverer().hover(this, box);
-
-		}
-
-		@Override
-		public int type() {
-			return 1;
-		}
-
-		@Override
-		public void reassign(WArmy a) {
-			throw new RuntimeException();
-		}
-
-		@Override
 		public CharSequence name() {
 			return div().info.name();
-		}
-
-		@Override
-		public WArmy army() {
-			return null;
 		}
 
 		@Override
@@ -395,34 +376,7 @@ final class WDivsCapitol implements LIST<WDIV>, SAVABLE {
 			return FACTIONS.player();
 		}
 
-		@Override
-		public WDivGeneration generate() {
 
-			WDivGeneration res = new WDivGeneration(men());
-			for (int i = 0; i < supplies.length; i++) {
-				
-				res.supplies[i] = equip(STATS.EQUIP().military_all().get(i));
-				
-			}
-
-			int i = 0;
-			for (ENTITY e : SETT.ENTITIES().getAllEnts()) {
-				if (e instanceof Humanoid) {
-					Humanoid a = (Humanoid) e;
-					Div d = STATS.BATTLE().DIV.get(a);
-					if (d == div()) {
-						res.indus[i++] = new WInduStored(a);
-					}
-				}
-
-			}
-
-			res.name = ""+name();
-			res.race = (short) race().index;
-			res.isRange = div().settings.ammo() != null;
-			res.bannerI = div().info.symbolI();
-			return res;
-		}
 
 		@Override
 		public int bannerI() {

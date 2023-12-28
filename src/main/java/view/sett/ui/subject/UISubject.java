@@ -112,7 +112,7 @@ final class UISubject extends ISidePanel implements Panel{
 		s.addRightC(8, new GButt.ButtPanel(SPRITES.icons().m.questionmark) {
 			@Override
 			protected void clickA() {
-				VIEW.inters().wiki.showRace(a.race());
+				VIEW.UI().wiki.showRace(a.race());
 
 			}
 			@Override

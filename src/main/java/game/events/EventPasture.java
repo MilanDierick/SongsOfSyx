@@ -8,15 +8,16 @@ import init.D;
 import settlement.main.SETT;
 import settlement.room.food.pasture.PastureInstance;
 import settlement.room.food.pasture.ROOM_PASTURE;
+import settlement.stats.STATS;
 import snake2d.util.MATH;
 import snake2d.util.file.FileGetter;
 import snake2d.util.file.FilePutter;
 import snake2d.util.misc.ACTION;
 import snake2d.util.rnd.RND;
 import snake2d.util.sprite.text.Str;
-import view.main.MessageText;
 import view.main.VIEW;
 import view.sett.IDebugPanelSett;
+import view.ui.message.MessageText;
 
 public class EventPasture extends EventResource{
 
@@ -93,10 +94,14 @@ public class EventPasture extends EventResource{
 		if (p.instancesSize() == 0)
 			return;
 		
+		if (STATS.POP().POP.data().get(null)-100 < RND.rInt(1000))
+			return;
+		
+		
 		if (p.employment().employed() < 5)
 			return;
 		
-		double death = 0.2 + MATH.pow15.pow(RND.rFloat())*0.8;
+		double death = 0.1 + MATH.pow15.pow(RND.rFloat())*0.5;
 		int tot = 0;
 		
 		for (int i = 0; i < p.instancesSize(); i++) {

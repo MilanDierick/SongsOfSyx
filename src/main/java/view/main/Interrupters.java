@@ -2,7 +2,7 @@ package view.main;
 
 import view.interrupter.*;
 import view.menu.IMenu;
-import view.wiki.WIKI;
+import view.ui.message.Messages;
 
 public class Interrupters {
 	
@@ -17,8 +17,10 @@ public class Interrupters {
 	public final InterGuisection section = new InterGuisection(manager);
 	public final Messages messages;
 	public final IPopup2 popup = new IPopup2(manager);
+	public final IPopup2 popup2 = new IPopup2(manager);
 	public final ILoadScreen load = new ILoadScreen(manager);
-	public final WIKI wiki = new WIKI();
+	
+	
 	
 	public Interrupters(){
 		messages = new Messages(manager);

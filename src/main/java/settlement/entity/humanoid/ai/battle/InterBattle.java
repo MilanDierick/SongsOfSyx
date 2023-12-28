@@ -1,7 +1,6 @@
 package settlement.entity.humanoid.ai.battle;
 
-import init.C;
-import init.boostable.BOOSTABLES;
+import game.boosting.BOOSTABLES;
 import init.sound.SOUND;
 import settlement.army.Div;
 import settlement.entity.humanoid.HEvent.HEventData;
@@ -68,11 +67,24 @@ class InterBattle {
 		if (e.type == HPoll.IMPACT_DAMAGE) {
 			if (e.isEnemy) {
 				
-				double attack = Util.getAttackValue(e.coll.other, e.coll.dirDotOther, a, e.coll.dirDot);
+				double attack = Util.getAttackValue(e.colli.other, e.colli.dirDotOther, a, e.colli.dirDot);
 				if (attack > 0) {
-					e.coll.pierceDamage = attack*BOOSTABLES.BATTLE().PIERCE_DAMAGE.get(a);
-					e.coll.momentum += attack*C.TILE_SIZE*BOOSTABLES.BATTLE().BLUNT_DAMAGE.get(a);
+					
+					double str = BOOSTABLES.BATTLE().BLUNT_ATTACK.get(a.indu());
+					attack*= str;
+					
+					
+					e.damage.damageStrength = attack;
+					
+					for (int i = 0; i < e.damage.damage.length; i++) {
+						double da = BOOSTABLES.BATTLE().DAMAGES.get(i).attack.get(a.indu());
+						e.damage.damage[i] = da;
+					}
+					
+					e.damage.momentum += Util.strengthMomentum(a, d);
 				}
+			}else {
+				e.damage.damageStrength = 0;
 			}
 			return 0;
 		}

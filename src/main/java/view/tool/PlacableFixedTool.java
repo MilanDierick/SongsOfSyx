@@ -56,7 +56,7 @@ final class PlacableFixedTool extends placeFunc {
 	}, KEYS.MAIN().ROTATE);
 	
 	@Override
-	void update(float ds, GameWindow window, boolean pressed) {
+	void updateHovered(float ds, GameWindow window, boolean pressed) {
 		
 		double s = MButt.peekWheel();
 		if (KEYS.MAIN().MOD.isPressed() && s != 0) {

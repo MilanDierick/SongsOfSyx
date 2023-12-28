@@ -2,6 +2,7 @@ package settlement.path.components;
 
 import static settlement.main.SETT.*;
 
+import init.resources.RBIT.RBITImp;
 import snake2d.util.datatypes.COORDINATE;
 import snake2d.util.datatypes.Coo;
 import snake2d.util.map.MAP_BOOLEAN;
@@ -14,11 +15,18 @@ public abstract class SComponent implements INDEXED, MAP_BOOLEAN {
 	private SComponentEdge edgeFirst;
 	private SComponent superComp = null;
 	
+	final RBITImp[] ress = new RBITImp[FindableDataRes.all.size()];
+	{
+		for (int i = 0; i < ress.length; i++)
+			ress[i] = new RBITImp();
+	}
+	
 	final long[] fdata = new long[FindableData.datao.longCount()];
 	
 	public abstract int centreX();
 	public abstract int centreY();
-	public abstract byte edgeMask();
+	public abstract boolean hasEdge();
+	public abstract boolean hasEntry();
 	
 	protected final void pushEdge(SComponent to, double cost, double distance) {
 		edgeFirst = SComponentEdge.create(to, cost, distance, edgeFirst);
@@ -40,6 +48,7 @@ public abstract class SComponent implements INDEXED, MAP_BOOLEAN {
 			removeEdge(edgeFirst.to());
 		}
 		superComp = null;
+		check();
 	}
 	
 	public abstract boolean retired();
@@ -65,7 +74,17 @@ public abstract class SComponent implements INDEXED, MAP_BOOLEAN {
 		}
 	}
 	
+	private void check() {
+		SComponentEdge e = edgeFirst;
+		while(e != null) {
+			if (e.to() != e.to().level().get(e.to().centreX(), e.to().centreY()))
+				new RuntimeException().printStackTrace();
+			e = e.next();
+		}
+	}
+	
 	protected void pruneEdges() {
+		check();
 //		SComponentEdge e = edgefirst();
 //		while(e != null) {
 //			SComponentEdge ee = e;
@@ -115,6 +134,11 @@ public abstract class SComponent implements INDEXED, MAP_BOOLEAN {
 	}
 	
 	void superCompSet(SComponent sComp) {
+		if (this.superComp != null && sComp != null) {
+			System.err.println(level().level());
+			System.err.println(this.superComp + " " + sComp);
+			throw new RuntimeException();
+		}
 		this.superComp = sComp;
 	}
 	
@@ -126,6 +150,8 @@ public abstract class SComponent implements INDEXED, MAP_BOOLEAN {
 		for (int i = 0; i < fdata.length; i++) {
 			fdata[i] = 0;
 		}
+		for (RBITImp b : ress)
+			b.clear();
 	}
 	
 	public abstract SComponentLevel level();

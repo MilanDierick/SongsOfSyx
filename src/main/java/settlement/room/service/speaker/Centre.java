@@ -1,5 +1,6 @@
 package settlement.room.service.speaker;
 
+import init.resources.RBIT;
 import init.resources.RESOURCE;
 import init.sound.SoundSettlement.Sound;
 import settlement.entity.humanoid.Humanoid;
@@ -140,8 +141,8 @@ final class Centre {
 		}
 		
 		@Override
-		public long jobResourceBitToFetch() {
-			return 0;
+		public RBIT jobResourceBitToFetch() {
+			return null;
 		}
 		
 		@Override
@@ -203,7 +204,7 @@ final class Centre {
 		}
 		
 		@Override
-		public SETT_JOB reportResourceMissing(long resourceMask, int jx, int jy) {
+		public SETT_JOB reportResourceMissing(RBIT resourceMask, int jx, int jy) {
 			return null;
 		}
 		
@@ -218,7 +219,7 @@ final class Centre {
 		}
 
 		@Override
-		public void reportResourceFound(long res) {
+		public void reportResourceFound(RESOURCE res) {
 			// TODO Auto-generated method stub
 			
 		}

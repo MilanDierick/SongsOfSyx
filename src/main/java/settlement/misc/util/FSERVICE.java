@@ -8,4 +8,8 @@ public interface FSERVICE extends FINDABLE{
 		
 	}
 	
+	public default boolean hasQueue() {
+		return false;
+	}
+	
 }

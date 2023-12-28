@@ -3,11 +3,11 @@ package settlement.room.sprite;
 import java.io.IOException;
 
 import init.sprite.game.SheetType;
-import settlement.main.RenderData.RenderIterator;
 import settlement.room.main.furnisher.FurnisherItem;
 import snake2d.SPRITE_RENDERER;
 import snake2d.util.datatypes.DIR;
 import snake2d.util.file.Json;
+import util.rendering.RenderData.RenderIterator;
 import util.rendering.ShadowBatch;
 
 public class RoomSprite1xN extends RoomSprite1x1 {

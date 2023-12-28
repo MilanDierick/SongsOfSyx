@@ -3,8 +3,8 @@ package settlement.room.infra.stockpile;
 import init.D;
 import init.resources.RESOURCE;
 import init.resources.RESOURCES;
-import init.sprite.ICON;
 import init.sprite.SPRITES;
+import init.sprite.UI.Icon;
 import init.sprite.UI.UI;
 import settlement.main.SETT;
 import settlement.room.main.RoomInstance;
@@ -25,7 +25,7 @@ import util.data.INT;
 import util.data.INT.INTE;
 import util.dic.DicRes;
 import util.gui.misc.*;
-import util.gui.misc.GMeter.GGaugeColor;
+import util.gui.misc.GMeter.GMeterCol;
 import util.gui.slider.GSliderInt;
 import util.gui.table.GScrollRows;
 import util.info.GFORMAT;
@@ -191,7 +191,7 @@ class Gui extends UIRoomModuleImp<StockpileInstance, ROOM_STOCKPILE> {
 	@Override
 	protected void appendTableButt(GuiSection s, GETTER<RoomInstance> ins) {
 
-		s.add(new SPRITE.Imp(s.body().width(), ICON.MEDIUM.SIZE) {
+		s.add(new SPRITE.Imp(s.body().width(), Icon.M) {
 
 			@Override
 			public void render(SPRITE_RENDERER r, int X1, int X2, int Y1, int Y2) {
@@ -205,8 +205,8 @@ class Gui extends UIRoomModuleImp<StockpileInstance, ROOM_STOCKPILE> {
 				for (RESOURCE res : RESOURCES.ALL()) {
 					if (in.cratesGet(res) > 0) {
 						res.icon().small.render(r, x, Y1+4);
-						x += res.icon().small.size();
-						if (x >= X2-res.icon().small.size())
+						x += res.icon().small.width();
+						if (x >= X2-res.icon().small.width())
 							break;
 						
 					}
@@ -265,7 +265,7 @@ class Gui extends UIRoomModuleImp<StockpileInstance, ROOM_STOCKPILE> {
 				
 				@Override
 				public int max() {
-					return crates.get()*ROOM_STOCKPILE.CRATE_MAX;
+					return crates.get()*g.get().crateSize();
 				}
 				
 				@Override
@@ -313,11 +313,11 @@ class Gui extends UIRoomModuleImp<StockpileInstance, ROOM_STOCKPILE> {
 				@Override
 				protected void renderMidColor(SPRITE_RENDERER r, int x1, int width, int widthFull, int y1, int y2) {
 					double a = g.get().amountTotal[res.index()];
-					double c = crates.get()*ROOM_STOCKPILE.CRATE_MAX;
+					double c = crates.get()*g.get().crateSize();
 					double d = 0;
 					if (c > 0)
 						d = a/c;
-					GGaugeColor col = GMeter.C_INACTIVE;
+					GMeterCol col = GMeter.C_INACTIVE;
 					if (d > 0.9)
 						col= GMeter.C_REDPURPLE;
 					else if (c > 0)
@@ -406,7 +406,7 @@ class Gui extends UIRoomModuleImp<StockpileInstance, ROOM_STOCKPILE> {
 				b.NL(8);
 				b.textL(DicRes.¤¤Stored);
 				b.tab(5);
-				b.add(GFORMAT.iofk(b.text(), stored.get(), crates.get()* ROOM_STOCKPILE.CRATE_MAX));
+				b.add(GFORMAT.iofk(b.text(), stored.get(), crates.get()*g.get().crateSize()));
 			}
 		}
 		

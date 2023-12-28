@@ -1,67 +1,89 @@
 package game.faction.player;
 
+import java.io.IOException;
+
+import game.boosting.*;
+import game.faction.FACTIONS;
+import game.faction.Faction;
 import init.D;
-import init.boostable.BOOSTABLE;
-import init.boostable.BOOSTABLES;
-import init.boostable.BOOST_LOOKUP.BOOSTER_LOOKUP_IMP;
-import init.boostable.BOOST_LOOKUP.SIMPLE;
+import init.sprite.UI.UI;
 import snake2d.LOG;
+import snake2d.util.file.*;
+import snake2d.util.misc.ACTION;
 import snake2d.util.sets.KeyMap;
-import util.keymap.KEY_COLLECTION;
+import snake2d.util.sets.LIST;
 
-final class PBonusSetting extends BOOSTER_LOOKUP_IMP implements SIMPLE{
+final class PBonusSetting implements ACTION, SAVABLE{
 
-	private static CharSequence ¤¤name = "¤Advantage";
+	private static CharSequence ¤¤name = "¤Setting";
+	private final KeyMap<Double> boosts;
 	static {
 		D.ts(PBonusSetting.class);
 	}
 
-	private double[] add = new double[BOOSTABLES.all().size()];
-	
 	protected PBonusSetting(KeyMap<Double> boosts) {
-		super(¤¤name);
-		for (String k : boosts.keys()) {
-			String scoll = k.split("_")[0];
-			if (BOOSTABLES.collmap().containsKey(scoll)) {
-				
-				KEY_COLLECTION<? extends BOOSTABLE> col = BOOSTABLES.collmap().get(scoll);
-				
-				String bb = k.split("_")[1];
+		this.boosts = boosts;
+		BOOSTING.connecter(this);
 
+		
+	}
+
+	@Override
+	public void exe() {
+		for (String k : boosts.keys()) {
+			LIST<Boostable> bb = BOOSTING.get(k);
+			
+			if (bb == null) {
+				LOG.err(k);
+				continue;
+			}
+			
+			for (Boostable b : bb) {
 				
-				BOOSTABLE b = col.tryGet(bb);
-				
-				if (b != null) {
-					double d = boosts.get(k);
-					if (d != 0) {
-						maxAdd[b.index] = Math.max(0, d);
-						minAdd[b.index] = Math.min(d, 0);
-						add[b.index] = d;
-					}
+				Booster bo = new BoosterImp(new BSourceInfo(¤¤name, UI.icons().s.alert), boosts.get(k), false) {
 					
-				}else {
-					LOG.ln("no mapping: " + k + " " + bb);
-				}
+					@Override
+					public double vGet(Faction f) {
+						if (f == FACTIONS.player())
+							return 1.0;
+						return 0;
+					}
+				};
 				
-			}else {
-				LOG.ln("no mapping: " + k);
+				bo.add(b);
+				
 			}
 			
 			
 		}
 		
-		makeBoosters(this, true, false, true);
-		
-	}
-	
-	@Override
-	public double add(BOOSTABLE b) {
-		return add[b.index];
 	}
 
 	@Override
-	public double mul(BOOSTABLE b) {
-		return 1.0;
+	public void save(FilePutter file) {
+		file.i(boosts.size());
+		for (String s : boosts.keysSorted()) {
+			file.chars(s);
+			file.d(boosts.get(s));
+		}
+	}
+
+	@Override
+	public void load(FileGetter file) throws IOException {
+		boosts.clear();
+		int am = file.i();
+		for (int i = 0; i < am; i++) {
+			String k = file.chars();
+			double v = file.d();
+			boosts.put(k, v);
+		}
+		BOOSTING.connecter(this);
+		
+	}
+
+	@Override
+	public void clear() {
+		boosts.clear();
 	}
 
 }

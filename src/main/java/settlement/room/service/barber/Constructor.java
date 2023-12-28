@@ -2,7 +2,6 @@ package settlement.room.service.barber;
 
 import java.io.IOException;
 
-import settlement.main.RenderData.RenderIterator;
 import settlement.main.SETT;
 import settlement.misc.util.FSERVICE;
 import settlement.path.AVAILABILITY;
@@ -14,6 +13,7 @@ import settlement.room.sprite.*;
 import snake2d.SPRITE_RENDERER;
 import snake2d.util.datatypes.DIR;
 import snake2d.util.file.Json;
+import util.rendering.RenderData.RenderIterator;
 import util.rendering.ShadowBatch;
 
 class Constructor extends Furnisher {
@@ -49,7 +49,7 @@ class Constructor extends Furnisher {
 				return item.sprite(rx, ry) != null && item.sprite(rx, ry).sData() == 22;
 			}
 		};
-		RoomSprite sTable = new RoomSpriteComboN(sp, "TABLE_COMBO") {
+		RoomSprite sTable = new RoomSpriteCombo(sp, "TABLE_COMBO") {
 			
 			@Override
 			public void renderAbove(SPRITE_RENDERER r, ShadowBatch s, int data, RenderIterator it, double degrade) {
@@ -65,7 +65,7 @@ class Constructor extends Furnisher {
 			}
 			
 		};
-		RoomSprite sTableC = new RoomSpriteComboN(sTable) {
+		RoomSprite sTableC = new RoomSpriteCombo(sTable) {
 			
 			@Override
 			public void renderAbove(SPRITE_RENDERER r, ShadowBatch s, int data, RenderIterator it, double degrade) {

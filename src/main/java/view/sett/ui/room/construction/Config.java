@@ -8,7 +8,7 @@ import snake2d.util.gui.GuiSection;
 import snake2d.util.gui.renderable.RENDEROBJ;
 import snake2d.util.sets.LISTE;
 import snake2d.util.sprite.SPRITE;
-import util.gui.panel.GFrame;
+import util.colors.GCOLOR;
 import view.main.VIEW;
 import view.tool.ToolConfig;
 
@@ -145,7 +145,7 @@ final class Config implements ToolConfig {
 		
 		@Override
 		public void render(SPRITE_RENDERER r, int X1, int X2, int Y1, int Y2) {
-			GFrame.renderVertical(r, X1, Y1, Y2-Y1);
+			GCOLOR.UI().border(r, X1, X2, Y1, Y2);
 			
 		}
 		

@@ -10,18 +10,17 @@ import settlement.room.main.category.RoomCategorySub;
 import settlement.room.main.furnisher.Furnisher;
 import settlement.room.main.job.ROOM_EMPLOY_AUTO;
 import settlement.room.main.util.RoomInitData;
-import settlement.room.service.module.RoomServiceDataAccess;
-import settlement.room.service.module.RoomServiceDataAccess.ROOM_SERVICE_ACCESS_HASER;
-import settlement.stats.STATS;
+import settlement.room.service.module.RoomServiceNeed;
+import settlement.room.service.module.RoomServiceNeed.ROOM_SERVICE_NEED_HASER;
 import snake2d.util.file.FileGetter;
 import snake2d.util.file.FilePutter;
 
-public final class ROOM_TAVERN extends RoomBlueprintIns<TavernInstance> implements ROOM_SERVICE_ACCESS_HASER, ROOM_EMPLOY_AUTO{
+public final class ROOM_TAVERN extends RoomBlueprintIns<TavernInstance> implements ROOM_SERVICE_NEED_HASER, ROOM_EMPLOY_AUTO{
 	
 	public final static int MAX_FOOD_LEVEL = 1;
 	public final static int MAX_DRINK_LEVEL = 4;
 	
-	public final RoomServiceDataAccess serviceData;
+	public final RoomServiceNeed serviceData;
 	final Table table = new Table(this);
 	
 	final Constructor constructor;
@@ -29,17 +28,13 @@ public final class ROOM_TAVERN extends RoomBlueprintIns<TavernInstance> implemen
 	public ROOM_TAVERN(String key, int index, RoomInitData data, RoomCategorySub cat) throws IOException {
 		super(index, data, key, cat);
 		constructor = new Constructor(this, data);
-		serviceData = new RoomServiceDataAccess(this, data) {
+		serviceData = new RoomServiceNeed(this, data) {
 			
 			@Override
 			public FSERVICE service(int tx, int ty) {
 				return table.get(tx, ty);
 			}
 			
-			@Override
-			public double totalMultiplier() {
-				return 1.0/STATS.NEEDS().HUNGER.rate.get(null, null);
-			}
 		};
 		
 	}
@@ -80,7 +75,7 @@ public final class ROOM_TAVERN extends RoomBlueprintIns<TavernInstance> implemen
 	}
 	
 	@Override
-	public RoomServiceDataAccess service() {
+	public RoomServiceNeed service() {
 		return serviceData;
 	}
 	

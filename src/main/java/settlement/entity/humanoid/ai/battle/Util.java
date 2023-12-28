@@ -1,7 +1,7 @@
 package settlement.entity.humanoid.ai.battle;
 
+import game.boosting.BOOSTABLES;
 import init.C;
-import init.boostable.BOOSTABLES;
 import init.config.Config;
 import init.sound.SOUND;
 import settlement.army.Div;
@@ -9,6 +9,7 @@ import settlement.entity.ENTITY;
 import settlement.entity.ENTITY.ECollision;
 import settlement.entity.humanoid.Humanoid;
 import settlement.entity.humanoid.ai.main.AIManager;
+import settlement.stats.Induvidual;
 import settlement.stats.STATS;
 import snake2d.util.datatypes.*;
 import snake2d.util.misc.CLAMP;
@@ -33,24 +34,27 @@ final class Util {
 		coll.norY = vec.nY();
 		coll.dirDot = dot;
 		coll.speedHasChanged = false;
-		double attack = getAttackValue(enemy, dot, a, 1.0);
-		if (attack > 0) {
+		coll.momentum = 0;
+		coll.dirDot = 1.0;
+		
+		if (setDamage(a, d, coll)) {
 			SOUND.sett().action.sword.rnd(enemy.physics.body());
-			double mom = attack*C.TILE_SIZE*BOOSTABLES.BATTLE().BLUNT_DAMAGE.get(a);
-			double nY = enemy.speed.y() - vec.nY()*mom*enemy.physics.getMassI();
-			double nX = enemy.speed.x() - vec.nX()*mom*enemy.physics.getMassI();
+			
+			double nY = enemy.speed.y() + vec.nY()*coll.momentum*enemy.physics.getMassI();
+			double nX = enemy.speed.x() + vec.nX()*coll.momentum*enemy.physics.getMassI();
 			coll.speedHasChanged = true;
 			enemy.speed.setRaw(nX, nY);
-			coll.pierceDamage = attack*BOOSTABLES.BATTLE().PIERCE_DAMAGE.get(a);
-			coll.momentum = mom;
+
+			
 			enemy.collide(coll);
 			if (enemy.isRemoved()) {
 				STATS.BATTLE().ENEMY_KILLS.indu().inc(a.indu(), 1);
 				STATS.BATTLE().COMBAT_EXPERIENCE.indu().inc(a.indu(), 1 + RND.rInt(4));
 			}
+			
 		}else {
 			
-			coll.pierceDamage = 0;
+			coll.damageStrength = 0;
 			coll.momentum = 0;
 			
 			enemy.collide(coll);
@@ -64,17 +68,43 @@ final class Util {
 			
 	}
 	
+	public static boolean setDamage(Humanoid a, AIManager d, ECollision e) {
+		double attack = getAttackValue(e.other, e.dirDotOther, a, e.dirDot);
+		if (attack > 0) {			
+			
+			e.momentum = strengthMomentum(a, d);
+			e.damageStrength = attack*BOOSTABLES.BATTLE().BLUNT_ATTACK.get(a.indu());
+			
+			for (int i = 0; i < e.damage.length; i++) {
+				double da = BOOSTABLES.BATTLE().DAMAGES.get(i).attack.get(a.indu());
+				e.damage[i] = da;
+			}
+			
+			
+			return true;
+		}
+		return false;
+	};
+	
+	public static double strengthMomentum(Humanoid a, AIManager d) {
+		return C.TILE_SIZE*BOOSTABLES.BATTLE().BLUNT_ATTACK.get(a.indu())*(0.5+RND.rFloat()*2);
+	};
+	
+	
 	public static double getAttackValue(ENTITY other, double otherFaceDot, Humanoid a, double aFaceDot) {
 		double def = 0.1 + Math.max(other.getDefenceSkill(otherFaceDot), 0);
-		double attack = ((0.1 + BOOSTABLES.BATTLE().OFFENCE.get(a))*aFaceDot);
+		double attack = 0.1 + Math.max(BOOSTABLES.BATTLE().OFFENCE.get(a.indu()), 0);
 		
-		attack -= (def*RND.rFloat()*4*Config.BATTLE.BLOCK_CHANCE);
-		return CLAMP.d(attack, 0, 1);
+		double d = attack-def;
+		
+		d -= RND.rFloat()*Config.BATTLE.BLOCK_CHANCE;
+		return CLAMP.d(d, 0, 1);
 	}
 	
-	static double getTraining(Humanoid a, AIManager d) {
-		double de = 0.2*BOOSTABLES.BATTLE().OFFENCE.get(a.indu()) + 0.5*BOOSTABLES.BATTLE().DEFENCE.get(a.indu());
-		return CLAMP.d(1.0-de, 0.3, 1);	
+	static double getAttackPause(Humanoid a, AIManager d) {
+		double de = (BOOSTABLES.BATTLE().ATTACK_RATE.get(a.indu())+1.0)/(BOOSTABLES.BATTLE().ATTACK_RATE.max(Induvidual.class)+1.0); 
+		de*= STATS.NEEDS().EXHASTION.indu().getD(a.indu());
+		return 1.0-de;
 	}
 	
 	static boolean isInPosition(COORDINATE dest, Humanoid a, AIManager d) {

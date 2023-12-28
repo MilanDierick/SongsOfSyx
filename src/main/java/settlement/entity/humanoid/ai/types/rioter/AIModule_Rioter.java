@@ -30,7 +30,7 @@ public final class AIModule_Rioter extends AIModule{
 	};
 	
 	@Override
-	protected AiPlanActivation getPlan(Humanoid a, AIManager d) {
+	public AiPlanActivation getPlan(Humanoid a, AIManager d) {
 		return planRout.activate(a, d);
 	}
 

@@ -1,6 +1,6 @@
 package world.entity;
 
-import static world.World.*;
+import static world.WORLD.*;
 
 import java.io.IOException;
 
@@ -17,7 +17,9 @@ public abstract class WEntity implements BODY_HOLDER{
 	//int managerArrayIndex;
 	final Rec hitBox;
 	WEntity renderNext;
+	WEntity regionNext;
 	short gridX,gridY;
+	short regionI = -1;
 	int index = -1;
 	
 	public WEntity(int hitBoxWidth, int hitBoxHeight) {
@@ -37,6 +39,8 @@ public abstract class WEntity implements BODY_HOLDER{
 	
 	protected final void add() {
 		renderNext = null;
+		regionNext = null;
+		regionI = -1;
 		ENTITIES().add(this);
 		addAction();
 	}
@@ -50,12 +54,18 @@ public abstract class WEntity implements BODY_HOLDER{
 		return index != -1;
 	}
 	
+	public final int index() {
+		return index;
+	}
+	
 	protected void renderGround(Renderer r, ShadowBatch s, float ds, int x, int y) {
 		
 	}
 	protected abstract void renderBelowTerrain(Renderer r, ShadowBatch s, float ds, int x, int y);
 	protected abstract void renderAboveTerrain(Renderer r, ShadowBatch s, float ds, int x, int y);
-	
+	protected void handleFow() {
+		
+	}
 	
 	protected void addAction() {
 		
@@ -86,7 +96,7 @@ public abstract class WEntity implements BODY_HOLDER{
 		return null;
 	}
 	
-	public WPath path() {
+	public world.map.pathing.WPath path() {
 		return null;
 	}
 	

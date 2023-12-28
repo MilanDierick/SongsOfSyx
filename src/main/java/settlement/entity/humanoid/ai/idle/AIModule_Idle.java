@@ -12,6 +12,7 @@ import settlement.entity.humanoid.ai.main.AIPLAN.AiPlanActivation;
 import settlement.entity.humanoid.ai.main.AISUB.AISubActivation;
 import settlement.main.SETT;
 import settlement.misc.util.FINDABLE;
+import settlement.stats.STATS;
 import snake2d.util.datatypes.DIR;
 import snake2d.util.rnd.RND;
 
@@ -152,8 +153,10 @@ public final class AIModule_Idle extends AIModule{
 		
 		@Override
 		protected AISubActivation init(Humanoid a, AIManager d) {
-			int r = (int) (a.indu().randomness() + TIME.hours().bitsSinceStart());
+			int r = (int) (STATS.RAN().get(a.indu(), 39) + TIME.hours().bitsSinceStart());
 			r &= 0x0FF;
+			
+			
 			
 			if (r > (0xFF>>2)) {
 				FINDABLE ff = SETT.ROOMS().BENCH.finder.getReservable(a.tc().x(), a.tc().y());
@@ -167,6 +170,10 @@ public final class AIModule_Idle extends AIModule{
 					d.planTile.set(d.path.destX(), d.path.destY());
 					walk.set(a, d);
 					return s;
+				}
+				if (!SETT.ROOMS().map.is(a.tc()) && SETT.FLOOR().getter.is(a.tc())) {
+					STATS.ACCESS().bench.access.indu().set(a.indu(), 0);
+					STATS.ACCESS().bench.quality.indu().set(a.indu(), 0);
 				}
 			
 			}
@@ -187,6 +194,9 @@ public final class AIModule_Idle extends AIModule{
 				if (SETT.ROOMS().BENCH.finder.getReserved(d.planTile.x(), d.planTile.y()) == null) {
 					return null;
 				}
+				STATS.ACCESS().bench.access.indu().set(a.indu(), 1);
+				STATS.ACCESS().bench.quality.indu().setD(a.indu(), (SETT.ROOMS().BENCH.get(d.planTile.x(), d.planTile.y()).getDegrade(d.planTile.x(), d.planTile.y())));
+				
 				if (d.planByte1 -- < 0 || !moduleCanContinue(a, d)) {
 					can(a, d);
 					return null;

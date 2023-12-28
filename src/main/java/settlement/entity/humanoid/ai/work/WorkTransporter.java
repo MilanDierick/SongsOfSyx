@@ -101,6 +101,8 @@ final class WorkTransporter extends PlanBlueprint{
 		return STATS.WORK().WORK_TIME.indu().getD(a.indu()) <= 0.7;
 	}
 	
+	
+	
 	private TransportInstance w(Humanoid a) {
 		RoomInstance ins = STATS.WORK().EMPLOYED.get(a);
 		if (ins != null && ins instanceof TransportInstance)

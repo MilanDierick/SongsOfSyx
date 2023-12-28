@@ -2,10 +2,10 @@ package settlement.entity.humanoid.ai.main;
 
 import static settlement.main.SETT.*;
 
-import game.GAME;
+import game.boosting.BOOSTABLES;
 import init.D;
-import init.boostable.BOOSTABLES;
 import settlement.entity.ENTITY;
+import settlement.entity.EPHYSICS;
 import settlement.entity.animal.Animal;
 import settlement.entity.humanoid.*;
 import settlement.entity.humanoid.HEvent.HEventData;
@@ -13,8 +13,8 @@ import settlement.entity.humanoid.HPoll.HPollData;
 import settlement.entity.humanoid.Humanoid.HumanoidResource;
 import settlement.entity.humanoid.ai.main.AISUB.AISubActivation;
 import settlement.main.SETT;
-import settlement.stats.CAUSE_LEAVE;
 import settlement.stats.STATS;
+import settlement.stats.util.CAUSE_LEAVE;
 import snake2d.util.rnd.RND;
 
 public final class AIEventListeners {
@@ -101,7 +101,7 @@ public final class AIEventListeners {
 			case EXHAUST:
 				double s = a.speed.magnitudeRelative();
 				if (s > 0.75) {
-					if (RND.oneIn(BOOSTABLES.PHYSICS().STAMINA.get(a)*8)){
+					if (RND.oneIn(BOOSTABLES.PHYSICS().STAMINA.get(a.indu())*8)){
 						if (STATS.NEEDS().EXHASTION.indu().isMax(a.indu())) {
 							d.interrupt(a, e);
 							d.overwrite(a, AI.listeners().EXHAUSTED.activate(a, d));
@@ -109,7 +109,7 @@ public final class AIEventListeners {
 							STATS.NEEDS().EXHASTION.indu().inc(a.indu(), 2);
 						}
 					}	
-				}else if(s <= 0.55) {
+				}else if(s < 0.6 && RND.oneIn(16)) {
 					STATS.NEEDS().EXHASTION.indu().inc(a.indu(), -1);
 				}
 				return false;
@@ -139,7 +139,8 @@ public final class AIEventListeners {
 					return true;
 				}
 				return false;
-			
+			case FISHINGTRIP_OVER:
+				return false;
 			}
 			
 				
@@ -160,7 +161,7 @@ public final class AIEventListeners {
 				}
 				return 0;
 			case DEFENCE:
-				return e.facingDot*BOOSTABLES.BATTLE().DEFENCE.get(a);
+				return e.facingDot*BOOSTABLES.BATTLE().DEFENCE.get(a.indu())*STATS.NEEDS().EXHASTION.indu().get(a.indu());
 			case BATTLE_READY:
 				return 0;
 			case SCARE_ANIMAL_NOT:
@@ -172,15 +173,17 @@ public final class AIEventListeners {
 			case IS_SLAVE_READY_FOR_UPRISING:
 				return -1;
 			case IS_ENEMY:
-				if (e.other instanceof Humanoid)
-					if (((Humanoid)e.other).indu().hostile() != a.indu().hostile())
+				if (e.other instanceof Humanoid) {
+					Humanoid o = (Humanoid) e.other;
+					if (o.indu().hostile() != a.indu().hostile()) {
 						return 1;
+					}
+				}
 				return 0;
 			case CAN_COLLIDE:
 				return 1.0;
 			case CAN_INTERRACT:
 				return 0;
-			
 			
 			}
 			
@@ -460,11 +463,14 @@ public final class AIEventListeners {
 		AISubActivation push(AIManager d, Humanoid a, double momentum) {
 			
 			if (momentum > 5) {
-				GAME.Notify("here");
+				momentum = 5;
 			}
 			
+			if (a.division() != null)
+				a.division().reporter.reportReachable(a.divSpot(), false);
+			
 			if (momentum > flyForce) {
-				AISTATE state = AI.STATES().FLY.activate(a,d, (float)(1 + (momentum - 1)));
+				AISTATE state = AI.STATES().FLY.activate(a,d, (float)(0.25 + (momentum - flyForce)/3.0));
 				AISubActivation ac = subFly.activate(a, d, state);
 				return ac;
 			}else {
@@ -493,8 +499,11 @@ public final class AIEventListeners {
 					d.subByte = 0;
 					return true;
 				}else if(e.event == HEvent.COLLISION_HARD) {
-					if (e.momentum > flyForce) {
-						AISTATE state = AI.STATES().FLY.add(a,d, (float)(e.momentum-flyForce));
+					
+					double mom = e.momentum*a.physics.getMassI()*EPHYSICS.MOM_TRESHOLDI;
+					
+					if (mom > flyForce) {
+						AISTATE state = AI.STATES().FLY.add(a,d, (float)((mom-flyForce)/3.0));
 						d.overwrite(a, state);
 						d.subByte = 0;
 					}

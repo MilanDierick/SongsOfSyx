@@ -153,7 +153,7 @@ class PlacerArea extends PlacableMulti{
 	public void renderPlaceHolder(SPRITE_RENDERER r, int mask, int x, int y, int tx, int ty, AREA area,
 			PLACER_TYPE type, boolean isPlacable, boolean areaIsPlacable) {
 		super.renderPlaceHolder(r, mask, x, y, tx, ty, area, type, isPlacable, areaIsPlacable);
-		if (isPlacable && embrio.autoWalls.isOn()) {
+		if (isPlacable && embrio.autoWalls.is()) {
 			embrio.door.renderTmpPlaceArea(r, x, y, tx, ty, area);
 		}
 		
@@ -188,7 +188,7 @@ class PlacerArea extends PlacableMulti{
 			am = 0;
 		}
 		
-		CharSequence s = PLACEMENT.placable(tx, ty, embrio.blueprint(), embrio.buildOnWalls.isOn());
+		CharSequence s = PLACEMENT.placable(tx, ty, embrio.blueprint(), embrio.buildOnWalls.is());
 		if (s != null)
 			return s;
 		

@@ -1,6 +1,6 @@
 package world.map.terrain;
 
-import static world.World.*;
+import static world.WORLD.*;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -10,9 +10,7 @@ import init.C;
 import init.RES;
 import init.biomes.TERRAINS;
 import init.paths.PATHS;
-import init.sprite.ICON;
-import settlement.main.RenderData;
-import settlement.main.RenderData.RenderIterator;
+import init.sprite.UI.Icon;
 import snake2d.PathTile;
 import snake2d.SPRITE_RENDERER;
 import snake2d.util.color.*;
@@ -24,13 +22,15 @@ import snake2d.util.map.MAP_BOOLEAN;
 import snake2d.util.map.MAP_INT;
 import snake2d.util.sets.Bitmap1D;
 import snake2d.util.sprite.*;
+import util.rendering.RenderData;
+import util.rendering.RenderData.RenderIterator;
 import util.rendering.ShadowBatch;
 import util.spritecomposer.*;
 import util.spritecomposer.ComposerThings.ITileSheet;
 import view.tool.*;
-import view.world.IDebugPanelWorld;
-import world.World;
-import world.World.WorldResource;
+import view.world.panel.IDebugPanelWorld;
+import world.WORLD;
+import world.WORLD.WorldResource;
 
 public class WorldMountain extends WorldResource{
 
@@ -64,7 +64,8 @@ public class WorldMountain extends WorldResource{
 	private static final int MAX_HEIGHT = 15;
 	private final COLOR[] colors = COLOR.interpolate(new ColorImp(80,80,80), new ColorImp(210,210,210), MAX_HEIGHT);
 	private final Bitmap1D top = new Bitmap1D(TAREA(), false);
-	public final PLACABLE placer;
+	public final PlacableMulti placer;
+	public final PlacableMulti clear;
 	public final SPRITE icon;
 	
 	public WorldMountain() throws IOException {
@@ -72,7 +73,7 @@ public class WorldMountain extends WorldResource{
 		for (int i = 0; i < data.length; i++)
 			data[i] = (byte) NOTHING;
 		
-		PLACABLE clear = new Placable("clear mountain") {
+		clear = new Placable("clear mountain") {
 
 			@Override
 			public CharSequence isPlacable(int tx, int ty, AREA area, PLACER_TYPE type) {
@@ -114,6 +115,10 @@ public class WorldMountain extends WorldResource{
 				return clear;
 			}
 			
+			@Override
+			public SPRITE getIcon() {
+				return icon;
+			}
 			
 		};
 		
@@ -137,7 +142,7 @@ public class WorldMountain extends WorldResource{
 		
 		IDebugPanelWorld.add(t);
 		
-		icon = new SPRITE.Imp(ICON.BIG.SIZE) {
+		icon = new SPRITE.Imp(Icon.L) {
 			
 			@Override
 			public void render(SPRITE_RENDERER r, int X1, int X2, int Y1, int Y2) {
@@ -580,13 +585,13 @@ public class WorldMountain extends WorldResource{
 		
 		private boolean ispp(int tx, int ty, DIR d) {
 			
-			if (!World.MOUNTAIN().isp(tx, ty))
+			if (!WORLD.MOUNTAIN().isp(tx, ty))
 				return false;
-			if (World.MOUNTAIN().getHeight(tx, ty) > 1)
+			if (WORLD.MOUNTAIN().getHeight(tx, ty) > 1)
 				return true;
-			int m = World.MOUNTAIN().get(tx + ty*TWIDTH());
+			int m = WORLD.MOUNTAIN().get(tx + ty*TWIDTH());
 			if (d == DIR.C)
-				return World.MOUNTAIN().centres[m];
+				return WORLD.MOUNTAIN().centres[m];
 			if (d.isOrtho()) {
 				return (m & d.next(1).mask()) > 0 && (m & d.next(-1).mask()) > 0;
 			}
@@ -600,21 +605,21 @@ public class WorldMountain extends WorldResource{
 				throw new RuntimeException();
 			
 			if (d == DIR.N) {
-				return World.MOUNTAIN().is(tx, ty-1, DIR.NW);
+				return WORLD.MOUNTAIN().is(tx, ty-1, DIR.NW);
 			}else if (d == DIR.NE) {
-				return World.MOUNTAIN().is(tx, ty-1, DIR.NE);
+				return WORLD.MOUNTAIN().is(tx, ty-1, DIR.NE);
 			}else if (d == DIR.E) {
-				return World.MOUNTAIN().is(tx, ty, DIR.NE);
+				return WORLD.MOUNTAIN().is(tx, ty, DIR.NE);
 			}else if (d == DIR.SE) {
-				return World.MOUNTAIN().is(tx, ty, DIR.SE);
+				return WORLD.MOUNTAIN().is(tx, ty, DIR.SE);
 			}else if (d == DIR.S) {
-				return World.MOUNTAIN().is(tx, ty, DIR.SW);
+				return WORLD.MOUNTAIN().is(tx, ty, DIR.SW);
 			}else if (d == DIR.SW) {
-				return World.MOUNTAIN().is(tx-1, ty, DIR.SW);
+				return WORLD.MOUNTAIN().is(tx-1, ty, DIR.SW);
 			}else if (d == DIR.W) {
-				return World.MOUNTAIN().is(tx-1, ty, DIR.NW);
+				return WORLD.MOUNTAIN().is(tx-1, ty, DIR.NW);
 			}else { //NW
-				return World.MOUNTAIN().is(tx-1, ty-1, DIR.NW);
+				return WORLD.MOUNTAIN().is(tx-1, ty-1, DIR.NW);
 			}
 			
 		}

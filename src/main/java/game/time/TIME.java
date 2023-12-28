@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.Serializable;
 
 import game.GAME.GameResource;
+import game.Profiler;
 import game.time.Seasons.Season;
 import game.time.TIMECYCLE.*;
 import init.paths.PATHS;
@@ -16,6 +17,7 @@ public class TIME extends GameResource implements Serializable{
 	public final static int secondsPerHour = 48;
 	public final static int hoursPerDay = 24;
 	public final static int secondsPerDay = secondsPerHour*hoursPerDay;
+	public final static double secondsPerDayI = 1.0/secondsPerDay;
 	public final static int workHours = 14;
 	public final static double workValue = (double)hoursPerDay/workHours;
 	
@@ -35,7 +37,7 @@ public class TIME extends GameResource implements Serializable{
 	private final Seasons seasons;
 	private final Years years;
 	private final Ages ages;
-	private final Light light = new Light();
+	private final Light light;
 	
 	private static TIME t;
 	
@@ -59,14 +61,14 @@ public class TIME extends GameResource implements Serializable{
 		ages = new Ages((int) years.cycleSeconds(), jData, jText);
 		
 		
-		currentSecond += days.bitSeconds()*0.20;
-		
-		update(0);
+		currentSecond += days.bitSeconds()*0.5;
+		light = new Light();
+		update(0, Profiler.DUMMY);
 	}
 	
 	public void set(double currentSecond){
 		this.currentSecond = currentSecond;
-		update(0);
+		update(0, Profiler.DUMMY);
 	}
 	
 	public static double currentSecond() {
@@ -139,7 +141,7 @@ public class TIME extends GameResource implements Serializable{
 		currentSecond = file.d();
 		offsetSecond = file.d();
 		playedGame = file.d();
-		update(0);
+		update(0, Profiler.DUMMY);
 	}
 
 	public static double playedGame() {
@@ -147,7 +149,7 @@ public class TIME extends GameResource implements Serializable{
 	}
 	
 	@Override
-	protected void update(float ds) {
+	protected void update(float ds, Profiler prof) {
 		currentSecond += ds;
 		playedGame += ds;
 		double current = currentSecond + offsetSecond;

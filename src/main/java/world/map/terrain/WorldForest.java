@@ -1,15 +1,14 @@
 package world.map.terrain;
 
-import static world.World.*;
+import static world.WORLD.*;
 
 import java.io.IOException;
 
+import game.Profiler;
 import init.C;
 import init.biomes.*;
 import init.paths.PATHS;
-import init.sprite.ICON;
-import settlement.main.RenderData;
-import settlement.main.RenderData.RenderIterator;
+import init.sprite.UI.Icon;
 import snake2d.CORE;
 import snake2d.SPRITE_RENDERER;
 import snake2d.util.color.COLOR;
@@ -25,17 +24,19 @@ import snake2d.util.sets.Bitsmap1D;
 import snake2d.util.sets.LIST;
 import snake2d.util.sprite.SPRITE;
 import snake2d.util.sprite.TILE_SHEET;
+import util.rendering.RenderData;
+import util.rendering.RenderData.RenderIterator;
 import util.rendering.ShadowBatch;
 import util.spritecomposer.*;
 import util.spritecomposer.ComposerThings.IColorSampler;
 import util.spritecomposer.ComposerThings.ITileSheet;
 import view.tool.*;
-import view.world.IDebugPanelWorld;
-import world.World;
-import world.World.WorldResource;
+import view.world.panel.IDebugPanelWorld;
+import world.WORLD;
+import world.WORLD.WorldResource;
 
 public class WorldForest extends WorldResource {
-
+	
 	private final Bitsmap1D data = new Bitsmap1D(0, 4, TAREA());
 	private static final int SET = 16;
 
@@ -48,7 +49,7 @@ public class WorldForest extends WorldResource {
 
 	private final Sprites sprites = new Sprites();
 
-	public WorldForest(World m) throws IOException {
+	public WorldForest(WORLD m) throws IOException {
 
 		PLACABLE CLEAR = new PlacableMulti("clear forest") {
 
@@ -75,16 +76,31 @@ public class WorldForest extends WorldResource {
 				int i = tx + ty * TWIDTH();
 				data.set(i, CLAMP.i(data.get(i) + 1, 0, max));
 			}
+			
+			@Override
+			public PLACABLE getUndo() {
+				return CLEAR;
+			}
+			
+			@Override
+			public SPRITE getIcon() {
+				return icon;
+			}
 		};
 		IDebugPanelWorld.add(placer);
 		IDebugPanelWorld.add(CLEAR);
 
-		icon = new SPRITE.Imp(ICON.BIG.SIZE) {
+		icon = new SPRITE.Imp(Icon.L) {
 
 			@Override
 			public void render(SPRITE_RENDERER r, int X1, int X2, int Y1, int Y2) {
-				sprites.colors[0][0].bind();
 				int t = 16*2;
+				COLOR.WHITE100.bind();
+				sprites.bg.render(r, t, X1-1, X2-1, Y1-1, Y2-1);
+				COLOR.BLACK.bind();
+				sprites.bg.render(r, t, X1+1, X2+1, Y1+1, Y2+1);
+				sprites.colors[0][0].bind();
+				
 				sprites.bg.render(r, t, X1, X2, Y1, Y2);
 				sprites.sheet.render(r, t, X1, X2, Y1, Y2);
 				COLOR.unbind();
@@ -169,7 +185,7 @@ public class WorldForest extends WorldResource {
 	}
 
 	@Override
-	protected void update(float ds) {
+	protected void update(float ds, Profiler prof) {
 
 	}
 
@@ -187,13 +203,13 @@ public class WorldForest extends WorldResource {
 		int off = (C.SCALE * 24 - C.TILE_SIZE) / 2;
 		int rMask = colorA - 1;
 
-		RenderIterator it = data.onScreenTiles(2, 2, 2, 0);
+		RenderIterator it = data.onScreenTiles(1, 1, 1, 0);
 		s.setHeight(4);
 		s.setDistance2Ground(0);
 		s.setSoft();
 		while (it.has()) {
 			int t = this.data.get(it.tile());
-			if (REGIONS().isCentre.is(it.tx(), it.ty())) {
+			if (REGIONS().map.isCentre.is(it.tx(), it.ty())) {
 				it.next();
 				continue;
 			}
@@ -206,7 +222,7 @@ public class WorldForest extends WorldResource {
 
 				t -= 1;
 				
-				if (BUILDINGS().roads.is(it.tile())) {
+				if (WORLD.ROADS().HARBOUR.is(it.tile()) || (WORLD.ROADS().ROAD.is(it.tile()) && !WORLD.ROADS().minified.is(it.tile()))) {
 					t = CLAMP.i(t / (2 + (it.ran() & 0b11)), 0, 8);
 					DIR d = DIR.NORTHO.get((it.ran()>>8)&0b11);
 					x += d.x()*C.TILE_SIZEH;
@@ -229,7 +245,7 @@ public class WorldForest extends WorldResource {
 		it = data.onScreenTiles(2, 2, 2, 0);
 		while (it.has()) {
 			int t = this.data.get(it.tile());
-			if (REGIONS().isCentre.is(it.tx(), it.ty())) {
+			if (REGIONS().map.isCentre.is(it.tx(), it.ty())) {
 				it.next();
 				continue;
 			}
@@ -242,7 +258,7 @@ public class WorldForest extends WorldResource {
 
 				t -= 1;
 				
-				if (BUILDINGS().roads.is(it.tile())) {
+				if (WORLD.ROADS().HARBOUR.is(it.tile()) || (WORLD.ROADS().ROAD.is(it.tile()) && !WORLD.ROADS().minified.is(it.tile()))) {
 					t = CLAMP.i(t / (2 + (it.ran() & 0b11)), 0, 8);
 					DIR d = DIR.NORTHO.get((it.ran()>>8)&0b11);
 					x += d.x()*C.TILE_SIZEH;

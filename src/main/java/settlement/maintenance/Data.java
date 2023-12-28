@@ -4,22 +4,36 @@ import static settlement.main.SETT.*;
 
 import java.io.IOException;
 
+import game.VERSION;
 import init.resources.RESOURCE;
 import settlement.main.SETT;
 import settlement.misc.util.FINDABLE;
 import settlement.path.finder.SFinderFindable;
 import settlement.room.main.Room;
-import settlement.tilemap.Floors.Floor;
+import settlement.tilemap.floor.Floors.Floor;
 import snake2d.util.file.*;
 import snake2d.util.map.*;
-import snake2d.util.sets.Bitmap1D;
-import snake2d.util.sets.Bitsmap1D;
+import snake2d.util.sets.*;
 
 final class Data implements SAVABLE{
 
 	private final Bitmap1D bisser = new Bitmap1D(SETT.TAREA, false);
 	private final Bitsmap1D bresource = new Bitsmap1D(0, 4, SETT.TAREA);
 	private final Bitmap1D breserved = new Bitmap1D(SETT.TAREA, false);
+	
+	final Bitmap2D disabled = new Bitmap2D(SETT.TILE_BOUNDS, false) {
+		
+		@Override
+		public MAP_BOOLEANE set(int tile, boolean value) {
+			if (value == is(tile))
+				return this;
+			remove(tile%TWIDTH, tile/TWIDTH);
+			super.set(tile, value);
+			breserved.set(tile, false);
+			add(tile%TWIDTH, tile/TWIDTH);
+			return this;
+		};
+	};
 	
 	private final Service service = new Service();
 	
@@ -28,18 +42,22 @@ final class Data implements SAVABLE{
 		bisser.save(file);
 		breserved.save(file);
 		bresource.save(file);
+		disabled.save(file);
 	}
 	@Override
 	public void load(FileGetter file) throws IOException {
 		bisser.load(file);
 		breserved.load(file);
 		bresource.load(file);
+		if (!VERSION.versionIsBefore(65, 33))
+			disabled.load(file);
 	}
 	@Override
 	public void clear() {
 		bisser.clear();
 		breserved.clear();
 		bresource.clear();
+		disabled.clear();
 	}
 	
 	public final MAP_OBJECT<RESOURCE> resource = new MAP_OBJECT<RESOURCE>() {
@@ -261,14 +279,14 @@ final class Data implements SAVABLE{
 
 		@Override
 		public FINDABLE getReservable(int tx, int ty) {
-			if (is.is(tx, ty) && service.init(tx, ty).findableReservedCanBe())
+			if (is.is(tx, ty) && !disabled.is(tx, ty) && service.init(tx, ty).findableReservedCanBe())
 				return service;
 			return null;
 		}
 
 		@Override
 		public FINDABLE getReserved(int tx, int ty) {
-			if (is.is(tx, ty) && service.init(tx, ty).findableReservedIs())
+			if (is.is(tx, ty) && !disabled.is(tx, ty) && service.init(tx, ty).findableReservedIs())
 				return service;
 			return null;
 		}

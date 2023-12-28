@@ -1,17 +1,17 @@
 package settlement.entity.humanoid;
 
-import init.boostable.BOOSTABLES;
+import game.boosting.BOOSTABLES;
 import init.config.Config;
-import settlement.army.DivMorale;
 import settlement.entity.ENTITY;
 import settlement.entity.ENTITY.ECollision;
 import settlement.entity.EPHYSICS;
 import settlement.entity.animal.Animal;
 import settlement.entity.humanoid.ai.main.AI;
 import settlement.entity.humanoid.ai.main.AIManager;
+import settlement.main.SETT;
 import settlement.room.main.RoomInstance;
-import settlement.stats.CAUSE_LEAVE;
 import settlement.stats.STATS;
+import settlement.stats.util.CAUSE_LEAVE;
 import snake2d.util.rnd.RND;
 import snake2d.util.sets.ArrayList;
 import snake2d.util.sets.LIST;
@@ -40,6 +40,7 @@ public enum HEvent {
 	PRISON_EXECUTE,
 	COLLISION_UNREACHABLE,
 	INTERRACT,
+	FISHINGTRIP_OVER,
 	;
 	
 	public static final LIST<HEvent> all = new ArrayList<HEvent>(values());
@@ -76,58 +77,56 @@ public enum HEvent {
 			
 		}
 		
+		static boolean  debug = false;
+		
 		static void collide(Humanoid a, AIManager ai, ECollision coll) {
 			
-			boolean hostile = coll.pierceDamage > 0 || (coll.other != null && coll.other instanceof Humanoid && HPoll.Handler.isEnemy(a, (Humanoid)coll.other));
-			double mom = coll.momentum*a.physics.getMassI()*EPHYSICS.MOM_TRESHOLDI;
+			boolean hostile = coll.damageStrength > 0 || (coll.other != null && coll.other instanceof Humanoid && HPoll.Handler.isEnemy(a, (Humanoid)coll.other));
 			
-//			{
-//				LOG.ln(Thread.currentThread().getStackTrace()[3]);
-//				LOG.ln(STATS.APPEARANCE().name(a.indu()));
-//				LOG.ln("other: " + (coll.other instanceof Humanoid ? STATS.APPEARANCE().name(((Humanoid)coll.other).indu()) : coll.other));
-//				LOG.ln("damage: " + coll.pierceDamage + " " + coll.momentum);
-//				LOG.ln("dot: " + coll.dirDot);
-//				LOG.ln("dotO: " + coll.dirDotOther);
-//				LOG.ln(coll.norX + " " + coll.norY);
-//				LOG.ln(mom + " " + coll.speedHasChanged);
-//				LOG.ln();;
-//			}
+			
+			double mom = coll.momentum*a.physics.getMassI()*EPHYSICS.MOM_TRESHOLDI;
 			
 			CAUSE_LEAVE l = coll.leave;
 			if (l == null)
 				l = coll.other instanceof Animal ? CAUSE_LEAVE.ANIMAL : CAUSE_LEAVE.SLAYED;
 			
+			
+			
 			if (mom > 4) {
-				a.inflictDamage(2, 2, l);
+				a.inflictDamage(2, l);
+				if (a.isRemoved()) {
+					if (coll.other instanceof Animal) {
+						Animal an = (Animal) coll.other;
+						SETT.ANIMALS().spawn.reportKillRevenge(an.species());
+					}
+				};
 				return;
 			}
 			
-			if (hostile) {
+			if (coll.damageStrength > 0) {
 				
-				if (coll.other == null && a.division() != null) {
-					DivMorale.PROJECTILES.incD(a.division(), 1);
+				double dam = coll.damageStrength;
+				
+				for (int i = 0; i < BOOSTABLES.BATTLE().DAMAGES.size(); i++) {
+					double d = coll.damageStrength*coll.damage[i]/(1.0 + BOOSTABLES.BATTLE().DAMAGES.get(i).defence.get(a.indu()));
+					dam += d;
 				}
 				
-				if (mom > RND.rFloat()*2) {
-					STATS.NEEDS().EXHASTION.indu().inc(a.indu(), 1);
-				}
-				
-//				double pdamage = coll.pierceDamage*RND.rFloat() - RND.rFloat()*BOOSTABLES.BATTLE().ARMOUR.get(a);
-//				pdamage = Math.max(RND.rFloat()*pdamage, 0);
-				
-				double damage = coll.pierceDamage*RND.rFloat() - BOOSTABLES.BATTLE().ARMOUR.get(a);
-				
-				damage = mom*10*Math.max(damage, 0)*Config.BATTLE.DAMAGE;
-				
-				mom = Math.pow(mom, 2 - STATS.NEEDS().EXHASTION.indu().getD(a.indu()));
-				double momDamage = Math.max(mom-RND.rFloat(), 0);
-				damage = momDamage + damage;
+				dam *= RND.rFloat()*Config.BATTLE.DAMAGE;
+				dam /= 5.0*(1 + BOOSTABLES.BATTLE().BLUNT_DEFENCE.get(a.indu()));
+				//dam -= RND.rFloat()*4.0;
 				
 				
-				if (damage > 0 && !a.inflictDamage(damage, momDamage, l)) {
+				
+				if (dam > 0 && !a.inflictDamage(dam, l)) {
+					if (a.isRemoved()) {
+						if (coll.other instanceof Animal) {
+							Animal an = (Animal) coll.other;
+							SETT.ANIMALS().spawn.reportKillRevenge(an.species());
+						}
+					};
 					return;
-				}
-				
+				}				
 			}
 			
 			
@@ -137,7 +136,7 @@ public enum HEvent {
 			event.norY = coll.norY;
 			event.speedHasChanged = coll.speedHasChanged;
 			
-			if (mom >= 1) {
+			if (mom > 1.0) {
 				event.event = COLLISION_HARD;
 				ai.event(a, event);
 				return;
@@ -170,7 +169,7 @@ public enum HEvent {
 		static void meet(Humanoid a, AIManager ai, ENTITY other) {
 			event.event = MEET_HARMLESS;
 			event.other = other;
-			if (other instanceof Animal && (a.indu().randomness() & 0x01FF) == 0)
+			if (other instanceof Animal && (STATS.RAN().get(a.indu(), 0) & 0x01FF) == 0)
 				STATS.POP().FRIEND.set(a.indu(), other);
 			ai.event(a, event);
 		}
@@ -206,6 +205,12 @@ public enum HEvent {
 		
 		public static void collisionUnreachable(Humanoid a) {
 			event.event = COLLISION_UNREACHABLE;
+			a.ai.event(a, event);
+		}
+		
+		public static void fishingTripOver(Humanoid a, double time) {
+			event.event = FISHINGTRIP_OVER;
+			event.momentum = time;
 			a.ai.event(a, event);
 		}
 

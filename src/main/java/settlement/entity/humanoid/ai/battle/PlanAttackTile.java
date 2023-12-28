@@ -1,7 +1,7 @@
 package settlement.entity.humanoid.ai.battle;
 
+import game.boosting.BOOSTABLES;
 import init.C;
-import init.boostable.BOOSTABLES;
 import settlement.entity.humanoid.HEvent.HEventData;
 import settlement.entity.humanoid.HPoll;
 import settlement.entity.humanoid.HPoll.HPollData;
@@ -157,7 +157,7 @@ final class PlanAttackTile extends AIPLAN.PLANRES {
 			if (!shouldattackTile(d, a, d.planTile.x(), d.planTile.y()))
 				return null;
 
-			double mom = C.TILE_SIZE * BOOSTABLES.BATTLE().BLUNT_DAMAGE.get(a);
+			double mom = C.TILE_SIZE * BOOSTABLES.BATTLE().BLUNT_ATTACK.get(a.indu());
 
 			double str = SETT.ARMIES().map.strength.get(d.planTile);
 			
@@ -219,7 +219,7 @@ final class PlanAttackTile extends AIPLAN.PLANRES {
 			}
 			return false;
 		case EXHAUST:
-			if (RND.oneIn(BOOSTABLES.PHYSICS().STAMINA.get(a) * 8)) {
+			if (RND.oneIn(BOOSTABLES.PHYSICS().STAMINA.get(a.indu()) * 8)) {
 				if (STATS.NEEDS().EXHASTION.indu().isMax(a.indu())) {
 					d.interrupt(a, e);
 					d.overwrite(a, AI.listeners().EXHAUSTED.activate(a, d));

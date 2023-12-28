@@ -4,7 +4,6 @@ import java.io.IOException;
 
 import game.time.TIME;
 import init.C;
-import settlement.main.RenderData.RenderIterator;
 import settlement.main.SETT;
 import settlement.path.AVAILABILITY;
 import settlement.room.main.*;
@@ -19,6 +18,7 @@ import snake2d.util.color.ColorImp;
 import snake2d.util.datatypes.DIR;
 import snake2d.util.file.Json;
 import snake2d.util.rnd.RND;
+import util.rendering.RenderData.RenderIterator;
 import util.rendering.ShadowBatch;
 
 final class Constructor extends Furnisher{
@@ -36,7 +36,7 @@ final class Constructor extends Furnisher{
 		
 		Json sp = init.data().json("SPRITES");
 	
-		RoomSpriteComboN sStencil = new RoomSpriteComboN(sp, "STONE_RING_STENCIL_COMBO");
+		RoomSpriteCombo sStencil = new RoomSpriteCombo(sp, "STONE_RING_STENCIL_COMBO");
 		RoomSprite sRoof = new RoomSprite1x1(sp, "ROOF_EDGE_1X1") {
 			
 			@Override
@@ -85,7 +85,7 @@ final class Constructor extends Furnisher{
 			
 		};
 		
-		RoomSprite sWellR = new RoomSpriteComboN(sp, "STONE_RING_COMBO") {
+		RoomSprite sWellR = new RoomSpriteCombo(sp, "STONE_RING_COMBO") {
 			
 			
 			

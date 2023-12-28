@@ -8,8 +8,8 @@ import settlement.entity.humanoid.Humanoid;
 import settlement.entity.humanoid.ai.main.*;
 import settlement.entity.humanoid.ai.main.AISUB.AISubActivation;
 import settlement.main.SETT;
-import settlement.stats.CAUSE_LEAVE;
 import settlement.stats.law.PRISONER_TYPE.CRIME;
+import settlement.stats.util.CAUSE_LEAVE;
 import snake2d.util.rnd.RND;
 
 final class Murder extends AIPLAN.PLANRES{
@@ -100,7 +100,7 @@ final class Murder extends AIPLAN.PLANRES{
 			if (e instanceof Humanoid) {
 				Humanoid h = (Humanoid) e;
 				double damage = RND.rFloat()*0.99;
-				h.inflictDamage(damage, 0, CAUSE_LEAVE.MURDER);
+				h.inflictDamage(damage, CAUSE_LEAVE.MURDER);
 				AIModule_Crime.notify(a);
 				if (h.isRemoved())
 					return cool_down.set(a, d);

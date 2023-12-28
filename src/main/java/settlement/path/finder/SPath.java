@@ -19,7 +19,7 @@ import snake2d.util.file.FilePutter;
 import snake2d.util.sprite.SPRITE;
 import snake2d.util.sprite.text.Text;
 
-public class SPath extends Path.PathSync {
+public class SPath extends Path.PathFancy {
 
 	protected short destX, destY;
 	protected boolean successful = false;
@@ -73,7 +73,7 @@ public class SPath extends Path.PathSync {
 
 		int x = x() * C.TILE_SIZE + offsetX;
 		int y = y() * C.TILE_SIZE + offsetY;
-		int d = 0; //(C.TILE_SIZE - ICON.MEDIUM.SIZE) / 2;
+		int d = 0; //(C.TILE_SIZE - Icon.M) / 2;
 		s.render(r, x + d, y + d);
 		t.clear().add(i++);
 		t.render(r, x, y);
@@ -154,7 +154,7 @@ public class SPath extends Path.PathSync {
 		this.destY = (short) destY;
 		this.successful = false;
 
-		if (!C.SETTLE_TDIM.holdsPoint(sx, sy)) {
+		if (!SETT.TILE_BOUNDS.holdsPoint(sx, sy)) {
 			clear();
 			return false;
 		}
@@ -180,7 +180,7 @@ public class SPath extends Path.PathSync {
 		
 		successful = false;
 		
-		if (!C.SETTLE_TDIM.holdsPoint(startX, startY)) {
+		if (!SETT.TILE_BOUNDS.holdsPoint(startX, startY)) {
 			return false;
 		}
 		
@@ -219,7 +219,7 @@ public class SPath extends Path.PathSync {
 		
 		successful = false;
 		
-		if (!C.SETTLE_TDIM.holdsPoint(startX, startY)) {
+		if (!SETT.TILE_BOUNDS.holdsPoint(startX, startY)) {
 			return false;
 		}
 		
@@ -453,7 +453,7 @@ public class SPath extends Path.PathSync {
 		arrived = isCompleate();
 	}
 	
-	public void copy(PathSync other, int destX, int destY, boolean full) {
+	public void copy(PathFancy other, int destX, int destY, boolean full) {
 		
 		
 		other.setCurrentI(0);

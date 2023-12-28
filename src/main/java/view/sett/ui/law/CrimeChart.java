@@ -1,8 +1,8 @@
 package view.sett.ui.law;
 
+import game.boosting.BOOSTABLES;
 import game.faction.FACTIONS;
 import game.time.TIME;
-import init.boostable.BOOSTABLES;
 import init.race.RACES;
 import init.settings.S;
 import init.sprite.SPRITES;
@@ -66,7 +66,7 @@ final class CrimeChart extends GuiSection{
 					if (i % 8 == 0)
 						b.NL();
 					b.add(RACES.all().get(i).appearance().icon);
-					b.add(GFORMAT.f1(b.text(), BOOSTABLES.BEHAVIOUR().LAWFULNESS.race(RACES.all().get(i))));
+					b.add(GFORMAT.f1(b.text(), BOOSTABLES.BEHAVIOUR().LAWFULNESS.get(RACES.clP(RACES.all().get(i), HCLASS.CITIZEN))));
 					b.space();
 				}
 				

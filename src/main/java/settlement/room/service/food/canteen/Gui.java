@@ -1,14 +1,12 @@
 package settlement.room.service.food.canteen;
 
 import init.D;
-import init.resources.Edible;
 import init.resources.RESOURCES;
-import init.sprite.UI.UI;
+import init.resources.ResG;
 import snake2d.util.datatypes.DIR;
 import snake2d.util.gui.GUI_BOX;
 import snake2d.util.gui.GuiSection;
 import snake2d.util.gui.renderable.RENDEROBJ;
-import util.data.BOOLEAN;
 import util.data.GETTER;
 import util.gui.misc.*;
 import util.info.GFORMAT;
@@ -28,7 +26,7 @@ class Gui extends UIRoomModuleImp<CanteenInstance, ROOM_CANTEEN> {
 		
 		GuiSection s = new GuiSection();
 		int i = 0;
-		for (Edible e : RESOURCES.EDI().all()) {
+		for (ResG e : RESOURCES.EDI().all()) {
 			
 			GButt.BSection ss = new GButt.BSection() {
 				
@@ -50,13 +48,6 @@ class Gui extends UIRoomModuleImp<CanteenInstance, ROOM_CANTEEN> {
 				}
 			};
 			
-			ss.add(UI.PANEL().checkSprite(new BOOLEAN() {
-				
-				@Override
-				public boolean is() {
-					return g.get().uses(e);
-				}
-			}), 0, 0);
 			
 			ss.addRightC(4, e.resource.icon());
 			
@@ -106,7 +97,7 @@ class Gui extends UIRoomModuleImp<CanteenInstance, ROOM_CANTEEN> {
 	protected void appendMain(GGrid gg, GGrid text, GuiSection sExtra) {
 		GuiSection s = new GuiSection();
 		int i = 0;
-		for (Edible e : RESOURCES.EDI().all()) {
+		for (ResG e : RESOURCES.EDI().all()) {
 			RENDEROBJ r = new GStat() {
 				
 				@Override

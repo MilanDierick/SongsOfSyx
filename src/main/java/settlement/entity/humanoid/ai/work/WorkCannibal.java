@@ -135,9 +135,12 @@ final class WorkCannibal extends PlanBlueprint {
 		
 		private void produce(Corpse corpse, Humanoid a,  AIManager d) {
 			
+			
 			if (corpse.resLeft() <= 0) {
-				RES_AMOUNT rr = corpse.indu().race().resources().rnd();
-				produce(rr.resource(), 1, a, d);
+				if (corpse.indu().race().resources().size() > 0) {
+					RES_AMOUNT rr = corpse.indu().race().resources().rnd();
+					produce(rr.resource(), 1, a, d);
+				}
 				corpse.remove();
 				return;
 			}

@@ -3,12 +3,16 @@ package settlement.room.main.job;
 import static settlement.main.SETT.*;
 
 import game.GAME;
+import init.resources.RBIT;
+import init.resources.RBIT.RBITImp;
 import init.resources.RESOURCE;
 import init.sound.SoundSettlement.Sound;
 import settlement.entity.humanoid.Humanoid;
 import settlement.main.SETT;
 import settlement.misc.job.SETT_JOB;
+import settlement.room.industry.module.Industry.IndustryResource;
 import settlement.room.industry.module.ROOM_PRODUCER;
+import settlement.room.main.RoomBlueprintImp;
 import settlement.room.main.RoomInstance;
 import snake2d.SPRITE_RENDERER;
 import snake2d.util.bit.Bit;
@@ -33,15 +37,17 @@ public abstract class RoomResDeposit implements SETT_JOB {
 		new Bit(0b0000_0000_1000_0000_0000_0000_0000_0000),
 	};
 
+	private static Bit WRESERVED = new Bit(0b0000_0001_0000_0000_0000_0000_0000_0000);
+	private static final double ww = 10;
 	protected Coo coo = new Coo();
 	protected int data;
 	protected final static String name = "Gettings raw materials";
 	private ROOM_PRODUCER ins;
+	private final RoomBlueprintImp blue;
 
 
-
-	protected RoomResDeposit() {
-
+	protected RoomResDeposit(RoomBlueprintImp blue) {
+		this.blue = blue;
 	}
 
 	public RoomResDeposit get(int tx, int ty, RoomInstance i) {
@@ -55,7 +61,9 @@ public abstract class RoomResDeposit implements SETT_JOB {
 	}
 
 	protected abstract boolean is(int tx, int ty);
-
+	protected abstract boolean regularJobCanBeReserved(COORDINATE coo);
+	protected abstract void regularJobStore(COORDINATE coo, int am);
+	
 	public int amount(int res) {
 		return AMOUNTS[res].get(data);
 	}
@@ -98,7 +106,9 @@ public abstract class RoomResDeposit implements SETT_JOB {
 
 	@Override
 	public boolean jobReserveCanBe() {
-		return jobResourceBitToFetch() != 0;
+		if (!WRESERVED.is(data) && regularJobCanBeReserved(coo) && hasOneOfEach())
+			return true;
+		return jobResourceBitToFetch() != null;
 	}
 
 	public void render(SPRITE_RENDERER r, ShadowBatch shadowBatch, int x, int y, int ran) {
@@ -109,7 +119,21 @@ public abstract class RoomResDeposit implements SETT_JOB {
 				res(i).renderLaying(r, x, y, ran, amount(i));
 				ran = ran >> 3;
 			}
+			
+//			if (RESERVED[i].is(data)) {
+//				COLOR.ORANGE100.render(r, x, y);
+//			}
+//			if (WRESERVED.is(data)) {
+//				COLOR.RED100.render(r, x, y);
+//			}
+			
 		}
+		
+//		for (int i = 0; i < 4; i++) {
+//			if (RESERVED[i].is(data)) {
+//				COLOR.RED100.render(r, x, y);
+//			}
+//		}
 	}
 
 	public boolean withDraw(int ri, int amount) {
@@ -118,16 +142,19 @@ public abstract class RoomResDeposit implements SETT_JOB {
 		return amount(ri) > 0;
 	}
 
+	private final RBITImp bits = new RBITImp();
+	
 	@Override
-	public long jobResourceBitToFetch() {
-		long l = 0;
+	public RBIT jobResourceBitToFetch() {
+		bits.clear();
 		for (int i = 0; i < resAm(); i++) {
 			if (!RESERVED[i].is(data)) {
 				if (amount(i) < 10)
-					l |= res(i).bit;
+					bits.or(res(i));
 			}
 		}
-		return l;
+		
+		return bits.isClear() ? null : bits;
 	}
 	
 	@Override
@@ -137,7 +164,7 @@ public abstract class RoomResDeposit implements SETT_JOB {
 
 	@Override
 	public double jobPerformTime(Humanoid skill) {
-		return 0;
+		return ww;
 	}
 
 	@Override
@@ -151,6 +178,45 @@ public abstract class RoomResDeposit implements SETT_JOB {
 	
 	@Override
 	public RESOURCE jobPerform(Humanoid skill, RESOURCE res, int ram) {
+		
+		
+		
+		if (res == null) {
+			
+			data = WRESERVED.set(data, false);
+			save();
+			
+			depositOneOfEach();
+			if (!regularJobCanBeReserved(coo))
+				return null;
+			
+			int ri = 0;
+			double w = ww;
+			for (IndustryResource r : ins.industry().ins()) {
+				int a = r.work(skill, ins, ww);
+				if (a > 0) {
+					int dd = amount(ri);
+					if (dd < a) {
+						double www = w*dd/a;
+						if (www < w)
+							w = www;
+						r.inc(ins, -(a-dd));
+						a = dd;
+					}
+					withDraw(ri, a);
+				}
+				ri++;
+			}
+
+			int am = ins.industry().outs().get(0).work(skill, ins, w);
+			
+			regularJobStore(coo, am);
+			
+			return null;
+			
+		}
+		
+		
 		boolean has = true;
 		
 		for (int i = 0; i < resAm(); i++) {
@@ -173,38 +239,58 @@ public abstract class RoomResDeposit implements SETT_JOB {
 
 	@Override
 	public void jobReserve(RESOURCE r) {
-		for (int i = 0; i < resAm(); i++) {
-			if (res(i) == r) {
-				data = RESERVED[i].set(data);
-				save();
-				return;
+		if (r != null) {
+			for (int i = 0; i < resAm(); i++) {
+				if (res(i) == r) {
+					data = RESERVED[i].set(data);
+					save();
+					return;
+				}
 			}
+		}else if (!WRESERVED.is(data)) {
+			withdrawOneOfEach();
+			data = WRESERVED.set(data);
+			save();
+			return;
 		}
+		
+		
 		throw new RuntimeException("" + r);
 	}
 
 	@Override
 	public boolean jobReservedIs(RESOURCE r) {
+		if (r == null) {
+			return WRESERVED.is(data);
+		}
+		
 		for (int i = 0; i < resAm(); i++) {
 			if (res(i) == r) {
 				return RESERVED[i].is(data);
 			}
 		}
-		//GAME.Notify("" + r + " " + coo.x() + " " + coo.y());
+
 		return false;
 	}
 
 	@Override
 	public void jobReserveCancel(RESOURCE r) {
-		for (int i = 0; i < resAm(); i++) {
-			if (res(i) == r) {
-				if (RESERVED[i].is(data)) {
-					data = RESERVED[i].clear(data);
-					save();
+		if (r == null) {
+			data = WRESERVED.set(data, false);
+			save();
+			return;
+		}else {
+			for (int i = 0; i < resAm(); i++) {
+				if (res(i) == r) {
+					if (RESERVED[i].is(data)) {
+						data = RESERVED[i].clear(data);
+						save();
+					}
+					return;
 				}
-				return;
 			}
 		}
+		
 		GAME.Notify("" + r);
 
 	}
@@ -221,8 +307,8 @@ public abstract class RoomResDeposit implements SETT_JOB {
 	}
 
 	@Override
-	public String jobName() {
-		return name;
+	public CharSequence jobName() {
+		return WRESERVED.is(data) ? blue.employment().verb : name;
 	}
 
 	@Override
@@ -262,5 +348,5 @@ public abstract class RoomResDeposit implements SETT_JOB {
 		
 
 	}
-
+	
 }

@@ -1,23 +1,23 @@
 package settlement.room.main.category;
 
-import init.sprite.ICON;
+import init.sprite.UI.Icon;
 import settlement.room.main.RoomBlueprintImp;
 import snake2d.util.color.COLOR;
-import snake2d.util.sets.ArrayListResize;
-import snake2d.util.sets.LIST;
+import snake2d.util.sets.*;
 
 public final class RoomCategorySub {
 	
-	private final ArrayListResize<RoomBlueprintImp> all = new ArrayListResize<RoomBlueprintImp>(32, 256);
+	private final ArrayListGrower<RoomBlueprintImp> all = new ArrayListGrower<RoomBlueprintImp>();
 	public final COLOR color;
 	private final CharSequence name;
-	private final ICON.MEDIUM icon;
+	private final Icon icon;
 	
-	RoomCategorySub(CharSequence name, ICON.MEDIUM icon, COLOR color) {
+	RoomCategorySub(ArrayListGrower<RoomCategorySub> all, CharSequence name, Icon icon, COLOR color) {
 		this.name = name;
 		this.icon = icon;
 		
 		this.color = color;
+		all.add(this);
 	}
 	
 	public int add(RoomBlueprintImp imp) {
@@ -28,8 +28,10 @@ public final class RoomCategorySub {
 		return name;
 	}
 	
-	public ICON.MEDIUM icon(){
-		return icon;
+	public Icon icon(){
+		if (icon != null)
+			return icon;
+		return all.get(0).icon;
 	}
 	
 	public LIST<RoomBlueprintImp> rooms(){

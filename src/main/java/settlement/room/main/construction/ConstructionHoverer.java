@@ -126,7 +126,7 @@ final class ConstructionHoverer extends UIRoomModule {
 
 		box.NL();
 		box.add(box.text().set(stringclear));
-		box.add(GFORMAT.perc(box.text(), (k.area()-clearNeeded)/(double)k.area()));
+		box.add(GFORMAT.perc(box.text(), (k.area()-clearNeeded)/(double)k.area(), 1));
 		
 		
 		box.NL();

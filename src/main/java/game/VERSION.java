@@ -2,8 +2,8 @@ package game;
 
 public final class VERSION {
 
-	public static final int VERSION_MAJOR = 64;
-	public static final int VERSION_MINOR = 0;
+	public static final int VERSION_MAJOR = 65;
+	public static final int VERSION_MINOR = 39;
 	public static final int VERSION = version(VERSION_MAJOR, VERSION_MINOR);
 	public static final String VERSION_STRING = versionString(VERSION);
 
@@ -11,7 +11,7 @@ public final class VERSION {
 
 	}
 //
-	public static boolean version2IsBefore(int major, int minor) {
+	public static boolean versionIsBefore(int major, int minor) {
 		return GAME.version() < version(major, minor);
 	}
 	

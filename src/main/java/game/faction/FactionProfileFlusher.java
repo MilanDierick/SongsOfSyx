@@ -19,14 +19,17 @@ public class FactionProfileFlusher {
 		try {
 			JsonE j = new JsonE();
 			j.addString("RULER_NAME", ""+p.ruler().name);
-			j.addString("FACTION_NAME", ""+p.appearence().name());
+			j.addString("FACTION_NAME", ""+p.name);
 			color(j, p.banner().colorBG(), "COLOR_BANNER_BACKGROUND");
 			color(j, p.banner().colorFG(), "COLOR_BANNER_FOREGROUND");
 			color(j, p.banner().colorBorder(), "COLOR_BANNER_BORDER");
 			color(j, p.banner().colorPole(), "COLOR_BANNER_POLE");
+			
+			JsonE cols = new JsonE();
+			
 			for (String k : PlayerColors.cats().keys()) {
 				for (PlayerColor c : PlayerColors.cats().get(k)) {
-					color(j, c.color, "CITY_" + c.key);
+					color(cols, c.color, c.cat + "_" + c.key);
 				}
 			}
 			String s = "";
@@ -34,6 +37,8 @@ public class FactionProfileFlusher {
 				s += p.banner().sprite.is(i) ? "1" : "0";
 			}
 			j.add("BANNER_DATA", s);
+			
+			j.add("COLORS", cols);
 			
 			if (!PATHS.local().PROFILE.exists(name))
 				PATHS.local().PROFILE.create(name);
@@ -46,11 +51,8 @@ public class FactionProfileFlusher {
 	}
 	
 	private static void color(JsonE j, COLOR c, String key) {
-		JsonE jc = new JsonE();
-		jc.add("R", 2*(c.red()&0x0FF));
-		jc.add("G", 2*(c.green()&0x0FF));
-		jc.add("B", 2*(c.blue()&0x0FF));
-		j.add(key, jc);
+		String v = (2*(c.red()&0x0FF)) + "_" + 2*(c.green()&0x0FF) + "_" + 2*(c.blue()&0x0FF);
+		j.add(key, v);
 	}
 	
 	public static boolean canLoad(Player p) {
@@ -64,24 +66,31 @@ public class FactionProfileFlusher {
 		try {
 			Json json = new Json(PATHS.local().PROFILE.get(name));
 			p.ruler().name.clear().add(json.text("RULER_NAME"));
-			p.appearence().name().clear().add(json.text("FACTION_NAME"));
+			p.name.clear().add(json.text("FACTION_NAME"));
 			p.banner().colorBG().set(new ColorImp(json, "COLOR_BANNER_BACKGROUND"));
 			p.banner().colorFG().set(new ColorImp(json, "COLOR_BANNER_FOREGROUND"));
 			p.banner().colorBorder().set(new ColorImp(json, "COLOR_BANNER_BORDER"));
 			p.banner().colorPole().set(new ColorImp(json, "COLOR_BANNER_POLE"));
 			
-			for (String k : PlayerColors.cats().keys()) {
-				for (PlayerColor c : PlayerColors.cats().get(k)) {
-					String kk = "CITY_" + c.key;
-					if (json.has(kk))
-						c.color.set(new ColorImp(json, kk));
-				}
-			}
+
 			
 			String s = json.value("BANNER_DATA");
 			for (int i = 0; i < s.length(); i++) {
 				p.banner().sprite.set(i, s.charAt(i) == '1');
 			}
+			
+			if (json.has("COLORS")) {
+				json = json.json("COLORS");
+				for (String k : PlayerColors.cats().keys()) {
+					for (PlayerColor c : PlayerColors.cats().get(k)) {
+						String kk =  c.cat + "_" + c.key;
+						if (json.has(kk))
+							c.color.set(new ColorImp(json, kk));
+					}
+				}
+			}
+			
+			
 		} catch (Exception e) {
 			e.printStackTrace(System.out);
 		}

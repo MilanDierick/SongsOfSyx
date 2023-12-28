@@ -16,6 +16,7 @@ import snake2d.util.sets.ArrayListResize;
 import util.colors.GCOLOR;
 import util.data.GETTER;
 import util.dic.DicArmy;
+import util.gui.misc.GButt;
 import util.gui.table.GTableBuilder;
 import util.gui.table.GTableBuilder.GRowBuilder;
 import view.interrupter.ISidePanel;
@@ -28,7 +29,7 @@ final class UIPanelArtillery extends ISidePanel{
 	private final CatSelection selection;
 	private final ArrayListResize<ArtilleryInstance> all = new ArrayListResize<>(256, ROOMS.ROOM_MAX);
 	
-	private static int width = 100;
+	private static int width = 160;
 
 	public UIPanelArtillery(Army army, CatSelection selection) {
 		titleSet(DicArmy.¤¤Artillery);
@@ -86,9 +87,9 @@ final class UIPanelArtillery extends ISidePanel{
 			
 			isSelected = ins.selected;
 			isHovered = ins.hovered;
-			GCOLOR.UI().border().render(r, body,-1);
-			GCOLOR.UI().bg(isActive, isSelected, isHovered).render(r, body, -2);
-			ins.blueprintI().iconBig().nomal.render(r, body().x1()+3, body().y1()+3);
+			GButt.ButtPanel.renderBG(r, isActive, isSelected, isHovered, body);
+			GButt.ButtPanel.renderFrame(r, isActive, isSelected, isHovered, body);
+			ins.blueprintI().iconBig().medium.render(r, body().x1()+3, body().y1()+3);
 			
 			if (ins.mustered()) {
 				if (ins.targetDivGet() != null || ins.targetCooGet() != null) {

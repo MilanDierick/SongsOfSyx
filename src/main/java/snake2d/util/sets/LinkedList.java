@@ -36,14 +36,14 @@ public class LinkedList<E> implements LISTE<E>, Serializable{
 		if (index > size)
 			return null;
 		
-		int i = 0;
-		for (E e : this){
-			if (i == index)
-				return e;
-			i++;
-		}
+		Node<E> n = first;
 		
-		return null;
+		while(index > 0 && n != null) {
+			n = n.next;
+			index--;
+		}
+		return n.element;
+		
 	}
 
 	@Override

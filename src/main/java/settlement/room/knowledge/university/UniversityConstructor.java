@@ -2,7 +2,6 @@ package settlement.room.knowledge.university;
 
 import java.io.IOException;
 
-import settlement.main.RenderData.RenderIterator;
 import settlement.path.AVAILABILITY;
 import settlement.room.main.*;
 import settlement.room.main.furnisher.*;
@@ -12,6 +11,7 @@ import settlement.room.sprite.*;
 import snake2d.SPRITE_RENDERER;
 import snake2d.util.datatypes.DIR;
 import snake2d.util.file.Json;
+import util.rendering.RenderData.RenderIterator;
 import util.rendering.ShadowBatch;
 
 final class UniversityConstructor extends Furnisher{
@@ -55,7 +55,7 @@ final class UniversityConstructor extends Furnisher{
 			}
 		};
 		
-		RoomSprite sCarpet = new RoomSpriteComboN(sp, "CARPET_COMBO") {
+		RoomSprite sCarpet = new RoomSpriteCombo(sp, "CARPET_COMBO") {
 			@Override
 			public void renderBelow(SPRITE_RENDERER r, ShadowBatch s, int data, RenderIterator it, double degrade) {
 				super.render(r, s, data, it, degrade, false);
@@ -71,7 +71,7 @@ final class UniversityConstructor extends Furnisher{
 				return item.sprite(rx, ry) != null && item.sprite(rx, ry).sData() == 1;
 			}
 		}.sData(1);
-		RoomSprite sCarpetCandle = new RoomSpriteComboN(sCarpet) {
+		RoomSprite sCarpetCandle = new RoomSpriteCombo(sCarpet) {
 			
 			final RoomSprite ca = new RoomSprite1x1(sp, "TORCH_1X1");
 			
@@ -96,7 +96,7 @@ final class UniversityConstructor extends Furnisher{
 			}
 		}.sData(1);
 		
-		RoomSprite podium = new RoomSpriteComboN(sp, "PODIUM_COMBO") {
+		RoomSprite podium = new RoomSpriteCombo(sp, "PODIUM_COMBO") {
 			
 			@Override
 			public boolean render(SPRITE_RENDERER r, ShadowBatch s, int data, RenderIterator it, double degrade,
@@ -171,21 +171,21 @@ final class UniversityConstructor extends Furnisher{
 		new FurnisherItem(new FurnisherItemTile[][] {
 			{bb,po,pc,po,bb},
 			{ca,bb,bb,bb,ca}, 
-		}, 1, 5);
+		}, 1, 6);
 		
 		new FurnisherItem(new FurnisherItemTile[][] {
 			{bb,po,pc,po,bb},
 			{bb,po,po,po,bb},
 			{cc,bb,bb,bb,cc}, 
 			{ca,bb,cc,bb,ca}, 
-		}, 1, 9);
+		}, 1, 10);
 		
 		new FurnisherItem(new FurnisherItemTile[][] {
 			{bb,po,po,pc,po,po,bb},
 			{bb,po,po,po,po,po,bb},
 			{cc,bb,bb,cc,bb,bb,cc}, 
 			{ca,bb,bb,cc,bb,bb,ca}, 
-		}, 1, 12);
+		}, 1.2, 13);
 		
 		new FurnisherItem(new FurnisherItemTile[][] {
 
@@ -195,7 +195,7 @@ final class UniversityConstructor extends Furnisher{
 			{cc,cc,bb,bb,cc,bb,bb,cc,cc,},
 			{ca,cc,bb,bb,cc,bb,bb,cc,ca,},
 			{__,__,bb,bb,cc,bb,bb,__,__,},
-		}, 1, 20);
+		}, 1.5, 21);
 		
 		flush(1, 3);
 		

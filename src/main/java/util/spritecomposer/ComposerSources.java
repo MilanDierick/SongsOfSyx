@@ -11,7 +11,7 @@ public final class ComposerSources {
 	public final Full full;
 	public final House house2;
 	public final Singles singles;
-	public final Full2 full2;
+	public final Full full2;
 	public final FullCombo combo = new FullCombo() {
 
 		@Override
@@ -23,9 +23,9 @@ public final class ComposerSources {
 
 	ComposerSources() {
 
-		full = new Full();
+		full = new Full(6);
 		singles = new Singles();
-		full2 = new Full2();
+		full2 = new Full(3);
 
 		house = new House(new Body(2, 2)) {
 			@Override
@@ -233,6 +233,23 @@ public final class ComposerSources {
 			}
 
 		}
+		
+		public void pasteOverBackground(boolean setNext, double blend) {
+			int i = 0;
+
+			setRot(0);
+			do {
+				Resources.c.copy(this);
+				Resources.c.paste(dest, blend);
+				dest.jump(1);
+				i++;
+			} while (!next());
+
+			if (!setNext) {
+				dest.jump(-i);
+			}
+
+		}
 
 		public void pasteRotated(int rotation, boolean setNext) {
 
@@ -354,18 +371,19 @@ public final class ComposerSources {
 	public static class Full extends Imp {
 
 		private int tilesX = 8;
-		private final static int m = 6;
+		private final int m;
 		private int tileStart, tileEnd;
 		private int tileCurrent;
 		private int offX, offY;
 		private int width;
 		private int tilesY;
 
-		private final Body body = new Body(m, m);
+		private final Body body;
 		private int size = 0;
 
-		private Full() {
-
+		private Full(int m) {
+			this.m = m;
+			body = new Body(m, m);
 		}
 
 		private void setSize(int size) {
@@ -466,120 +484,120 @@ public final class ComposerSources {
 
 	}
 	
-	public static class Full2 extends Imp {
-
-		private int tilesX = 8;
-		private final static int m = 3;
-		private int tileStart, tileEnd;
-		private int tileCurrent;
-		private int offX, offY;
-		private int width;
-		private int tilesY;
-
-		private final Body body = new Body(m, m);
-		private int size = 0;
-
-		private Full2() {
-
-		}
-
-		private void setSize(int size) {
-			this.size = size;
-			body.init(0, 0, width, m * 2, 1, 1);
-		}
-
-		public Full2 init(int x, int y, int width, int height, int tilesX, int tilesY, ComposerDests.Tile dest) {
-			setSize(dest.size());
-			this.tilesX = tilesX;
-			this.width = m * 2 + tilesX * size;
-			body.init(x, y, this.width, (tilesY * size + 2 * m), width, height);
-			setVar(0);
-			setSkip(0, tilesY * tilesX);
-			this.tilesY = tilesY;
-			setDest(dest);
-			tileCurrent = 0;
-			tileStart = 0;
-			tileEnd = tilesX * tilesY;
-			calc();
-			return this;
-		}
-
-		@Override
-		public Full2 setSkip(int maxAmount, int skipfirst) {
-			tileStart = skipfirst;
-			tileEnd = tileStart + maxAmount;
-			assert tileEnd <= tilesX * tilesY && tileEnd > tileStart;
-			tileCurrent = tileStart;
-			calc();
-			return this;
-		}
-
-		public Full2 setNextSingle() {
-			setSkip(1, tileStart + 1);
-			return this;
-		}
-
-		@Override
-		public Full2 setVar(int var) {
-			body.set(var);
-			calc();
-			return this;
-		}
-
-		private void calc() {
-			offX = tileCurrent % tilesX;
-			offY = tileCurrent / tilesX;
-			offX *= size;
-			offY *= size;
-			offX += body.getStartX();
-			offY += body.getStartY();
-		}
-
-		@Override
-		public boolean next() {
-
-			tileCurrent++;
-
-			if (tileCurrent >= tileEnd) {
-				tileCurrent = tileStart;
-				calc();
-				return true;
-			}
-			calc();
-			return false;
-		}
-
-		@Override
-		public RECTANGLE body() {
-			return body.body();
-		}
-
-		@Override
-		void setRot(int rot) {
-
-		}
-
-		@Override
-		int height() {
-			return size;
-		}
-
-		@Override
-		int width() {
-			return size;
-		}
-
-		@Override
-		int x1() {
-			return offX;
-		}
-
-		@Override
-		int y1() {
-			return offY;
-		}
-
-	}
+//	private static class Full2 extends Imp {
+//
+//		private int tilesX = 8;
+//		private final static int m = 3;
+//		private int tileStart, tileEnd;
+//		private int tileCurrent;
+//		private int offX, offY;
+//		private int width;
+//		private int tilesY;
+//
+//		private final Body body = new Body(m, m);
+//		private int size = 0;
+//
+//		private Full2() {
+//
+//		}
+//
+//		private void setSize(int size) {
+//			this.size = size;
+//			body.init(0, 0, width, m * 2, 1, 1);
+//		}
+//
+//		public Full2 init(int x, int y, int width, int height, int tilesX, int tilesY, ComposerDests.Tile dest) {
+//			setSize(dest.size());
+//			this.tilesX = tilesX;
+//			this.width = m * 2 + tilesX * size;
+//			body.init(x, y, this.width, (tilesY * size + 2 * m), width, height);
+//			setVar(0);
+//			setSkip(0, tilesY * tilesX);
+//			this.tilesY = tilesY;
+//			setDest(dest);
+//			tileCurrent = 0;
+//			tileStart = 0;
+//			tileEnd = tilesX * tilesY;
+//			calc();
+//			return this;
+//		}
+//
+//		@Override
+//		public Full2 setSkip(int maxAmount, int skipfirst) {
+//			tileStart = skipfirst;
+//			tileEnd = tileStart + maxAmount;
+//			assert tileEnd <= tilesX * tilesY && tileEnd > tileStart;
+//			tileCurrent = tileStart;
+//			calc();
+//			return this;
+//		}
+//
+//		public Full2 setNextSingle() {
+//			setSkip(1, tileStart + 1);
+//			return this;
+//		}
+//
+//		@Override
+//		public Full2 setVar(int var) {
+//			body.set(var);
+//			calc();
+//			return this;
+//		}
+//
+//		private void calc() {
+//			offX = tileCurrent % tilesX;
+//			offY = tileCurrent / tilesX;
+//			offX *= size;
+//			offY *= size;
+//			offX += body.getStartX();
+//			offY += body.getStartY();
+//		}
+//
+//		@Override
+//		public boolean next() {
+//
+//			tileCurrent++;
+//
+//			if (tileCurrent >= tileEnd) {
+//				tileCurrent = tileStart;
+//				calc();
+//				return true;
+//			}
+//			calc();
+//			return false;
+//		}
+//
+//		@Override
+//		public RECTANGLE body() {
+//			return body.body();
+//		}
+//
+//		@Override
+//		void setRot(int rot) {
+//
+//		}
+//
+//		@Override
+//		int height() {
+//			return size;
+//		}
+//
+//		@Override
+//		int width() {
+//			return size;
+//		}
+//
+//		@Override
+//		int x1() {
+//			return offX;
+//		}
+//
+//		@Override
+//		int y1() {
+//			return offY;
+//		}
+//
+//	}
 
 	public static abstract class House extends Imp {
 

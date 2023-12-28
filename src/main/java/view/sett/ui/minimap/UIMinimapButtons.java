@@ -1,8 +1,8 @@
 package view.sett.ui.minimap;
 
 import game.GAME;
-import init.*;
-import init.sprite.ICON;
+import init.C;
+import init.D;
 import init.sprite.SPRITES;
 import init.sprite.UI.UI;
 import settlement.entity.humanoid.HCLASS;
@@ -17,9 +17,11 @@ import snake2d.util.gui.GuiSection;
 import snake2d.util.gui.clickable.CLICKABLE;
 import snake2d.util.gui.renderable.RENDEROBJ;
 import snake2d.util.misc.ACTION;
+import util.colors.GCOLOR;
 import util.data.GETTER.GETTER_IMP;
 import util.dic.DicMisc;
 import util.dic.DicRes;
+import util.gui.common.SuperSc;
 import util.gui.misc.GButt;
 import view.keyboard.KEYS;
 import view.keyboard.KeyButt;
@@ -29,8 +31,6 @@ import view.subview.GameWindow;
 
 final class UIMinimapButtons extends GuiSection {
 
-	private static CharSequence ¤¤screenshot_question = "This will capture a huge 1:1 image of your settlement and save it in your screenshot folder. It will take some time. Proceed?";
-	private static CharSequence ¤¤screenshot_desc = "Take a huge screen-shot of your whole settlement. Screen-shots are saved in your local files, reachable through the game launcher.";
 	private static CharSequence ¤¤hotspots = "Hot-spots";
 	private static CharSequence ¤¤minipanels = "Mini Panels";
 	private static CharSequence ¤¤ToggleOverlay = "¤Toggle Overlay: ";
@@ -39,7 +39,9 @@ final class UIMinimapButtons extends GuiSection {
 		D.ts(UIMinimapButtons.class);
 	}
 
-	private final SUPER_SCREENSHOT shotSett = new SUPER_SCREENSHOT(){
+	public final static int height = 36;
+	
+	private final SUPER_SCREENSHOT shotSett = new SUPER_SCREENSHOT(2){
 		
 		private final static int zoomout = 2;
 		private final int winW = (C.WIDTH())<<zoomout;
@@ -79,10 +81,11 @@ final class UIMinimapButtons extends GuiSection {
 	
 	private final GETTER_IMP<Addable> thing = new GETTER_IMP<Addable>();
 	
-	public UIMinimapButtons(int y1, UIMinimap panel, GameWindow w, boolean resources, boolean hotspots, boolean nobles, boolean species, boolean heat) {
+	public UIMinimapButtons(int y1, int width, UIMinimap panel, GameWindow w, boolean resources, boolean hotspots, boolean nobles, boolean species, boolean heat) {
 		
 		
-		int ss = 24;
+		int ww = 30;
+		int hh = 26;
 		
 		GButt b;
 		GuiSection buttons = new GuiSection();
@@ -119,7 +122,8 @@ final class UIMinimapButtons extends GuiSection {
 					
 					selectedSet(thing.get() != null);
 				};
-			}.hoverInfoSet(DicMisc.¤¤Overlays);
+			}.setDim(ww, hh).hoverInfoSet(DicMisc.¤¤Overlays);
+			
 			buttons.addRight(0, c);
 		}
 		
@@ -130,28 +134,20 @@ final class UIMinimapButtons extends GuiSection {
 				CORE.getGraphics().makeScreenShot();
 			};
 			
-		}.setDim(ss, ss);
-		buttons.addRight(8, KeyButt.wrap(b, KEYS.MAIN().SCREENSHOT));
+		}.setDim(ww, hh);
+		buttons.addRight(0, KeyButt.wrap(b, KEYS.MAIN().SCREENSHOT));
 		
-		b = new GButt.ButtPanel(new ICON.SMALL.Twin(SPRITES.icons().s.camera, SPRITES.icons().s.plus)) {
+		b = new GButt.ButtPanel(SPRITES.icons().s.cameraBig) {
 			
+			private final SuperSc sst = new SuperSc("SUPER_WORLD", shotSett);
 			
-			private ACTION yes = new ACTION() {
-				
-				@Override
-				public void exe() {
-					RES.loader().init();
-					RES.loader().print(DicMisc.¤¤Generating);
-					shotSett.perform();
-				}
-			};
 			
 			@Override
 			protected void clickA() {
-				VIEW.inters().yesNo.activate(¤¤screenshot_question, yes, null, true);
+				VIEW.inters().popup.show(sst, this, true);
 			};
-		}.setDim(ss, ss);
-		b.hoverInfoSet(¤¤screenshot_desc);
+		}.setDim(ww, hh);
+		b.hoverInfoSet(SuperSc.¤¤name);
 		buttons.addRightC(0, b);
 		
 		b = new GButt.ButtPanel(SPRITES.icons().s.cancel) {
@@ -160,7 +156,7 @@ final class UIMinimapButtons extends GuiSection {
 			protected void clickA() {
 				VIEW.hide();
 			};
-		}.setDim(ss, ss);
+		}.setDim(ww, hh);
 		b.hoverInfoSet(¤¤HideUI);
 		buttons.addRightC(0, b);
 
@@ -175,8 +171,8 @@ final class UIMinimapButtons extends GuiSection {
 			protected void renAction() {
 				activeSet(w.zoomout() > 0);
 			}
-		}.setDim(ss, ss);
-		buttons.addRight(8, KeyButt.wrap(b, KEYS.MAIN().ZOOM_IN));
+		}.setDim(ww, hh);
+		buttons.addRight(0, KeyButt.wrap(b, KEYS.MAIN().ZOOM_IN));
 		
 		b = new GButt.ButtPanel(SPRITES.icons().s.minifier) {
 			@Override
@@ -189,8 +185,8 @@ final class UIMinimapButtons extends GuiSection {
 			protected void renAction() {
 				activeSet(w.zoomout() < w.zoomoutmax());
 			}
-		}.setDim(ss, ss);
-		buttons.addRight(8, KeyButt.wrap(b, KEYS.MAIN().ZOOM_OUT));
+		}.setDim(ww, hh);
+		buttons.addRight(0, KeyButt.wrap(b, KEYS.MAIN().ZOOM_OUT));
 		
 		COLOR cView = new ColorImp(47, 23, 0);
 		b = new GButt.ButtPanel(SPRITES.icons().s.minimap) {
@@ -198,7 +194,7 @@ final class UIMinimapButtons extends GuiSection {
 			protected void clickA() {
 				panel.minimap.show();
 			};
-		}.setDim(ss, ss).bg(cView);
+		}.setDim(ww, hh).bg(cView);
 		buttons.addRight(0, KeyButt.wrap(b, KEYS.MAIN().MINIMAP));
 		
 		if (species || nobles || resources || hotspots) {
@@ -217,13 +213,15 @@ final class UIMinimapButtons extends GuiSection {
 				protected void clickA() {
 					VIEW.inters().popup.show(s, this);
 				}
-			}.hoverInfoSet(¤¤minipanels);
-			buttons.addRightC(8, c);
+			}.setDim(ww, hh).hoverInfoSet(¤¤minipanels);
+			buttons.addRightC(0, c);
 		}
 		
 		
-
-		
+		body().setWidth(width);
+		body().setHeight(height);
+		buttons.body().moveCY(body().cY());
+		buttons.body().moveX2(body().x2()-6);
 		add(buttons);
 	
 	}
@@ -257,6 +255,8 @@ final class UIMinimapButtons extends GuiSection {
 	}
 	
 	private RENDEROBJ exp(Expansion s, CharSequence name) {
+		if (s == null)
+			throw new RuntimeException();
 		CLICKABLE b = new GButt.ButtPanel(name) {
 			@Override
 			protected void clickA() {
@@ -273,6 +273,15 @@ final class UIMinimapButtons extends GuiSection {
 	
 	void clearOverlay() {
 		thing.set(null);
+	}
+	
+	@Override
+	public void render(SPRITE_RENDERER r, float ds) {
+		GCOLOR.UI().panBG.render(r, body());
+		GCOLOR.UI().borderH(r, body(), 0);
+//		GCOLOR.UI().border(r, body().x1(), body().x1()+3, body().y1(), body().y2());
+//		GCOLOR.UI().border(r, body().x1(), body().x2(), body().y2(), body().y2()+3);
+		super.render(r, ds);
 	}
 
 }

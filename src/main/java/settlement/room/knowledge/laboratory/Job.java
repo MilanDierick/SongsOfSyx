@@ -2,6 +2,7 @@ package settlement.room.knowledge.laboratory;
 
 import static settlement.main.SETT.*;
 
+import init.resources.RBIT;
 import init.resources.RESOURCE;
 import init.sound.SoundSettlement.Sound;
 import settlement.entity.humanoid.Humanoid;
@@ -76,8 +77,8 @@ class Job implements SETT_JOB{
 	}
 
 	@Override
-	public long jobResourceBitToFetch() {
-		return 0;
+	public RBIT jobResourceBitToFetch() {
+		return null;
 	}
 
 	@Override
@@ -95,7 +96,7 @@ class Job implements SETT_JOB{
 	public RESOURCE jobPerform(Humanoid skill, RESOURCE r, int ram) {
 		
 	
-		double d = IndustryUtil.calcProductionRate(1, skill, null, b.bonus, ins);
+		double d = IndustryUtil.calcProductionRate(1, skill, null, b.bonus(), ins);
 		
 		ins.performJob(d);
 		jobReserveCancel(null);

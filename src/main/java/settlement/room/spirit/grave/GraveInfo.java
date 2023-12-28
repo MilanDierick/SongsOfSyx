@@ -1,14 +1,14 @@
 package settlement.room.spirit.grave;
 
-import game.time.TIME;
 import init.race.RACES;
 import init.race.Race;
 import settlement.entity.humanoid.HTYPE;
 import settlement.main.SETT;
-import settlement.stats.CAUSE_LEAVE;
 import settlement.stats.STATS;
+import settlement.stats.util.CAUSE_LEAVE;
 import settlement.thing.ThingsCorpses.Corpse;
 import snake2d.util.bit.BitsLong;
+import snake2d.util.misc.CLAMP;
 
 public final class GraveInfo {
 
@@ -95,9 +95,8 @@ public final class GraveInfo {
 		data = type.set(data, c.indu().hType().index()); 
 		data = race.set(data, c.indu().race().index);
 		data = cause.set(data, c.cause().index());
-		int a =  (int) (STATS.POP().AGE.indu().get(c.indu())/TIME.years().bitConversion(TIME.days()));
-		if (a > age.mask)
-			a = (int) age.mask;
+		int a =  STATS.POP().age.years(c.indu());
+		a = CLAMP.i(a, 0, (int) age.mask);
 		data = age.set(data, a);
 		ins.datas[id] = data;
 	}

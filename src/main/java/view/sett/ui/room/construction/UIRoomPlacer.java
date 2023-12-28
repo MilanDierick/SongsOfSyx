@@ -7,8 +7,10 @@ import settlement.room.main.TmpArea;
 import settlement.room.main.category.RoomCategorySub;
 import settlement.room.main.furnisher.FurnisherItem;
 import settlement.room.main.util.RoomState;
+import snake2d.util.datatypes.AREA;
+import util.gui.misc.GBox;
 import view.main.VIEW;
-import view.tool.PlacableFixed;
+import view.tool.*;
 
 public class UIRoomPlacer {
 
@@ -25,7 +27,17 @@ public class UIRoomPlacer {
 		if (b.constructor().usesArea())
 			VIEW.s().tools.place(state.placement.placer.area(), state.config);
 		else {
-			
+			if (b.constructor().isAreaPlacable()) {
+				if (b.constructor().groups().size() == 1 && b.constructor().groups().get(0).rotations() == 1 && b.constructor().groups().size() == 1) {
+					if (b.employment() == null) {
+						ipla.set(b);
+						VIEW.s().tools.place(ipla, null);
+						return;
+					}
+				}else
+					throw new RuntimeException();
+				
+			}
 			
 			FurnisherItem it = SETT.ROOMS().fData.item.get(tx, ty);
 			if (it != null) {
@@ -93,6 +105,62 @@ public class UIRoomPlacer {
 	
 	public boolean isActive(RoomBlueprintImp b) {
 		return VIEW.s().tools.configCurrent() == state.config && b == this.state.b;
+	}
+	
+	private final PlacerItemSingleArea ipla = new PlacerItemSingleArea();
+	
+	private class PlacerItemSingleArea extends PlacableMulti{
+
+		private RoomBlueprintImp blueprint;
+
+		
+		public PlacerItemSingleArea() {
+			super("");
+		}
+		
+		public void set(RoomBlueprintImp b) {
+			this.blueprint = b;
+			
+		}
+		
+		@Override
+		public CharSequence name() {
+			return blueprint.info.names;
+		}
+
+		@Override
+		public CharSequence isPlacable(int tx, int ty, AREA area, PLACER_TYPE type) {
+			return init().placable(tx, ty, 0, 0);
+		}
+
+		@Override
+		public void place(int tx, int ty, AREA area, PLACER_TYPE type) {
+			init().place(tx, ty, 0, 0);
+		}
+		
+		@Override
+		public PLACABLE getUndo() {
+			return init().getUndo();
+		}
+		
+		@Override
+		public void placeInfo(GBox b, int oktiles, AREA a) {
+			for (int i = 0; i < blueprint.constructor().resources(); i++) {
+				if (blueprint.constructor().groups().get(0).item(0, 0).cost(i, 0) > 0) {
+					b.setResource(blueprint.constructor().resource(i),oktiles*blueprint.constructor().groups().get(0).item(0, 0).cost(i, 0));
+					b.space();
+				}
+			}
+			super.placeInfo(b, oktiles, a);
+		}
+
+		private PlacableFixed init() {
+			state.placement.placer.init(blueprint, 0);
+			PlacableFixed pp = state.placement.placer.item(0);
+			return pp;
+		}
+		
+
 	}
 	
 }

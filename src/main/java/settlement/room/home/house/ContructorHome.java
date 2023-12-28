@@ -8,12 +8,10 @@ import settlement.room.main.*;
 import settlement.room.main.furnisher.*;
 import settlement.room.main.util.RoomInit;
 import settlement.room.main.util.RoomInitData;
-import settlement.tilemap.Floors.Floor;
+import settlement.tilemap.floor.Floors.Floor;
 import snake2d.LOG;
 import snake2d.util.datatypes.COORDINATE;
 import snake2d.util.datatypes.DIR;
-import snake2d.util.sprite.TILE_SHEET;
-import util.spritecomposer.*;
 
 final class ContructorHome extends Furnisher{
 
@@ -22,9 +20,9 @@ final class ContructorHome extends Furnisher{
 	final FurnisherStat occupants = new FurnisherStat.FurnisherStatI(this, 1);
 	
 	public final int[][] maxOccupants = new int[][] {
-		{1,2,3},
-		{2,4,5},
-		{4,7,10},
+		{3,4,5},
+		{5,7,9},
+		{10,14,18},
 	};
 	
 	static final int entrance = 2;
@@ -34,7 +32,7 @@ final class ContructorHome extends Furnisher{
 	public final Floor flooring;
 	protected ContructorHome(RoomInitData init, ROOM_HOME blue)
 			throws IOException {
-		super(init, 3, 1, 88, 44);
+		super(init, 3, 1);
 		
 		flooring = floor.get(0);
 		sp = new Sprites(init.data());
@@ -62,9 +60,9 @@ final class ContructorHome extends Furnisher{
 		create(new FurnisherItemTile[][] {
 			{xx,xx,xx},
 			{xx,__,xx},
-			 {xx,__,xx},
-			 {xx,__,xx},
-			 {xx,ee,xx},
+			{xx,__,xx},
+			{xx,__,xx},
+			{xx,ee,xx},
 		}, 15);
 		create(new FurnisherItemTile[][] {
 			 {xx,xx,xx,xx,xx},
@@ -100,12 +98,6 @@ final class ContructorHome extends Furnisher{
 	@Override
 	public boolean mustBeOutdoors() {
 		return false;
-	}
-	
-	
-	@Override
-	protected TILE_SHEET sheet(ComposerUtil c, ComposerSources s, ComposerDests d, int y1) {
-		return null;
 	}
 
 	@Override

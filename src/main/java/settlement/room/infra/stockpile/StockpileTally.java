@@ -5,8 +5,8 @@ import java.util.Arrays;
 
 import game.time.TIME;
 import init.D;
-import init.resources.RESOURCE;
-import init.resources.RESOURCES;
+import init.resources.*;
+import init.resources.RBIT.RBITImp;
 import settlement.main.SETT;
 import settlement.stats.STATS;
 import snake2d.util.file.*;
@@ -39,14 +39,15 @@ public final class StockpileTally{
 			return amounts.info();
 		};
 	};
-	private final int[] crateDesignations = new int[RESOURCES.ALL().size()];
-	private final int[] amountTotal = new int[RESOURCES.ALL().size()];
-	private final int[] amountReservable = new int[RESOURCES.ALL().size()];
-	private final int[] amountFetch = new int[RESOURCES.ALL().size()];
+	private final Data crateDesignations = new Data();
+	private final Data amountTotal = new Data();
+	private final Data amountReservable = new Data();
+	private final Data amountFetch = new Data();
 //	private final int[] spaceTotal = new int[RESOURCES.ALL().size()];
 //	private final int[] spaceReservable = new int[RESOURCES.ALL().size()];
-	private final int[] spaceReserved = new int[RESOURCES.ALL().size()];
-	private long spaceMask = 0;
+	private final Data spaceReserved = new Data();
+	private final Data space = new Data();
+	private final RBITImp spaceMask = new RBITImp();
 	private long totalAmount = 0;
 	private long totalSpace = 0;
 	
@@ -69,12 +70,13 @@ public final class StockpileTally{
 		public void save(FilePutter file) {
 			amounts.save(file);
 			amountDay.save(file);
-			file.is(crateDesignations);
-			file.is(amountTotal);
-			file.is(amountReservable);
-			file.is(amountFetch);
-			file.is(spaceReserved);
-			file.l(spaceMask);
+			crateDesignations.save(file);;
+			amountTotal.save(file);
+			amountReservable.save(file);
+			amountFetch.save(file);
+			spaceReserved.save(file);
+			space.save(file);
+			spaceMask.save(file);
 			file.l(totalAmount);
 			file.l(totalSpace);
 		}
@@ -83,12 +85,13 @@ public final class StockpileTally{
 		public void load(FileGetter file) throws IOException {
 			amounts.load(file);
 			amountDay.load(file);
-			file.is(crateDesignations);
-			file.is(amountTotal);
-			file.is(amountReservable);
-			file.is(amountFetch);
-			file.is(spaceReserved);
-			spaceMask = file.l();
+			crateDesignations.load(file);;
+			amountTotal.load(file);
+			amountReservable.load(file);
+			amountFetch.load(file);
+			spaceReserved.load(file);
+			space.load(file);
+			spaceMask.load(file);
 			totalAmount = file.l();
 			totalSpace = file.l();
 		}
@@ -97,12 +100,13 @@ public final class StockpileTally{
 		public void clear() {
 			amounts.clear();
 			amountDay.clear();
-			Arrays.fill(crateDesignations, 0);
-			Arrays.fill(amountTotal, 0);
-			Arrays.fill(amountReservable, 0);
-			Arrays.fill(amountFetch, 0);
-			Arrays.fill(spaceReserved, 0);
-			spaceMask = 0;
+			crateDesignations.clear();
+			amountTotal.clear();
+			amountReservable.clear();
+			amountFetch.clear();
+			spaceReserved.clear();
+			space.clear();
+			spaceMask.clear();
 			totalAmount = 0;
 			totalSpace = 0;
 		}
@@ -113,66 +117,67 @@ public final class StockpileTally{
 		// TODO Auto-generated constructor stub
 	}
 	
-	void tally(int res, int crates, int amountTot, int amountUnres, int spaceRes, int crateSize, boolean fetch) {
+	void tally(int res, int crates, int amountTot, int amountUnres, int spaceRes, int space, boolean fetch) {
 		
-		crateDesignations[res] += crates;
-		amountTotal[res] += amountTot;
+		if (check(RESOURCES.ALL().get(res)) != 0)
+			debug(RESOURCES.ALL().get(res));
+		
+		crateDesignations.inc(res, crates);
+		amountTotal.inc(res, amountTot);
 		totalAmount += amountTot;
-		amountReservable[res] += amountUnres;
-		spaceReserved[res] += spaceRes;
+		amountReservable.inc(res, amountUnres);
+		spaceReserved.inc(res, spaceRes);
+		this.space.inc(res, space);
 		if (fetch) {
-			amountFetch[res] += amountTot;
+			amountFetch.inc(res, amountTot);
 		}
+		
+		
+		
 		
 		if (spaceReservable(res) == 0) {
-			spaceMask &= ~RESOURCES.ALL().get(res).bit;
+			spaceMask.clear(RESOURCES.ALL().get(res));
 		}else if(spaceReservable(res) > 0) {
-			spaceMask |= RESOURCES.ALL().get(res).bit;
-		}else {
-			debug(res);
-			throw new RuntimeException("IF THIS CAN BE REPRODUCED, PLEASE SEND THE SAVE TO: info@songsofsyx.com");
-		}
-		
-		if (amountReservable[res] == 0) {
-		
-		}else if(amountReservable[res] > 0) {
-			
-		}else {
-			debug(res);
-			throw new RuntimeException("" +amountReservable[res]);
+			spaceMask.or(RESOURCES.ALL().get(res));
 		}
 		
 		amounts.set(RESOURCES.ALL().get(res), amountTotal(res));
 		amountDay.set(RESOURCES.ALL().get(res), amountTotal(res));
+		
+		if (check(RESOURCES.ALL().get(res)) != 0) {
+			System.err.println(crates + " " + amountTot + " " + amountUnres + " " + spaceRes + " " + space + " " + fetch);
+			debug(RESOURCES.ALL().get(res));
+		}
 		//debug(res);
 		
 	}
 	
-	void debug(int res) {
-		System.err.println(RESOURCES.ALL().get(res));
-		System.err.println(crateDesignations[res]);
-		System.err.println(amountTotal[res]);
-		System.err.println(amountReservable[res]);
-		System.err.println(amountFetch[res]);
-		System.err.println(spaceTotal(res));
-		System.err.println(spaceReservable(res));
-		System.err.println(spaceReserved[res]);
+	int check(RESOURCE res) {
+		if (amountTotal(res) > spaceTotal(res))
+			return 1;
+		if (amountReservable(res) > amountTotal(res))
+			return 2;
+		if (amountNGReservable(res) > amountTotal(res))
+			return 3;
+		if (spaceReservable(res) > spaceTotal(res))
+			return 4;
+		if (spaceReserved(res) >  spaceTotal(res))
+			return 5;
+		if (spaceReservable(res) + spaceReserved(res) + amountTotal(res) != spaceTotal(res))
+			return 6;
+		return 0;
+		
 	}
 	
-	private long get(int[] array, int ri) {
-		int am = 0;
-		if (ri == -1) {
-			for (int i = 0; i < RESOURCES.ALL().size(); i++) {
-				am += array[i];
-			}
-		}else {
-			am += array[ri];
-		}
-		return am;
-	}
-	
-	private long get(int[] array, RESOURCE ri) {
-		return get(array, ri == null ? -1 : ri.index());
+	void debug(RESOURCE res) {
+		System.err.println(res);
+		System.err.println("capacity " + spaceTotal(res));
+		System.err.println("stored:  "  + amountTotal(res));
+		System.err.println("reservalble " + amountReservable(res));
+		System.err.println("space reservable " + spaceReservable(res));
+		System.err.println("space reserved " + spaceReserved(res));
+		
+		throw new RuntimeException("" + res + " " + check(res));
 	}
 	
 	public HistoryResource amountsSeason() {
@@ -190,23 +195,23 @@ public final class StockpileTally{
 	}
 	
 	long crateDesignations(int res) {
-		return get(crateDesignations, res);
+		return crateDesignations.get(res);
 	}
 
 	public long crateDesignations(RESOURCE res) {
-		return get(crateDesignations, res);
+		return crateDesignations.get(res);
 	}
 	
 	int amountTotal(int res) {
-		return (int) get(amountTotal, res);
+		return amountTotal.get(res);
 	}
 	
 	public int amountTotal(RESOURCE res) {
-		return (int) get(amountTotal, res);
+		return amountTotal.get(res);
 	}
 	
 	long amountReservable(int res) {
-		return get(amountReservable, res);
+		return amountReservable.get(res);
 	}
 	
 	/**
@@ -215,19 +220,19 @@ public final class StockpileTally{
 	 * @return
 	 */
 	public long amountNGReservable(RESOURCE res) {
-		return get(amountReservable, res) - get(amountFetch, res);
+		return amountReservable.get(res) - amountFetch.get(res);
 	}
 	
 	public long amountReservable(RESOURCE res) {
-		return get(amountReservable, res);
+		return amountReservable.get(res);
 	}
 	
 	long spaceTotal(int res) {
-		return get(crateDesignations, res)*ROOM_STOCKPILE.CRATE_MAX;
+		return space.get(res);
 	}
 	
 	public long spaceTotal(RESOURCE res) {
-		return get(crateDesignations, res)*ROOM_STOCKPILE.CRATE_MAX;
+		return space.get(res);
 	}
 	
 	long spaceReservable(int res) {
@@ -238,16 +243,16 @@ public final class StockpileTally{
 		return spaceReservable(res.bIndex());
 	}
 	
-	public boolean spaceReservable(long mask) {
-		return (spaceMask & mask) > 0;
+	public boolean spaceReservable(RBIT mask) {
+		return spaceMask.has(mask);
 	}
 	
 	long spaceReserved(int res) {
-		return get(spaceReserved, res);
+		return spaceReserved.get(res);
 	}
 	
 	public long spaceReserved(RESOURCE res) {
-		return get(spaceReserved, res);
+		return spaceReserved.get(res);
 	}
 	
 	public long totalSpace() {
@@ -256,6 +261,43 @@ public final class StockpileTally{
 	
 	public long totalAmount() {
 		return totalAmount;
+	}
+	
+	private static class Data implements SAVABLE{
+		
+		private final int[] ams = new int[RESOURCES.ALL().size()+1];
+		
+		public int get(int ri) {
+			return ams[ri];
+		}
+		
+		public int get(RESOURCE res) {
+			if (res == null)
+				return ams[RESOURCES.ALL().size()];
+			return ams[res.index()];
+		}
+		
+		
+		public void inc(int ri, int am) {
+			ams[ri]+= am;
+			ams[RESOURCES.ALL().size()] += am;
+		}
+
+		@Override
+		public void save(FilePutter file) {
+			file.is(ams);
+		}
+
+		@Override
+		public void load(FileGetter file) throws IOException {
+			file.is(ams);
+		}
+
+		@Override
+		public void clear() {
+			Arrays.fill(ams, 0);
+		}
+		
 	}
 	
 }

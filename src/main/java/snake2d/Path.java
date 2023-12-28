@@ -16,12 +16,6 @@ public interface Path extends COORDINATE, SAVABLE {
 	
 	/**
 	 * 
-	 * @return - the total cost of this path, calculated by costmethod.
-	 */
-	public double getTotalCost();
-	
-	/**
-	 * 
 	 * @return length of current path
 	 */
 	public int length();
@@ -77,15 +71,6 @@ public interface Path extends COORDINATE, SAVABLE {
 	 * @return there was previous coordinate
 	 */
 	public boolean setPrev();
-	
-	/**
-	 * 
-	 * @return did the actual path fit into this path's size? If not, you only got a partial
-	 * path
-	 */
-	public boolean isCompleate();
-	
-	public int lengthTotal();
 
 	public interface COST {
 
@@ -123,45 +108,7 @@ public interface Path extends COORDINATE, SAVABLE {
 		
 	}
 	
-	public static class Async extends PathSync {
-
-		private volatile boolean undergoingProcessing = false;
-		
-		/**
-		 * 
-		 * @param size
-		 */
-		public Async(int size){
-			super(size);
-		}
-		
-		/**
-		 * 
-		 * @param success - path was found
-		 */
-		protected void pathCalculated(boolean success) {
-			
-		}
-		
-		final void lock(){
-			undergoingProcessing = true;
-		}
-		
-		final void unlock() {
-			undergoingProcessing = false;
-		}
-		
-		/**
-		 * 
-		 * @return is this path being processed by another thread? i.e. don't touch it?
-		 */
-		public final boolean isBusy(){
-			return undergoingProcessing;
-		}
-
-	}
-	
-	public static class PathSync implements Path{
+	public static class PathSimple implements Path{
 
 		private final static int bitA = 2;
 		private final static int tilesPerInt = 8;
@@ -171,16 +118,13 @@ public interface Path extends COORDINATE, SAVABLE {
 		private final int[] bits;
 		private int length;
 		private int tilesI = 0;
-		private boolean compleate;
 		private short currentX,currentY;
-		private double totalCost;
-		private int totalLength;
 		
 		/**
 		 * 
 		 * @param size
 		 */
-		public PathSync(int size){
+		public PathSimple(int size){
 			
 			int ints = size/tilesPerInt;
 			if (size % tilesPerInt > 0)
@@ -194,10 +138,7 @@ public interface Path extends COORDINATE, SAVABLE {
 			file.is(bits);
 			file.i(length);
 			file.i(tilesI);
-			file.bool(compleate);
 			file.i(currentX).i(currentY);
-			file.d(totalCost);
-			file.i(totalLength);
 		}
 		
 		@Override
@@ -206,17 +147,13 @@ public interface Path extends COORDINATE, SAVABLE {
 			
 			length = file.i();
 			tilesI = file.i();
-			compleate = file.bool();
 			currentX = (short) file.i(); 
 			currentY = (short) file.i();
-			totalCost  = file.d();
-			totalLength  = file.i();
 		}
 		
 		@Override
 		public void clear() {
 			tilesI = 0;
-			compleate = false;
 			length = 0;
 		}
 		
@@ -226,16 +163,13 @@ public interface Path extends COORDINATE, SAVABLE {
 		}
 		
 		
-		public void copyTo(PathSync other) {
+		public void copyTo(PathSimple other) {
 			if (other.getCapacity() < getCapacity())
 				throw new RuntimeException();
 			other.length = CLAMP.i(length, 0, other.getCapacity());
 			other.tilesI = CLAMP.i(tilesI, 0, other.getCapacity());
-			other.compleate = compleate;
 			other.currentX = currentX;
 			other.currentY = currentY;
-			other.totalCost = totalCost;
-			other.totalLength = totalLength;
 			for (int i = 0; i < bits.length; i++) {
 				other.bits[i] = bits[i];
 			}
@@ -275,7 +209,7 @@ public interface Path extends COORDINATE, SAVABLE {
 			
 		}
 
-		private final void set(int index, int value){
+		private void set(int index, int value){
 			
 			if (index < 0 || index >= bits.length*tilesPerInt*bitA)
 				throw new RuntimeException("outof");
@@ -327,18 +261,16 @@ public interface Path extends COORDINATE, SAVABLE {
 		
 		protected final void cancel() {
 			length = 0;
-			totalCost = 0;
 			tilesI = 0;
 		}
 
-		public final void set(PathTile dest) {
+		public boolean set(PathTile dest) {
 			if (dest == null) {
 				cancel();
-				return;
+				return true;
 			}
-			totalCost = dest.accCost;
 			
-			
+			boolean ret = true;
 			int i = 1;
 			PathTile t = dest.pathParent;
 			while(t != null){
@@ -347,14 +279,11 @@ public interface Path extends COORDINATE, SAVABLE {
 			}
 			
 			this.length = i;
-			this.totalLength = i;
-			
-			compleate = true;
 			
 			int skip = this.length - getCapacity();
 			if (skip > 0) {
 				this.length = getCapacity();
-				compleate = false;
+				ret = false;
 				while (skip > 0) {
 					dest = dest.pathParent;
 					skip--;
@@ -375,24 +304,19 @@ public interface Path extends COORDINATE, SAVABLE {
 				tilesI --;
 			}
 			tilesI++;
+			return ret;
 		}
 		
-		protected void setOne(int destX, int destY) {
-			totalCost = 0;
+		public void setOne(int destX, int destY) {
 			this.length = 1;
-			compleate = true;
 			
 			currentX = (short) destX;
 			currentY = (short) destY;
 			tilesI = 0;
-			totalLength = 1;
 		}
 		
-		protected void setTwo(int x1, int y1, int x2, int y2) {
-			totalCost = 0;
+		public void setTwo(int x1, int y1, int x2, int y2) {
 			this.length = 2;
-			totalLength = 2;
-			compleate = true;
 			set(0, y1-y2);
 			set(1, x1-x2);
 			currentX = (short) x1;
@@ -400,20 +324,9 @@ public interface Path extends COORDINATE, SAVABLE {
 			tilesI = 0;
 		}
 		
-		
-		@Override
-		public final double getTotalCost() {
-			return totalCost;
-		}
-		
 		@Override
 		public final int length() {
 			return length;
-		}
-		
-		@Override
-		public int lengthTotal() {
-			return totalLength;
 		}
 		
 		@Override
@@ -487,7 +400,6 @@ public interface Path extends COORDINATE, SAVABLE {
 			if (length > 0)
 				return currentX;
 			return-1;
-			//throw new RuntimeException("path has length 0. There is no coordinates");
 		}
 
 		@Override
@@ -495,12 +407,6 @@ public interface Path extends COORDINATE, SAVABLE {
 			if (length > 0)
 				return currentY;
 			return -1;
-			//throw new RuntimeException("path has length 0. There is no coordinates");
-		}
-		
-		@Override
-		public final boolean isCompleate(){
-			return compleate;
 		}
 		
 		@Override
@@ -517,39 +423,6 @@ public interface Path extends COORDINATE, SAVABLE {
 			while(tilesI > i)
 				setPrev();
 		}
-
-
-//		@Override
-//		public void save(FilePutter file) {
-//			file.i(length);
-//			file.i(tilesI);
-//			file.bool(compleate);
-//			file.i(currentX).i(currentY);
-//			file.d(totalCost);
-//			file.is(bits);
-//			
-//		}
-//
-//		@Override
-//		public void load(FileGetter file) throws IOException {
-//			length = file.i();
-//			tilesI = file.i();
-//			compleate = file.bool();
-//			currentX = (short) file.i();
-//			currentY = (short) file.i();
-//			totalCost = file.d();
-//			file.is(bits);
-//		}
-//
-//		@Override
-//		public void clear() {
-//			length = 0;
-//			tilesI = 0;
-//			compleate = false;
-//			currentX = 0; currentY = 0;
-//			totalCost = 0;
-//			
-//		}
 		
 		public void debug() {
 			int iold = getCurrentI();
@@ -562,6 +435,102 @@ public interface Path extends COORDINATE, SAVABLE {
 			}
 			setCurrentI(iold);
 			Printer.ln();
+		}
+		
+	}
+	
+	public static class PathFancy extends PathSimple{
+
+		private boolean compleate;
+		private double totalCost;
+		private int totalLength;
+		
+		/**
+		 * 
+		 * @param size
+		 */
+		public PathFancy(int size){
+			super(size);
+			
+
+		}
+		
+		@Override
+		public void save(FilePutter file) {
+			super.save(file);
+			file.bool(compleate);
+			file.d(totalCost);
+			file.i(totalLength);
+		}
+		
+		@Override
+		public void load(FileGetter file) throws IOException {
+			super.load(file);
+			compleate = file.bool();
+			totalCost  = file.d();
+			totalLength  = file.i();
+		}
+		
+		@Override
+		public void clear() {
+			super.clear();
+			compleate = false;
+		}
+		
+		public void copyTo(PathFancy other) {
+			super.copyTo(other);
+			if (other.getCapacity() < getCapacity())
+				throw new RuntimeException();
+			other.compleate = compleate;
+			other.totalCost = totalCost;
+			other.totalLength = totalLength;
+		}
+
+		@Override
+		public final boolean set(PathTile dest) {
+			super.set(dest);
+			totalCost = dest.accCost;
+
+			int i = 1;
+			PathTile t = dest.pathParent;
+			while(t != null){
+				i++;
+				t = t.pathParent;
+			}
+			this.totalLength = i;
+			
+			compleate = super.set(dest);
+			return compleate;
+			
+		}
+		
+		@Override
+		public void setOne(int destX, int destY) {
+			super.setOne(destX, destY);
+			totalCost = 0;
+			compleate = true;
+			totalLength = 1;
+		}
+		
+		@Override
+		public void setTwo(int x1, int y1, int x2, int y2) {
+			super.setTwo(x1, y1, x2, y2);
+			totalCost = 0;
+			totalLength = 2;
+			compleate = true;
+		}
+		
+		
+		public final double getTotalCost() {
+			return totalCost;
+		}
+		
+		public int lengthTotal() {
+			return totalLength;
+		}
+		
+		public final boolean isCompleate(){
+			return compleate;
 		}
 		
 	}

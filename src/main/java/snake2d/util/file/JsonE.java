@@ -1,23 +1,44 @@
 package snake2d.util.file;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.PrintWriter;
 import java.nio.file.Files;
-import java.util.HashMap;
-import java.util.Map.Entry;
+import java.util.HashSet;
+
+import snake2d.util.sets.ArrayList;
+import snake2d.util.sets.LIST;
+import snake2d.util.sets.LinkedList;
+import snake2d.util.sets.Tuple.TupleImp;
 
 public class JsonE {
 
-	private final HashMap<String, String> map = new HashMap<>();
+	private final LinkedList<TupleImp<String, String>> list = new LinkedList<>();
+	
+	private final HashSet<String> map = new HashSet<>();
 	
 	public JsonE(){
 		
 	}
 	
 	public void add(String key, String value) {
-		map.put(key, value);
+		padd(key, value);
+	}
+	
+	
+	private void padd(String key, String value) {
+		if (map.contains(key))
+			throw new RuntimeException(" " + key);
+		map.add(key);
+		list.add(new TupleImp<String, String>(key,  value));
+		
 	}
 	
 	public void add(String key, String[] values) {
+		add(key, new ArrayList<String>(values));
+	}
+	
+	public void add(String key, LIST<String> values) {
 		StringBuilder b = new StringBuilder();
 		b.append('[');
 		b.append(System.lineSeparator());
@@ -35,22 +56,23 @@ public class JsonE {
 	}
 	
 	public void addStrings(String key, String[] values) {
+		String[] vvs = new String[values.length];
 		for (int i = 0; i < values.length; i++) {
-			values[i] = "\""+ values[i] + "\"";
+			vvs[i] = "\""+ values[i] + "\"";
 		}
-		add(key, values);
+		add(key, vvs);
 	}
 	
 	public boolean has(String key) {
-		return map.containsKey(key);
+		return map.contains(key);
 	}
 	
 	public void add(String key, boolean b) {
-		map.put(key, b ? "true" : "false");
+		padd(key, b ? "true" : "false");
 	}
 	
 	public void add(String key, int i) {
-		map.put(key, ""+i);
+		padd(key, ""+i);
 	}
 	
 	public void add(String key, int[] is) {
@@ -62,7 +84,7 @@ public class JsonE {
 	}
 	
 	public void add(String key, double d) {
-		map.put(key, ""+d);
+		padd(key, ""+d);
 	}
 	
 	public void add(String key, double[] is) {
@@ -90,18 +112,35 @@ public class JsonE {
 		add(key, strings);
 	}
 	
+	public void addJ(String key, LIST<JsonE> jsons) {
+		String[] strings = new String[jsons.size()];
+		for (int i = 0; i < jsons.size(); i++) {
+			strings[i] = '\t' + "{" + System.lineSeparator() + jsons.get(i).toString(2) + System.lineSeparator() + '\t' + "}";
+		}
+		add(key, strings);
+	}
+	
 	@Override
 	public String toString() {
+		return toString(0);
+	}
+	
+	public String toString(int tabs) {
 		StringBuilder b = new StringBuilder();
-		for(Entry<String, String> e : map.entrySet()) {
-			b.append(e.getKey());
+		for(TupleImp<String, String> e : list) {
+			for (int t = 0; t < tabs; t++)
+				b.append('\t');
+			b.append(e.a);
 			b.append(':');
 			b.append(' ');
-			String[] ss = e.getValue().split(System.lineSeparator());
+			String[] ss = e.b.split(System.lineSeparator());
 			b.append(ss[0]);
 			for (int i = 1; i < ss.length; i++) {
 				b.append(System.lineSeparator());
-				b.append('\t');
+				for (int t = 0; t < tabs; t++)
+					b.append('\t');
+				if (i < ss.length-1)
+					b.append('\t');
 				b.append(ss[i]);
 			}
 			b.append(',');

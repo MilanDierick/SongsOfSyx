@@ -3,12 +3,12 @@ package settlement.weather;
 import game.time.TIME;
 import init.C;
 import init.settings.S;
-import settlement.main.RenderData;
 import settlement.main.SETT;
 import snake2d.CORE;
 import snake2d.Renderer;
 import snake2d.util.color.*;
 import snake2d.util.rnd.RND;
+import util.rendering.RenderData;
 
 final class WeatherDownfallRenderer{
 
@@ -53,14 +53,16 @@ final class WeatherDownfallRenderer{
 		if (speedAcc < 0)
 			speedAcc = 0;
 		
-		int am = (int) (64*rain);
+		rain *= rain;
+		
+		int am = (int) Math.ceil(32*rain);
 		int smask = offs.length-1;
 		int amask = amount-1;
 		int cmask = (amount>>1)-1;
-		int zs = 0;
-		int ze = 1;
+		int zs = 1;
+		int ze = 2;
 		if (S.get().graphics.get() == 0) {
-			ze = 0;
+			ze = 1;
 		}
 		
 //		
@@ -123,7 +125,9 @@ final class WeatherDownfallRenderer{
 								continue;
 							cs[ra&cmask].bind();
 							CORE.renderer().renderParticle(px, py);
-							
+							if (!snow) {
+								CORE.renderer().renderParticle(px+CORE.renderer().pointsize(), py-CORE.renderer().pointsize());
+							}
 							
 						}
 						ranI += 64;
@@ -175,7 +179,7 @@ final class WeatherDownfallRenderer{
 		private int sqIW,sqIH;
 		
 		void init(RenderData data, int zoomout, int z, double skyzoom) {
-
+			
 			int skyX = (int) ((data.gBounds().x1()+SETT.PWIDTH/2)*skyzoom);
 			int skyY = (int) ((data.gBounds().y1()+SETT.PHEIGHT/2)*skyzoom);
 			

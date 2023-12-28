@@ -3,6 +3,7 @@ package settlement.job;
 import static settlement.main.SETT.*;
 
 import game.GAME;
+import game.faction.FResources.RTYPE;
 import init.D;
 import init.resources.RESOURCES;
 import init.sound.SOUND;
@@ -10,9 +11,14 @@ import init.sound.SoundSettlement.Sound;
 import init.sprite.SPRITES;
 import settlement.entity.humanoid.Humanoid;
 import settlement.main.SETT;
-import settlement.tilemap.Terrain.TerrainTile;
+import settlement.tilemap.terrain.Terrain.TerrainTile;
 import snake2d.SPRITE_RENDERER;
+import snake2d.util.datatypes.AREA;
 import snake2d.util.datatypes.DIR;
+import snake2d.util.gui.clickable.CLICKABLE;
+import snake2d.util.sets.LIST;
+import util.gui.misc.GBox;
+import view.main.VIEW;
 import view.tool.PlacableMessages;
 
 final class JobBuildFillCave extends JobBuild{
@@ -30,7 +36,23 @@ final class JobBuildFillCave extends JobBuild{
 				2, true, 
 				¤¤name, 
 				¤¤desc, 
-				SPRITES.icons().m.tunnel_fill);
+				SETT.TERRAIN().MOUNTAIN.getIcon());
+		
+		this.placer = new Placer(this, RESOURCES.STONE(), 2, ¤¤desc) {
+			private final String jobs = "Jobs: ";
+			@Override
+			public void placeInfo(GBox b, int okTiles, AREA a) {
+				super.placeInfo(b, okTiles, a);
+				if (okTiles > 0) {
+					VIEW.hoverBox().add(VIEW.hoverBox().text().add(jobs).add(okTiles));
+				}
+			}
+			
+			@Override
+			public LIST<CLICKABLE> getAdditionalButt() {
+				return SETT.JOBS().clearss.butts;
+			}
+		};
 	}
 
 	@Override
@@ -68,7 +90,7 @@ final class JobBuildFillCave extends JobBuild{
 
 	@Override
 	protected boolean construct(int tx, int ty) {
-		GAME.player().res().outConstruction.inc(RESOURCES.STONE(), 2);
+		GAME.player().res().inc(RESOURCES.STONE(), RTYPE.CONSTRUCTION, -2);
 		TERRAIN().MOUNTAIN.placeFixed(tx, ty);
 		
 		for (DIR d : DIR.ALLC) {
@@ -99,4 +121,5 @@ final class JobBuildFillCave extends JobBuild{
 		return TERRAIN().MOUNTAIN;
 	}
 
+	
 }

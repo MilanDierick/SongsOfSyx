@@ -9,8 +9,6 @@ import init.C;
 import init.paths.PATHS;
 import init.sprite.SPRITES;
 import init.sprite.game.*;
-import settlement.main.RenderData;
-import settlement.main.RenderData.RenderIterator;
 import settlement.main.SETT;
 import snake2d.CORE;
 import snake2d.SPRITE_RENDERER;
@@ -21,6 +19,9 @@ import snake2d.util.rnd.RND;
 import snake2d.util.sets.ArrayList;
 import snake2d.util.sets.KeyMap;
 import snake2d.util.sprite.TILE_SHEET;
+import snake2d.util.sprite.TextureCoords;
+import util.rendering.RenderData;
+import util.rendering.RenderData.RenderIterator;
 import util.rendering.ShadowBatch;
 import util.spritecomposer.*;
 
@@ -162,6 +163,9 @@ public final class GrowableSprite {
 		
 		int cr = i.ranGet(-1, -1);
 
+		if (CORE.renderer().getZoomout() > 2)
+			am = CLAMP.i(am, 0, 2);
+		
 		for (int ii = 0; ii < am; ii++) {
 			
 			part.color[cr&0x0F].bind();
@@ -446,6 +450,11 @@ public final class GrowableSprite {
 					sp.render(poss[0], sr, s, it, part, am, (ripe-0.5)*2, t);
 			}
 			
+		}
+
+		@Override
+		public TextureCoords texture(int tile) {
+			return COLOR.WHITE100.texture();
 		}
 		
 

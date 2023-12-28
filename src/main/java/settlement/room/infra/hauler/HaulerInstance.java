@@ -3,9 +3,8 @@ package settlement.room.infra.hauler;
 import static settlement.main.SETT.*;
 
 import game.GAME;
-import init.boostable.BOOSTABLE;
-import init.resources.RESOURCE;
-import init.resources.RESOURCES;
+import game.boosting.Boostable;
+import init.resources.*;
 import settlement.main.SETT;
 import settlement.maintenance.ROOM_DEGRADER;
 import settlement.misc.util.RESOURCE_TILE;
@@ -26,21 +25,16 @@ final class HaulerInstance extends RoomInstance implements StorageCrate.STORAGE_
 	boolean fetch = true;
 	boolean unavailable = false;
 	short amount;
-	final byte crates;
 	private short spaceRes;
 	boolean auto = true;
+	final StorageCrate.StorageData[] sdata;
 
 	HaulerInstance(ROOM_HAULER blueprint, TmpArea area, RoomInit init) {
 		super(blueprint, area, init);
 		ROOMS().data.set(this, mX(), mY(), 0);
+		sdata = blueprint.crate.make(this);
 		employees().maxSet(body().width()*5);
 		employees().neededSet(body().width());
-		int cr = 0;
-		for (COORDINATE c : body()) {
-			if (is(c) && blueprint.crate.is(c.x(), c.y()))
-				cr ++;
-		}
-		crates = (byte) cr;
 		activate();
 	}
 
@@ -66,13 +60,13 @@ final class HaulerInstance extends RoomInstance implements StorageCrate.STORAGE_
 	public void setResource(RESOURCE res) {
 		resourceI = -1;
 		for (COORDINATE c : body()) {
-			if (is(c) && blueprintI().crate.get(c.x(), c.y(), this) != null) {
+			if (is(c) && blueprintI().crate.get(c.x(), c.y(), this, sdata) != null) {
 				blueprintI().crate.clear();
 			}
 		}
 		if (res != null) {
 			for (COORDINATE c : body()) {
-				if (is(c) && blueprintI().crate.get(c.x(), c.y(), this) != null) {
+				if (is(c) && blueprintI().crate.get(c.x(), c.y(), this, sdata) != null) {
 					blueprintI().crate.resourceSet(res);
 				}
 			}
@@ -96,7 +90,7 @@ final class HaulerInstance extends RoomInstance implements StorageCrate.STORAGE_
 	@Override
 	protected void dispose() {
 		for (COORDINATE c : body()) {
-			if (is(c) && blueprintI().crate.get(c.x(), c.y(), this) != null) {
+			if (is(c) && blueprintI().crate.get(c.x(), c.y(), this, sdata) != null) {
 				blueprintI().crate.dispose();
 			}
 		}
@@ -125,13 +119,13 @@ final class HaulerInstance extends RoomInstance implements StorageCrate.STORAGE_
 		if (f != fetch) {
 			
 			for (COORDINATE c : body()) {
-				if (is(c) && blueprintI().crate.get(c.x(), c.y(), this) != null) {
+				if (is(c) && blueprintI().crate.get(c.x(), c.y(), this, sdata) != null) {
 					blueprintI().crate.remove();
 				}
 			}
 			fetch = f;
 			for (COORDINATE c : body()) {
-				if (is(c) && blueprintI().crate.get(c.x(), c.y(), this) != null) {
+				if (is(c) && blueprintI().crate.get(c.x(), c.y(), this, sdata) != null) {
 					blueprintI().crate.add();
 				}
 			}
@@ -145,9 +139,9 @@ final class HaulerInstance extends RoomInstance implements StorageCrate.STORAGE_
 			return null;
 		if (unavailable)
 			return null;
-		if (amount + spaceRes >= crates*Crate.size)
+		if (amount + spaceRes >= sdata.length*Crate.size)
 			return null;
-		RESOURCE r = SETT.PATH().finders.resource.find(resource().bit, fetch ? resource().bit : 0, 0, start, path, Integer.MAX_VALUE);
+		RESOURCE r = SETT.PATH().finders.resource.find(resource().bit, fetch ? resource().bit : RBIT.NONE, RBIT.NONE, start, path, Integer.MAX_VALUE);
 		if (r == null) {
 			unavailable = true;
 			return null;
@@ -157,7 +151,7 @@ final class HaulerInstance extends RoomInstance implements StorageCrate.STORAGE_
 		int by = -1;
 		int b = 0;
 		for (COORDINATE c : body()) {
-			if (is(c) && blueprintI().crate.get(c.x(), c.y(), this) != null) {
+			if (is(c) && blueprintI().crate.get(c.x(), c.y(), this, sdata) != null) {
 				if (blueprintI().crate.storageReservable() > b) {
 					b = blueprintI().crate.storageReservable();
 					bx = c.x();
@@ -168,7 +162,7 @@ final class HaulerInstance extends RoomInstance implements StorageCrate.STORAGE_
 		}
 		
 		if (b > 0) {
-			return blueprintI().crate.get(bx, by, this);
+			return blueprintI().crate.get(bx, by, this, sdata);
 		}
 		
 		GAME.Notify("weird! " + " " + amount + " " + spaceRes);
@@ -185,18 +179,18 @@ final class HaulerInstance extends RoomInstance implements StorageCrate.STORAGE_
 	
 	@Override
 	public TILE_STORAGE storage(int tx, int ty) {
-		return blueprintI().crate.get(tx, ty, this);
+		return blueprintI().crate.get(tx, ty, this, sdata);
 	}
 	
 	@Override
 	public RESOURCE_TILE resourceTile(int tx, int ty) {
-		return blueprintI().crate.get(tx, ty, this);
+		return blueprintI().crate.get(tx, ty, this, sdata);
 	}
 
 	@Override
 	public TILE_STORAGE job(int tx, int ty) {
 		if (is(tx, ty))
-			return blueprintI().crate.get(tx, ty, this);
+			return blueprintI().crate.get(tx, ty, this, sdata);
 		return null;
 	}
 
@@ -206,15 +200,15 @@ final class HaulerInstance extends RoomInstance implements StorageCrate.STORAGE_
 	}
 
 	@Override
-	public TILE_STORAGE getDeliveryCrate(long okMask, int minAmount) {
+	public TILE_STORAGE getDeliveryCrate(RBIT okMask, int minAmount) {
 		if (resource() == null)
 			return null;
-		if ((okMask & resource().bit) == 0)
+		if (!okMask.has(resource()))
 			return null;
-		if (Crate.size*crates - amount - spaceRes < minAmount)
+		if (Crate.size*sdata.length - amount - spaceRes < minAmount)
 			return null;
 		for (COORDINATE c : body()) {
-			if (is(c) && blueprintI().crate.get(c.x(), c.y(), this) != null) {
+			if (is(c) && blueprintI().crate.get(c.x(), c.y(), this, sdata) != null) {
 				if (blueprintI().crate.storageReservable() >= minAmount)
 					return blueprintI().crate;
 			}
@@ -223,8 +217,8 @@ final class HaulerInstance extends RoomInstance implements StorageCrate.STORAGE_
 	}
 
 	@Override
-	public BOOSTABLE carryBonus() {
-		return SETT.ROOMS().STOCKPILE.bonus;
+	public Boostable carryBonus() {
+		return SETT.ROOMS().STOCKPILE.bonus();
 	}
 
 }

@@ -6,15 +6,15 @@ import java.io.Serializable;
 
 import game.time.TIME;
 import init.D;
+import init.resources.RBIT;
 import init.resources.RESOURCE;
 import init.sound.SoundSettlement.Sound;
 import settlement.entity.humanoid.Humanoid;
-import settlement.main.RenderData;
 import settlement.main.SETT;
 import settlement.misc.job.SETT_JOB;
 import settlement.room.industry.module.Industry.IndustryResource;
 import settlement.room.main.util.RoomBits;
-import settlement.tilemap.Fertility;
+import settlement.tilemap.growth.Fertility;
 import snake2d.LOG;
 import snake2d.SPRITE_RENDERER;
 import snake2d.util.MATH;
@@ -23,6 +23,7 @@ import snake2d.util.datatypes.COORDINATE;
 import snake2d.util.datatypes.Coo;
 import snake2d.util.misc.CLAMP;
 import snake2d.util.rnd.RND;
+import util.rendering.RenderData;
 import util.rendering.ShadowBatch;
 import view.sett.SettDebugClick;
 
@@ -33,17 +34,18 @@ final class Tile {
 	private final ROOM_FARM b;
 	private final Time time;
 	
-	private final RoomBits bDead = new RoomBits(coo, 			new Bits(0b0000_0000_0000_0000_0000_0000_0000_1000));
 	private final RoomBits bReserved = new RoomBits(coo, 		new Bits(0b0000_0000_0000_0000_0000_0000_0000_0111));
+	private final RoomBits bDead = new RoomBits(coo, 			new Bits(0b0000_0000_0000_0000_0000_0000_0000_1000));
 	private final RoomBits bRandom = new RoomBits(coo, 			new Bits(0b0000_0000_0000_0000_0000_0111_1111_0000));
-	private final double bRandomI = 1.0/bRandom.max();
 	private final RoomBits bHarvested = new RoomBits(coo, 		new Bits(0b0000_0000_0000_0000_0000_1000_0000_0000));
-
-	
 	private final RoomBits bSize = new RoomBits(coo, 			new Bits(0b0000_0000_0000_0000_1111_0000_0000_0000));
-	private final double bSizeI = 1.0/bRandom.max();	
 	private final RoomBits bWorked = new RoomBits(coo, 			new Bits(0b0000_0000_0011_1111_0000_0000_0000_0000));
 	private final RoomBits bFertility = new RoomBits(coo, 		new Bits(0b0011_1111_1100_0000_0000_0000_0000_0000));
+	private final RoomBits bHasExtraWork = new RoomBits(coo,	new Bits(0b0100_0000_0000_0000_0000_0000_0000_0000));
+	private final double bRandomI = 1.0/bRandom.max();
+	private final double bSizeI = 1.0/bRandom.max();	
+
+
 		
 	private final Cycle[] cycles;
 
@@ -101,7 +103,7 @@ final class Tile {
 	
 	public void init(COORDINATE c, FarmInstance ins) {
 		bRandom.set(ins, RND.rInt(bRandom.max()));
-		bFertility.set(ins, (int) (SETT.FERTILITY().target.get(c)*Fertility.MAX));
+		bFertility.set(ins, ferBase());
 		ins.tData.fertility += bFertility.get();
 		bReserved.set(ins, (dayR()-1) & 0b111);
 	}
@@ -109,7 +111,7 @@ final class Tile {
 	public void updateDay() {
 		cycle().update();
 		
-		int fer = (int) (SETT.FERTILITY().target.get(coo)*Fertility.MAX);
+		int fer = ferBase();
 		if (fer < bFertility.get()) {
 			bFertility.inc(ins, -1);
 			ins.tData.fertility -= 1;
@@ -118,6 +120,10 @@ final class Tile {
 			bFertility.inc(ins, 1);
 			ins.tData.fertility += 1;
 		}
+		if (bReserved.get() != dayR()) {
+			bHasExtraWork.set(ins, 1);
+		}
+		
 		if (Math.ceil(bReserved.get() - dayR()) >= 2) {
 			bReserved.set(ins, (dayR()-1) & 0b111);
 		}
@@ -129,6 +135,25 @@ final class Tile {
 //			job().jobPerform(null, null, 0);
 //		}
 		
+	}
+	
+	private int ferBase() {
+		double d = ferBase(coo.x(), coo.y(), b.constructor.isIndoors);
+		return CLAMP.i((int) (d*Fertility.MAX), 0, Fertility.MAX);
+	}
+	
+	public static double ferBase(int tx, int ty, boolean indoors) {
+		double d = 0;
+		if (!indoors) {
+			d = SETT.FERTILITY().target.get(tx, ty);
+		}else {
+			d = 0.7;
+			if (SETT.TERRAIN().MOUNTAIN.is(tx, ty))
+				d = 0.8;
+			d += 0.2 * SETT.ENV().environment.WATER_SWEET.get(tx, ty);	
+		}
+		
+		return CLAMP.d(d, 0, 1);
 	}
 	
 	public boolean destroyTileCan() {
@@ -219,8 +244,11 @@ final class Tile {
 		@Override
 		public RESOURCE jobPerform(Humanoid skill, RESOURCE r, int rAm) {
 			bWorked.inc(ins, 1);
-			
+			bHasExtraWork.inc(ins, -1);
 			ins.tData.increase(skill, coo.x(), coo.y());
+			if (bHasExtraWork.get() > 0 && is()) {
+				jobReserveCancel(null);
+			}
 			return null;
 		}
 
@@ -254,8 +282,7 @@ final class Tile {
 			d *= bWorked.get()*time.daysWorkingI;
 			
 			d *= ins.tData.skill();
-			if (!b.constructor.isIndoors)
-				d*= fer();
+			d*= fer();
 			d = CLAMP.d(d, 0, 1);
 			
 			
@@ -319,7 +346,11 @@ final class Tile {
 		public RESOURCE jobPerform(Humanoid skill, RESOURCE r, int rAm) {
 			bWorked.inc(ins, 1);
 			bHarvested.set(ins, 0);
+			bHasExtraWork.inc(ins, -1);
 			ins.tData.increase(skill, coo.x(), coo.y());
+			if (bHasExtraWork.get() > 0 && is()) {
+				jobReserveCancel(null);
+			}
 			return null;
 		}
 		
@@ -346,8 +377,7 @@ final class Tile {
 			if (bHarvested.get() == 0) {
 				double d = bWorked.get()*time.daysWorkingI;
 				d *= ins.tData.skill();
-				if (!b.constructor.isIndoors)
-					d*= fer();
+				d*= fer();
 				d = CLAMP.d(d, 0, 1);
 				
 				return d;
@@ -400,14 +430,15 @@ final class Tile {
 			d *= ins.blueprintI().event();
 			d *= ins.blueprintI().yearMul;
 			d *= b.moisture;
-			if (!ins.blueprintI().constructor.isIndoors)
-				d *= fer();
+			d *= fer();
 			
 			int am = rr.inc(ins, d);
 			if (am > 0) {
 				THINGS().resources.create(coo, b.crop.resource, am);
 			}
 			CDead.jobPerform(skill, r, rAm);
+			
+
 			return null;
 		}
 		
@@ -485,7 +516,7 @@ final class Tile {
 		
 	};
 	
-
+	public static final double WORK_TIME = 4;
 	
 	private abstract class Cycle implements SETT_JOB {
 
@@ -516,15 +547,15 @@ final class Tile {
 		public boolean jobReserveCanBe() {
 			return is() && !jobReservedIs(null);
 		}
-
+		
 		@Override
-		public long jobResourceBitToFetch() {
-			return 0;
+		public RBIT jobResourceBitToFetch() {
+			return null;
 		}
 
 		@Override
 		public double jobPerformTime(Humanoid a) {
-			return 3;
+			return WORK_TIME;
 		}
 
 		@Override
@@ -644,7 +675,7 @@ final class Tile {
 		
 		private void increase(Humanoid skill, int tx, int ty) {
 			works ++;
-			double s = ins.blueprintI().industries().get(0).bonus().get(skill);
+			double s = ins.blueprintI().industries().get(0).bonus().get(skill.indu());
 			
 			this.skill += s;
 		}

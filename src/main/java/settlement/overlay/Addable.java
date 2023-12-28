@@ -1,14 +1,12 @@
 package settlement.overlay;
 
 import init.C;
-import init.sprite.ICON;
 import init.sprite.SPRITES;
-import settlement.main.RenderData;
-import settlement.main.RenderData.RenderIterator;
+import init.sprite.UI.Icon;
 import settlement.main.SETT;
-import settlement.tilemap.Floors.Floor;
-import settlement.tilemap.TBuilding;
-import settlement.tilemap.Terrain.TerrainTile;
+import settlement.tilemap.floor.Floors.Floor;
+import settlement.tilemap.terrain.TBuilding;
+import settlement.tilemap.terrain.Terrain.TerrainTile;
 import snake2d.Renderer;
 import snake2d.util.color.COLOR;
 import snake2d.util.color.ColorImp;
@@ -16,11 +14,13 @@ import snake2d.util.datatypes.DIR;
 import snake2d.util.sets.LISTE;
 import util.colors.GCOLORS_MAP;
 import util.info.INFO;
+import util.rendering.RenderData;
+import util.rendering.RenderData.RenderIterator;
 import view.main.VIEW;
 
 public abstract class Addable extends INFO{
 
-	static final int iSize = ICON.MEDIUM.SIZE*2;
+	static final int iSize = Icon.M*2;
 	static final int iOff = (C.TILE_SIZE-iSize)/2;
 	
 	boolean added = false;

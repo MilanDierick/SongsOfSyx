@@ -3,6 +3,8 @@ package settlement.room.service.nursery;
 import static settlement.main.SETT.*;
 
 import game.time.TIME;
+import init.resources.RBIT;
+import init.resources.RBIT.RBITImp;
 import init.resources.RESOURCE;
 import init.sound.SoundSettlement.Sound;
 import settlement.entity.humanoid.HCLASS;
@@ -34,7 +36,7 @@ class Station {
 	final INTE reserved = 		new BBit(new Bits(	0b0000_0000_0000_0000_0001_0000_0000));
 	final INTE amount = 		new BBit(new Bits(	0b0000_0000_0000_0000_1110_0000_0000));
 	final INTE age = 			new BBit(new Bits(	0b0000_0000_1111_1111_0000_0000_0000));
-	private final Bits all = 			new Bits(	0b0000_0000_1111_1111_1111_1111_1111);
+	final Bits all = 					new Bits(	0b0000_0000_1111_1111_1111_1111_1111);
 	final INTE usedByKid = 		new BBit(new Bits(	0b0000_0001_0000_0000_0000_0000_0000));
 	
 	Station(ROOM_NURSERY b){
@@ -77,13 +79,26 @@ class Station {
 		}
 	}
 	
-	private long resMask() {
-		long m = 0;
+	void remove() {
+
+		if (usedByKid.get() == 1 ) {
+			ins.kidspotsUsed --;
+			if (ins.active())
+				b.kidSpotsUsed --;
+		}else if(all.get(data) > 0) {
+			b.babies --;
+		}
+	}
+	
+	private final RBITImp bits = new RBITImp();
+	
+	private RBIT resMask() {
+		bits.clear();
 		for (IndustryResource r : b.productionData.ins()) {
 			if (resources[r.index()].get() == 0)
-				m |= r.resource.bit;
+				bits.or(r.resource);
 		}
-		return m;
+		return bits;
 	}
 	
 	final SETT_JOB job = new SETT_JOB() {
@@ -106,8 +121,11 @@ class Station {
 		}
 		
 		@Override
-		public long jobResourceBitToFetch() {
-			return resMask();
+		public RBIT jobResourceBitToFetch() {
+			RBIT rr = resMask();
+			if (rr.isClear())
+				return null;
+			return rr;
 		}
 
 		@Override
@@ -132,12 +150,13 @@ class Station {
 			if (ins.searchFirst && (age.get() == 0 || usedByKid.get() == 0)) {
 				return false;
 			}
+			
 			if (age.get() == 0 && usedByKid.get() == 0) {
-				int am = STATS.POP().POP.data(HCLASS.CITIZEN).get(b.race) + STATS.POP().POP.data(HCLASS.CHILD).get(b.race) + b.babies;
-				if (am > b.limit)
+				int am = STATS.POP().POP.data(HCLASS.CHILD).get(b.race) + b.babies;
+				if (am > b.max())
 					return false;
 			}
-			return amount.get() < amount.max() || resMask() != 0;
+			return amount.get() < amount.max() || !resMask().isClear();
 		}
 		
 		@Override

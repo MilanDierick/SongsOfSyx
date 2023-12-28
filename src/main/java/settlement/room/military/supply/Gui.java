@@ -17,8 +17,8 @@ import util.gui.misc.*;
 import util.gui.slider.GGaugeMutable;
 import util.info.GFORMAT;
 import view.sett.ui.room.UIRoomModule.UIRoomModuleImp;
-import world.army.WARMYD;
-import world.army.WARMYD.WArmySupply;
+import world.army.AD;
+import world.army.ADSupply;
 
 class Gui extends UIRoomModuleImp<SupplyInstance, ROOM_SUPPLY> {
 	
@@ -39,7 +39,7 @@ class Gui extends UIRoomModuleImp<SupplyInstance, ROOM_SUPPLY> {
 			}
 		}.hv(D.g("stored")), 50, section.getLastY2());
 		
-		section.addRightC(50, new GButt.CheckboxTitle(D.g("fetch")) {
+		section.addRightC(50, new GButt.Checkbox(D.g("fetch")) {
 			
 			@Override
 			protected void clickA() {
@@ -85,7 +85,7 @@ class Gui extends UIRoomModuleImp<SupplyInstance, ROOM_SUPPLY> {
 		
 		boolean[] used = new boolean[RESOURCES.ALL().size()];
 		
-		for (WArmySupply res : WARMYD.supplies().all) {
+		for (ADSupply res : AD.supplies().all) {
 			RESOURCE r = res.res;
 			if (used[r.index()])
 				continue;

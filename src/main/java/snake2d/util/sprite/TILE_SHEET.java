@@ -34,7 +34,7 @@ public interface TILE_SHEET {
 		@Override
 		public int tiles() {
 			// TODO Auto-generated method stub
-			return 0;
+			return 16;
 		}
 		
 		@Override

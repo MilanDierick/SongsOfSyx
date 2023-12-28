@@ -1,13 +1,13 @@
 package settlement.job;
 
 import init.D;
-import init.sprite.ICON;
 import init.sprite.SPRITES;
 import settlement.main.SETT;
 import settlement.room.main.Room;
 import settlement.room.main.TmpArea;
 import settlement.room.military.artillery.ArtilleryInstance;
 import snake2d.util.datatypes.AREA;
+import snake2d.util.sprite.SPRITE;
 import view.tool.*;
 
 public class PlacerRemoveAll extends PlacableMulti{
@@ -19,7 +19,7 @@ public class PlacerRemoveAll extends PlacableMulti{
 	}
 	
 	public PlacerRemoveAll() {
-		super(¤¤remove, ¤¤desc, new ICON.MEDIUM.Twin(SPRITES.icons().m.building, SPRITES.icons().m.anti));
+		super(¤¤remove, ¤¤desc, new SPRITE.Twin(SPRITES.icons().m.building, SPRITES.icons().m.anti));
 	}
 	
 	@Override

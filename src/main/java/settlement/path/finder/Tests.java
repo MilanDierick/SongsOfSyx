@@ -3,10 +3,11 @@ package settlement.path.finder;
 import static settlement.main.SETT.*;
 
 import init.RES;
+import init.resources.RBIT;
 import init.resources.RESOURCE;
 import init.sprite.SPRITES;
-import settlement.main.*;
-import settlement.main.RenderData.RenderIterator;
+import settlement.main.ON_TOP_RENDERABLE;
+import settlement.main.SETT;
 import snake2d.*;
 import snake2d.LOG.Log;
 import snake2d.util.color.COLOR;
@@ -16,6 +17,8 @@ import snake2d.util.misc.CLAMP;
 import snake2d.util.rnd.RND;
 import snake2d.util.sets.*;
 import util.gui.misc.GButt;
+import util.rendering.RenderData;
+import util.rendering.RenderData.RenderIterator;
 import util.rendering.ShadowBatch;
 import view.main.VIEW;
 import view.sett.IDebugPanelSett;
@@ -176,7 +179,7 @@ class Tests {
 			}
 			
 			private boolean findR(int startX, int startY, boolean full) {
-				RESOURCE res = SETT.PATH().finders.resource.scattered.reserve(startX, startY, ~0l,  p, 250);
+				RESOURCE res = SETT.PATH().finders.resource.scattered.reserve(startX, startY, RBIT.ALL,  p, 250);
 				if (res == null) {
 					return false;
 				}
@@ -188,7 +191,7 @@ class Tests {
 			}
 			
 			private boolean findJ(int startX, int startY) {
-				if (SETT.PATH().finders.job.find(startX, startY, 150, p) != null) {
+				if (SETT.PATH().finders.job.find(startX, startY, p, true) != null) {
 					return forward();
 				}
 				return false;
@@ -207,7 +210,7 @@ class Tests {
 		private Bitmap1D map2 = null;
 		int sx,sy;
 		private final SPath path = new SPath();
-		private final Path.PathSync path2 = new Path.PathSync(256);
+		private final Path.PathFancy path2 = new Path.PathFancy(256);
 		
 		ON_TOP_RENDERABLE ren = new ON_TOP_RENDERABLE() {
 			

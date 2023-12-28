@@ -8,8 +8,8 @@ import init.C;
 import init.D;
 import init.race.RACES;
 import init.race.Race;
-import init.sprite.ICON;
 import init.sprite.SPRITES;
+import init.sprite.UI.Icon;
 import init.sprite.UI.UI;
 import settlement.entity.humanoid.HCLASS;
 import settlement.main.SETT;
@@ -34,7 +34,6 @@ import util.colors.GCOLOR;
 import util.data.DOUBLE;
 import util.data.INT.INTE;
 import util.gui.misc.*;
-import util.gui.panel.GFrame;
 import util.gui.table.GScrollRows;
 import util.info.GFORMAT;
 import view.main.VIEW;
@@ -53,14 +52,8 @@ final class UIMiniRaces extends Expansion{
 		}
 		
 		int width = rows[0].body().width();
-
+		body().setDim(width+6,C.HEIGHT()-y1);
 		
-		GFrame f = new GFrame();
-		f.body().setWidth(width);
-		f.body().setHeight(C.HEIGHT()-y1);
-		f.body().moveX2(C.WIDTH());
-		f.body().moveY1(y1);
-		add(f);
 		
 		RENDEROBJ c;
 		c = new GButt.Glow(UI.decor().up) {
@@ -73,11 +66,11 @@ final class UIMiniRaces extends Expansion{
 				t.inc(-1);
 			}
 		};
-		c.body().centerX(this);
-		c.body().moveY1(body().y1());
+		c.body().moveCX(body().cX());
+		c.body().moveY1(body().y1()+3);
 		add(c);
 		
-		GScrollRows sc = new GScrollRows(rows, C.HEIGHT()-y1-c.body().height()*2, 0, false);
+		GScrollRows sc = new GScrollRows(rows, C.HEIGHT()-y1-(c.body().height()+3)*2, 0, false);
 		addDownC(0, sc.view());
 		
 		c = new GButt.Glow(UI.decor().down) {
@@ -91,7 +84,7 @@ final class UIMiniRaces extends Expansion{
 			}
 		};
 		addDownC(0, c);
-		
+		body().moveY1(y1);
 		t = sc.target;
 		
 
@@ -105,7 +98,8 @@ final class UIMiniRaces extends Expansion{
 	@Override
 	public void render(SPRITE_RENDERER r, float ds) {
 		if (visableIs()) {
-			COLOR.WHITE15.render(r, body());
+			GCOLOR.UI().panBG.render(r, body());
+			GCOLOR.UI().borderH(r, body(), 0);
 			super.render(r, ds);
 		}
 		if (!MButt.LEFT.isDown())
@@ -144,8 +138,8 @@ final class UIMiniRaces extends Expansion{
 		RaceUI(int ri){
 			this.ri = ri;
 			
-			body().setWidth(ICON.MEDIUM.SIZE*2);
-			addDownC(2, new SPRITE.Imp(ICON.MEDIUM.SIZE, ICON.MEDIUM.SIZE) {
+			body().setWidth(Icon.M*2);
+			addDownC(2, new SPRITE.Imp(Icon.M, Icon.M) {
 				
 				@Override
 				public void render(SPRITE_RENDERER r, int X1, int X2, int Y1, int Y2) {
@@ -218,7 +212,7 @@ final class UIMiniRaces extends Expansion{
 			b.add(b.text().add(STATS.POP().POP.data(HCLASS.CITIZEN).get(res, 0)));
 			b.NL();
 			b.add(b.text().lablifySub().add(STANDINGS.CITIZEN().info().name));
-			b.add(GFORMAT.perc(b.text(), STANDINGS.CITIZEN().main.getD(res)));
+			b.add(GFORMAT.perc(b.text(), STANDINGS.CITIZEN().loyalty.getD(res)));
 			b.NL(8);
 			
 			b.NL();
@@ -251,7 +245,7 @@ final class UIMiniRaces extends Expansion{
 			
 			GCOLOR.UI().border().render(r, body(), -1);
 			COLOR.WHITE05.render(r, body(),-2);
-			double d = CLAMP.d(STANDINGS.CITIZEN().mainTarget.getD(res), 0, 1)-STANDINGS.CITIZEN().main.getD(res);
+			double d = STANDINGS.CITIZEN().loyaltyTarget.getD(res)-STANDINGS.CITIZEN().loyalty.getD(res);
 			
 			if (hoveredIs())
 				COLOR.WHITE30.render(r, body(), -3);

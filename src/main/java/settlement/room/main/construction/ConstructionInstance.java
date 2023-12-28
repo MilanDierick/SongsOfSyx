@@ -6,13 +6,12 @@ import static settlement.room.main.construction.ConstructionData.*;
 import java.io.*;
 
 import game.GAME;
+import game.faction.FResources.RTYPE;
 import init.D;
 import init.RES;
 import init.resources.RESOURCE;
 import settlement.job.Job;
 import settlement.job.ROOM_JOBBER;
-import settlement.main.RenderData;
-import settlement.main.RenderData.RenderIterator;
 import settlement.main.SETT;
 import settlement.maintenance.ROOM_DEGRADER;
 import settlement.path.AVAILABILITY;
@@ -22,7 +21,7 @@ import settlement.room.main.placement.UtilExtraCost;
 import settlement.room.main.util.RoomInit;
 import settlement.room.main.util.RoomState;
 import settlement.room.sprite.RoomSprite;
-import settlement.tilemap.TBuilding;
+import settlement.tilemap.terrain.TBuilding;
 import snake2d.LOG;
 import snake2d.Renderer;
 import snake2d.util.color.COLOR;
@@ -32,6 +31,8 @@ import snake2d.util.rnd.RND;
 import snake2d.util.sprite.SPRITE;
 import snake2d.util.sprite.text.Str;
 import util.gui.misc.GBox;
+import util.rendering.RenderData;
+import util.rendering.RenderData.RenderIterator;
 import util.rendering.ShadowBatch;
 
 class ConstructionInstance extends Room.RoomInstanceImp implements ROOM_JOBBER {
@@ -63,12 +64,16 @@ class ConstructionInstance extends Room.RoomInstanceImp implements ROOM_JOBBER {
 	
 	ConstructionInstance(RoomBlueprint daddy, TmpArea a, ConstructionInit init) {
 		super(ROOMS(), daddy, false);
-		
 		tiles = new Rec(a.body());
 		this.size = a.area();
 		a.replaceAndClear(this);
 		blueprint = init.b;
-		this.upgrade = init.upgrade;
+		
+		if (blueprint == SETT.ROOMS().HOMES.HOME.constructor())
+			this.upgrade = 0;
+		else
+			this.upgrade = init.upgrade;
+		
 		this.state = init.state;
 		this.resMul = 1 + UtilExtraCost.expense(this, init.b.blue());
 		
@@ -280,6 +285,8 @@ class ConstructionInstance extends Room.RoomInstanceImp implements ROOM_JOBBER {
 		}
 
 		
+		
+		
 		for (int i = 0; i < blueprint.resources(); i++) {
 			if (resNeeded[i] > 0) {
 				GAME.Notify(blueprint.resource(i).name + " " + resNeeded[i]);
@@ -442,7 +449,7 @@ class ConstructionInstance extends Room.RoomInstanceImp implements ROOM_JOBBER {
 		CONSTRUCTION.ppCreate(a, init, blueprint, upgrade, state);
 		
 		if (blueprint.blue() instanceof RoomBlueprintIns<?>) {
-			GAME.stats().ROOMS_BUILT.inc(1);
+			GAME.count().ROOMS_BUILT.inc(1);
 			SETT.ROOMS().stats.finished().add(fx, fy);
 		}
 		
@@ -466,7 +473,7 @@ class ConstructionInstance extends Room.RoomInstanceImp implements ROOM_JOBBER {
 			if (am == t.resAmount) {
 				t.roof.placeFixed(tx, ty);
 				if (t.resource != null)
-					GAME.player().res().outConstruction.inc(t.resource, t.resAmount);
+					GAME.player().res().dec(t.resource, RTYPE.CONSTRUCTION, t.resAmount);
 				dWorkAmount.set(this, tx, ty, 0);
 				structuresNeeded --;
 				if (structuresNeeded == 0)
@@ -488,7 +495,7 @@ class ConstructionInstance extends Room.RoomInstanceImp implements ROOM_JOBBER {
 			if (r == null)
 				throw new RuntimeException();
 			
-			GAME.player().res().outConstruction.inc(r, ram);
+			GAME.player().res().dec(r, RTYPE.CONSTRUCTION, ram);
 			int needed = 0;
 			for (int i = 0; i < blueprint.resources(); i++) {
 				needed += dResourceNeeded[i].get(tx, ty);
@@ -695,6 +702,7 @@ class ConstructionInstance extends Room.RoomInstanceImp implements ROOM_JOBBER {
 			for (int x = 0; x < it.width(); x++) {
 				if (it.is(x, y)) {
 					dBroken.set(this, x1+x, y1+y, 1);
+					PATH().availability.updateAvailability(x1+x, y1+y);
 				}
 			}
 		}
@@ -703,6 +711,7 @@ class ConstructionInstance extends Room.RoomInstanceImp implements ROOM_JOBBER {
 		broken = true;
 		active = false;
 		broken = true;
+		PATH().availability.updateAvailability(tx, ty);
 		init();
 	}
 
@@ -753,7 +762,7 @@ class ConstructionInstance extends Room.RoomInstanceImp implements ROOM_JOBBER {
 				if (structuresNeeded > 0) {
 					int am = dWorkAmount.get(c);
 					if (am > 0) {
-						GAME.player().res().inDemolition.inc(TERRAIN().BUILDINGS.getAt(structureI).resource, am);
+						GAME.player().res().inc(TERRAIN().BUILDINGS.getAt(structureI).resource, RTYPE.CONSTRUCTION, am);
 						THINGS().resources.create(c, TERRAIN().BUILDINGS.getAt(structureI).resource, am);
 					}
 					dWorkAmount.set(this, c, 0);
@@ -765,7 +774,7 @@ class ConstructionInstance extends Room.RoomInstanceImp implements ROOM_JOBBER {
 						int a = CLAMP.i(am, 0, dResourceNeeded[i].get(c));
 						if (a > 0) {
 							THINGS().resources.create(c, blueprint.resource(i), a);
-							GAME.player().res().inDemolition.inc(blueprint.resource(i), a);
+							GAME.player().res().inc(blueprint.resource(i), RTYPE.CONSTRUCTION, a);
 						}
 						am -= a;
 						
@@ -852,7 +861,7 @@ class ConstructionInstance extends Room.RoomInstanceImp implements ROOM_JOBBER {
 				int am = (int) Math.ceil(resMul*it.cost(i, upgrade));
 				if (am > 0) {
 					THINGS().resources.create(tx, ty, blueprint.resource(i), am);
-					GAME.player().res().inDemolition.inc(blueprint.resource(i), am);
+					GAME.player().res().inc(blueprint.resource(i), RTYPE.CONSTRUCTION, am);
 				}
 				
 			}
@@ -936,7 +945,7 @@ class ConstructionInstance extends Room.RoomInstanceImp implements ROOM_JOBBER {
 
 	@Override
 	public SPRITE icon() {
-		return blueprint.icon();
+		return blueprint.blue().iconBig();
 	}
 
 	@Override

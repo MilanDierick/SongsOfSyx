@@ -1,5 +1,6 @@
 package settlement.misc.job;
 
+import init.resources.RBIT;
 import init.resources.RESOURCE;
 import init.sound.SoundSettlement;
 import settlement.entity.humanoid.Humanoid;
@@ -20,13 +21,14 @@ public interface SETT_JOB {
 	 * 
 	 * @return 0 if no resource, else a bitmask of resources
 	 */
-	public long jobResourceBitToFetch();
+	public RBIT jobResourceBitToFetch();
 	public default int jobResourcesNeeded() {
 		return 1;
 	}
 	public double jobPerformTime(Humanoid a);
 	public void jobStartPerforming();
 	public RESOURCE jobPerform(Humanoid skill, RESOURCE r, int rAm);
+	
 	
 	public COORDINATE jobCoo();
 	public default DIR jobStandDir() {
@@ -44,5 +46,6 @@ public interface SETT_JOB {
 	public default boolean longFetch() {
 		return false;
 	}
+	
 	
 }

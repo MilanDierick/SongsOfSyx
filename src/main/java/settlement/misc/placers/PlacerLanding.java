@@ -3,9 +3,11 @@ package settlement.misc.placers;
 import static settlement.main.SETT.*;
 import static settlement.misc.placers.Tiles.*;
 
+import game.boosting.BOOSTABLES;
 import game.faction.FACTIONS;
-import init.boostable.BOOSTABLES;
+import game.faction.FCredits;
 import init.paths.PATHS;
+import init.race.RACES;
 import init.resources.RESOURCE;
 import init.resources.RESOURCES;
 import init.sprite.SPRITES;
@@ -14,10 +16,10 @@ import settlement.entity.humanoid.Humanoid;
 import settlement.main.SETT;
 import settlement.misc.placers.Tiles.Conpound;
 import settlement.room.food.farm.ROOM_FARM;
-import settlement.stats.CAUSE_ARRIVE;
 import settlement.stats.STATS;
 import settlement.stats.standing.STANDINGS;
-import settlement.tilemap.TBuilding;
+import settlement.stats.util.CAUSE_ARRIVE;
+import settlement.tilemap.terrain.TBuilding;
 import snake2d.util.file.Json;
 import snake2d.util.rnd.RND;
 import snake2d.util.sets.LIST;
@@ -29,7 +31,7 @@ final class PlacerLanding{
 	
 	static Placer get() {
 		
-		TBuilding b = SETT.TERRAIN().BUILDINGS.tryGet("WOOD");
+		TBuilding b = SETT.TERRAIN().BUILDINGS.MUD;
 		if (b == null)
 			b = TERRAIN().BUILDINGS.all().get(0);
 		
@@ -63,7 +65,7 @@ final class PlacerLanding{
 			public void place(int tx, int ty, TileGrid grid, int rx, int ry) {
 				ROOMS().THRONE.init.place(tx, ty, 2);
 				
-				FACTIONS.player().credits().tribute.IN.inc((int) (5000*FACTIONS.player().bonus().mul(BOOSTABLES.START().LANDING)*FACTIONS.player().bonus().add(BOOSTABLES.START().LANDING)));
+				FACTIONS.player().credits().inc((int) (5000*BOOSTABLES.START().LANDING.get(RACES.clP(null, null))), FCredits.CTYPE.MISC);
 				
 			}
 			
@@ -81,8 +83,12 @@ final class PlacerLanding{
 		Tile WW = new Conpound(rr, new Resource(RESOURCES.map().get(keys.get(1), j), j.i(keys.get(1), 1, 500)));
 		Tile LS = new Conpound(rr, new Resource(RESOURCES.map().get(keys.get(2), j), j.i(keys.get(2), 1, 500)));
 		Tile RA = new Conpound(rr, new Resource(RESOURCES.map().get(keys.get(3), j), j.i(keys.get(3), 1, 500)));
-		Tile CL = new Conpound(rr, new Resource(RESOURCES.map().get(keys.get(4), j), j.i(keys.get(4), 1, 500)));
-		Tile GR = new Conpound(rr, new Resource(growable(3), 40));
+//		Tile CL = new Conpound(rr, new Resource(RESOURCES.map().get(keys.get(4), j), j.i(keys.get(4), 1, 500)));
+		RESOURCE grain = RESOURCES.map().tryGet("GRAIN");
+		if (grain == null)
+			grain = growable(3);
+		
+		Tile GR = new Conpound(rr, new Resource(grain, 40));
 		
 
 		Tile dd = new Tile() {
@@ -96,8 +102,8 @@ final class PlacerLanding{
 			
 			@Override
 			public void place(int tx, int ty, TileGrid grid, int rx, int ry) {
-				if (am == -1) {
-					am = 10 + (int) (10*FACTIONS.player().bonus().mul(BOOSTABLES.START().LANDING)*FACTIONS.player().bonus().add(BOOSTABLES.START().LANDING));
+				if (STATS.POP().POP.data(null).get(null) == 0) {
+					am = 10 + (int) (10*BOOSTABLES.START().LANDING.get(RACES.clP(null, null)));
 					ePerTile = (int) Math.ceil((am)/10.0);
 				}
 				for (int i = 0; i < ePerTile; i++) {
@@ -124,7 +130,7 @@ final class PlacerLanding{
 			{ww,rr,rr,rr,rr,rr,rr,rr,ww},
 			{ww,rr,rr,rr,rr,rr,rr,rr,ww},
 			{ww,rr,rr,ST,LS,RA,rr,rr,ww},
-			{ww,rr,rr,WW,GR,CL,rr,rr,ww},
+			{ww,rr,rr,WW,GR,rr,rr,rr,ww},
 			{ww,rr,rr,rr,rr,rr,rr,rr,ww},
 			{ww,ww,ww,rr,rr,rr,ww,ww,ww},
 			{__,dd,__,__,__,__,__,dd,__},
@@ -179,7 +185,7 @@ final class PlacerLanding{
 
 		@Override
 		public void place(int tx, int ty, TileGrid grid, int rx, int ry) {
-			SETT.THINGS().resources.createPrecise(tx, ty, r, amount + (int)(amount*FACTIONS.player().bonus().mul(BOOSTABLES.START().LANDING)*FACTIONS.player().bonus().add(BOOSTABLES.START().LANDING)));
+			SETT.THINGS().resources.createPrecise(tx, ty, r, amount + (int)(amount*BOOSTABLES.START().LANDING.get(RACES.clP(null, null))));
 		}
 		
 		@Override

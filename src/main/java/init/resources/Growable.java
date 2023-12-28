@@ -5,13 +5,13 @@ import java.io.IOException;
 import init.biomes.CLIMATE;
 import init.biomes.CLIMATES;
 import init.paths.PATH;
-import settlement.main.RenderData;
 import snake2d.SPRITE_RENDERER;
 import snake2d.util.color.COLOR;
 import snake2d.util.color.ColorImp;
 import snake2d.util.file.Json;
 import snake2d.util.sets.*;
 import util.keymap.RCollection;
+import util.rendering.RenderData;
 import util.rendering.ShadowBatch;
 
 public final class Growable implements INDEXED{

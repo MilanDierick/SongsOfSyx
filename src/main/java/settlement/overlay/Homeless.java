@@ -4,8 +4,6 @@ import init.RES;
 import init.sprite.SPRITES;
 import settlement.entity.EntityIterator;
 import settlement.entity.humanoid.Humanoid;
-import settlement.main.RenderData;
-import settlement.main.RenderData.RenderIterator;
 import settlement.main.SETT;
 import settlement.room.home.HOME;
 import settlement.room.main.Room;
@@ -16,6 +14,8 @@ import snake2d.util.color.COLOR;
 import snake2d.util.color.ColorImp;
 import snake2d.util.sets.LISTE;
 import util.colors.GCOLORS_MAP;
+import util.rendering.RenderData;
+import util.rendering.RenderData.RenderIterator;
 
 final class Homeless extends Addable{
 

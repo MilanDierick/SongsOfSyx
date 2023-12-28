@@ -3,9 +3,8 @@ package settlement.room.military.supply;
 import static settlement.main.SETT.*;
 
 import game.GAME;
-import init.boostable.BOOSTABLE;
-import init.resources.RESOURCE;
-import init.resources.RESOURCES;
+import game.boosting.Boostable;
+import init.resources.*;
 import settlement.main.SETT;
 import settlement.maintenance.ROOM_DEGRADER;
 import settlement.misc.util.TILE_STORAGE;
@@ -160,7 +159,7 @@ final class SupplyInstance extends RoomInstance implements StorageCrate.STORAGE_
 		if (fetch) {
 			r = SETT.PATH().finders.resource.normal.reserve(start, resource().bit, path, Integer.MAX_VALUE);
 		}else
-			r = SETT.PATH().finders.resource.find(resource().bit, resource().bit, fetch ? resource().bit : 0, start, path, Integer.MAX_VALUE);
+			r = SETT.PATH().finders.resource.find(resource().bit, resource().bit, fetch ? resource().bit : RBIT.NONE, start, path, Integer.MAX_VALUE);
 		if (r == null) {
 			unavailable = true;
 			return null;
@@ -200,8 +199,8 @@ final class SupplyInstance extends RoomInstance implements StorageCrate.STORAGE_
 	}
 
 	@Override
-	public BOOSTABLE carryBonus() {
-		return SETT.ROOMS().STOCKPILE.bonus;
+	public Boostable carryBonus() {
+		return SETT.ROOMS().STOCKPILE.bonus();
 	}
 	
 //	@Override

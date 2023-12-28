@@ -130,5 +130,11 @@ public class ArrayCooShort implements Serializable{
 		i%=(size);
 		
 	}
+	
+	public void dec() {
+		i--;
+		if (i <= 0)
+			i = 0;
+	}
 
 }

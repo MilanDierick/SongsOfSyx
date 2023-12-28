@@ -9,7 +9,7 @@ import util.gui.misc.GMeter;
 
 public abstract class GGauge extends SPRITE.Imp implements TITLEABLE, DOUBLE{
 
-	private final GMeter.GGaugeColor col;
+	private final GMeter.GMeterCol col;
 	
 	public GGauge(int width, int height){
 		this(width, height, GMeter.C_REDGREEN);
@@ -20,7 +20,7 @@ public abstract class GGauge extends SPRITE.Imp implements TITLEABLE, DOUBLE{
 		this(48, 16, GMeter.C_REDGREEN);
 	}
 	
-	public GGauge(int width, int height, GMeter.GGaugeColor col){
+	public GGauge(int width, int height, GMeter.GMeterCol col){
 		this.col = col;
 		setDim(width, height);
 	}

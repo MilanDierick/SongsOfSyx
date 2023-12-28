@@ -26,7 +26,7 @@ public class Sheets {
 	}
 	
 	public Sheets(SheetType type, Json json) throws IOException{
-		sheets = SPRITES.GAME().get(type, json);
+		sheets = SPRITES.GAME().sheets(type, json);
 	}
 	
 	public Sheets(Sheet s, SheetData d) throws IOException{

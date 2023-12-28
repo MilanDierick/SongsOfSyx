@@ -74,7 +74,7 @@ public class TextureHolder extends CORE_RESOURCE{
 	
 	void flush() {
 		
-		if (pixels.count > 0) {
+		if (pixels.count() > 0) {
 			GlHelper.ViewPort.set(pixelWidth, pixelHeight);
 			glBindFramebuffer(GL_DRAW_FRAMEBUFFER, FBO);
 			glDrawBuffers(GL_COLOR_ATTACHMENT0);

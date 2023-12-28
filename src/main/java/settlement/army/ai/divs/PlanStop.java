@@ -143,6 +143,7 @@ final class PlanStop extends Plan{
 				}
 			}
 			
+			shouldBreak = true;
 			shouldFire = true;
 			
 		}

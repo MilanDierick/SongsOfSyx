@@ -29,7 +29,6 @@ public final class Minable implements INDEXED{
 	public final RESOURCE resource;
 	public final CharSequence name;
 	public final TILE_SHEET sheet;
-	public final double occurance;
 	public final boolean onEverymap;
 	public final COLOR tint;
 	public final COLOR miniColor;
@@ -38,7 +37,6 @@ public final class Minable implements INDEXED{
 	public double fertilityIncrease;
 	
 	Minable(int index, TILE_SHEET sheet, Json json){
-		occurance = 0.5;
 		onEverymap = json.bool("ON_EVERY_MAP");
 		tint = new ColorImp(json);
 		miniColor = new ColorImp(json, "MINIMAP_COLOR");
@@ -48,6 +46,7 @@ public final class Minable implements INDEXED{
 		this.resource = RESOURCES.map().get(json);
 		name = new Str(¤¤minable).insert(0, resource.name).trim();
 		terrainPref = KEY_COLLECTION.fill(TERRAINS.MAP(), json, 1.0);
+
 	}
 	
 	static RCollection<Minable> make(PATH pathData, PATH pathSprites) throws IOException{
@@ -109,8 +108,8 @@ public final class Minable implements INDEXED{
 				
 				@Override
 				protected TILE_SHEET init(ComposerUtil c, ComposerSources s, ComposerDests d) {
-					s.singles.init(0, 0, 1, 1, 8, 4, d.s16);
-					s.singles.paste(true);
+					s.singles.init(0, 0, 1, 1, 8, 2, d.s16);
+					s.singles.paste(1, true);
 					return d.s16.saveGame();
 				}
 			}.get();

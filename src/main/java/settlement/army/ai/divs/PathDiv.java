@@ -91,7 +91,7 @@ public final class PathDiv implements COORDINATE, SAVABLE, Copyable<PathDiv>{
 		
 	}
 	
-	void init(int startPX, int startPY, Path p, int ftDestX, int ftDestY, PathCost cost, Army a){
+	void init(int startPX, int startPY, Path.PathFancy p, int ftDestX, int ftDestY, PathCost cost, Army a){
 		
 		
 		finalDest.set(ftDestX, ftDestY);

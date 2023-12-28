@@ -3,8 +3,7 @@ package settlement.entity.humanoid.ai.util;
 import static settlement.main.SETT.*;
 
 import init.D;
-import init.resources.RESOURCE;
-import init.resources.RESOURCES;
+import init.resources.*;
 import settlement.entity.humanoid.Humanoid;
 import settlement.entity.humanoid.ai.main.*;
 import settlement.entity.humanoid.ai.main.AIPLAN.PLANRES.Resumer;
@@ -31,9 +30,10 @@ public abstract class AIPlanResourceMany {
 			@Override
 			protected AISubActivation res(Humanoid a, AIManager d) {
 				int am = PATH().finders.resource.pickup(resource(a, d), d.path.destX(), d.path.destY(), d.planByte2);
+
 				
-				
-				if (d.resourceCarried() == null) {
+				if (d.resourceCarried() != resource(a, d)) {
+					d.resourceDrop(a);
 					d.resourceCarriedSet(resource(a, d));
 					if (am > 0)
 						am --;
@@ -47,7 +47,7 @@ public abstract class AIPlanResourceMany {
 				
 				int dist = extraDistance - extraDistance*d.resourceA()/target(a, d);
 				
-				if (PATH().finders.resource.find(resource(a, d).bit, stored(d) ? resource(a, d).bit : 0, fetch(d) ? resource(a, d).bit : 0, a.tc(), d.path, dist) == null) {
+				if (PATH().finders.resource.find(resource(a, d).bit, stored(d) ? resource(a, d).bit : RBIT.NONE, fetch(d) ? resource(a, d).bit : RBIT.NONE, a.tc(), d.path, dist) == null) {
 					return next(a, d);
 				}
 				d.planByte2 = 1;
@@ -60,16 +60,20 @@ public abstract class AIPlanResourceMany {
 				int extra = target(a, d) - d.resourceA() -d.planByte2;
 				extra = PATH().finders.resource.reserveExtra(stored(d), fetch(d), resource(a, d), d.path.destX(), d.path.destY(), extra);
 				d.planByte2 += extra;
+
 				return s;
 			}
 
 			@Override
 			public boolean con(Humanoid a, AIManager d) {
+				
+				
 				int am = target(a, d)-d.resourceA()-d.planByte2;
 				
 				if (am > 0) {
 					d.planByte2 += (byte) PATH().finders.resource.reserveExtra(stored(d), fetch(d), resource(a, d), d.path.destX(), d.path.destY(), am);
 				}
+				
 				return d.resourceCarried() == resource(a, d) || PATH().finders.resource.isReservedAndAvailable(resource(a, d), d.path.destX(), d.path.destY());
 			}
 
@@ -112,32 +116,17 @@ public abstract class AIPlanResourceMany {
 	}
 
 
-	public AISubActivation activate(Humanoid a, AIManager d, long res, int target, int distance, boolean stored, boolean fetch) {
+	public AISubActivation activate(Humanoid a, AIManager d, RBIT res, int target, int distance, boolean stored, boolean fetch) {
 		
+		RESOURCE r = PATH().finders.resource.find(res, stored ? res : RBIT.NONE, fetch ? res : RBIT.NONE, a.tc(), d.path, distance);
+		if (r != null)
+			return activateFound(a, d, r, target, stored, fetch);
 		init(d, target, stored, fetch);
 		d.resourceDrop(a);
-		
-		d.planByte2 = 0;
-		RESOURCE r = PATH().finders.resource.find(res, stored(d) ? res : 0, fetch(d) ? res : 0, a.tc(), d.path, distance);
-		if (r != null) {
-			d.planByte4 = r.bIndex();
-			d.planByte2 = 1;
-			AISubActivation s = AI.SUBS().walkTo.path(a, d);
-			if (s == null) {
-				PATH().finders.resource.unreserve(r, d.path.destX(), d.path.destY(), 1);
-				return null;
-			}
-			int extra = target -d.planByte2;
-			extra = PATH().finders.resource.reserveExtra(stored(d), fetch(d), r, d.path.destX(), d.path.destY(), extra);
-			d.planByte2 += extra;
-			
-			get.set(a, d);
-			return s;
-		}
 		return null;
 	}
 	
-	public AISubActivation activateFound(Humanoid a, AIManager d, RESOURCE res, int target, int distance, boolean stored, boolean fetch) {
+	public AISubActivation activateFound(Humanoid a, AIManager d, RESOURCE res, int target, boolean stored, boolean fetch) {
 
 		init(d, target, stored, fetch);
 		d.resourceDrop(a);

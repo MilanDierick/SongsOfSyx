@@ -32,7 +32,7 @@ class Gui extends UIRoomModuleImp<SchoolInstance, ROOM_SCHOOL> {
 			@Override
 			public void update(GText text) {
 				text.add(¤¤learningRateI);
-				text.insert(0, (int)Math.ceil(blueprint.learningSpeed(getter.get().mX(), getter.get().mY())*100));
+				text.insert(0, blueprint.learningSpeed(getter.get().mX(), getter.get().mY())*100, 2);
 			}
 		}.hh(¤¤learningRate));
 		

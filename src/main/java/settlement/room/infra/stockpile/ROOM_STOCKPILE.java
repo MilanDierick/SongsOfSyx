@@ -4,10 +4,12 @@ import static settlement.main.SETT.*;
 
 import java.io.IOException;
 
+import game.*;
+import game.faction.FACTIONS;
+import game.faction.FResources.RTYPE;
 import init.D;
-import init.boostable.BOOSTABLE;
-import init.boostable.BOOSTABLES;
-import init.resources.RESOURCE;
+import init.resources.*;
+import init.resources.STOCKPILE.StockpileImp;
 import settlement.misc.util.RESOURCE_TILE;
 import settlement.path.finder.SFinderRoomService;
 import settlement.room.main.Room;
@@ -22,17 +24,14 @@ import snake2d.util.file.FileGetter;
 import snake2d.util.file.FilePutter;
 import snake2d.util.misc.CLAMP;
 import snake2d.util.sets.LISTE;
-import util.statistics.HistoryResource;
 import view.sett.ui.room.UIRoomModule;
 
 public final class ROOM_STOCKPILE extends RoomBlueprintIns<StockpileInstance> implements ROOM_RADIUSE, ROOM_EMPLOY_AUTO{
 
-	public final static int CRATE_MAX = 0x0FF;
 	private final StockpileTally tally = new StockpileTally();
 	
 	final Constructor constructor;
 	
-	public final BOOSTABLE bonus;
 	final Crate crate = new Crate(this);
 	private static CharSequence ¤¤bname = "¤Carry Capacity";
 	private static CharSequence ¤¤bdesc = "¤Carry Capacity of all logistics workers.";
@@ -44,12 +43,45 @@ public final class ROOM_STOCKPILE extends RoomBlueprintIns<StockpileInstance> im
 	public ROOM_STOCKPILE(RoomInitData init, RoomCategorySub cat) throws IOException {
 		super(0, init, "_STOCKPILE", cat);
 		constructor = new Constructor(this, init);
-		bonus = BOOSTABLES.ROOMS().pushRoom(this, init.data(), null, ¤¤bname, ¤¤bdesc);
+		pushBo(init.data(), ¤¤bname, ¤¤bdesc, null, false);
+		if (VERSION.versionIsBefore(65, 29)) {
+			new GAME_LOAD_FIXER() {
+				
+				@Override
+				protected void fix() {
+					tally.saver.clear();
+					for (int i = 0; i < instancesSize(); i++) {
+						StockpileInstance ins = getInstance(i);
+						ins.fixiFix();
+						
+//						for (RESOURCE res : RESOURCES.ALL()) {
+//							tally(res.index(), ins.cratesGet(res), ins.amountTotal[res.index()], ins.amountUnreserved[res.index()], ins.spaceReserved[res.index()], ins.crateSize(), ins.fetchesFromEveryone(res));
+//						}
+						
+					}
+					
+				}
+			};
+		}
+//		new GAME_LOAD_FIXER() {
+//			
+//			@Override
+//			protected void fix() {
+//				for (int i = 0; i < instancesSize(); i++) {
+//					StockpileInstance in = getInstance(i);
+//					for (RESOURCE rr : RESOURCES.ALL())
+//						in.debug(rr);
+//					
+//				}
+//				
+//			}
+//		};
+		
 	}
 	
-	void tally(int res, int crates, int amountTot, int amountUnres, int spaceRes, boolean fetch) {
+	void tally(int res, int crates, int amountTot, int amountUnres, int spaceRes, int crateSize, boolean fetch) {
 		
-		tally.tally(res, crates, amountTot, amountUnres, spaceRes, CRATE_MAX, fetch);
+		tally.tally(res, crates, amountTot, amountUnres, spaceRes, crates*crateSize, fetch);
 		
 	}
 
@@ -131,28 +163,34 @@ public final class ROOM_STOCKPILE extends RoomBlueprintIns<StockpileInstance> im
 		((StockpileInstance) r).autoE = b;
 	}
 	
-	public void removeFromEverywhere(double am, long mask, HistoryResource record) {
+	public STOCKPILE.StockpileImp removeFromEverywhere(double am, RBIT mask, RTYPE record) {
+		StockpileImp imp = new StockpileImp();
+		
 		for (COORDINATE c : TILE_BOUNDS) {
 			Room r = ROOMS().STOCKPILE.get(c.x(), c.y());
 			if (r == null)
 				continue;
 			RESOURCE_TILE cr = (RESOURCE_TILE) r.storage(c.x(), c.y());
-			if (cr != null && cr.resource() != null && (cr.resource().bit & mask) != 0) {
+			if (cr != null && cr.resource() != null && mask.has(cr.resource())) {
 				int a = (int) Math.ceil(am*cr.reservable());
 				for (int i = 0; i < a; i++) {
 					cr.findableReserve();
 					cr.resourcePickup();
 				}
-				record.inc(cr.resource(), a);
+				FACTIONS.player().res().inc(cr.resource(), record, -a);
+				imp.add(cr.resource(), a);
 			}
 		}
+		return imp;
 	}
 	
-	public void remove(RESOURCE res, int total, HistoryResource record) {
+	public int remove(RESOURCE res, int total, RTYPE record) {
+		
+		int tot  = CLAMP.i(total, 0, (int) tally.amountReservable(res));
 		
 		double d = tally.amountReservable(res);
 		if (d == 0)
-			return;
+			return tot;
 		d = total/d;
 		d = CLAMP.d(d, 0, 1);
 		for (int ii = 0; ii < instancesSize(); ii++) {
@@ -170,18 +208,20 @@ public final class ROOM_STOCKPILE extends RoomBlueprintIns<StockpileInstance> im
 						for (int k = 0; k < a; k++) {
 							cr.findableReserve();
 							cr.resourcePickup();
+							if (record != null)
+								FACTIONS.player().res().inc(cr.resource(), record, -1);
 							total --;
-							if (total <= 0) {
-								record.inc(cr.resource(), k);
-								return;
+							if (total <= 0) {			
+								return tot;
 							}
 						}
-						record.inc(cr.resource(), a);
 					}
 				}
 			}
 			
 		}
+		
+		return tot;
 	}
 	
 }

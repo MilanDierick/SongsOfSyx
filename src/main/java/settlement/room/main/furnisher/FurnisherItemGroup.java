@@ -26,7 +26,7 @@ public final class FurnisherItemGroup implements INDEXED{
 		this.name = name;
 		this.desc = desc;
 		this.items = new FurnisherItem[FurnisherItem.itemsTmp.size()][rots + 1];
-		index = b.groups.add(this);
+		index = b.pgroups.add(this);
 		this.max = max;
 		this.min = min;
 		for (int s = 0; s < FurnisherItem.itemsTmp.size(); s++) {

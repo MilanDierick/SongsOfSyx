@@ -4,13 +4,13 @@ import static settlement.main.SETT.*;
 
 import java.io.IOException;
 
+import game.VERSION;
 import settlement.main.SETT;
 import settlement.path.finder.SFinderRoomService;
 import settlement.room.main.*;
 import snake2d.util.color.COLOR;
 import snake2d.util.color.ColorImp;
-import snake2d.util.file.FileGetter;
-import snake2d.util.file.FilePutter;
+import snake2d.util.file.*;
 import snake2d.util.map.MAP_BOOLEAN;
 import view.tool.PLACABLE;
 import view.tool.PlacableMessages;
@@ -73,6 +73,29 @@ public class PLACEMENT {
 		}
 
 		
+	};
+	
+	public final SAVABLE saver = new SAVABLE() {
+		
+		@Override
+		public void save(FilePutter file) {
+			file.i(placer.structure.get().index());
+		}
+		
+		@Override
+		public void load(FileGetter file) throws IOException {
+			if (VERSION.versionIsBefore(65, 28))
+				;
+			else
+				placer.structure.set(SETT.TERRAIN().BUILDINGS.all().getC(file.i()));
+			
+		}
+		
+		@Override
+		public void clear() {
+			// TODO Auto-generated method stub
+			
+		}
 	};
 	
 	public boolean canReconstruct(int tx, int ty) {

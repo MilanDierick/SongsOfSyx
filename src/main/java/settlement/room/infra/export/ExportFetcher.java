@@ -50,22 +50,30 @@ public class ExportFetcher extends Interractor{
 				am = Caravan.MAX_LOAD;
 			if (SETT.HALFENTS().caravans.createFetcher(r, am)) {
 				
+			}else if (SETT.HALFENTS().caravans.createWarehouseFetcher(r, am, 0)) {
+				tally.promised.inc(r, -am);
 			}else {
 				COORDINATE coo = getReservableSpot(-1, -1, r);
-				if (coo == null ) {
-				
-					if (!debugged) {
-						LOG.ln(r.name + " " + am);
-						tally.debug();
-						debugged = true;
-					}
-					tally.promised.set(r, 0);
-				}else {
+				if (coo != null) {
 					int a = CLAMP.i(reservable(r, coo), 0, am);
 					reserve(r, coo, a);
 					finish(r, coo, a);
 					tally.promised.inc(r, -a);
+				}else {
+					int a = SETT.ROOMS().STOCKPILE.remove(r, am, null);
+					
+					if (a != am) {
+						if (!debugged) {
+							LOG.ln(r.name + " " + am + " " + a);
+							tally.debug();
+							debugged = true;
+						}
+						tally.promised.inc(r, -am);
+					}else {
+						tally.promised.inc(r, -a);
+					}
 				}
+				
 
 			}
 		}

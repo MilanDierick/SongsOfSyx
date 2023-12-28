@@ -1,6 +1,7 @@
 package util.statistics;
 
 import game.time.TIMECYCLE;
+import snake2d.util.misc.CLAMP;
 import util.data.*;
 import util.data.INT_O.INT_OE;
 import util.info.INFO;
@@ -28,6 +29,20 @@ public interface HISTORY_INT extends INT, HISTORY{
 		double tot = k*(k+1)*0.5;
 		am /= tot;
 		return (int) Math.ceil(am);
+	}
+	
+	public default int getPeriodSum(int from, int to) {
+		int am = 0;
+		from = CLAMP.i(from, -historyRecords(), 0);
+		to = CLAMP.i(to, from, 0);
+		from++;
+		
+		while(from <= to) {
+			am += get(-from);
+			
+			from++;
+		}
+		return am;
 	}
 	
 	

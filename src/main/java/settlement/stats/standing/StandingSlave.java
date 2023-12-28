@@ -2,12 +2,15 @@ package settlement.stats.standing;
 
 import java.io.IOException;
 
+import game.boosting.BOOSTABLES;
 import game.time.TIME;
 import init.D;
+import init.race.RACES;
 import settlement.entity.humanoid.HCLASS;
 import settlement.main.SETT;
-import settlement.stats.*;
-import settlement.stats.StatsMultipliers.StatMultiplier;
+import settlement.stats.Induvidual;
+import settlement.stats.STATS;
+import settlement.stats.stat.STAT;
 import snake2d.util.file.FileGetter;
 import snake2d.util.file.FilePutter;
 import snake2d.util.misc.ACTION;
@@ -165,8 +168,7 @@ public final class StandingSlave extends Standing{
 			for (SlaveFactor f : factors) {
 				tar *= f.getD();
 			}
-			for (StatMultiplier m : STATS.MULTIPLIERS().get(HCLASS.SLAVE))
-				tar *= m.multiplier(cl, null, 0);
+			tar *= BOOSTABLES.BEHAVIOUR().SUBMISSION.get(RACES.clP(null, HCLASS.SLAVE));	
 			tar = CLAMP.d(tar, 0, 1);
 			
 		}
@@ -241,8 +243,7 @@ public final class StandingSlave extends Standing{
 			
 		}
 		
-		for (StatMultiplier m : STATS.MULTIPLIERS().get(HCLASS.SLAVE))
-			ful *= m.multiplier(cl, null, 0);
+		ful *= BOOSTABLES.BEHAVIOUR().SUBMISSION.get(RACES.clP(null, HCLASS.SLAVE));	
 		ful = CLAMP.d(ful, 0, 1);
 		return ful;
 	}

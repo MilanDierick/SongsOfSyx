@@ -3,8 +3,10 @@ package view.sett.ui.standing;
 import init.D;
 import init.sprite.UI.UI;
 import settlement.entity.humanoid.HCLASS;
-import settlement.stats.*;
-import settlement.stats.StatsLaw.StatLaw;
+import settlement.stats.STATS;
+import settlement.stats.law.StatsLaw.StatLaw;
+import settlement.stats.stat.STAT;
+import settlement.stats.stat.StatCollection;
 import snake2d.SPRITE_RENDERER;
 import snake2d.util.gui.GUI_BOX;
 import snake2d.util.gui.GuiSection;
@@ -84,7 +86,7 @@ final class CatGovern extends Cat {
 		
 		res.add(s.p.icon, 0, 0);
 		res.addRightCAbs(40, new Arrow(s, cl));
-		res.addRightC(2, new GText(UI.FONT().H2, s.info().names).lablify());
+		res.addRightC(2, new GText(UI.FONT().H2, s.info().name).lablify());
 		res.addCentredY(new GStat() {
 			
 			@Override

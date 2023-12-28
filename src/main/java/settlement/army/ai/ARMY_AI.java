@@ -2,9 +2,11 @@ package settlement.army.ai;
 
 import java.io.IOException;
 
+import game.GameDisposable;
+import game.Profiler;
 import settlement.army.ai.divs.ARMY_AI_DIVS;
 import settlement.army.ai.fire.ARMY_AI_TRAJECT;
-import settlement.army.ai.general.ARMY_AI_GENERAL;
+import settlement.army.ai.general.Strategos2000;
 import settlement.army.ai.util.ArmyAIUtilThread;
 import settlement.army.order.DivTDatas;
 import settlement.main.CapitolArea;
@@ -20,7 +22,7 @@ public final class ARMY_AI extends SettResource{
 		new ARMY_AI_DIVS(this),
 		new ArmyAIUtilThread(),
 		new ARMY_AI_TRAJECT(),
-		new ARMY_AI_GENERAL(),
+		new Strategos2000(),
 	};
 	
 	public ARMY_AI(){
@@ -28,7 +30,7 @@ public final class ARMY_AI extends SettResource{
 	}
 	
 	@Override
-	protected void update(float ds) {
+	protected void update(float ds, Profiler profiler) {
 		start();
 		for (ArmyThread t : threads)
 			t.doInMainThread();
@@ -38,10 +40,16 @@ public final class ARMY_AI extends SettResource{
 	
 	@Override
 	protected void save(FilePutter file) {
+		file.mark(this);
 		stop();
+		file.mark(orders);
 		orders.save(file);
-		for (ArmyThread t : threads)
+		for (ArmyThread t : threads) {
+			file.mark(t);
 			t.save(file);
+			file.mark(t);
+		}
+		file.mark(this);
 	}
 	
 	private void stop() {
@@ -64,10 +72,17 @@ public final class ARMY_AI extends SettResource{
 	
 	@Override
 	protected void load(FileGetter file) throws IOException {
+		file.check(this);
 		stop();
+		file.check(orders);
 		orders.load(file);
-		for (ArmyThread t : threads)
+		init(false);
+		for (ArmyThread t : threads) {
+			file.check(t);
 			t.load(file);
+			file.check(t);
+		}
+		file.check(this);
 	}
 	
 	@Override

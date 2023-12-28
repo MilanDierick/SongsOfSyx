@@ -7,8 +7,8 @@ import init.resources.Minable;
 import init.resources.RESOURCES;
 import snake2d.util.misc.CLAMP;
 import util.data.DOUBLE.DoubleImp;
-import world.World;
-import world.map.regions.CapitolPlacablity;
+import world.WORLD;
+import world.regions.centre.WCentre;
 
 public final class WorldTerrainInfo {
 
@@ -42,8 +42,8 @@ public final class WorldTerrainInfo {
 	public void initCity(int x1, int y1) {
 		clear();
 		
-		for (int y = 0; y < CapitolPlacablity.TILE_DIM; y++) {
-			for (int x = 0; x < CapitolPlacablity.TILE_DIM; x++) {
+		for (int y = 0; y < WCentre.TILE_DIM; y++) {
+			for (int x = 0; x < WCentre.TILE_DIM; x++) {
 				int tx = x + x1;
 				int ty = y + y1;
 				add(tx, ty);
@@ -51,23 +51,23 @@ public final class WorldTerrainInfo {
 		}
 		tx = x1+1;
 		ty = y1+1;
-		double d = CapitolPlacablity.TILE_DIM*CapitolPlacablity.TILE_DIM;
+		double d = WCentre.TILE_DIM*WCentre.TILE_DIM;
 		divide(d);
 	}
 	
 	public void add(int tx, int ty) {
-		fertility.incD(World.GROUND().getFertility(tx, ty));
+		fertility.incD(WORLD.GROUND().getFertility(tx, ty));
 		double f = 0;
-		f += World.FOREST().add(this, tx, ty);
-		f += World.MOUNTAIN().add(this, tx, ty);
-		f += World.WATER().add(this, tx, ty);
+		f += WORLD.FOREST().add(this, tx, ty);
+		f += WORLD.MOUNTAIN().add(this, tx, ty);
+		f += WORLD.WATER().add(this, tx, ty);
 		
 		add(TERRAINS.NONE(), CLAMP.d(1.0-f, 0, 1));
 		
-		Minable m = World.MINERALS().get(tx, ty);
+		Minable m = WORLD.MINERALS().get(tx, ty);
 		if (m != null)
 			minables[m.index()]++;
-		climates[World.CLIMATE().getter.get(tx, ty).index()].incD(1); 
+		climates[WORLD.CLIMATE().getter.get(tx, ty).index()].incD(1); 
 	}
 	
 	public void add(TERRAIN t, double v) {

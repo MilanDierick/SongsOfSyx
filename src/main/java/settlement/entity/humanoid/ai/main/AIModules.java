@@ -7,13 +7,11 @@ import settlement.entity.humanoid.HTYPE;
 import settlement.entity.humanoid.Humanoid;
 import settlement.entity.humanoid.ai.battle.AIModule_Battle;
 import settlement.entity.humanoid.ai.crime.AIModule_Crime;
-import settlement.entity.humanoid.ai.entertainment.AIModule_Entertainment;
-import settlement.entity.humanoid.ai.equipment.AIModule_Equipment;
-import settlement.entity.humanoid.ai.health.AIModule_Health;
-import settlement.entity.humanoid.ai.health.AIModule_Hygine;
+import settlement.entity.humanoid.ai.danger.AIModuleDanger;
+import settlement.entity.humanoid.ai.home.AIModule_Home;
 import settlement.entity.humanoid.ai.idle.AIModule_Idle;
 import settlement.entity.humanoid.ai.main.AIPLAN.AiPlanActivation;
-import settlement.entity.humanoid.ai.needs.*;
+import settlement.entity.humanoid.ai.service.AIModule_Service;
 import settlement.entity.humanoid.ai.subject.AIModule_Subject;
 import settlement.entity.humanoid.ai.types.child.AIModule_Child;
 import settlement.entity.humanoid.ai.types.insane.AIModule_Insane;
@@ -27,9 +25,12 @@ import settlement.entity.humanoid.ai.types.student.AIModule_Student;
 import settlement.entity.humanoid.ai.types.tourist.AIModule_Tourist;
 import settlement.entity.humanoid.ai.work.AIModule_Work;
 import settlement.room.main.ROOMA;
-import settlement.stats.*;
+import settlement.stats.STATS;
+import settlement.stats.util.CAUSE_ARRIVE;
+import settlement.stats.util.CAUSE_LEAVE;
 import snake2d.util.datatypes.COORDINATEE;
 import snake2d.util.datatypes.DIR;
+import snake2d.util.misc.CLAMP;
 import snake2d.util.rnd.RND;
 import snake2d.util.sets.*;
 import util.data.INT_O.INT_OE;
@@ -41,22 +42,14 @@ public final class AIModules {
 		data = new AIDataModule(AI.data());
 	}
 	public final AIModule_Idle idle = new AIModule_Idle();
-	final AIModule_Hunger hunger = new AIModule_Hunger();
-	final AIModule drink = new AIModule_Drink();
-	final AIModule religion = new AIModule_Religion();
+
 	final AIModule_Subject subject = new AIModule_Subject();
-	final AIModule health = new AIModule_Health();
-	final AIModule equipment = new AIModule_Equipment();
-	final AIModule_Hygine hygine = new AIModule_Hygine();
-	final AIModule_Groom groom = new AIModule_Groom();
+	final AIModuleDanger danger = new AIModuleDanger();
 	public final AIModule_Work work = new AIModule_Work();
 	public final AIModule_Battle battle = new AIModule_Battle();
-	final AIModule_NeedsForDeed need4deed = new AIModule_NeedsForDeed();
 	final AIModule noble = new AIModule_Noble();
 	final AIModule slave = new AIModule_Slave();
 	final AIModule_Student student = new AIModule_Student();
-	public final AIModule_Entertainment entertainment = new AIModule_Entertainment();
-	public final AIModule_Exposure exposure = new AIModule_Exposure(hygine);
 	private final AIModule_Crime criminal = new AIModule_Crime();
 	private final AIModule_Prisoner prisoner = new AIModule_Prisoner();
 	private final AIModule_Recruit recruit = new AIModule_Recruit();
@@ -67,18 +60,9 @@ public final class AIModules {
 	private final AIModule_Insane insane = new AIModule_Insane();
 	private final AIModule_Tourist tourist = new AIModule_Tourist();
 	
-	private final LIST<AIModule> std = new ArrayList<>(
-			hunger,
-			drink,
-			groom,
-			religion,
-			health,
-			equipment,
-			hygine,
-			need4deed,
-			exposure,
-			entertainment
-			);
+	public final AIModule_Service needs = new AIModule_Service();
+	
+	private final LIST<AIModule> std = new ArrayList<AIModule>(0).join(needs.all).join(danger.all);
 	private final LIST<AIModule> pla = std.join(subject,home);
 	
 	private final AIModule[][] modules = new AIModule[HTYPE.ALL().size()][];
@@ -117,7 +101,7 @@ public final class AIModules {
 		return moduleCoo;
 	}
 	
-	private final Sorter2 sorter = new Sorter2();
+	private final Sorter2 sorter;
 
 	AIModules() {
 		
@@ -143,20 +127,12 @@ public final class AIModules {
 
 		modules[HTYPE.PRISONER.index()] = new AIModule[] {
 			prisoner,
-			health,
 		};
 		
-		modules[HTYPE.CHILD.index()] = new AIModule[] {
-			child,
-			health,
-		};
+		modules[HTYPE.CHILD.index()] = make(danger.all.join(child));
 		
-		modules[HTYPE.DERANGED.index()] = new AIModule[] {
-			insane,
-			health,
-			exposure,
-		};
-		
+		modules[HTYPE.DERANGED.index()] = make(danger.all.join(insane));
+		sorter = new Sorter2();
 	}
 	
 	private AIModule[] make(LIST<AIModule> extra) {
@@ -208,8 +184,10 @@ public final class AIModules {
 		
 		if (next != null)
 			data.nextModule.set(d, next.index);
-		else
+		else {
 			data.nextModule.set(d, data.currentModule.get(d));
+			hprio = 0;
+		}
 		data.nextModulePrio.set(d, hprio);
 		
 	}
@@ -229,10 +207,17 @@ public final class AIModules {
 		
 		switchType(a, d);
 		
+		AIModule current = current(d);
+		boolean hasCurrent = false;
+		int rrr = data.timesResumed.get(d);
+		data.timesResumed.set(d, 0);
+		
 		sorter.init(a, d, getModules(a, d));
 		
 		AIModule n = sorter.poll();
 		while(n != null) {
+			
+			hasCurrent |= n == current;
 			
 			p = n.getPlan(a, d);
 			if (p != null) {
@@ -243,6 +228,18 @@ public final class AIModules {
 			}
 			n = sorter.poll();
 		}
+		
+		if (current != null && hasCurrent) {
+			p = current.resume(a, d, rrr);
+			if (p != null) {
+				data.timesResumed.set(d, CLAMP.i(rrr+1, 0, data.timesResumed.max(d)));
+				data.currentModule.set(d, current.index);
+				data.nextModule.set(d, current.index);
+				data.nextModulePrio.set(d, 0);
+				return p;
+			}
+		}
+		
 		p = idle.getPlan(a, d);
 		data.currentModule.set(d, ((AIModule)idle).index);
 		data.nextModule.set(d, ((AIModule)idle).index);
@@ -281,26 +278,26 @@ public final class AIModules {
 	
 	private void switchType(Humanoid a, AIManager d) {
 		if (a.indu().hType() == HTYPE.SUBJECT) {
-			if(STATS.POP().shoudRetire(a.indu())) {
+			if(STATS.POP().age.shoudRetire(a.indu())) {
 				switchType(a, d, HTYPE.RETIREE, null, null);
 			}else if(recruit.canBecome(a, d)) {
 				switchType(a, d, HTYPE.RECRUIT, null, null);
 			}else if(student.tryInit(a, d))
 				switchType(a, d, HTYPE.STUDENT, null, null);
 		}else if (a.indu().hType() == HTYPE.RETIREE) {
-			if(!STATS.POP().shoudRetire(a.indu())) {
+			if(!STATS.POP().age.shoudRetire(a.indu())) {
 				switchType(a, d, HTYPE.SUBJECT, null, null);
 			}
 		}else if (a.indu().hType() == HTYPE.RECRUIT) {
-			if (!recruit.shouldRemain(a, d)) {
+			if (!recruit.setEmploy(a, d)) {
 				switchType(a, d, HTYPE.SUBJECT, null, null);
 			}
-			if(STATS.POP().shoudRetire(a.indu())) {
+			if(STATS.POP().age.shoudRetire(a.indu())) {
 				switchType(a,d, HTYPE.RETIREE, null, null);
 			}
 		}else if (a.indu().hType() == HTYPE.CHILD) {
-			if (STATS.POP().AGE.indu().get(a.indu()) > a.race().physics.adultAt) {
-				switchType(a,d, HTYPE.SUBJECT, null, null);
+			if (STATS.POP().age.isAdult(a.indu())) {
+				switchType(a,d, HTYPE.SUBJECT, null, CAUSE_ARRIVE.BORN);
 				STATS.RELIGION().setChildReligion(a);
 			}
 		}else if (a.indu().hType() == HTYPE.STUDENT) {
@@ -330,7 +327,10 @@ public final class AIModules {
 	}
 	
 	public static AIModule current(AIManager d) {
-		return AIModule.all.get(data.currentModule.get(d));
+		AIModule m = AIModule.all.get(data.currentModule.get(d));
+		if (m == null)
+			return AI.modules().idle;
+		return m;
 	}
 	
 	public void evictFromRoom(Humanoid a, AIManager d, ROOMA r) {
@@ -340,7 +340,7 @@ public final class AIModules {
 	
 	private final static class Sorter2 {
 		
-		private final Tree<Node> sorter = new Tree<Node>(20) {
+		private final Tree<Node> sorter = new Tree<Node>(AIModule.all.size()) {
 
 			@Override
 			protected boolean isGreaterThan(Node current,
@@ -350,7 +350,7 @@ public final class AIModules {
 			
 		};
 		
-		private final Node[] nodes = new Node[20];
+		private final Node[] nodes = new Node[AIModule.all.size()];
 		
 		Sorter2() {
 			for (int i = 0; i < nodes.length; i++)
@@ -400,7 +400,7 @@ public final class AIModules {
 		public final INT_OE<AIManager> nextModule;
 		public final INT_OE<AIManager> currentModule;
 		private final INT_OE<AIManager> nextModulePrio;
-
+		private final INT_OE<AIManager> timesResumed;
 
 		private AIDataModule(AIData data) {
 			byte1 = data.new DataByte();
@@ -411,6 +411,7 @@ public final class AIModules {
 			nextModule = data.new DataByte();
 			currentModule = data.new DataByte();
 			nextModulePrio = data.new DataByte();
+			timesResumed = data.new DataNibble();
 		}
 		
 		private final COORDINATEE coo = new COORDINATEE.Abs() {

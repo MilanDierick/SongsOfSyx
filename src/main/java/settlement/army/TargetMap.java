@@ -7,7 +7,7 @@ import settlement.main.SETT;
 import settlement.room.main.Room;
 import settlement.room.main.RoomBlueprint;
 import settlement.room.military.artillery.ArtilleryInstance;
-import settlement.tilemap.Terrain.TerrainTile;
+import settlement.tilemap.terrain.Terrain.TerrainTile;
 import snake2d.util.datatypes.AREA;
 import snake2d.util.map.*;
 import view.sett.IDebugPanelSett;

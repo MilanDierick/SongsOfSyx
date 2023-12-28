@@ -4,8 +4,6 @@ import init.C;
 import init.RES;
 import init.sprite.SPRITES;
 import settlement.environment.SEService;
-import settlement.main.RenderData;
-import settlement.main.RenderData.RenderIterator;
 import settlement.main.SETT;
 import settlement.path.components.*;
 import settlement.path.finder.SFinderFindable;
@@ -16,6 +14,8 @@ import snake2d.util.color.COLOR;
 import snake2d.util.datatypes.DIR;
 import snake2d.util.sets.LISTE;
 import snake2d.util.sprite.SPRITE;
+import util.rendering.RenderData;
+import util.rendering.RenderData.RenderIterator;
 
 final class RadiusInter extends Addable{
 

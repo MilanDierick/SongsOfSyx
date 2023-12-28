@@ -21,7 +21,7 @@ import snake2d.util.datatypes.COORDINATE;
 import snake2d.util.datatypes.Coo;
 import snake2d.util.file.FileManager;
 import snake2d.util.file.SnakeImage;
-import snake2d.util.process.Proccesser;
+import snake2d.util.misc.OS;
 
 /**
  * The magic entrance to the game. The mother of classes. Sets up the display,
@@ -81,14 +81,21 @@ public class GraphicContext {
 		if (!glfwInit())
 			throw new IllegalStateException("Unable to initialize GLFW");
 
+		
+		
 		// window hints
 		glfwDefaultWindowHints();
 		glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
 		glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
 		glfwWindowHint(GLFW_FOCUSED, GLFW_TRUE);
-		glfwWindowHint(GLFW_AUTO_ICONIFY, GLFW_FALSE);
-		glfwWindowHint(GLFW_FLOATING, GLFW_FALSE);
-
+		glfwWindowHint(GLFW_FOCUS_ON_SHOW, GLFW_TRUE);
+		
+		if (OS.get() == OS.LINUX) {
+			glfwWindowHint(GLFW_FLOATING, GLFW_TRUE);
+		}else
+			glfwWindowHint(GLFW_FLOATING, GLFW_FALSE);
+		
+		
 		// FB hints
 		glfwWindowHint(GLFW_RED_BITS, 8);
 		glfwWindowHint(GLFW_GREEN_BITS, 8);
@@ -118,7 +125,8 @@ public class GraphicContext {
 		// }
 
 		new Displays();
-
+		
+		
 		printSettings(sett);
 
 		Printer.ln("GRAPHICS");
@@ -126,7 +134,8 @@ public class GraphicContext {
 		DisplayMode wanted = sett.display();
 		int dispWidth = wanted.width;
 		int dispHeight = wanted.height;
-
+		glfwWindowHint(GLFW_AUTO_ICONIFY, wanted.fullScreen ? GLFW_TRUE : GLFW_FALSE);
+		
 		nativeWidth = sett.getNativeWidth();
 		nativeHeight = sett.getNativeHeight();
 
@@ -147,14 +156,25 @@ public class GraphicContext {
 		displayWidth = dispWidth;
 		displayHeight = dispHeight;
 
+		// Is decoration wanted?
 		boolean dec = sett.decoratedWindow();
+		
+		// Decoration is excluded for fullscreen and for borderless (full size) windows
 		dec &= !wanted.fullScreen && displayWidth < Displays.current(sett.monitor()).width
 				&& displayHeight < Displays.current(sett.monitor()).height;
+		
+		
+
+		
 		glfwWindowHint(GLFW_DECORATED, dec ? GLFW_TRUE : GLFW_FALSE);
+		
 
 		try {
 			Printer.ln("---attempting resolution: " + displayWidth + "x" + dispHeight + " " + wanted.fullScreen + " "
 					+ refreshRate + " " + sett.monitor());
+			
+			// Monitor is specified for full screen and for borderless full-size
+			// Monitor is NULL for decorated windows
 			window = glfwCreateWindow(displayWidth, displayHeight, sett.getWindowName(),
 					wanted.fullScreen ? Displays.pointer(sett.monitor()) : NULL, NULL);
 		} catch (Exception e) {
@@ -170,6 +190,7 @@ public class GraphicContext {
 			int[] dx = new int[1];
 			int[] dy = new int[1];
 
+			// Decorated windows are now moved 1/4 into screen (see launcher window)
 			glfwGetMonitorPos(Displays.pointer(sett.monitor()), dx, dy);
 			if (!wanted.fullScreen && dec) {
 				int x1 = (Displays.current(sett.monitor()).width - displayWidth) / 4;
@@ -182,8 +203,6 @@ public class GraphicContext {
 				if (sett.decoratedWindow())
 					y1 += 30;
 				glfwSetWindowPos(window, x1 + dx[0], y1 + dy[0]);
-			} else {
-				glfwSetWindowPos(window, dx[0], dy[0]);
 			}
 		}
 
@@ -231,7 +250,7 @@ public class GraphicContext {
 		if (!GL.getCapabilities().OpenGL33)
 			throw error.get();
 
-		if (Proccesser.isMac()) {
+		if (OS.get() == OS.MAC) {
 			blitArea = new Coo(GlHelper.FBSize());
 		} else {
 			IntBuffer w = BufferUtils.createIntBuffer(1);
@@ -300,7 +319,7 @@ public class GraphicContext {
 
 	private void printSettings(SETTINGS sett) {
 		Printer.ln("SETTINGS");
-		Printer.ln("Degug: " + sett.debugMode());
+		Printer.ln("Debug: " + sett.debugMode());
 		Printer.ln("Native Screen: " + sett.getNativeWidth() + "x" + sett.getNativeHeight());
 		Printer.ln("Display: " + sett.display());
 		Printer.ln("Full: " + sett.display().fullScreen);
@@ -320,17 +339,24 @@ public class GraphicContext {
 		renderer.flush();
 	}
 
+	int chi = 0;
+	int bi = -1;
+	
+	
 	boolean swapAndCheckClose() {
-		if (debugAll)
+		if (debugAll && (chi & 0x0FF) == 0)
 			GlHelper.checkErrors();
-		int i = glGetInteger(GL_READ_FRAMEBUFFER_BINDING);
+		if (bi == -1)
+			bi = glGetInteger(GL_READ_FRAMEBUFFER_BINDING);
+//		System.out.println(i);
 		glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
 		glfwSwapBuffers(window);
-		glBindFramebuffer(GL_READ_FRAMEBUFFER, i);
+		glBindFramebuffer(GL_READ_FRAMEBUFFER, bi);
 		windowIsFocused = glfwGetWindowAttrib(window, GLFW_FOCUSED) == 1;
 		diagnose(false);
-		if (debugAll)
+		if (debugAll && (chi & 0x0FF) == 0)
 			GlHelper.checkErrors();
+		chi ++;
 		return !glfwWindowShouldClose(window);
 	}
 

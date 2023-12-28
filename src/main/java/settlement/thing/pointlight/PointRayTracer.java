@@ -48,20 +48,20 @@ class PointRayTracer {
 		int ty1 = cty - tileDiameter/2; 
 		
 		
-		for (int gy = 0; gy < tileDiameter; gy++) {
+		for (int gy = 0; gy <= tileDiameter; gy++) {
 			rayTrace(-tx1, -ty1, ctx, cty, tx1, ty1+gy);
 			rayTrace(-tx1, -ty1, ctx, cty, tx1+tileDiameter-1, ty1+gy);
 		}
 		
-		for (int gx = 1; gx < tileDiameter-1; gx++) {
+		for (int gx = 1; gx <= tileDiameter-1; gx++) {
 			rayTrace(-tx1, -ty1, ctx, cty, tx1+gx, ty1);
 			rayTrace(-tx1, -ty1, ctx, cty, tx1+gx, ty1+tileDiameter-1);
 		}
 		
 		corners.clear();
 		
-		for (int ty = 1; ty < tileDiameter-1; ty++) {
-			for (int tx = 1; tx < tileDiameter-1; tx++) {
+		for (int ty = 1; ty <= tileDiameter-1; ty++) {
+			for (int tx = 1; tx <= tileDiameter-1; tx++) {
 				int t = tx + ty * tileDiameter;
 				if (lit.get(t)) {
 					corners.set(t, 0x0F);

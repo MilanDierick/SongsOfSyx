@@ -1,6 +1,7 @@
 package settlement.room.infra.janitor;
 
-import settlement.main.RenderData;
+import init.resources.RBIT.RBITImp;
+import init.resources.RESOURCES;
 import settlement.main.SETT;
 import settlement.misc.job.JOBMANAGER_HASER;
 import settlement.misc.job.JOB_MANAGER;
@@ -10,6 +11,8 @@ import settlement.room.main.job.ROOM_RADIUS.ROOM_RADIUS_INSTANCE;
 import settlement.room.main.util.RoomInit;
 import snake2d.Renderer;
 import snake2d.util.datatypes.COORDINATE;
+import snake2d.util.sets.Bitsmap1D;
+import util.rendering.RenderData;
 import util.rendering.ShadowBatch;
 
 final class JanitorInstance extends RoomInstance implements JOBMANAGER_HASER, ROOM_RADIUS_INSTANCE{
@@ -18,18 +21,19 @@ final class JanitorInstance extends RoomInstance implements JOBMANAGER_HASER, RO
 	boolean searching;
 	int viewRes = 0;
 	boolean auto = true;
-	final int[] resData;
-	long resourcesFindable = -1;
-	long resourcesMissing = 0;
-	long resourcesNeeded = 0;
-	long resourcesReserved = 0;
+	//final int[] resData;
+	final Bitsmap1D resbits = new Bitsmap1D(0, 4, RESOURCES.ALL().size());
+	final RBITImp resourcesFindable = new RBITImp().setAll();
+	final RBITImp resourcesMissing = new RBITImp();
+	final RBITImp resourcesNeeded = new RBITImp();
+	final RBITImp  resourcesReserved = new RBITImp();
 
 	final short rx, ry;
 	
 	
 	protected JanitorInstance(ROOM_JANITOR b, TmpArea area, RoomInit init) {
 		super(b, area, init);
-		resData = new int[b.res.intsize];
+		//resData = new int[b.res.intsize];
 
 		employees().maxSet((int) blueprintI().constructor.workers.get(this));
 		employees().neededSet((int) Math.ceil(blueprintI().constructor.workers.get(this)/5.0));

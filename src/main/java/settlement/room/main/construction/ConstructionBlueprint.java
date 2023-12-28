@@ -8,7 +8,7 @@ import settlement.job.Job;
 import settlement.main.SETT;
 import settlement.path.finder.SFinderFindable;
 import settlement.room.main.*;
-import settlement.tilemap.Terrain.TerrainTile;
+import settlement.tilemap.terrain.Terrain.TerrainTile;
 import snake2d.util.color.COLOR;
 import snake2d.util.color.ColorImp;
 import snake2d.util.datatypes.*;

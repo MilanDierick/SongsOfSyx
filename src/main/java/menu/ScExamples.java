@@ -6,7 +6,6 @@ import init.D;
 import init.paths.PATHS;
 import init.sprite.UI.UI;
 import menu.GUI.COLORS;
-import menu.screens.Screener;
 import snake2d.SPRITE_RENDERER;
 import snake2d.util.color.COLOR;
 import snake2d.util.datatypes.COORDINATE;
@@ -19,7 +18,7 @@ import snake2d.util.sprite.text.Font;
 import util.gui.table.GScrollable;
 import util.save.SaveFile;
 
-class ScExamples implements SCREEN{
+class ScExamples implements SC{
 
 	private final GuiSection main;
 	private GuiSection current;

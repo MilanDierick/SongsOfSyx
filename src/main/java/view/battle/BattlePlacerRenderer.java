@@ -8,8 +8,6 @@ import init.sprite.SPRITES;
 import settlement.army.Div;
 import settlement.army.ai.util.DivTDataStatus;
 import settlement.main.ON_TOP_RENDERABLE;
-import settlement.main.RenderData;
-import settlement.main.RenderData.RenderIterator;
 import settlement.room.military.artillery.ArtilleryInstance;
 import settlement.thing.projectiles.Trajectory;
 import snake2d.Renderer;
@@ -17,6 +15,8 @@ import snake2d.util.color.COLOR;
 import snake2d.util.datatypes.COORDINATE;
 import snake2d.util.datatypes.DIR;
 import util.colors.GCOLORS_MAP;
+import util.rendering.RenderData;
+import util.rendering.RenderData.RenderIterator;
 import util.rendering.ShadowBatch;
 import view.main.VIEW;
 
@@ -80,7 +80,8 @@ final class BattlePlacerRenderer extends ON_TOP_RENDERABLE{
 					d.order().status.get(stat);
 					xs[ri] = stat.currentPixelCX()>>C.T_SCROLL;
 					ys[ri] = stat.currentPixelCY()>>C.T_SCROLL;
-					ranges[ri] = Trajectory.range(TERRAIN().get((int)xs[ri], (int)ys[ri]).heightEnd((int)xs[ri], (int)ys[ri]), d.settings.ammo().speed(d));
+					double ref = d.settings.ammo().ref(d);
+					ranges[ri] = Trajectory.range(TERRAIN().get((int)xs[ri], (int)ys[ri]).heightEnd((int)xs[ri], (int)ys[ri]), d.settings.ammo().projectile. maxAngle(ref), d.settings.ammo().projectile.velocity(ref));
 					ranges[ri] = (int)ranges[ri]/C.TILE_SIZE;
 					//ranges[ri] *= ranges[ri];
 					

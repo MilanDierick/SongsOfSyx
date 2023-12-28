@@ -19,6 +19,8 @@ public interface LIST<E> extends Iterable<E>{
 	public E get(int index);
 	
 	public default E getC(int index) {
+		if (size() == 0)
+			return null;
 		int remainder = (index % size());
 		index = ((remainder >> 31) & size()) + remainder;
 		return get(index);

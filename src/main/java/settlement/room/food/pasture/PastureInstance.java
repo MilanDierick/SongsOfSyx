@@ -4,14 +4,15 @@ import static settlement.main.SETT.*;
 
 import game.GAME;
 import game.faction.FACTIONS;
+import game.faction.FResources.RTYPE;
 import init.C;
+import init.race.RACES;
 import init.resources.RESOURCE;
 import init.resources.RESOURCES;
 import settlement.entity.ENTITY;
 import settlement.entity.animal.Animal;
 import settlement.entity.humanoid.HCLASS;
 import settlement.entity.humanoid.Humanoid;
-import settlement.main.RenderData;
 import settlement.main.SETT;
 import settlement.maintenance.ROOM_DEGRADER;
 import settlement.misc.job.JOBMANAGER_HASER;
@@ -20,6 +21,7 @@ import settlement.misc.util.RESOURCE_TILE;
 import settlement.path.AVAILABILITY;
 import settlement.room.industry.module.*;
 import settlement.room.industry.module.Industry.IndustryResource;
+import settlement.room.industry.module.Industry.RoomBoost;
 import settlement.room.main.RoomInstance;
 import settlement.room.main.TmpArea;
 import settlement.room.main.furnisher.FurnisherItemTile;
@@ -30,6 +32,7 @@ import snake2d.Renderer;
 import snake2d.util.datatypes.COORDINATE;
 import snake2d.util.datatypes.DIR;
 import snake2d.util.misc.CLAMP;
+import util.rendering.RenderData;
 import util.rendering.ShadowBatch;
 
 public final class PastureInstance extends RoomInstance implements JOBMANAGER_HASER, ROOM_PRODUCER {
@@ -56,6 +59,10 @@ public final class PastureInstance extends RoomInstance implements JOBMANAGER_HA
 	final int workMax;
 	float animalsToDie = 0;
 	
+	float water;
+	private short waterTiles = 0;
+	private short waterCount = 0;
+	
 	PastureInstance(ROOM_PASTURE p, TmpArea area, RoomInit init) {
 		super(p, area, init);
 
@@ -70,6 +77,8 @@ public final class PastureInstance extends RoomInstance implements JOBMANAGER_HA
 				dy = c.y();
 				break;
 			}
+			if (SETT.ENV().environment.WATER_SWEET.get(c) > 0)
+				water ++;
 		};
 		
 		depX = (short) dx;
@@ -79,14 +88,32 @@ public final class PastureInstance extends RoomInstance implements JOBMANAGER_HA
 		animalsToFetch = animalsMax;
 		
 		workMax = (int) (blueprintI().constructor.ferarea.get(this)*ROOM_PASTURE.WORKERS_PER_TILE*blueprintI().jobsPerDay);
-		skillPrev = (float) blueprintI().bonus2.get(HCLASS.CITIZEN, null);
+		skillPrev = (float) blueprintI().bonus().get(RACES.clP(null, HCLASS.CITIZEN));
 		double work = blueprintI().constructor.workers.get(this);
 		employees().maxSet((int) Math.ceil(work)*2);
 		employees().neededSet((int) Math.ceil(work));
 		productionData = blueprintI().productionData.makeData();
 		activate();
+		
+		water *= 1.5;
+		water /= area();
+		water = (float) CLAMP.d(water, 0, 1);
+		
 	}
 
+	@Override
+	public void updateTileDay(int tx, int ty) {
+		waterCount++;
+		waterTiles += SETT.ENV().environment.WATER_SWEET.get(tx, ty) > 0 ? 1 : 0;
+		if (waterCount >= area()) {
+			water = (float) CLAMP.d((1.5*waterCount)/waterTiles, 0, 1);
+			waterCount = 0;
+			waterTiles = 0;
+		}
+		
+		super.updateTileDay(tx, ty);
+	}
+	
 	@Override
 	protected void updateAction(double updateInterval, boolean day, int daycount) {
 		
@@ -101,19 +128,22 @@ public final class PastureInstance extends RoomInstance implements JOBMANAGER_HA
 					skill = 1;
 				skillPrev = (float) dskill;
 				
-				double produce = blueprintI().constructor.ferarea.get(this)*ROOM_PASTURE.WORKERS_PER_TILE;
-				produce *= dskill*(animalsCurrent-animalsToDie)/animalsMax;
+				double produce = 1;
+				for (RoomBoost rr : blueprintI().indus.get(0).boosts()) {
+					produce *= rr.get(this);
+				}
+				
 				produce(produce);
 				
 				double toDie = CLAMP.d(1.0 - work/(double)needed, 0, 1)*animalsCurrent;
-				int death = (int) Math.min(toDie, animalsToDie);
-				if (death >= 1) {
-					int kill = CLAMP.i((int)death, 0, animalsCurrent);
-					kill(kill);
-				}
+//				int death = (int) Math.min(toDie, animalsToDie);
+//				if (death >= 1) {
+//					int kill = CLAMP.i((int)death, 0, animalsCurrent);
+//					kill(kill);
+//				}
 				animalsToDie = (float) toDie;
 			}else {
-				skillPrev = (float) blueprintI().bonus2.get(HCLASS.CITIZEN, null);
+				skillPrev = (float) blueprintI().bonus().get(RACES.clP(null, HCLASS.CITIZEN));
 			}
 			
 			animalsToFetch = (short) (animalsMax - animalsCurrent);
@@ -184,7 +214,7 @@ public final class PastureInstance extends RoomInstance implements JOBMANAGER_HA
 		if (r == RESOURCES.LIVESTOCK()) {
 			
 			if (animalsCurrent < animalsMax) {
-				FACTIONS.player().res().outConsumed.inc(r, 1);
+				FACTIONS.player().res().inc(r, RTYPE.CONSUMED, -1);
 				Animal a = new Animal(coo.x()*C.TILE_SIZE+C.TILE_SIZEH, coo.y()*C.TILE_SIZE+C.TILE_SIZEH, blueprintI().species, null);
 				if (a != null && !a.isRemoved()) {
 					a.domesticate();
@@ -195,7 +225,7 @@ public final class PastureInstance extends RoomInstance implements JOBMANAGER_HA
 			}
 		}else {
 			work ++;
-			this.skill += IndustryUtil.calcProductionRate(1, skill, blueprintI().productionData, this);
+			this.skill += blueprintI().productionData.bonus().get(skill.indu());
 			SETT.GRASS().currentI.increment(coo, 1);
 		}
 		
@@ -214,7 +244,7 @@ public final class PastureInstance extends RoomInstance implements JOBMANAGER_HA
 				s.deposit();
 			}
 			if (am > 0) {
-				GAME.player().res().outSpoilt.inc(r.resource, am);
+				GAME.player().res().inc(r.resource, RTYPE.SPOILAGE, -am);
 			}
 		}
 	}
@@ -406,4 +436,11 @@ public final class PastureInstance extends RoomInstance implements JOBMANAGER_HA
 		return animalsCurrent;
 	}
 
+	@Override
+	public double productionRate(RoomInstance ins, Humanoid h, Industry in, IndustryResource oo) {
+		if (employees().employed() == 0)
+			return 0;
+		return oo.rate*IndustryUtil.roomBonus(this, in)/employees().employed();
+	}
+	
 }

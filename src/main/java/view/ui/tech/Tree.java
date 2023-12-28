@@ -2,7 +2,8 @@ package view.ui.tech;
 
 import java.util.Arrays;
 
-import init.boostable.BOOSTABLE;
+import game.boosting.Boostable;
+import game.faction.FACTIONS;
 import init.tech.TECH;
 import init.tech.TECH.TechRequirement;
 import init.tech.TECHS;
@@ -27,14 +28,16 @@ final class Tree extends GuiSection{
 	private final Coo[] nodeCoos = new Coo[TECHS.ALL().size()]; 
 	private int LINE_DIM = 4;
 	boolean[] hoverededTechs = new boolean[TECHS.ALL().size()];
-	BOOSTABLE hoveredBoost = null;
+	boolean[] filteredTechs = new boolean[TECHS.ALL().size()];
+	Boostable hoveredBoost = null;
 	final Prompt prompt = new Prompt();
 	
-	Tree(int height){
+	Tree(int height, int width){
 		
+		width -= 24;
 		height = Node.HEIGHT*(height/Node.HEIGHT);
 		
-		nodes = NodeCreator.make();
+		nodes = NodeCreator.make(width);
 		for (TECH t : TECHS.ALL())
 			nodeCoos[t.index()] = new Coo();
 		
@@ -96,6 +99,10 @@ final class Tree extends GuiSection{
 			ii.inc(0);
 	}
 	
+	public void filter(TECH t) {
+		filteredTechs[t.index()] = true;
+	}
+	
 	@Override
 	public void render(SPRITE_RENDERER r, float ds) {
 		if (body().holdsPoint(VIEW.mouse())) {
@@ -106,22 +113,43 @@ final class Tree extends GuiSection{
 		}
 		
 		for (TECH t : TECHS.ALL()) {
-			renderLine(r, t, false);
+			renderLine(r, t, true, false, false);
+		}
+		for (TECH t : TECHS.ALL()) {
+			renderLine(r, t, false, false, true);
+		}
+		for (TECH t : TECHS.ALL()) {
+			renderLine(r, t, false, true, false);
 		}
 		
 		RENDEROBJ rr = content.getHovered();
 		if (rr != null && rr instanceof Node) {
-			renderLine(r, ((Node)(rr)).tech, true);
+			renderHovered(r, ((Node)(rr)).tech);
 		}
 		
 		super.render(r, ds);
-		
+		Arrays.fill(filteredTechs, false);
 		Arrays.fill(hoverededTechs, false);
 		hoveredBoost = null;
 	}
 	
-	private void renderLine(SPRITE_RENDERER r, TECH t, boolean hovered) {
-		hoverededTechs[t.index()] = hovered;
+	private void renderHovered(SPRITE_RENDERER r, TECH t) {
+		hoverededTechs[t.index()] = true;
+		Coo from = nodeCoos[t.index()];
+		if (from == null)
+			return;
+		for (int ti = 0; ti < t.requiresNodes().size(); ti++) {
+			TechRequirement c = t.requiresNodes().get(ti);
+			if (c.level <= 0)
+				continue;
+			Coo to = nodeCoos[c.tech.index()];
+			hoverededTechs[c.tech.index()] = true;
+			renderArrow(r, from, to, Node.Chovered);
+			renderHovered(r, c.tech);
+		}
+	}
+	
+	private void renderLine(SPRITE_RENDERER r, TECH t, boolean dormant, boolean unlocked, boolean unlockable) {
 		Coo from = nodeCoos[t.index()];
 		if (from == null)
 			return;
@@ -129,8 +157,19 @@ final class Tree extends GuiSection{
 			if (c.level <= 0)
 				continue;
 			Coo to = nodeCoos[c.tech.index()];
-			hoverededTechs[c.tech.index()] = hovered;
-			renderArrow(r, from, to, hovered ? Node.Cunlockable : Node.Cdormant);
+			COLOR col = Node.Cdormant;
+			if (FACTIONS.player().tech.level(c.tech) > 0) {
+				if (!unlocked)
+					continue;
+				col = Node.Callocated;
+			}
+			else if (FACTIONS.player().tech.costOfNextWithRequired(c.tech) <= FACTIONS.player().tech().available().get()) {
+				if (!unlockable)
+					continue;
+				col = Node.CUnlockable;
+			}else if (!dormant)
+				continue;
+			renderArrow(r, from, to, col);
 			
 		}
 		

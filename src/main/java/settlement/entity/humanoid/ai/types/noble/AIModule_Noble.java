@@ -22,7 +22,7 @@ public final class AIModule_Noble extends AIModule{
 
 	
 	@Override
-	protected AiPlanActivation getPlan(Humanoid a, AIManager d) {
+	public AiPlanActivation getPlan(Humanoid a, AIManager d) {
 		return beNoble.activate(a, d);
 	}
 	

@@ -2,7 +2,8 @@ package settlement.maintenance;
 
 import static settlement.main.SETT.*;
 
-import init.boostable.BOOSTABLES;
+import game.boosting.BOOSTABLES;
+import init.race.RACES;
 import settlement.main.SETT;
 import snake2d.util.misc.CLAMP;
 import snake2d.util.rnd.RND;
@@ -19,10 +20,16 @@ final class MFloor {
 	
 	public void update(int tx, int ty, int i) {
 		if (validate(tx, ty)) {
+			if (FLOOR().degrade.get(tx, ty) > 0 && !data.setter.is(tx, ty)) {
+				data.setter.set(tx, ty);
+				
+			}
+			
+			
 			if (!RND.oneIn(rate))
 				return;
 			
-			double c = CLAMP.d(1.0/BOOSTABLES.CIVICS().MAINTENANCE.get(null, null), 0, 1000);
+			double c = CLAMP.d(1.0/BOOSTABLES.CIVICS().MAINTENANCE.get(RACES.clP(null, null)), 0, 1000);
 			if ((1.0-FLOOR().getter.get(tx, ty).durability) <= RND.rFloat()*c)
 				return;
 			FLOOR().degradeInc(i, 1);
@@ -35,7 +42,7 @@ final class MFloor {
 	}
 	
 	public boolean validate(int tx, int ty) {
-		if (FLOOR().getter.is(tx, ty)) {
+		if (FLOOR().getter.is(tx, ty) && !PATH().solidity.is(tx, ty)) {
 //			if (FLOOR().degrade(tx, ty) == 0) {
 //				data.setter.clear(tx, ty);
 //			}

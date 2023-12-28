@@ -2,7 +2,6 @@ package settlement.room.military.supply;
 
 import java.io.IOException;
 
-import settlement.main.RenderData.RenderIterator;
 import settlement.main.SETT;
 import settlement.path.AVAILABILITY;
 import settlement.room.main.Room;
@@ -11,13 +10,14 @@ import settlement.room.main.furnisher.*;
 import settlement.room.main.util.RoomInit;
 import settlement.room.main.util.RoomInitData;
 import settlement.room.sprite.*;
-import settlement.tilemap.Floors;
+import settlement.tilemap.floor.Floors;
 import snake2d.SPRITE_RENDERER;
 import snake2d.util.datatypes.AREA;
 import snake2d.util.datatypes.DIR;
 import snake2d.util.file.Json;
 import util.gui.misc.GText;
 import util.info.GFORMAT;
+import util.rendering.RenderData.RenderIterator;
 import util.rendering.ShadowBatch;
 
 final class Constructor extends Furnisher{
@@ -55,11 +55,11 @@ final class Constructor extends Furnisher{
 			throws IOException {
 		super(init, 1, 2, 88, 44);
 	
-		floor2 = SETT.FLOOR().getByKey("FLOOR2", init.data());
+		floor2 = SETT.FLOOR().map.getByKey("FLOOR2", init.data());
 		
 		Json sp = init.data().json("SPRITES");
 		
-		RoomSprite sFence = new RoomSpriteComboN(sp, "FENCE_COMBO");
+		RoomSprite sFence = new RoomSpriteCombo(sp, "FENCE_COMBO");
 		
 		RoomSprite sStone = new RoomSprite1x1(sp, "TORCH_1X1");
 		

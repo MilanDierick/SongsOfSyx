@@ -4,16 +4,15 @@ import java.io.IOException;
 
 import game.faction.FACTIONS;
 import game.faction.Faction;
-import init.config.Config;
 import init.race.RACES;
 import snake2d.util.rnd.RND;
 import snake2d.util.sets.LISTE;
 import snake2d.util.sets.Stack;
 import util.dic.DicArmy;
 import view.tool.PlacableSingle;
-import view.world.IDebugPanelWorld;
-import world.World;
-import world.army.WARMYD;
+import view.world.panel.IDebugPanelWorld;
+import world.WORLD;
+import world.army.AD;
 import world.army.WDivRegional;
 import world.entity.WEntity;
 import world.entity.WEntityConstructor;
@@ -21,10 +20,12 @@ import world.entity.WEntityConstructor;
 public final class WArmyConstructor extends WEntityConstructor<WArmy> {
 
 	private final Stack<WArmy> free = new Stack<>(512);
-	private WArmy[] all = new WArmy[512];
+	private WArmy[] all = new WArmy[128];
 	private int amount = 0;
 	final WArmySprite sprite = new WArmySprite();
 	private boolean tmpStop;
+	
+	public static final int MAX = 1024;
 	
 	public WArmyConstructor(LISTE<WEntityConstructor<? extends WEntity>> all) throws IOException{
 		super(all);
@@ -33,20 +34,20 @@ public final class WArmyConstructor extends WEntityConstructor<WArmy> {
 			
 			@Override
 			public void placeFirst(int tx, int ty) {
-				WArmy e = FACTIONS.player().kingdom().armies().create(tx, ty);
+				WArmy e = FACTIONS.player().armies().create(tx, ty);
 				for (int i = 0; i <= 100; i++) {
 					
 					
-					WDivRegional d = World.ARMIES().regional().create(RACES.all().rnd(), (10.0 + RND.rInt(Config.BATTLE.MEN_PER_DIVISION-10))/Config.BATTLE.MEN_PER_DIVISION, 0, 0, e);
-					d.randomize(RND.rFloat(), RND.rInt(16));
+					WDivRegional d = WORLD.ARMIES().regional().create(RACES.all().rnd(),  0.25 + 0.75*(1.0-(1-RND.rFloatP(2))), e);
+					d.randomize(RND.rFloat(), RND.rFloat());
 					d.menSet(d.menTarget());
 				}
-				WARMYD.supplies().fillAll(e);
+				AD.supplies().fillAll(e);
 			}
 			
 			@Override
 			public CharSequence isPlacable(int tx, int ty) {
-				return World.REGIONS().getter.get(tx, ty) != null ? null : E;
+				return WORLD.PATH().route.is(tx, ty) ? null : E;
 			}
 		});
 		
@@ -54,20 +55,20 @@ public final class WArmyConstructor extends WEntityConstructor<WArmy> {
 			
 			@Override
 			public void placeFirst(int tx, int ty) {
-				WArmy e = FACTIONS.player().kingdom().armies().create(tx, ty);
+				WArmy e = FACTIONS.player().armies().create(tx, ty);
 				for (int i = 0; i <= 1; i++) {
 					
 					
-					WDivRegional d = World.ARMIES().regional().create(RACES.all().rnd(), (10.0 + RND.rInt(Config.BATTLE.MEN_PER_DIVISION-10))/Config.BATTLE.MEN_PER_DIVISION, 0,0, e);
-					d.randomize(RND.rFloat(), RND.rInt(16));
+					WDivRegional d = WORLD.ARMIES().regional().create(RACES.all().rnd(),  0.25 + 0.75*(1.0-(1-RND.rFloatP(2))), e);
+					d.randomize(RND.rFloat(), RND.rFloat());
 					d.menSet(d.menTarget());
 				}
-				WARMYD.supplies().fillAll(e);
+				AD.supplies().fillAll(e);
 			}
 			
 			@Override
 			public CharSequence isPlacable(int tx, int ty) {
-				return World.REGIONS().getter.get(tx, ty) != null ? null : E;
+				return WORLD.PATH().route.is(tx, ty) ? null : E;
 			}
 		});
 		
@@ -75,21 +76,20 @@ public final class WArmyConstructor extends WEntityConstructor<WArmy> {
 			
 			@Override
 			public void placeFirst(int tx, int ty) {
-				WArmy e = FACTIONS.player().kingdom().armies().create(tx, ty);
-				WARMYD.faction().set(e, null);
+				WArmy e = FACTIONS.player().armies().create(tx, ty);
+				AD.faction().set(e, null);
 				for (int i = 0; i <= 100; i++) {
 					
-					
-					WDivRegional d = World.ARMIES().regional().create(RACES.all().rnd(), (10.0 + RND.rInt(Config.BATTLE.MEN_PER_DIVISION-10))/Config.BATTLE.MEN_PER_DIVISION, 0,0, e);
-					d.randomize(RND.rFloat(), RND.rInt(16));
+					WDivRegional d = WORLD.ARMIES().regional().create(RACES.all().rnd(), 0.25 + 0.75*(1.0-(1-RND.rFloatP(2))), e);
+					d.randomize(RND.rFloat(), RND.rFloat());
 					d.menSet(d.menTarget());
 				}
-				WARMYD.supplies().fillAll(e);
+				AD.supplies().fillAll(e);
 			}
 			
 			@Override
 			public CharSequence isPlacable(int tx, int ty) {
-				return World.REGIONS().getter.get(tx, ty) != null ? null : E;
+				return WORLD.PATH().route.is(tx, ty) ? null : E;
 			}
 		});
 		
@@ -97,18 +97,18 @@ public final class WArmyConstructor extends WEntityConstructor<WArmy> {
 			
 			@Override
 			public void placeFirst(int tx, int ty) {
-				WArmy e = FACTIONS.player().kingdom().armies().create(tx, ty);
-				WARMYD.faction().set(e, null);
+				WArmy e = FACTIONS.player().armies().create(tx, ty);
+				AD.faction().set(e, null);
 				
 				
-				WDivRegional d = World.ARMIES().regional().create(RACES.all().rnd(), (10.0 + RND.rInt(Config.BATTLE.MEN_PER_DIVISION-10))/Config.BATTLE.MEN_PER_DIVISION, 0, 0, e);
-				d.randomize(RND.rFloat(), RND.rInt(16));
+				WDivRegional d = WORLD.ARMIES().regional().create(RACES.all().rnd(),  0.25 + 0.75*(1.0-(1-RND.rFloatP(2))), e);
+				d.randomize(RND.rFloat(), RND.rFloat());
 				d.menSet(d.menTarget());
 			}
 			
 			@Override
 			public CharSequence isPlacable(int tx, int ty) {
-				return World.REGIONS().getter.get(tx, ty) != null ? null : E;
+				return WORLD.PATH().route.is(tx, ty) ? null : E;
 			}
 		});
 		
@@ -119,21 +119,21 @@ public final class WArmyConstructor extends WEntityConstructor<WArmy> {
 				Faction f = FACTIONS.NPCs().get(0);
 				if (f.capitolRegion() == null)
 					return;
-				WArmy e = f.kingdom().armies().create(tx, ty);
+				WArmy e = f.armies().create(tx, ty);
 				for (int i = 0; i <= 50; i++) {
 					
 					
-					WDivRegional d = World.ARMIES().regional().create(RACES.all().rnd(), (10.0 + RND.rInt(Config.BATTLE.MEN_PER_DIVISION-10))/Config.BATTLE.MEN_PER_DIVISION, 0, 0, e);
-					d.randomize(RND.rFloat(), RND.rInt(16));
+					WDivRegional d = WORLD.ARMIES().regional().create(RACES.all().rnd(),  0.25 + 0.75*(1.0-(1-RND.rFloatP(2))), e);
+					d.randomize(RND.rFloat(), RND.rFloat());
 					d.menSet(d.menTarget());
 				}
-				WARMYD.supplies().fillAll(e);
-				FACTIONS.rel().war.set(f, FACTIONS.player(), 1);
+				AD.supplies().fillAll(e);
+				FACTIONS.DIP().war.set(f, FACTIONS.player(), true);
 			}
 			
 			@Override
 			public CharSequence isPlacable(int tx, int ty) {
-				return World.REGIONS().getter.get(tx, ty) != null ? null : E;
+				return WORLD.PATH().route.is(tx, ty) ? null : E;
 			}
 		});
 		
@@ -155,15 +155,21 @@ public final class WArmyConstructor extends WEntityConstructor<WArmy> {
 	}
 	
 	public int max() {
-		return 512;
+		return all.length;
 	}
 	
 	public WArmy get(int index) {
 		return all[index];
 	}
 	
+	public WArmy tryGet(int index) {
+		if (index < 0 || index > all.length)
+			return null;
+		return all[index];
+	}
+	
 	public boolean canCreate() {
-		return amount < Short.MAX_VALUE && World.ENTITIES().canAdd();
+		return amount < MAX && WORLD.ENTITIES().canAdd();
 	}
 	
 	/**
@@ -176,7 +182,7 @@ public final class WArmyConstructor extends WEntityConstructor<WArmy> {
 	public int create(int tx, int ty, Faction f) {
 		
 		if (!canCreate()) {
-			throw new RuntimeException("too many armies on the map!" + " " + amount + " " + World.ENTITIES().all().size());
+			throw new RuntimeException("too many armies on the map!" + " " + amount + " " + WORLD.ENTITIES().all().size());
 		}
 		
 		for (int i = 0; i < all.length; i++) {
@@ -185,7 +191,7 @@ public final class WArmyConstructor extends WEntityConstructor<WArmy> {
 			}
 		}
 		
-		int nsize = all.length + 128;
+		int nsize = all.length + 64;
 		if (nsize > Short.MAX_VALUE)
 			nsize = Short.MAX_VALUE;
 		if (nsize <= all.length)
@@ -214,14 +220,14 @@ public final class WArmyConstructor extends WEntityConstructor<WArmy> {
 		a.index = (short) index;
 		all[index] = a;
 		a.init(tx, ty);
-		WARMYD.faction().set(a, f);
+		AD.faction().set(a, f);
 		if (!a.added())
 			throw new RuntimeException();
 		amount ++;
 		
 		a.name.clear();
 		if (f != null) {
-			a.name.add(DicArmy.¤¤Army).s().add(f.kingdom().armies().all().size());
+			a.name.add(DicArmy.¤¤Army).s().add(f.armies().all().size());
 		}else {
 			a.name.add(DicArmy.¤¤Army);
 		}
@@ -231,14 +237,23 @@ public final class WArmyConstructor extends WEntityConstructor<WArmy> {
 	
 	WArmy add(WArmy a, int index) {
 		a.index = (short) index;
+		if(index > all.length) {
+			WArmy[] nn = all;
+			while(index > all.length)
+				nn = new WArmy[nn.length+64];
+			for (int i = 0; i < all.length; i++)
+				nn[i] = all[i];
+			all = nn;
+		}
 		all[index] = a;
 		amount ++;
 		return a;
 	}
 	
+	
 	@Override
 	protected void clear() {
-		all = new WArmy[512];
+		all = new WArmy[128];
 		amount = 0;
 	}
 

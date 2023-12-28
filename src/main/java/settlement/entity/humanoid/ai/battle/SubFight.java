@@ -2,8 +2,8 @@ package settlement.entity.humanoid.ai.battle;
 
 import static settlement.main.SETT.*;
 
+import game.boosting.BOOSTABLES;
 import init.C;
-import init.boostable.BOOSTABLES;
 import settlement.entity.ENTITY;
 import settlement.entity.humanoid.*;
 import settlement.entity.humanoid.HEvent.HEventData;
@@ -111,7 +111,7 @@ public class SubFight extends AISUB.Resumable {
 		public AISTATE setAction(Humanoid a, AIManager d) {
 			if (d.otherEntity() != null)
 				a.speed.setDirCurrent(DIR.get(a.body(), d.otherEntity().body()));
-			return AI.STATES().STAND.activate(a, d, 0.1 + Util.getTraining(a, d) * 2.0f);
+			return AI.STATES().STAND.activate(a, d, 0.1 + Util.getAttackPause(a, d) * 5.0f);
 		}
 
 		@Override
@@ -128,14 +128,13 @@ public class SubFight extends AISUB.Resumable {
 			if (d.otherEntity() == null)
 				return exit.set(a, d);
 			a.speed.setDirCurrent(DIR.get(a.body(), d.otherEntity().body()));
-			return stopBraced.activate(a, d, RND.rFloat() * 2 + Util.getTraining(a, d) * 2.0f);
+			return stopBraced.activate(a, d, 0.1 + Util.getAttackPause(a, d) * 5.0f);
 		}
 
 		@Override
 		public AISTATE res(Humanoid a, AIManager d) {
 			Humanoid ene = d.otherEntity();
-			
-			
+
 			if (ene == null || ene.isRemoved()) {
 				return exit.set(a, d);
 			}
@@ -149,15 +148,13 @@ public class SubFight extends AISUB.Resumable {
 			int dist = a.body().getDistance(ene.body());
 			if (dist > C.TILE_SIZE * 10)
 				return exit.set(a, d);
-
-			if (dist <= (a.body().width() + ene.body().width()) / 2 + 6)
+			if (dist <= (a.body().width() + ene.body().width()) / 2 - 6)
 				return backup.set(a, d);
-
 			if (dist > C.TILE_SIZE * 4)
 				return charge.set(a, d);
-
 			if (dist > (a.body().width() + a.body().width()) / 2 + 8)
 				return move_closer.set(a, d);
+			
 			return strike.set(a, d);
 		}
 	
@@ -351,8 +348,8 @@ public class SubFight extends AISUB.Resumable {
 				int dist = a.body().getDistance(d.otherEntity().body());
 				if (dist <= (a.body().width() + d.otherEntity().body().width()) / 2 + 24) {
 					Humanoid enemy = d.otherEntity();
-					
-					Util.attack(a, d, enemy);
+					attack(a, d, enemy);
+					//Util.attack(a, d, enemy);
 					
 				}
 			}
@@ -383,6 +380,10 @@ public class SubFight extends AISUB.Resumable {
 
 	};
 
+	public void attack(Humanoid a, AIManager d, Humanoid enemy) {
+		Util.attack(a, d, enemy);
+	}
+	
 	private final Resumer backup = new ResumerB() {
 
 		@Override
@@ -491,7 +492,7 @@ public class SubFight extends AISUB.Resumable {
 				}
 				return false;
 			case EXHAUST:
-				if (RND.oneIn(BOOSTABLES.PHYSICS().STAMINA.get(a) * 8)) {
+				if (RND.oneIn(BOOSTABLES.PHYSICS().STAMINA.get(a.indu()) * 8)) {
 					if (STATS.NEEDS().EXHASTION.indu().isMax(a.indu())) {
 						d.interrupt(a, e);
 						d.overwrite(a, AI.listeners().EXHAUSTED.activate(a, d));

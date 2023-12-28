@@ -36,7 +36,7 @@ public final class AIModule_Crime extends AIModule{
 	}
 	
 	@Override
-	protected AiPlanActivation getPlan(Humanoid a, AIManager d) {
+	public AiPlanActivation getPlan(Humanoid a, AIManager d) {
 		
 		if (GAME.events().killer.theKiller() == a && GAME.events().killer.theKillerShouldKill())
 			return serial.activate(a, d);

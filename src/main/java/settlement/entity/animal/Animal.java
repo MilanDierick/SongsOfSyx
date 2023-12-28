@@ -5,20 +5,23 @@ import static settlement.main.SETT.*;
 import java.io.IOException;
 
 import game.GAME;
+import game.boosting.BOOSTABLES;
 import game.time.TIME;
 import init.C;
 import init.D;
 import init.settings.S;
+import init.sprite.SPRITES;
 import settlement.entity.ENTITY;
 import settlement.entity.ResolverTile;
 import settlement.entity.animal.spawning.AnimalSpawnSpot;
 import settlement.entity.humanoid.HPoll;
 import settlement.entity.humanoid.Humanoid;
+import settlement.job.JOBS;
+import settlement.job.Job;
 import settlement.main.SETT;
 import settlement.room.food.pasture.PastureInstance;
 import settlement.room.food.pasture.ROOM_PASTURE;
 import settlement.room.main.Room;
-import settlement.room.service.hygine.bath.ROOM_BATH;
 import settlement.thing.ThingsCadavers.Cadaver;
 import snake2d.Renderer;
 import snake2d.util.color.COLOR;
@@ -30,6 +33,7 @@ import snake2d.util.file.FilePutter;
 import snake2d.util.rnd.RND;
 import util.gui.misc.GBox;
 import util.rendering.ShadowBatch;
+import view.main.VIEW;
 
 public class Animal extends ENTITY{
 	
@@ -40,7 +44,9 @@ public class Animal extends ENTITY{
 	}
 	
 	private final byte def;
-	private boolean isBeeingHunted = false;
+	private boolean markedForTheHunt = false;
+	private boolean huntedReserved = false;
+	
 	float spriteTimer;
 	final float ran;
 	float damage = 0f;
@@ -71,7 +77,7 @@ public class Animal extends ENTITY{
 		physics.setMass(spec.mass()*RND.rFloat1(0.2));
 		physics.setRestitution(0.2f);
 		physics.setHeight(spec.heightOverGround() + RND.rFloat0(spec.heightOverGround()/4.0f));
-		inWater = TERRAIN().WATER.isOpen(physics.tileC().x(), physics.tileC().y()) || ROOM_BATH.isPool(physics.tileC().x(), physics.tileC().y());
+		inWater = SETT.ENTITIES().submerged.is(physics.tileC().x(), physics.tileC().y());
 		speed.accelerationInit(spec.acceleration());
 		speed.magnitudeMaxInit(spec.acceleration());
 		speed.turnRandom();
@@ -86,7 +92,7 @@ public class Animal extends ENTITY{
 		speed.turnRandom();
 		setState(State.STAND, RND.rFloat(1));	
 		//ai.update(this, 0);
-		add();
+		add(false);
 	}
 	
 	public Animal(FileGetter file) throws IOException{
@@ -95,7 +101,8 @@ public class Animal extends ENTITY{
 		
 		
 		this.def = file.b();
-		isBeeingHunted = file.bool();
+		markedForTheHunt = file.bool();
+		huntedReserved = file.bool();
 		spriteTimer = file.f();
 		ran = file.f();
 		damage = file.f();
@@ -121,7 +128,8 @@ public class Animal extends ENTITY{
 	protected void save(FilePutter file) {
 		super.save(file);
 		file.b(def);
-		file.bool(isBeeingHunted);
+		file.bool(markedForTheHunt);
+		file.bool(huntedReserved);
 		file.f(spriteTimer);
 		file.f(ran);
 		file.f(damage);
@@ -240,7 +248,7 @@ public class Animal extends ENTITY{
 				}
 			}
 			
-			inWater = TERRAIN().WATER.isOpenNonFrozen(physics.tileC().x(), physics.tileC().y()) || ROOM_BATH.isPool(physics.tileC().x(), physics.tileC().y());
+			inWater = SETT.ENTITIES().submerged.is(physics.tileC().x(), physics.tileC().y());
 		}
 
 		if (!domesticated && !isRemoved()) {
@@ -248,7 +256,7 @@ public class Animal extends ENTITY{
 			if (upHour == TIME.hours().bitCurrent()) {
 				if (cub && TIME.days().bitsSinceStart()-birthDay < 14) {
 					cub = false;
-					PATH().finders.entity.report(this, 1);
+					
 				}
 				
 				if (TIME.days().bitCurrent()-birthDay > lifeSpan) {
@@ -282,6 +290,18 @@ public class Animal extends ENTITY{
 	@Override
 	public void render(Renderer r, ShadowBatch s, float ds, int offsetX, int offsetY) {
 		state.sprite(this).render(this, false, r, s, ds, offsetX, offsetY);
+		if (!VIEW.hideUI()) {
+			if (huntReservable()) {
+				Job.CACTIVE.bind();
+				SPRITES.cons().ICO.crosshair.renderC(r, body().cX()+offsetX, body().cY()+offsetY);
+			}else if (huntReserved()) {
+				JOBS.CRESERVED.bind();
+				SPRITES.cons().ICO.crosshair.renderC(r, body().cX()+offsetX, body().cY()+offsetY);
+			}
+			COLOR.unbind();
+		}
+		
+		
 	}
 	
 	public AnimalSpecies species(){
@@ -334,6 +354,7 @@ public class Animal extends ENTITY{
 
 	@Override
 	public void collide(ECollision coll) {
+
 		
 		if (!state.wantsToCollide(this, coll.momentum)) {
 			state.collide(this, coll.other, coll.norX, coll.norY, 0);
@@ -341,16 +362,23 @@ public class Animal extends ENTITY{
 		}
 		state.collide(this, coll.other, coll.norX, coll.norY, coll.momentum);
 		
-		coll.momentum *= 1.0 + coll.pierceDamage*RND.rFloat();
+
+
+		double dam = 0;
 		
-		if (coll.momentum > 7*species().momTreshold) {
+		for (int i = 0; i < BOOSTABLES.BATTLE().DAMAGES.size(); i++) {
+			dam += 0.25*coll.damage[i];
+		}
+		
+		
+		if (dam > 7*species().momTreshold) {
 			damage += 2f;
 			//Settlement.THINGS().gore.explode(this);
 //			Settlement.ANIMALS().cadavers.gore(body().cX(), body().cY(), species());
-		}else if(coll.momentum > 3.5*species().momTreshold) {
-			coll.momentum -= 1.5*species().momTreshold;
-			coll.momentum /= 0.5*species().momTreshold;
-			damage += coll.momentum;
+		}else if(dam > 3.5*species().momTreshold) {
+			dam -= 1.5*species().momTreshold;
+			dam /= 0.5*species().momTreshold;
+			damage += dam;
 //			
 //			health -= (momentum-1.5*momentumThreshold)/0.5*momentumThreshold;
 //			if (health < 0) {
@@ -375,6 +403,7 @@ public class Animal extends ENTITY{
 	public boolean collideTile(boolean broken, double norX, double norY, double momentum, int tx, int ty) {
 		return state.collideTile(this, broken, norX, norY, momentum);
 	}
+	
 
 	@Override
 	public COLOR minimapColor() {
@@ -393,6 +422,7 @@ public class Animal extends ENTITY{
 	}
 	
 	Cadaver kill(boolean gore, boolean hunted) {
+		
 		if (isRemoved())
 			throw new RuntimeException();
 		helloMyNameIsInigoMontoyaYouKilledMyFatherPrepareToDie();
@@ -402,15 +432,10 @@ public class Animal extends ENTITY{
 			return null;
 		
 		if (hunted) {
-			if (!domesticated && (RND.oneIn(7) || cub)) {
-				
-			}
+			SETT.ANIMALS().spawn.reportKilled(species());
 			return THINGS().cadavers.normal(body().cX(), body().cY(), physics.getMass(), damage, species(), speed.dir().id());		
 		}
 		
-		if (cub) {
-			return null;
-		}
 		if (gore) {
 			return THINGS().cadavers.gore(body().cX(), body().cY(), species());
 		}
@@ -443,9 +468,9 @@ public class Animal extends ENTITY{
 	}
 	
 	public void domesticate() {
-		reserveCancel();
 		PATH().finders.entity.report(this, -1);
 		domesticated = true;
+		PATH().finders.entity.report(this, 1);
 	}
 	
 	public AnimalSpawnSpot spot() {
@@ -456,9 +481,14 @@ public class Animal extends ENTITY{
 	
 
 	@Override
-	protected void setCollideDamage(ECollision coll) {
-		if (!cub && !domesticated())
-			coll.pierceDamage = !(coll.other instanceof Animal) && !domesticated ? coll.dirDot*0.4-RND.rFloat() : 0;
+	protected void setCollideDamage(ECollision coll, ECollision result) {
+		if (!cub && !domesticated() && !(coll.other instanceof Animal)) {
+			if (SETT.ANIMALS().spawn.isTimeForAKill(species())) {
+				result.damage[0] = 1;
+				result.damageStrength = physics.getMass()*C.TILE_SIZE*32;
+			}
+			
+		}
 	}
 
 	@Override
@@ -477,30 +507,6 @@ public class Animal extends ENTITY{
 		
 	}
 
-	public boolean reservable() {
-		return !cub && !domesticated && !isBeeingHunted && !isRemoved();
-	}
-	
-	public boolean reserved() {
-		return !cub && !domesticated && isBeeingHunted && !isRemoved();
-	}
-	
-	public void reserve() {
-		if (reservable()) {
-			PATH().finders.entity.report(this, -1);
-			isBeeingHunted = true;
-			return;
-		}
-		throw new RuntimeException(!cub + " " + !domesticated + " " + !isBeeingHunted + " " + !isRemoved());
-	}
-	
-	public void reserveCancel() {
-		if (reserved()) {
-			isBeeingHunted = false;
-			PATH().finders.entity.report(this, 1);
-		}
-	}
-
 	public boolean isBaby() {
 		return cub;
 	}
@@ -509,8 +515,58 @@ public class Animal extends ENTITY{
 	protected boolean collides() {
 		return true;
 	}
+	
+	public boolean huntReservable() {
+		return !domesticated && markedForTheHunt && !huntedReserved && !isRemoved();
+	}
+	
+	public boolean huntReserved() {
+		return !domesticated && markedForTheHunt && huntedReserved && !isRemoved();
+	}
+	
+	public void huntReserve() {
+		if (huntReservable()) {
+			PATH().finders.entity.report(this, -1);
+			huntedReserved = true;
+			PATH().finders.entity.report(this, 1);
+			return;
+		}
+		throw new RuntimeException(!cub + " " + !domesticated + " " + !huntedReserved + " " + !isRemoved());
+	}
+	
+	public void huntReserveCancel() {
+		if (huntReserved()) {
+			PATH().finders.entity.report(this, -1);
+			huntedReserved = false;
+			PATH().finders.entity.report(this, 1);
+		}
+	}
+
+	public boolean huntMarkedIs() {
+		return huntReservable() || huntReserved();
+	}
+	
+	public boolean huntMarkedCan() {
+		return !huntMarkedIs() && !domesticated;
+	}
+
+	public void huntMark(boolean m) {
+		PATH().finders.entity.report(this, -1);
+		if (m) {
+			if (huntMarkedIs())
+				return;
+			if (huntMarkedCan()) {
+				markedForTheHunt = true;
+			}
+		}else if (huntMarkedIs()){
+			markedForTheHunt = false;
+		}
+		PATH().finders.entity.report(this, 1);
+	}
+	
 
 
+	
 
 	
 }

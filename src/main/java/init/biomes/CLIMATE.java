@@ -1,16 +1,19 @@
 package init.biomes;
 
+import java.io.IOException;
+
+import game.boosting.BoostSpecs;
 import game.time.TIME;
-import init.boostable.BBoost;
-import init.boostable.BOOST_HOLDER;
-import init.sprite.ICON;
+import init.sprite.UI.UI;
 import snake2d.util.color.COLOR;
 import snake2d.util.color.ColorImp;
 import snake2d.util.file.Json;
-import snake2d.util.sets.*;
+import snake2d.util.sets.INDEXED;
+import snake2d.util.sets.LISTE;
+import snake2d.util.sprite.SPRITE;
 import util.info.INFO;
 
-public final class CLIMATE extends INFO implements INDEXED, BOOST_HOLDER{
+public final class CLIMATE extends INFO implements INDEXED{
 
 	public final String key;
 	private final int index;
@@ -20,21 +23,26 @@ public final class CLIMATE extends INFO implements INDEXED, BOOST_HOLDER{
 	public final COLOR color;
 	public final COLOR colorGroundDry;
 	public final COLOR colorGroundWet;
-	ClimateBonus.Boost booster;
+	public final SPRITE icon;
+	public final BoostSpecs boosters;
 	
-	CLIMATE(LISTE<CLIMATE> all, String key, CharSequence name, CharSequence desc,  Json json){
+	CLIMATE(LISTE<CLIMATE> all, String key, CharSequence name, CharSequence desc,  Json json) throws IOException{
 		super(name, desc);
 		index = all.add(this);
 		this.key = key;
 		json = json.json(key);
 		this.seasonChange = json.d("SEASONAL_CHANGE", 0, 1);
 		double t = json.d("TEMP_COLD",-1,1);
+		icon = UI.icons().get(json);
 		t = t < 0 ? 1.0 + t : 1 + t;
 		tempCold = t/2.0;
 		t = json.d("TEMP_WARM",-1,1);
 		t = t < 0 ? 1.0 + t : 1 + t;
 		tempWarm = t/2.0;
 		color = new ColorImp(json);
+		boosters = new BoostSpecs(CLIMATES.INFO().name + ": " + name, icon, false);
+		boosters.push(json, null);
+		
 		json = json.json("GROUND");
 		colorGroundDry = new ColorImp(json, "DRY");
 		colorGroundWet = new ColorImp(json, "WET");
@@ -64,20 +72,6 @@ public final class CLIMATE extends INFO implements INDEXED, BOOST_HOLDER{
 			d = 1.0-d;
 			return 0.5+d*0.5;
 		}
-	}
-	
-	public ICON.BIG icon(){
-		return CLIMATES.icon(this);
-	}
-	
-	@Override
-	public CharSequence boosterName() {
-		return name;
-	}
-
-	@Override
-	public LIST<BBoost> boosts() {
-		return booster.boosts;
 	}
 	
 }

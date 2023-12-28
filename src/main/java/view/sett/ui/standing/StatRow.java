@@ -2,11 +2,13 @@ package view.sett.ui.standing;
 
 import init.D;
 import init.race.Race;
-import init.sprite.ICON;
 import init.sprite.SPRITES;
+import init.sprite.UI.Icon;
 import init.sprite.UI.UI;
 import settlement.entity.humanoid.HCLASS;
-import settlement.stats.*;
+import settlement.stats.Induvidual;
+import settlement.stats.stat.STAT;
+import settlement.stats.stat.StatDecree;
 import snake2d.SPRITE_RENDERER;
 import snake2d.util.color.COLOR;
 import snake2d.util.gui.GUI_BOX;
@@ -17,7 +19,7 @@ import util.colors.GCOLOR;
 import util.data.INT.INTE;
 import util.data.INT_O.INT_OE;
 import util.gui.misc.*;
-import util.gui.misc.GButt.CheckboxTitle;
+import util.gui.misc.GButt.Checkbox;
 import util.gui.slider.GGaugeMutable;
 import util.gui.slider.GTarget;
 import util.info.GFORMAT;
@@ -38,7 +40,10 @@ public class StatRow extends GuiSection{
 		this.s = s;
 		this.cl = cl;
 		add(new Arrow(s, cl));
-		addRightC(2, new GText(UI.FONT().H2, s.info().names).lablify());
+		GText t = new GText(UI.FONT().H2, s.info().name);
+		t.setMultipleLines(false);
+		t.setMaxWidth(210);
+		addRightC(2, t.lablify());
 		add(new GStat() {
 			
 			@Override
@@ -57,7 +62,7 @@ public class StatRow extends GuiSection{
 		private final HCLASS cl;
 		
 		Arrow(STAT s, HCLASS cl){
-			super(ICON.SMALL.SIZE);
+			super(Icon.S);
 			this.s = s;
 			this.cl = cl;
 		}
@@ -109,7 +114,7 @@ public class StatRow extends GuiSection{
 			return;
 		INT_OE<Race> rr = c.get(cl);
 		if (rr.max(null) == 1) {
-			CheckboxTitle b = new GButt.CheckboxTitle((SPRITE)(new GText(UI.FONT().S, c.name).lablifySub())) {
+			Checkbox b = new GButt.Checkbox((SPRITE)(new GText(UI.FONT().S, c.name).lablifySub())) {
 				@Override
 				protected void renAction() {
 					

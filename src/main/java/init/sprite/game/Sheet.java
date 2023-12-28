@@ -1,10 +1,12 @@
 package init.sprite.game;
 
 import init.sprite.SPRITES;
-import settlement.main.RenderData.RenderIterator;
 import snake2d.SPRITE_RENDERER;
+import snake2d.util.color.COLOR;
 import snake2d.util.color.OPACITY;
 import snake2d.util.sprite.TILE_SHEET;
+import snake2d.util.sprite.TextureCoords;
+import util.rendering.RenderData.RenderIterator;
 import util.rendering.ShadowBatch;
 
 public abstract class Sheet {
@@ -22,6 +24,8 @@ public abstract class Sheet {
 	public abstract void render(SheetData da, int x, int y, RenderIterator it, SPRITE_RENDERER sr, int tile, int random, double degrade);
 	public abstract void renderShadow(SheetData da, int x, int y, RenderIterator it, ShadowBatch shadow, int tile, int random);
 	
+	public abstract TextureCoords texture(int tile);
+	
 	public static class Imp extends Sheet {
 		
 		public final TILE_SHEET sheet;
@@ -29,9 +33,9 @@ public abstract class Sheet {
 
 		
 		public Imp(SheetType type, TILE_SHEET sheet, boolean rotates){
-			super(sheet.tiles(), rotates, shadow(sheet, type.sizeSize*(rotates ? 4 :1)));
+			super(sheet.tiles(), rotates&type.defRotates, shadow(sheet, type.sizeSize*((rotates&type.defRotates)  ? 4 :1)));
 			this.sheet = sheet;
-			varSize = type.sizeSize*(rotates ? 4 :1);
+			varSize = type.sizeSize*((rotates&type.defRotates) ? 4 :1);
 		}
 		
 
@@ -68,6 +72,11 @@ public abstract class Sheet {
 		public TILE_SHEET sheet() {
 			return sheet;
 		}
+		
+		@Override
+		public TextureCoords texture(int tile) {
+			return sheet.getTexture(tile);
+		}
 	}
 	
 	static class Dummy extends Sheet {
@@ -86,6 +95,13 @@ public abstract class Sheet {
 		@Override
 		public void renderShadow(SheetData da, int x, int y, RenderIterator it, ShadowBatch shadow, int tile, int random) {
 			
+		}
+
+
+
+		@Override
+		public TextureCoords texture(int tile) {
+			return COLOR.WHITE100.texture();
 		}
 
 	}

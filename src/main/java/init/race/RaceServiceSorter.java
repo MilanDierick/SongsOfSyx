@@ -1,113 +1,49 @@
 package init.race;
 
-import static settlement.main.SETT.*;
-
 import java.util.Arrays;
 import java.util.Comparator;
 
+import init.need.NEED;
+import init.need.NEEDS;
 import settlement.entity.humanoid.HCLASS;
 import settlement.main.SETT;
-import settlement.room.service.barber.ROOM_BARBER;
-import settlement.room.service.lavatory.ROOM_LAVATORY;
-import settlement.room.service.module.RoomServiceDataAccess.ROOM_SERVICE_ACCESS_HASER;
-import settlement.stats.STANDING;
+import settlement.room.service.module.RoomService;
+import settlement.room.service.module.RoomServiceNeed;
+import settlement.room.spirit.shrine.ROOM_SHRINE;
+import settlement.room.spirit.temple.ROOM_TEMPLE;
+import settlement.stats.Induvidual;
 import settlement.stats.STATS;
-import settlement.stats.StatsBurial.StatGrave;
-import snake2d.util.sets.*;
+import settlement.stats.colls.StatsBurial.StatGrave;
+import settlement.stats.standing.StatStanding;
+import snake2d.util.sets.ArrayList;
+import snake2d.util.sets.LIST;
 
 public final class RaceServiceSorter {
 	
-	public final LIST<LIST<ROOM_SERVICE_ACCESS_HASER>> HYGINE;
-	public final LIST<LIST<ROOM_SERVICE_ACCESS_HASER>> EAT;
-	public final LIST<LIST<ROOM_SERVICE_ACCESS_HASER>> DRINK;
-	public final LIST<LIST<ROOM_LAVATORY>> SHIT;
-	public final LIST<LIST<ROOM_BARBER>> BARBER;
+
 	public final LIST<LIST<StatGrave>> GRAVES;
-	
-	private final boolean[][] entertains = new boolean[HCLASS.ALL.size()][SETT.ROOMS().ENTERTAINMENT.size()];
-	private final int[][] entertainsIs = new int[HCLASS.ALL.size()][];
-	
-	public final LIST<LIST<ROOM_SERVICE_ACCESS_HASER>> ENTERTAINMENT;
+	private final ArrayList<Sort> sorts = new ArrayList<>(NEEDS.ALL().size());
+	private final ArrayList<RoomService> tmp = new ArrayList<RoomService>(16);
 	
 	RaceServiceSorter(Race race) {
 		
-		Sorter<ROOM_SERVICE_ACCESS_HASER> ser = new Sorter<ROOM_SERVICE_ACCESS_HASER>() {
-
-			@Override
-			STANDING standing(ROOM_SERVICE_ACCESS_HASER t) {
-				return t.service().stats().total().standing();
-			}
 		
-		};
+		for (NEED n : NEEDS.ALL())
+			sorts.add(new Sort(n, race));
 		
-		EAT = ser.sort(ROOMS().EAT, race);
-		HYGINE = ser.sort(ROOMS().HYGINE, race);
-		DRINK = ser.sort(ROOMS().DRINK, race);
-		SHIT = new Sorter<ROOM_LAVATORY>() {
-
-			@Override
-			STANDING standing(ROOM_LAVATORY t) {
-				return t.service().stats().total().standing();
-			}
 		
-		}.sort(ROOMS().LAVATORIES, race);
-		
-		BARBER = new Sorter<ROOM_BARBER>() {
-
-			@Override
-			STANDING standing(ROOM_BARBER t) {
-				return t.service().stats().total().standing();
-			}
-		
-		}.sort(ROOMS().BARBERS, race);
 		
 		Sorter<StatGrave> serG = new Sorter<StatGrave>() {
 
 			@Override
-			STANDING standing(StatGrave t) {
+			StatStanding standing(StatGrave t) {
 				return t.standing();
 			}
 		};
 		
 		GRAVES = serG.sort(STATS.BURIAL().graves(), race);
 
-		{
-			ArrayList<LIST<ROOM_SERVICE_ACCESS_HASER>> all = new ArrayList<>(HCLASS.ALL.size());
-			
-			int am = 0;
-			for (HCLASS s : HCLASS.ALL) {
-				int i = 0;
-				for (ROOM_SERVICE_ACCESS_HASER ss : SETT.ROOMS().ENTERTAINMENT) {
-					if (ss.service().stats().total().standing().max(s, race) > 0) {
-						entertains[s.index()][i] = true;
-						am++;
-					}
-					i++;
-				}
-				entertainsIs[s.index()] = new int[am];
-				i = 0;
-				int k = 0;
-				for (ROOM_SERVICE_ACCESS_HASER ss : SETT.ROOMS().ENTERTAINMENT) {
-					if (ss.service().stats().total().standing().max(s, race) > 0) {
-						entertainsIs[s.index()][k++] = i;
-						am++;
-					}
-					i++;
-				}
-			}
-			
-			for (HCLASS s : HCLASS.ALL) {
-				LinkedList<ROOM_SERVICE_ACCESS_HASER> ra = new LinkedList<>();
-				for (ROOM_SERVICE_ACCESS_HASER ss : SETT.ROOMS().ENTERTAINMENT) {
-					if (ss.service().stats().total().standing().max(s, race) > 0) {
-						ra.add(ss);
-					}
-				}
-				LIST<ROOM_SERVICE_ACCESS_HASER> l = new ArrayList<>(ra);
-				all.add(l);
-			}
-			ENTERTAINMENT = all;
-		}
+
 		
 
 		
@@ -158,7 +94,7 @@ public final class RaceServiceSorter {
 
 		}
 		
-		abstract STANDING standing(T t);
+		abstract StatStanding standing(T t);
 		
 		private void dismiss(Race r, LIST<LIST<T>> ss) {
 			
@@ -171,17 +107,87 @@ public final class RaceServiceSorter {
 		
 	}
 	
-	public boolean entertainsAny(HCLASS cl) {
-		return entertainsIs[cl.index()].length > 0;
+
+	
+	public LIST<RoomServiceNeed> services(HCLASS cl, NEED need){
+		return sorts.get(need.index()).res.get(cl.index());
 	}
 	
-	public boolean entertains(HCLASS cl, int ei) {
-		return entertains[cl.index()][ei];
+
+	
+	public LIST<RoomService> services(Induvidual i, NEED need){
+		tmp.clearSloppy();
+		
+		if (need == NEEDS.TYPES().TEMPLE) {
+			if (STATS.RELIGION().TEMPLE_TOTAL.standing().max(i.clas(), i.race()) > 0)
+				for (ROOM_TEMPLE t : SETT.ROOMS().TEMPLES.perRel.get(STATS.RELIGION().getter.get(i).religion.index()))
+					tmp.add(t.service());
+			return tmp;
+		}
+		
+		if (need == NEEDS.TYPES().SHRINE) {
+			if (STATS.RELIGION().SHRINE_TOTAL.standing().max(i.clas(), i.race()) > 0)
+				for (ROOM_SHRINE t : SETT.ROOMS().TEMPLES.perRelShrine.get(STATS.RELIGION().getter.get(i).religion.index()))
+					tmp.add(t.service());
+			return tmp;
+		}
+		
+		
+		for (RoomServiceNeed n : sorts.get(need.index()).res.get(i.clas().index())) {
+			tmp.tryAdd(n);
+		}
+		return tmp;
 	}
 	
-	public int[] entertainIs(HCLASS cl) {
-		return entertainsIs[cl.index()];
+	private class Sort {
+		
+		public final ArrayList<ArrayList<RoomServiceNeed>> res;
+		
+		Sort(NEED need, Race race){
+			
+			res = new ArrayList<ArrayList<RoomServiceNeed>>(HCLASS.ALL.size());
+			
+			for (HCLASS cl : HCLASS.ALL) {
+				int am = 0;
+				for (RoomServiceNeed n : need.sGroup().all()) {
+					if (n.stats().total().standing().definition(race).get(cl).max > 0)
+						am++;
+				}
+				ArrayList<RoomServiceNeed> ss = new ArrayList<>(am);
+				for (RoomServiceNeed n : need.sGroup().all()) {
+					if (n.stats().total().standing().definition(race).get(cl).max > 0)
+						ss.add(n);
+				}
+				
+				ss.sort(new Comparator<RoomServiceNeed>() {
+
+					@Override
+					public int compare(RoomServiceNeed o1, RoomServiceNeed o2) {
+						double d1 = o1.stats().total().standing().definition(race).get(cl).max;
+						double d2 = o2.stats().total().standing().definition(race).get(cl).max;
+						if (d1 < d2)
+							return 1;
+						if (d1 > d2)
+							return -1;
+						return 0;
+					}
+				
+				});
+				
+				res.add(ss);
+						
+			
+			}
+			
+			for (HCLASS c : HCLASS.ALL()) {
+				for (int i = 1; i < res.get(c.index()).size(); i++) {
+					res.get(c.index()).get(i).stats().total().standing().definition(race).get(c).dismiss = true;
+				}
+			}
+		}
+		
 	}
+
 }
 
 

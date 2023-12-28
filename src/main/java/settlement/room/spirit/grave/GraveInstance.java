@@ -131,12 +131,11 @@ final class GraveInstance extends RoomInstance{
 	}
 	
 	@Override
-	public TmpArea remove(int tx, int ty, boolean scatter, Object user, boolean forced) {
-		if (forced || !prompt())
-			return super.remove(tx, ty, scatter, user, forced);
-		return null;
-		
-	};
+	protected boolean canRemoveAndRemoveAction(int tx, int ty, boolean scatter, Object obj, boolean force) {
+		if (force || !prompt())
+			return true;
+		return false;
+	}
 	
 	static class Jobs extends JobPositions<GraveInstance> {
 

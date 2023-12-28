@@ -3,45 +3,38 @@ package game.faction.player;
 import java.io.IOException;
 import java.util.Arrays;
 
+import game.boosting.*;
 import game.faction.FACTIONS;
-import game.faction.player.PLocks.PLocker;
+import game.faction.Faction;
+import game.faction.npc.FactionNPC;
 import game.time.TIME;
 import init.D;
-import init.boostable.*;
-import init.boostable.BOOST_LOOKUP.BOOSTER_LOOKUP_IMP;
-import init.boostable.BOOST_LOOKUP.SIMPLE;
+import init.race.RACES;
 import init.sprite.SPRITES;
-import init.tech.*;
+import init.sprite.UI.UI;
+import init.tech.TECH;
 import init.tech.TECH.TechRequirement;
+import init.tech.TECHS;
 import settlement.main.SETT;
-import settlement.room.industry.module.Industry;
 import settlement.room.knowledge.laboratory.ROOM_LABORATORY;
 import settlement.room.knowledge.library.ROOM_LIBRARY;
-import settlement.room.main.RoomBlueprint;
-import settlement.room.main.RoomBlueprintImp;
-import settlement.tilemap.Floors.Floor;
 import snake2d.util.file.*;
 import snake2d.util.gui.GUI_BOX;
 import snake2d.util.misc.ACTION;
 import snake2d.util.misc.CLAMP;
 import util.data.DOUBLE;
 import util.data.INT;
-import util.dic.DicGeo;
 import util.gui.misc.GBox;
 import util.gui.misc.GText;
 import util.info.GFORMAT;
 import util.info.INFO;
 import view.interrupter.IDebugPanel;
-import view.main.MessageText;
-import world.map.regions.REGIOND;
-import world.map.regions.Region;
+import view.ui.message.MessageText;
 
 public class PTech {
 
 	private static CharSequence ¤¤low = "¤Knowledge low";
-	private static CharSequence ¤¤lowBody = "¤There is not enough knowledge to maintain our current technologies. As a result, all bonuses from technologies are receiving a big penalty, and unlocked rooms are now locked. Make sure your knowledge producing facilities are fully operational, or build more of them.";
-	private static CharSequence ¤¤UnlocksByTech = "¤Unlocks with technology:";
-	private static CharSequence ¤¤LockedByDefecit = "¤Locked until knowledge is restored.";
+	private static CharSequence ¤¤lowBody = "¤There is not enough knowledge to maintain our current technologies. As a result, all bonuses from technologies are receiving a penalty, and some unlocked mechanics are now re-locked. Make sure your knowledge producing facilities are fully operational, or build more of them.";
 	{D.t(this);}
 	
 	public final INFO info = new INFO(
@@ -58,9 +51,6 @@ public class PTech {
 	private double forgetTimer = 50;
 	public static final double FORGET_THRESHOLD = 0.8;
 	private double askTimer = -10;
-	
-	public BOOST_LOOKUP.SIMPLE BOOSTER;
-	private final Boost boost;
 	
 	private final INT.IntImp allocated = new INT.IntImp() {
 		
@@ -135,24 +125,6 @@ public class PTech {
 				}
 				b.NL(8);
 				
-				{
-					b.textL(DicGeo.¤¤Regions);
-					b.tab(6);
-					
-					
-					int am = 0;
-					int next = 0;
-					for (Region r : FACTIONS.player().kingdom().realm().regions()) {
-						am += REGIOND.CIVIC().knowledge.getD(r);
-						next += REGIOND.CIVIC().knowledge.next(r);
-					}
-					b.add(GFORMAT.iIncr(b.text(), am));
-					b.tab(9);
-					b.add(SPRITES.icons().s.arrow_right);
-					b.add(GFORMAT.i(b.text(), next));
-					b.NL();
-				}
-				b.NL(8);
 				b.textLL(allocated.info().name);
 				b.tab(6);
 				b.add(GFORMAT.iIncr(b.text(), -allocated.get()));
@@ -205,12 +177,12 @@ public class PTech {
 		return penalty;
 	}
 
+	public final BoostSpecs boosters = new BoostSpecs(TECHS.¤¤name, UI.icons().s.vial, true);
+	private final BoostCompound<TECH> bos;
 	
 	PTech(){
 
-		boost = new Boost();
-		BOOSTER = boost;
-		
+
 		IDebugPanel.add("unlockRooms", new ACTION() {
 			
 			@Override
@@ -218,56 +190,88 @@ public class PTech {
 				SETT.ROOMS().LABORATORIES.get(0).knowledgeAdd(1000000);
 				for (int ti = 0; ti < TECHS.ALL().size(); ti++) {
 					TECH t = TECHS.ALL().get(ti);
-					if (t.roomsUnlocks().size() > 0) {
+					if (t.lockers.all().size() > 0) {
 						levelSet(t, t.levelMax);
 					}
 				}
 			}
 		});
-		boost.setBonuses();
+
+		bos = new BoostCompound<TECH>(boosters, TECHS.ALL()) {
+
+			private final double npcTech = tech();
+			
+			@Override
+			protected BoostSpecs bos(TECH t) {
+				BoostSpecs bos = new BoostSpecs(t.boosters.info.name, t.boosters.info.icon, false);
+				for (BoostSpec s : t.boosters.all()) {
+					double to = s.booster.isMul ? ((s.booster.to()-1)*t.levelMax + 1) : s.booster.to()*t.levelMax;
+					BoosterImp b = new BoosterImp(t.boosters.info, s.booster.from(), to, s.booster.isMul) {
+						@Override
+						public double vGet(Faction f) {
+							return s.booster.vGet(f);
+						}
+					};
+					bos.push(b, s.boostable);
+				}
+				
+				
+				
+				return bos;
+			}
+
+			@Override
+			protected double getValue(TECH t) {
+				return (double)pPenalty*level(t)/t.levelMax;
+			}
+
+			@Override
+			protected double get(Boostable bo, FactionNPC f, boolean isMul) {
+				return super.get(bo, f, isMul)*npcTech;
+			}
+			
+			private double tech() {
+				double techCost = 0;
+				
+				for (TECH t : TECHS.ALL()) {
+					techCost += PTech.costTotal(t, t.levelMax);
+				}
+				
+				double la = 0;
+				for (ROOM_LABORATORY l : SETT.ROOMS().LABORATORIES)
+					la = Math.max(la, l.knowledgePerStation());
+				
+				double li = 0;
+				for (ROOM_LIBRARY l : SETT.ROOMS().LIBRARIES)
+					li = Math.max(li, l.boostPerStation());
+				
+				double pop = 5000;
+				
+				double labs = (1+(li*pop))/(2*li);
+				double libs = pop-labs;
+				double know = labs*la*(1.0+libs*li);
+				
+				double d = CLAMP.d(know/techCost, 0, 1);
+				
+				return 1.0+d;
+			}
+		
+		};
+		
 	}
 	
-	private class Boost extends BOOSTER_LOOKUP_IMP implements SIMPLE {
 
-		private final double[] add = new double[BOOSTABLES.all().size()];
-		private final double[] mul = new double[BOOSTABLES.all().size()];
-		
-		protected Boost() {
-			super(info.name);
-			for (TECH t : TECHS.ALL())
-				init(t, t.levelMax);
-			setBonuses();
-			makeBoosters(this, true, false, true);
-		}
-
-		@Override
-		public double add(BOOSTABLE b) {
-			return add[b.index()]* pPenalty;
-		}
-
-		@Override
-		public double mul(BOOSTABLE b) {
-			return mul[b.index()] + (mul[b.index()]-1)*pPenalty;
-		}
-		
-		private void setBonuses() {
-			Arrays.fill(add, 0);
-			Arrays.fill(mul, 1);
-			allocated.set(0);
-			for (TECH t : TECHS.ALL()) {
-				int l = level(t);
-				if (l > 0) {
-					allocated.inc(costTotal(t, l));
-					for (BBoost b : t.boosts()) {
-						if (b.isMul())
-							mul[b.boostable.index()] *= b.value()*l;
-						else
-							add[b.boostable.index()] += b.value()*l;
-					}
-				}
+	
+	private void setBonuses() {
+		allocated.set(0);
+		for (TECH t : TECHS.ALL()) {
+			int l = level(t);
+			if (l > 0) {
+				allocated.inc(costTotal(t, l));
 			}
-			setPenalty();
 		}
+		bos.clearChache();
+		setPenalty();
 	}
 	
 	final SAVABLE saver = new SAVABLE() {
@@ -308,8 +312,9 @@ public class PTech {
 				forgetting = file.bool();
 				forgetTimer = file.d();
 			}
-			boost.setBonuses();
+			setBonuses();
 			askTimer = -10;
+			bos.clearChache();
 		}
 		
 		@Override
@@ -319,9 +324,10 @@ public class PTech {
 	};
 	
 
+
 	
 	private void setPenalty() {
-		if (FACTIONS.player() == null || FACTIONS.player().kingdom() == null) {
+		if (FACTIONS.player() == null || FACTIONS.player().capitolRegion() == null) {
 			pPenalty = 1;
 			return;
 		}
@@ -356,12 +362,8 @@ public class PTech {
 		for (ROOM_LIBRARY l : SETT.ROOMS().LIBRARIES)
 			b += l.projection();
 		am *= b;
-		for (Region r : FACTIONS.player().kingdom().realm().regions()) {
-			am += REGIOND.CIVIC().knowledge.next(r);
-		}
-		double s =  FACTIONS.player().bonus().add(BOOSTABLES.START().KNOWLEDGE);
+		double s = BOOSTABLES.START().KNOWLEDGE.get(RACES.clP(null, null));
 		am += Math.ceil(s);
-		am *= FACTIONS.player().bonus().mul(BOOSTABLES.START().KNOWLEDGE);
 		return (long) (am);
 	}
 
@@ -375,10 +377,7 @@ public class PTech {
 			b += l.boost();
 		
 		am *= b;
-		for (Region r : FACTIONS.player().kingdom().realm().regions()) {
-			am += REGIOND.CIVIC().knowledge.next(r);
-		}
-		am += BOOSTABLES.START().KNOWLEDGE.get(null, null);
+		am += BOOSTABLES.START().KNOWLEDGE.get(RACES.clP(null, null));
 		return am;
 	}
 	
@@ -395,7 +394,10 @@ public class PTech {
 		}
 		
 		if (pfrozen > 0) {
-			pfrozen -= ds*frozenRate;
+			double dfrocen = pfrozen/(TIME.secondsPerDay*4);
+			dfrocen = Math.max(dfrocen, frozenRate);
+			
+			pfrozen -= dfrocen*ds;
 			if (pfrozen < 0)
 				pfrozen = 0;
 			
@@ -407,6 +409,7 @@ public class PTech {
 			if (!forgetting && forgetTimer > 30) {
 				forgetting = true;
 				new MessageText(¤¤low, ¤¤lowBody).send();
+				bos.clearChache();
 				forgetTimer = 0;
 			}else {
 				
@@ -453,7 +456,7 @@ public class PTech {
 		}
 		
 		this.level[tech.index()] = level;
-		boost.setBonuses();
+		setBonuses();
 		
 	}
 	
@@ -508,129 +511,5 @@ public class PTech {
 		}
 		return am;
 	}
-	
-	public final PLocker locker = new PLocker(¤¤UnlocksByTech) {
-
-		
-		@Override
-		public CharSequence unlockText(Floor f) {
-			s.clear();
-			boolean l = false;
-			for (int i = 0; i < TECHS.ALL().size(); i++) {
-				TECH t = TECHS.ALL().get(i);
-				for (Floor ff : TECHS.ALL().get(i).unlocksRoads()) {
-					if (f == ff) {
-						if (level(t) < 1)
-							s.add(TECHS.ALL().get(i).info.name).NL();
-						else
-							l = true;
-						break;
-					}
-				}
-			}
-			if (l && s.length() == 0 && pPenalty < 1) {
-				s.add(¤¤LockedByDefecit);
-			}
-			return s;
-		}
-		
-		@Override
-		public CharSequence unlockText(Industry f) {
-			s.clear();
-			boolean l = false;
-			for (int i = 0; i < TECHS.ALL().size(); i++) {
-				TECH t = TECHS.ALL().get(i);
-				for (Industry ff : TECHS.ALL().get(i).unlocksIndustry()) {
-					if (f == ff) {
-						if (level(t) < 1)
-							s.add(TECHS.ALL().get(i).info.name).NL();
-						else
-							l = true;
-						break;
-					}
-				}
-			}
-			if (l && s.length() == 0 && pPenalty < 1) {
-				s.add(¤¤LockedByDefecit);
-			}
-			return s;
-		}
-		
-		@Override
-		public CharSequence unlockText(RoomBlueprint f) {
-			s.clear();
-			boolean l = false;
-			for (int i = 0; i < TECHS.ALL().size(); i++) {
-				TECH t = TECHS.ALL().get(i);
-				for (RoomBlueprintImp ff : TECHS.ALL().get(i).roomsUnlocks()) {
-					if (f == ff) {
-						if (level(t) < 1)
-							s.add(TECHS.ALL().get(i).info.name).NL();
-						else
-							l = true;
-						break;
-					}
-				}
-			}
-			if (l && s.length() == 0 && pPenalty < 1) {
-				s.add(¤¤LockedByDefecit);
-			}
-			return s;
-		}
-
-		@Override
-		public int lockedUpgrades(RoomBlueprint f) {
-			int am = 0;
-			int total = 0;
-			for (int i = 0; i < TECHS.ALL().size(); i++) {
-				TECH t = TECHS.ALL().get(i);
-				for (RoomBlueprintImp ff : TECHS.ALL().get(i).unlocksUpgrades()) {
-					if (f == ff) {
-						total ++;
-						if (level(t) < 1)
-							am++;
-						break;
-					}
-				}
-			}
-			
-			if (pPenalty < 1)
-				return total;
-			return am;
-		}
-
-		@Override
-		public CharSequence unlockTextUpgrade(RoomBlueprint f) {
-			s.clear();
-			boolean l = false;
-			for (int i = 0; i < TECHS.ALL().size(); i++) {
-				TECH t = TECHS.ALL().get(i);
-				for (RoomBlueprintImp ff : TECHS.ALL().get(i).unlocksUpgrades()) {
-					if (f == ff) {
-						if (level(t) < 1)
-							s.add(TECHS.ALL().get(i).info.name).NL();
-						else
-							l = true;
-						break;
-					}
-				}
-			}
-			if (l && s.length() == 0 && pPenalty < 1) {
-				s.add(¤¤LockedByDefecit);
-			}
-			return s;
-		}
-
-		@Override
-		protected int unlocks() {
-			return TECHS.ALL().size();
-		}
-
-		@Override
-		protected Unlocks unlock(int i) {
-			return TECHS.ALL().get(i);
-		}
-	};
-
 	
 }

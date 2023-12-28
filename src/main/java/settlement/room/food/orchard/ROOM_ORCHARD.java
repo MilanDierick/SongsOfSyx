@@ -3,8 +3,6 @@ package settlement.room.food.orchard;
 import java.io.IOException;
 
 import game.time.TIME;
-import init.boostable.BOOSTABLE;
-import init.boostable.BOOSTABLES;
 import init.resources.RESOURCES;
 import init.resources.RES_AMOUNT;
 import settlement.main.SETT;
@@ -12,6 +10,7 @@ import settlement.path.finder.SFinderRoomService;
 import settlement.room.industry.module.INDUSTRY_HASER;
 import settlement.room.industry.module.Industry;
 import settlement.room.industry.module.Industry.RoomBoost;
+import settlement.room.main.BonusExp.RoomExperienceBonus;
 import settlement.room.main.RoomBlueprintIns;
 import settlement.room.main.category.RoomCategorySub;
 import settlement.room.main.furnisher.Furnisher;
@@ -22,6 +21,7 @@ import snake2d.util.file.FilePutter;
 import snake2d.util.misc.CLAMP;
 import snake2d.util.sets.*;
 import view.sett.ui.room.UIRoomModule;
+import world.regions.Region;
 
 public class ROOM_ORCHARD extends RoomBlueprintIns<Instance> implements INDUSTRY_HASER{
 
@@ -32,7 +32,6 @@ public class ROOM_ORCHARD extends RoomBlueprintIns<Instance> implements INDUSTRY
 	
 	final Constructor constructor;
 	final Industry productionData;
-	public final BOOSTABLE bonus2;
 	final LIST<Industry> indus;
 	final OTile tile;
 	public final RES_AMOUNT auxRes;
@@ -46,14 +45,19 @@ public class ROOM_ORCHARD extends RoomBlueprintIns<Instance> implements INDUSTRY
 		super(index, data, key, cat);
 		
 		constructor = new Constructor(this, data);
-		bonus2 = BOOSTABLES.ROOMS().pushRoom(this, data.data(), type);
-		productionData = new Industry(this, data.data(), new RoomBoost[] {constructor.fertility, }, bonus2);
+		pushBo(data.data(), type, true);
+		productionData = new Industry(this, data.data(), new RoomBoost[] {constructor.fertility, }, bonus()) {
+			@Override
+			public double getRegionBonus(Region reg) {
+				return CLAMP.d(0.5 + reg.info.fertility(), 0, 1);
+			}
+		};
 		
 		indus = new ArrayList<>(productionData);
 		this.time = new Time(data);
 		auxRes = new RES_AMOUNT.Abs(RESOURCES.map().getByKey("EXTRA_RESOURCE", data.data()), data.data().i("EXTRA_RESOURCE_AMOUNT"));
 		tile = new OTile(this);
-		
+		new RoomExperienceBonus(this, data.data(), bonus());
 		
 		
 	}

@@ -55,24 +55,24 @@ final class RSprites {
 			return d.s16.save(1);
 		}
 	};
-	public final SPRITE logo = new ITileSprite(352,192,1,g.get("Logo"), 728, 204) {
+	public final SPRITE logo = new ITileSprite(352,32*7,1,g.get("Logo"), 728, 224) {
 		
 		@Override
 		protected TILE_SHEET init(ComposerUtil c, ComposerSources s, ComposerDests d) {
-			s.full.init(0, 0, 1, 1, 11, 6, d.s32);
+			s.full.init(0, 0, 1, 1, 11, 7, d.s32);
 			s.full.paste(true);
 			return d.s32.save(1);
 		}
 	};
 	public final COLOR[] logoColors = new COLOR[] {
-		new ColorImp(61, 5, 15),
-		new ColorImp(75, 26, 5),
-		new ColorImp(84, 60, 10),
-		new ColorImp(15, 75, 4),
-		new ColorImp(15, 75, 10),
-		new ColorImp(2, 10, 75),
-		new ColorImp(61, 5, 15),
-		new ColorImp(75, 30, 5),
+		new ColorImp(61, 5, 15).saturateSelf(0.75),
+		new ColorImp(75, 26, 5).saturateSelf(0.75),
+		new ColorImp(84, 60, 10).saturateSelf(0.75),
+		new ColorImp(15, 75, 4).saturateSelf(0.75),
+		new ColorImp(15, 75, 10).saturateSelf(0.75),
+		new ColorImp(2, 10, 75).saturateSelf(0.75),
+		new ColorImp(61, 5, 15).saturateSelf(0.75),
+		new ColorImp(75, 30, 5).saturateSelf(0.75),
 	};
 	
 	public final SPRITE creditsSmallFrame;

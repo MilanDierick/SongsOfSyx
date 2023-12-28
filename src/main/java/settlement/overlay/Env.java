@@ -1,9 +1,9 @@
 package settlement.overlay;
 
 import settlement.environment.SettEnvMap.SettEnv;
-import settlement.main.RenderData.RenderIterator;
 import snake2d.Renderer;
 import snake2d.util.sets.LISTE;
+import util.rendering.RenderData.RenderIterator;
 
 final class Env extends Addable{
 

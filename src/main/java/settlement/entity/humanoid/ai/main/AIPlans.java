@@ -7,12 +7,12 @@ import settlement.entity.humanoid.HEvent;
 import settlement.entity.humanoid.HEvent.HEventData;
 import settlement.entity.humanoid.HPoll.HPollData;
 import settlement.entity.humanoid.Humanoid;
+import settlement.entity.humanoid.ai.main.AIPLAN.AiPlanActivation;
 import settlement.entity.humanoid.ai.main.AISUB.AISubActivation;
 import settlement.main.SETT;
-import settlement.misc.util.FINDABLE;
 import settlement.room.main.throne.THRONE;
-import settlement.stats.CAUSE_LEAVE;
 import settlement.stats.STATS;
+import settlement.stats.util.CAUSE_LEAVE;
 import snake2d.util.datatypes.COORDINATE;
 import snake2d.util.datatypes.DIR;
 import snake2d.util.rnd.RND;
@@ -21,7 +21,6 @@ public final class AIPlans {
 
 	private static CharSequence ¤¤swimming = "¤Swimming";
 	private static CharSequence ¤¤trapped = "¤Cut off from the throne";
-	private static CharSequence ¤¤skinnydipping = "¤Skinny dipping";
 	private static CharSequence ¤¤WalkingToCentre = "¤Walking to the center of the city";
 	private static CharSequence ¤¤Fleeing = "¤Fleeing";
 	
@@ -41,7 +40,7 @@ public final class AIPlans {
 			
 			STATS.POP().TRAPPED.indu().set(a.indu(), 1);
 			
-			if (a.inWater && TERRAIN().WATER.DEEP.is(a.tc()))
+			if (TERRAIN().WATER.DEEP.is(a.tc()))
 				return drowning.set(a, d);
 			else {
 				return start.set(a, d);
@@ -59,7 +58,7 @@ public final class AIPlans {
 			
 			@Override
 			public AISubActivation res(Humanoid a, AIManager d) {
-				if (a.inWater && TERRAIN().WATER.DEEP.is(a.tc()))
+				if (TERRAIN().WATER.DEEP.is(a.tc()))
 					return drowning.set(a, d);
 				if (!PATH().connectivity.is(a.physics.tileC()))
 					AIManager.dead = CAUSE_LEAVE.OTHER;
@@ -143,7 +142,7 @@ public final class AIPlans {
 				case 0:return AI.STATES().STAND.activate(a, d, 0.5f+RND.rFloat(5));
 				case 1:return AI.STATES().anima.wave.activate(a, d, 0.5f+RND.rFloat(5));
 				}
-				if (a.indu().hType().hostile && a.division() != null) {
+				if (!a.indu().hType().hostile && a.division() != null) {
 					a.setDivision(null);
 					STATS.BATTLE().ROUTING.indu().set(a.indu(), 1);
 				}
@@ -230,115 +229,24 @@ public final class AIPlans {
 		}
 	};
 	
-	public final AIPLAN skinnydip = new AIPLAN.PLANRES() {
-
-		private final AISUB sub = new AISUB.Simple("") {
-
-			@Override
-			protected AISTATE resume(Humanoid a, AIManager d) {
-
-				d.subByte++;
-
-				if (!a.speed.isZero())
-					a.speed.magnitudeInit(0);
-
-				if (d.subByte > 1) {
-					STATS.NEEDS().DIRTINESS.fix(a.indu());
-				}
-
-				if (d.subByte > 20)
-					return null;
-
-				if (RND.oneIn(5)) {
-
-					DIR dir = DIR.ALL.get(RND.rInt(DIR.ALL.size()));
-
-					for (int i = 0; i < 8; i++) {
-						int x = a.physics.tileC().x() + dir.x();
-						int y = a.physics.tileC().y() + dir.y();
-						if (SETT.PATH().coster.player.getCost(a.tc().x(), a.tc().y(), x, y) > 0 && TERRAIN().WATER.isService(x, y)) {
-							return AI.STATES().WALK2.dirTile(a, d, dir);
-						}
-						dir = dir.next(1);
-					}
-
-				}
-
-				if (RND.oneIn(3))
-					return AI.STATES().STAND.aDirRND(a, d, 1 + RND.rFloat(2));
-				return AI.STATES().LAY.activate(a, d, 1 + RND.rFloat(5));
-			}
-		};
-
-		private final Resumer walkToWater = new Resumer(¤¤skinnydipping) {
-
-			@Override
-			protected AISubActivation setAction(Humanoid a, AIManager d) {
-				return AI.SUBS().walkTo.serviceInclude(a, d, PATH().finders.water, 100);
-			}
-
-			@Override
-			protected AISubActivation res(Humanoid a, AIManager d) {
-				return bathe.set(a, d);
-			}
-
-			@Override
-			public boolean con(Humanoid a, AIManager d) {
-				return true;
-			}
-
-			@Override
-			public void can(Humanoid a, AIManager d) {
-
-			}
-		};
-
-		private final Resumer bathe = new Resumer(¤¤skinnydipping) {
-
-			@Override
-			protected AISubActivation setAction(Humanoid a, AIManager d) {
-				STATS.POP().NAKED.set(a.indu(), 1);
-				STATS.NEEDS().EXPOSURE.count.set(a.indu(), 0);
-				return sub.activate(a, d);
-			}
-
-			@Override
-			protected AISubActivation res(Humanoid a, AIManager d) {
-				can(a, d);
-				STATS.NEEDS().EXPOSURE.count.set(a.indu(), 0);
-				STATS.NEEDS().DIRTINESS.fix(a.indu());
-				return null;
-			}
-
-			@Override
-			public boolean con(Humanoid a, AIManager d) {
-				FINDABLE s = PATH().finders.water.getReserved(d.path.destX(), d.path.destY());
-				return s != null && s.findableReservedIs();
-			}
-
-			@Override
-			public void can(Humanoid a, AIManager d) {
-				FINDABLE s = PATH().finders.water.getReserved(d.path.destX(), d.path.destY());
-				if (s != null)
-					s.findableReserveCancel();
-				STATS.POP().NAKED.set(a.indu(), 0);
-			}
-		};
-
-		@Override
-		protected AISubActivation init(Humanoid a, AIManager d) {
-			return walkToWater.set(a, d);
-		}
-	};
-	
 	final AIPLAN dead = new AIPLAN.PLANRES() {
 		
 		private final AISUB dead = new AISUB.Simple("dead") {
 			
 			@Override
 			public AISTATE resume(Humanoid a, AIManager d) {
-				return AI.STATES().STAND.activate(a, d, 100);
+				return AI.STATES().layStop.activate(a, d, 100);
 			}
+			
+			@Override
+			public boolean event(Humanoid a, AIManager d, HEventData e) {
+				return false;
+			};
+			
+			@Override
+			public double poll(Humanoid a, AIManager d, HPollData e) {
+				return 0;
+			};
 		};
 		
 		final Resumer r = new Resumer("dead") {
@@ -369,6 +277,66 @@ public final class AIPlans {
 		public AISubActivation init(Humanoid a, AIManager d) {
 			return r.set(a, d);
 		}
+
+	};
+	
+	private final AIPLAN deadWhenStill = new AIPLAN.PLANRES() {
+		
+		private final AISUB dead = new AISUB.Simple("dead") {
+			
+			@Override
+			public AISTATE resume(Humanoid a, AIManager d) {
+				return null;
+			}
+			
+			@Override
+			public boolean event(Humanoid a, AIManager d, HEventData e) {
+				return false;
+			};
+			
+			@Override
+			public double poll(Humanoid a, AIManager d, HPollData e) {
+				return 0;
+			};
+		};
+		
+		final Resumer r = new Resumer("dead") {
+			
+			@Override
+			public AISubActivation setAction(Humanoid a, AIManager d) {
+				return AISubActivation.make(dead, AI.STATES().layStop.activate(a, d, 0.5));
+			}
+			
+			@Override
+			public AISubActivation res(Humanoid a, AIManager d) {
+				if (a.speed.isZero()) {
+					AIManager.dead = CAUSE_LEAVE.ALL().get(d.subByte);
+				}
+				return AISubActivation.make(dead, AI.STATES().layStop.activate(a, d, 0.5));
+			}
+			
+			@Override
+			public boolean con(Humanoid a, AIManager d) {
+				return true;
+			}
+			
+			@Override
+			public void can(Humanoid a, AIManager d) {
+				// TODO Auto-generated method stub
+				
+			}
+		};
+		
+		@Override
+		public AISubActivation init(Humanoid a, AIManager d) {
+			return r.set(a, d);
+		}
+
+	};
+	
+	public AiPlanActivation deadWhenStill(Humanoid a, AIManager d, CAUSE_LEAVE l, boolean gore) {
+		d.subByte = (byte) l.index();
+		return deadWhenStill.activate(a, d);
 	};
 	
 	final AIPLAN GoToThrone = new AIPLAN.PLANRES() {
@@ -497,6 +465,8 @@ public final class AIPlans {
 				
 				@Override
 				protected AISTATE resumeInterrupted(Humanoid a, AIManager d, HEvent event) {
+					if (d.planByte1 == 0)
+						return null;
 					d.planByte1 = 0;
 					return AI.STATES().RUN.activate(a, d, 4f + RND.rFloat()*3);
 				};

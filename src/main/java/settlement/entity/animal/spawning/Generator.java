@@ -67,7 +67,7 @@ class Generator {
 		int[] caveAmouts = new int[as.species.all().size()];
 		for (AnimalSpecies a : as.species.all()) {
 			occ[a.index()] /= otot; 
-			double aa = (occ[a.index()]*200*tot);
+			double aa = (occ[a.index()]*75*tot);
 			int am = (int) aa;
 			aa -= am;
 			if (RND.rFloat() < aa)
@@ -201,7 +201,7 @@ class Generator {
 			return false;	
 		if (SETT.PATH().availability.get(x, y).player < 0)
 			return false;
-		if (TERRAIN().WATER.isWater(x, y))
+		if (TERRAIN().WATER.is.is(x, y))
 			return false;
 		
 		double ff = SETT.FERTILITY().baseD.get(x, y);

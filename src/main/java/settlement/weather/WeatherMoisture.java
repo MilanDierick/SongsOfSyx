@@ -6,8 +6,8 @@ import init.D;
 import settlement.main.SETT;
 import snake2d.util.misc.CLAMP;
 import snake2d.util.sprite.text.Str;
-import view.main.MessageText;
 import view.main.VIEW;
+import view.ui.message.MessageText;
 
 public final class WeatherMoisture extends WeatherThing{
 
@@ -65,7 +65,7 @@ public final class WeatherMoisture extends WeatherThing{
 	public DOUBLE_MUTABLE setD(double d) {
 		if (d < 0.25 && getD() >= 0.25) {
 			if (sendTimer < 0 && !VIEW.b().isActive()) {
-				Str.TMP.clear().add(¤¤mBody).insert(0, FACTIONS.player().appearence().name());
+				Str.TMP.clear().add(¤¤mBody).insert(0, FACTIONS.player().name);
 				new MessageText(¤¤mTitle).paragraph(Str.TMP).send();
 				sendTimer = 10;
 			}

@@ -1,47 +1,65 @@
 package view.world.generator;
 
 import init.C;
-import init.sprite.SPRITES;
+import init.D;
 import snake2d.util.datatypes.DIR;
 import snake2d.util.gui.GuiSection;
+import snake2d.util.misc.ACTION;
 import util.dic.DicMisc;
 import util.gui.misc.GButt;
+import view.main.VIEW;
 import view.world.generator.tools.UIWorldGenerateTerrain;
-import world.World;
-import world.map.terrain.WorldGeneratorTerrain;
+import world.WORLD;
+import world.map.terrain.WorldGenTerrain;
 
 class StageTerrain{
 
-	public StageTerrain(Stages stages) {
+	static CharSequence ¤¤title = "Generate Terrain";
+	static CharSequence ¤¤warning = "Regenerating terrain will reset your current world. Proceed?";
+	
+	static {
+		D.ts(StageTerrain.class);
+	}
+	
+	public StageTerrain(WorldViewGenerator stages) {
 		
-
-		GuiSection s = new UIWorldGenerateTerrain(World.GEN());
+		stages.reset();
+		GuiSection s = new UIWorldGenerateTerrain(WORLD.GEN());
 		s.body().centerIn(C.DIM());
 		
 		GuiSection ss = new GuiSection();
-		ss.add(new GButt.ButtPanel(SPRITES.icons().m.arrow_left) {
-				@Override
-				protected void clickA() {
-					stages.titles();
-				}
-		}.hoverInfoSet(DicMisc.¤¤Previous));
 		
-		ss.addRightC(2, new GButt.ButtPanel(Stages.¤¤generate) {
+		ACTION generate = new ACTION() {
+			
+			@Override
+			public void exe() {
+				if (WORLD.GEN().playerX != -1) {
+					StageCapitol.clear();
+				}
+				
+				stages.reset();
+				new WorldGenTerrain().generateAll(WORLD.GEN(), WorldViewGenerator.loadPrint);
+				WORLD.GEN().hasGeneratedTerrain = true;
+				stages.set();
+			}
+		};
+		
+		ss.addRightC(2, new GButt.ButtPanel(WorldViewGenerator.¤¤generate) {
 			@Override
 			protected void clickA() {
-				stages.dummy.add(null);
-				new WorldGeneratorTerrain().generateAll(World.GEN());
-				World.GEN().hasGeneratedTerrain = true;
-				stages.set();
-				
+				if (WORLD.GEN().playerX != -1) {
+					VIEW.inters().yesNo.activate(¤¤warning, generate, ACTION.NOP, true);
+				}else {
+					generate.exe();
+				}
 			}
 			
-		}.hoverInfoSet(DicMisc.¤¤Next));
-		if (World.GEN().hasGeneratedTerrain) {
-			ss.addRightC(2, new GButt.ButtPanel(SPRITES.icons().m.arrow_right) {
+		});
+		if (WORLD.GEN().hasGeneratedTerrain) {
+			ss.addRightC(2, new GButt.ButtPanel(DicMisc.¤¤cancel) {
 				@Override
 				protected void clickA() {
-					new StageCapitol(stages, false);
+					stages.set();
 				}
 				
 			});
@@ -49,7 +67,8 @@ class StageTerrain{
 		
 		s.addRelBody(8, DIR.S, ss);
 		
-		stages.dummy.add(s);
+		stages.dummy.add(s, UIWorldGenerateTerrain.¤¤MapType);
+
 		
 	}
 	

@@ -1,6 +1,6 @@
 package world.map.terrain;
 
-import static world.World.*;
+import static world.WORLD.*;
 
 import init.RES;
 import init.biomes.CLIMATES;
@@ -10,15 +10,15 @@ import snake2d.util.datatypes.DIR;
 import snake2d.util.misc.CLAMP;
 import snake2d.util.rnd.HeightMap;
 import snake2d.util.rnd.RND;
-import world.World;
+import world.WORLD;
 
 class GeneratorSeasoner {
 	
 	private double heightMul = 0.5;
 	private double climateMul = 0.2;
 	
-	GeneratorSeasoner(World m, HeightMap height, double value, float[][] climate){
-
+	GeneratorSeasoner(WORLD m, double value, float[][] climate){
+		HeightMap height = new HeightMap(TWIDTH(), THEIGHT(), TWIDTH()/8, 4);
 		double equator = THEIGHT()*value;
 		double dSouth = THEIGHT()-equator;
 		
@@ -53,7 +53,6 @@ class GeneratorSeasoner {
 				}
 			}
 			climate[c.y()][c.x()] = (float) d + RND.rFloat0(0.05);
-			BUILDINGS().roads.clear(c);
 		}
 		
 		RES.flooder().init(this);

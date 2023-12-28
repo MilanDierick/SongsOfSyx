@@ -8,9 +8,9 @@ import settlement.entity.humanoid.Humanoid.HumanoidResource;
 import settlement.entity.humanoid.ai.main.*;
 import settlement.entity.humanoid.ai.main.AISUB.AISubActivation;
 import settlement.main.SETT;
-import settlement.stats.CAUSE_LEAVE;
 import settlement.stats.STATS;
-import world.World;
+import settlement.stats.util.CAUSE_LEAVE;
+import world.WORLD;
 
 public class PlanEmmigrate extends AIPLAN.PLANRES{
 
@@ -34,7 +34,7 @@ public class PlanEmmigrate extends AIPLAN.PLANRES{
 		if (SETT.ENTRY().isClosed())
 			return false;
 		
-		if (World.camps().available(a.race()) && World.camps().factions.max(a.indu().faction(), a.race()) < STATS.POP().POP.data(HCLASS.CITIZEN).get(a.race()))
+		if (WORLD.camps().available(a.race()) && WORLD.camps().factions.max(a.indu().faction(), a.race()) < STATS.POP().POP.data(HCLASS.CITIZEN).get(a.race()))
 			return true;
 		
 //		if (!SETT.ENTRY().immi().shouldEmmigrate(a.race()))

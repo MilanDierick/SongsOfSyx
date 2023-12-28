@@ -55,6 +55,12 @@ public abstract class RoomsJson {
 			return new ArrayList<RoomBlueprintImp>(SETT.ROOMS().imps());
 		}
 		
+		RoomBlueprintImp r = ROOMS.lookup.look.get(key);
+		if (r != null) {
+			res.add(r);
+			return new ArrayList<RoomBlueprintImp>(res);
+		}
+		
 		if (key.indexOf('_') < 0) {
 			res.add(getType(key, error));
 		}else {

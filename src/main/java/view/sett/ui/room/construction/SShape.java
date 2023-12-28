@@ -1,15 +1,14 @@
 package view.sett.ui.room.construction;
 
 import init.D;
-import init.sprite.ICON;
 import init.sprite.SPRITES;
 import settlement.main.SETT;
 import snake2d.SPRITE_RENDERER;
 import snake2d.util.datatypes.DIR;
-import snake2d.util.gui.GUI_BOX;
 import snake2d.util.gui.GuiSection;
 import snake2d.util.gui.Hoverable.HOVERABLE;
 import snake2d.util.gui.clickable.CLICKABLE;
+import snake2d.util.sprite.SPRITE;
 import util.colors.GCOLOR;
 import util.dic.DicMisc;
 import util.gui.misc.*;
@@ -48,11 +47,11 @@ final class SShape{
 		
 		@Override
 		protected void renAction() {
-			selectedSet(VIEW.s().tools.placer.getCurrent() == s.placement.placer.area() && !s.placement.placer.buildOnWalls.isOn());
+			selectedSet(VIEW.s().tools.placer.getCurrent() == s.placement.placer.area() && !s.placement.placer.buildOnWalls.is());
 		}
 	}.hoverInfoSet(D.g("Expand", "Expand Room. Items can only be placed on the designated room area."));
 	
-	final CLICKABLE buttExpandWalls = new GButt.ButtPanel(new ICON.MEDIUM.Twin(SPRITES.icons().m.expand, SPRITES.icons().m.plus)) {
+	final CLICKABLE buttExpandWalls = new GButt.ButtPanel(new SPRITE.Twin(SPRITES.icons().m.expand, SPRITES.icons().m.plus)) {
 		
 		@Override
 		protected void clickA() {
@@ -62,7 +61,7 @@ final class SShape{
 		
 		@Override
 		protected void renAction() {
-			selectedSet(VIEW.s().tools.placer.getCurrent() == s.placement.placer.area() && s.placement.placer.buildOnWalls.isOn());
+			selectedSet(VIEW.s().tools.placer.getCurrent() == s.placement.placer.area() && s.placement.placer.buildOnWalls.is());
 		}
 	}.hoverInfoSet(D.g("ExpandOver", "Expand Room Over Structures"));
 	
@@ -81,39 +80,6 @@ final class SShape{
 		
 	}.hoverInfoSet(D.g("Shrink", "Shrink Room"));
 	
-	private final HOVERABLE squareness = new HOVERABLE.HoverableAbs(50, 12) {
-		
-		@Override
-		protected void render(SPRITE_RENDERER r, float ds, boolean isHovered) {
-
-			if (!s.b.constructor().hasShape())
-				return;
-			double d = s.placement.placer.squareness();
-
-			
-			GMeter.renderC(r, d*2, body());
-			
-			
-		}
-		
-		@Override
-		public void hoverInfoGet(GUI_BOX text) {
-			if (!s.b.constructor().hasShape())
-				return;
-			
-			GBox b = (GBox) text;
-			b.title(SETT.ENV().squareness.info.name);
-			b.text(SETT.ENV().squareness.info.desc);
-			b.NL(4);
-			b.textL(DicMisc.¤¤Round);
-			b.add(GFORMAT.perc(b.text(), 1.0-s.placement.placer.squareness()));
-			b.NL();
-			b.textL(DicMisc.¤¤Square);
-			b.add(GFORMAT.perc(b.text(), s.placement.placer.squareness()));
-			b.NL();
-		};
-	};
-	
 	private final HOVERABLE expensiveness = new GStat() {
 		@Override
 		public void update(GText text) {
@@ -130,7 +96,6 @@ final class SShape{
 		ss.clear();
 		
 		ss.add(title);
-		ss.addRightC(16, squareness);
 		
 		butts.clear();
 		butts.add(buttExpand, 0, 0);

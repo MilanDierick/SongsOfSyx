@@ -2,8 +2,8 @@ package menu;
 
 import static menu.GUI.*;
 
-import game.GAME;
-import game.GameLoader;
+import game.*;
+import init.C;
 import init.D;
 import init.paths.PATHS;
 import init.sprite.UI.UI;
@@ -14,16 +14,16 @@ import snake2d.util.gui.GuiSection;
 import snake2d.util.gui.clickable.CLICKABLE;
 import snake2d.util.gui.renderable.RENDEROBJ;
 import snake2d.util.misc.ACTION;
+import util.gui.misc.GText;
 
-class ScMain implements SCREEN{
+class ScMain implements SC{
 
 	private final GuiSection first;
 	private final GuiSection play;
-	private final GuiSection credits;	
 	private GuiSection current;
 	private final RENDEROBJ.Sprite logo;
 	private final Menu menu;
-
+	private final GText version = new GText(UI.FONT().H2, VERSION.VERSION_STRING);
 	ScMain(Menu menu) {
 		
 		D.t(this);
@@ -31,8 +31,6 @@ class ScMain implements SCREEN{
 		first = getFirst(menu);
 		play = getPlay(menu);
 		play.body().moveY1(first.body().y1());
-		credits = getCredits(menu);
-		credits.body().moveY1(first.body().y1());
 		
 		logo = new RENDEROBJ.Sprite(RESOURCES.s().logo);
 		logo.body().moveX2(left.x2());
@@ -59,7 +57,7 @@ class ScMain implements SCREEN{
 		});
 		current.addDown(0, text);
 		
-		text = new Button(UI.FONT().H1S.getText(D.g("continue"))) {
+		text = new Button(UI.FONT().H1.getText(D.g("continue"))) {
 			@Override
 			protected void render(SPRITE_RENDERER r, float ds, boolean isActive, boolean isSelected,
 					boolean isHovered) {
@@ -88,7 +86,7 @@ class ScMain implements SCREEN{
 		text.clickActionSet(new ACTION() {
 			@Override
 			public void exe() {
-				switchNavigator(credits);
+				menu.switchScreen(menu.credits);
 			}
 		});
 		current.addDown(8, text);
@@ -136,64 +134,6 @@ class ScMain implements SCREEN{
 		return current;
 	}
 	
-	private GuiSection getCredits(Menu menu){
-		
-		GuiSection current = new GuiSection();
-		CLICKABLE text;
-		
-
-		
-		text = getNavButt(menu.hallOfLegends.¤¤name);
-		text.clickActionSet(new ACTION() {
-			@Override
-			public void exe() {
-				menu.switchScreen(menu.hallOfLegends);
-			}
-		});
-		current.addDown(8, text);
-		
-		text = getNavButt(menu.hallOfHeroes.¤¤name);
-		text.clickActionSet(new ACTION() {
-			@Override
-			public void exe() {
-				menu.switchScreen(menu.hallOfHeroes);
-			}
-		});
-		current.addDown(8, text);
-		
-		text = getNavButt(menu.hallOfFame.¤¤name);
-		text.clickActionSet(new ACTION() {
-			@Override
-			public void exe() {
-				menu.switchScreen(menu.hallOfFame);
-			}
-		});
-		current.addDown(8, text);
-		
-		text = getNavButt(menu.credits.¤¤name);
-		text.clickActionSet(new ACTION() {
-			@Override
-			public void exe() {
-				menu.switchScreen(menu.credits);
-			}
-		});
-		current.addDown(8, text);
-		
-		text = getBackArrow();
-		text.clickActionSet(new ACTION() {
-			@Override
-			public void exe() {
-				switchNavigator(first);
-			}
-		});
-		current.addDown(10, text);
-		
-		current.body().moveX1(right.x1());
-		current.body().centerY(right);
-		
-		return current;
-	}
-	
 	
 	private GuiSection getPlay(Menu menu){
 		
@@ -219,7 +159,7 @@ class ScMain implements SCREEN{
 					@Override
 					public CORE_STATE getState() {
 						CORE_STATE s = super.getState();
-						GAME.script().appendScript("_Tutorial");
+						GAME.events().tutorial.enabled = true;
 						return s;
 					}
 				});
@@ -270,7 +210,7 @@ class ScMain implements SCREEN{
 	public void render(SPRITE_RENDERER r, float ds) {
 		logo.render(r, ds);
 		current.render(r, ds);
-		
+		version.render(r, C.DIM().x2()-32-version.width(), 32);
 	}
 
 	@Override
